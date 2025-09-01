@@ -87,7 +87,11 @@ function NavbarAuthButton() {
   if (user) {
     return (
       <div className="flex items-center gap-4">
-        <span className="text-sm">Hey, {user.email}!</span>
+        {/* <span className="text-sm">Hey, {user.email}!</span> */}
+
+        <NavbarButton variant="secondary" onClick={() => router.push("/profile")}>
+          My Profile
+        </NavbarButton>
         <NavbarButton variant="secondary" onClick={logout}>
           Logout
         </NavbarButton>
