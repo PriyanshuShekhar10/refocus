@@ -1,6 +1,13 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@theme {
+  --font-raleway: "Raleway", sans-serif;
+  --font-roboto: "Roboto", sans-serif;
+}
 
 @layer base {
   :root {
@@ -29,6 +36,7 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --hero-gradient: linear-gradient(135deg, #a5a3f7 10%, #ff8650 100%);
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -55,6 +63,7 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --hero-gradient: linear-gradient(135deg, #101041 10%, #922408 100%);
   }
 }
 
@@ -128,18 +137,16 @@ html {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 0px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  /* background: transparent; */
+  width: 0px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #2563eb, #7c3aed);
+  /* background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+  border-radius: 4px; */
+  width: 0px;
 }

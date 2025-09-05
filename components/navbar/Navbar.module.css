@@ -17,10 +17,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 32px;
-  /* background: rgba(255, 255, 255, 0.65); */
+  padding: 0px 16px 0px 0px;
+  background: rgba(255, 255, 255, 1);
   /* border: 1px solid rgba(255, 255, 255, 0.5); */
-  border: 3px solid rgba(0, 0, 0, 0.2);
+  /* border: 1px solid rgba(0, 0, 0, 0.2); */
   /* border-radius: 50px; */
   margin-left: auto;
   margin-right: auto;
@@ -32,6 +32,7 @@
 }
 
 :global(.dark) .navbar {
+  background: rgba(0, 0, 0, 1);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -39,6 +40,7 @@
 .navbar.fixed {
   margin-top: 0;
   max-width: 100%;
+  background: rgba(255, 255, 255, 0.7);
   border-bottom: 1px solid rgba(50, 50, 50, 0.1);
   padding: 18px 32px;
   /* border: none; */
@@ -46,7 +48,7 @@
 
 /* Fixed dark override */
 :global(.dark) .navbar.fixed {
-  /* background: rgba(0, 0, 0, 0.7); */
+  background: rgba(0, 0, 0, 0.7);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -62,22 +64,16 @@
   margin-right: 8px;
 }
 
-.brandName {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
-}
-
 /* Nav links */
 .navLinks {
   list-style: none;
   display: flex;
-  gap: 20px;
+  gap: 40px;
 }
 
 .navLinks li {
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 200;
 }
 
 .navLinks a {
@@ -138,14 +134,13 @@
   background: #0056b3;
 }
 
-/* Improved button styles */
 .signInBtn {
   background: transparent;
   border: 2px solid rgba(0, 0, 0, 0.3);
   padding: 10px 24px;
   border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 400;
   color: #000000;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -159,7 +154,6 @@
   background: rgba(0, 0, 0, 0.1);
   border-color: #000000;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .signUpBtn {
@@ -167,8 +161,8 @@
   border: none;
   padding: 12px 28px;
   border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 400;
   color: #ffffff;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -176,20 +170,17 @@
   display: inline-block;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .signUpBtn:hover {
   background: #333333;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 .signUpBtn:active {
   transform: translateY(0);
 }
 
-/* Dark mode button styles */
 :global(.dark) .signInBtn {
   border-color: rgba(255, 255, 255, 0.4);
   color: #ffffff;

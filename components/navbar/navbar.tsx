@@ -32,7 +32,7 @@ export const NavbarLogo = ({
         src={Logo}
         alt="logo"
         className={cn(
-          `p-3 ${width && "w-" + width} ${height && "h-" + height}`,
+          `py-3 h-20`,
           mounted && theme === "dark" && "invert brightness-0"
         )}
       />
@@ -182,7 +182,7 @@ const Navbar = () => {
       } backdrop-blur-md`}
     >
       <div className={styles.logo}>
-        <NavbarLogo height={"24"} />
+        <NavbarLogo />
       </div>
 
       <ul className={styles.navLinks}>
