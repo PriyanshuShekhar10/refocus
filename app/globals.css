@@ -38,6 +38,7 @@
     --radius: 0.5rem;
     /* --hero-gradient: linear-gradient(135deg, #997880 5%, #b09193 100%); */
     --hero-gradient: linear-gradient(135deg, #dcdcfc 40%, #f06c41 100%);
+    --button-gradient: linear-gradient(135deg, #799bffcf 20%, #ec8867b3 90%);
     /* --hero-gradient: linear-gradient(135deg, #a5a3f7 10%, #ff8650 100%); */
   }
   .dark {
@@ -67,6 +68,7 @@
     --chart-5: 340 75% 55%;
     /* --hero-gradient: linear-gradient(135deg, #101041 10%, #922408 100%); */
     --hero-gradient: linear-gradient(135deg, #101041 10%, #922408 100%);
+    --button-gradient: linear-gradient(135deg, #101041 10%, #922408 100%);
   }
 }
 

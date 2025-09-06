@@ -60,6 +60,7 @@ export default {
       backgroundImage: {
         "hero-bg": "url('@/assets/Hero-bg-base-new.avif')",
         "hero-gradient": "var(--hero-gradient)",
+        "button-gradient": "var(--button-gradient)",
         // "hero-gradient": "linear-gradient(135deg, #a5a3f7 10%, #ff8650 100%)",
       },
     },
