@@ -50,11 +50,11 @@ export function Hero() {
                 />
                 <div className="text-center relative z-10">
                   <motion.div
-                    className="w-16 h-16 bg-[#ff875eb3] dark:bg-[#4674ffcf] rounded-full flex items-center justify-center mx-auto mb-4 82a1ffcf ff875eb3"
+                    className="w-12 h-12 bg-[#ff875eb3] dark:bg-[#4674ffcf] rounded-full flex items-center justify-center mx-auto mb-4 82a1ffcf ff875eb3"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   >
-                    <Play className="w-8 h-8 text-white ml-1" />
+                    <Play className="w-6 h-6 text-white ml-1" />
                   </motion.div>
                   <p className="text-slate-600 dark:text-slate-300 font-medium text-sm">
                     Demo
