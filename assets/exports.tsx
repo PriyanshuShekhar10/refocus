@@ -1,3 +1,3 @@
 import Logo from "./Logo.svg";
-
-export { Logo };
+import Graphic2 from "./graphic2.png";
+export { Logo, Graphic2 };

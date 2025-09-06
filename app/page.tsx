@@ -1,5 +1,6 @@
 import Faq from "@/components/faq";
 import { Hero } from "@/components/hero";
+import { Features } from "@/components/features";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export default function Home() {
@@ -8,6 +9,7 @@ export default function Home() {
       <div className="flex-1 w-full flex flex-col gap-20 items-center">
         <div className="flex-1 flex flex-col gap-20 max-w-5x">
           <Hero />
+          <Features />
           <Faq />
         </div>
 
