@@ -9,6 +9,10 @@
   --font-roboto: "Roboto", sans-serif;
 }
 
+body {
+  cursor: url("../assets/cursor.png"), auto;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
