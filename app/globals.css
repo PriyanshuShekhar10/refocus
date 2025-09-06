@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,12 +8,19 @@
 @theme {
   --font-raleway: "Raleway", sans-serif;
   --font-roboto: "Roboto", sans-serif;
+  --font-quicksand: "Quicksand", sans-serif;
 }
 
 body {
   cursor: url("../assets/cursor.png"), auto;
 }
 
+a,
+button,
+[role="button"],
+.clickable {
+  cursor: url("../assets/cursor-ptr.png"), pointer;
+}
 @layer base {
   :root {
     --background: 0 0% 100%;

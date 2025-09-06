@@ -16,7 +16,7 @@ export function Hero() {
     <div className="flex flex-col gap-16 items-center">
       <section className="w-screen h-screen bg-hero-gradient pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-screen-lg mx-auto text-center mt-24">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-normal dark:text-white mb-14 leading-normal">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold dark:text-white mb-14 leading-normal">
             Let&apos;s make your{" "}
             <span className="inline-block min-w-[3ch] font-bold text-center text-[#E0FF88]">
               {mounted && theme === "dark" ? "night" : "day"}
@@ -24,7 +24,7 @@ export function Hero() {
             a little more productive
           </h1>
           <p className="text-xl sm:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            Virtual Coworking Made Easy
+            Refocus allows you to regain focus, virtual coworking made easy.
           </p>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}

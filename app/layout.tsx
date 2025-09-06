@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Raleway } from "next/font/google";
+import { Quicksand } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import Navbar from "@/components/navbar/navbar";
@@ -30,6 +31,15 @@ const ralewaySans = Raleway({
   style: "normal",
 });
 
+const quicksandSans = Quicksand({
+  variable: "--font-quicksand",
+  display: "swap",
+  subsets: ["latin"],
+  preload: true,
+  weight: ["300", "400", "500", "600", "700"],
+  style: "normal",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,7 +47,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${ralewaySans.className} antialiased`}>
+      <body className={`${quicksandSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
