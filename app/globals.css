@@ -95,7 +95,7 @@ button,
 
 /* View Transition Animation for Theme Switching */
 ::view-transition-group(root) {
-  animation-duration: 0.7s;
+  animation-duration: 0.2s;
   animation-timing-function: linear(
     0 0%,
     0.2342 12.49%,

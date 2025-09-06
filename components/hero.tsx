@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { Play } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export function Hero() {
   const { theme } = useTheme();
@@ -70,21 +71,18 @@ export function Hero() {
 
             <div className="flex items-center space-x-3 absolute bottom-10">
               <div className="flex -space-x-2">
-                <img
-                  className="w-10 h-10 rounded-full border-2 border-white"
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=d"
-                  alt="Alice"
-                />
-                <img
-                  className="w-10 h-10 rounded-full border-2 border-white"
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=Bob"
-                  alt="Bob"
-                />
-                <img
-                  className="w-10 h-10 rounded-full border-2 border-white"
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie"
-                  alt="Charlie"
-                />
+                <Avatar>
+                  <AvatarImage src="https://github.com/shadcn.png" />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+                <Avatar>
+                  <AvatarImage src="https://github.com/evilrabbit.png" />
+                  <AvatarFallback>ER</AvatarFallback>
+                </Avatar>
+                <Avatar>
+                  <AvatarImage src="https://github.com/leerob.png" />
+                  <AvatarFallback>LR</AvatarFallback>
+                </Avatar>
               </div>
               <span className="text-gray-800 dark:text-gray-200 font-medium">
                 Join waitlist among{" "}
