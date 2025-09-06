@@ -36,6 +36,7 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    /* --hero-gradient: linear-gradient(135deg, #997880 5%, #b09193 100%); */
     --hero-gradient: linear-gradient(135deg, #dcdcfc 40%, #f06c41 100%);
     /* --hero-gradient: linear-gradient(135deg, #a5a3f7 10%, #ff8650 100%); */
   }
