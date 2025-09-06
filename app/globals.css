@@ -11,7 +11,7 @@
   --font-quicksand: "Quicksand", sans-serif;
 }
 
-body {
+/* body {
   cursor: url("../assets/cursor.png"), auto;
 }
 
@@ -20,7 +20,8 @@ button,
 [role="button"],
 .clickable {
   cursor: url("../assets/cursor-ptr.png"), pointer;
-}
+} */
+
 @layer base {
   :root {
     --background: 0 0% 100%;
