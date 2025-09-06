@@ -14,13 +14,6 @@ export default async function NotFound() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
       <div className="text-center space-y-8 px-4">
         <div className="mb-8 flex justify-center">
-          {/* <Image
-            src={Logo}
-            alt="Refocus Logo"
-            width={192}
-            height={77}
-            className="mx-auto "
-          /> */}
           <NavbarLogo />
         </div>
 
