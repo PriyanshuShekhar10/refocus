@@ -1,21 +1,23 @@
 import Image from "next/image";
 import { Graphic2 } from "@/assets/exports";
+
 export const Features = () => {
   return (
     <div className="flex flex-col gap-16 items-center my-8">
       <section className="w-screen h-max pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-screen-lg mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium dark:text-white mb-8 leading-normal">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-gray-900 dark:text-white mb-8 leading-normal">
             Consider yourself limitless
           </h1>
-          <p className="text-xl sm:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
             कल करे सो आज कर, आज करे सो अब
           </p>
         </div>
+
         {/* 3 features */}
         <div className="flex flex-col gap-8 mt-24 mx-16 items-center justify-between">
           {/* Feature 1 */}
-          <div className="bg-[#f4f5f5] w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pl-10">
+          <div className="bg-gray-100 dark:bg-gray-800 w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center p-10">
             {/* Left Content */}
             <div className="space-y-6">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium leading-tight text-gray-900 dark:text-white">
@@ -41,9 +43,9 @@ export const Features = () => {
               </div>
             </div>
           </div>
+
           {/* Feature 2 */}
-          <div className="bg-[#f4f5f5] w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pr-10">
-            {/* Left Content */}
+          <div className="bg-gray-100 dark:bg-gray-800 w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center p-10">
             <div className="relative w-full h-full flex items-center justify-center">
               <div className="rounded-3xl">
                 <Image
@@ -68,9 +70,9 @@ export const Features = () => {
               </button>
             </div>
           </div>
+
           {/* Feature 3 */}
-          <div className="bg-[#f4f5f5] w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pl-10">
-            {/* Left Content */}
+          <div className="bg-gray-100 dark:bg-gray-800 w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center p-10">
             <div className="space-y-6">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium leading-tight text-gray-900 dark:text-white">
                 Create at the speed of thought

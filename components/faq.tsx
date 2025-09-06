@@ -9,9 +9,8 @@ type FaqItem = {
 
 type Props = {
   title?: string;
-  /** allow several panels open at once */
   allowMultiple?: boolean;
-  pointerCursorUrl?: string; // e.g. "/assets/cursor-pointer.png"
+  pointerCursorUrl?: string;
   className?: string;
 };
 
@@ -127,7 +126,7 @@ export default function Faq({
               </button>
 
               <Collapse id={panelId} labelledBy={btnId} open={isOpen}>
-                <div className="pb-6 pr-10 text-base leading-relaxed text-black/80">
+                <div className="pb-6 pr-10 text-base leading-relaxed text-black/80 dark:text-white">
                   {item.answer}
                 </div>
               </Collapse>
@@ -139,7 +138,6 @@ export default function Faq({
   );
 }
 
-/** Helper for smooth height animation */
 function Collapse({
   id,
   labelledBy,
