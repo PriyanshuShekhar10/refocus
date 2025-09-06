@@ -1,22 +1,37 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { Play } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { VideoModal } from "./video-modal";
 
 export function Hero() {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Close modal on ESC
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") setIsOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, handleKeyDown]);
 
   return (
     <div className="flex flex-col gap-16 items-center">
       <section className="w-screen h-screen bg-hero-gradient pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-screen-lg mx-auto text-center mt-24">
+          {/* Heading */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold dark:text-white mb-14 leading-normal">
             Let&apos;s make your{" "}
             <span className="inline-block min-w-[3ch] font-bold text-center text-[#E0FF88]">
@@ -27,6 +42,8 @@ export function Hero() {
           <p className="text-xl sm:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
             Refocus allows you to regain focus, virtual coworking made easy.
           </p>
+
+          {/* Play button */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -42,7 +59,10 @@ export function Hero() {
                 shadow-md
               "
             >
-              <div className="aspect-video rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer">
+              <div
+                className="aspect-video rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer"
+                onClick={() => setIsOpen(true)}
+              >
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -50,7 +70,7 @@ export function Hero() {
                 />
                 <div className="text-center relative z-10">
                   <motion.div
-                    className="w-12 h-12 bg-[#ff875eb3] dark:bg-[#4674ffcf] rounded-full flex items-center justify-center mx-auto mb-4 82a1ffcf ff875eb3"
+                    className="w-12 h-12 bg-[#ff875eb3] dark:bg-[#4674ffcf] rounded-full flex items-center justify-center mx-auto mb-4"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   >
@@ -63,8 +83,9 @@ export function Hero() {
               </div>
             </div>
           </motion.div>
+
+          {/* CTA */}
           <div className="flex flex-col items-center mt-6 space-y-3">
-            {/* Button */}
             <button className="mb-64 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
               Get early access
             </button>
@@ -92,6 +113,9 @@ export function Hero() {
           </div>
         </div>
       </section>
+
+      {/* Video Modal */}
+      <VideoModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </div>
   );
 }
