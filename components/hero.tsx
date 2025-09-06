@@ -52,7 +52,7 @@ export function Hero() {
           >
             <div
               className="
-                rounded-2xl max-w-sm mx-auto my-10
+                rounded-2xl max-w-80 mx-auto my-10
                 backdrop-blur-xl
                 bg-white/20 dark:bg-slate-700/20
                 border border-white/30 dark:border-slate-500/30

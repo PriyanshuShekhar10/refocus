@@ -36,7 +36,6 @@ export const NavbarLogo = ({
           mounted && theme === "dark" && "invert brightness-0"
         )}
       />
-      {/* <span className="font-medium text-black dark:text-white">Startup</span> */}
     </a>
   );
 };
@@ -122,10 +121,10 @@ function NavbarAuthButton() {
   if (user) {
     return (
       <div className="flex items-center gap-4">
-        <Link href="/profile" className={styles.profileBtn}>
+        <Link href="/profile" className={styles.signUpBtn}>
           My Profile
         </Link>
-        <button className={styles.logoutBtn} onClick={logout}>
+        <button className={styles.signInBtn} onClick={logout}>
           Logout
         </button>
       </div>
@@ -167,7 +166,7 @@ const Navbar = () => {
     },
     {
       name: "FAQ",
-      link: "/faq",
+      link: "#faq",
     },
     {
       name: "About Us",

@@ -69,10 +69,13 @@ export default function Faq({
   };
 
   return (
-    <section className={`mx-auto max-w-5xl px-6 ${className}`}>
+    <section id="faq" className={`mx-auto max-w-5xl px-6 ${className}`}>
       <h2 className="mb-6 text-4xl/[1.1] font-semibold md:text-6xl">{title}</h2>
 
-      <ul role="list" className="divide-y divide-black/15">
+      <ul
+        role="list"
+        className="divide-y divide-black/15  dark:divide-white/15"
+      >
         {faqItems.map((item, i) => {
           const isOpen = open.includes(i);
           const panelId = `${baseId}-panel-${i}`;
@@ -105,7 +108,7 @@ export default function Faq({
                     viewBox="0 0 24 24"
                     width="22"
                     height="22"
-                    className="text-[#0f1226]"
+                    className="text-[#0f1226] dark:text-white/15"
                   >
                     <path
                       d="M5 12h14"
