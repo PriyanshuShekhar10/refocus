@@ -1,7 +1,7 @@
+"use client";
 import Image from "next/image";
-import { Graphic2 } from "@/assets/exports";
-import { PastBuddies } from "@/assets/exports";
-
+import { Graphic2, PastBuddies } from "@/assets/exports";
+import { motion } from "framer-motion";
 export const Features = () => {
   return (
     <div className="flex flex-col gap-16 items-center my-8">
@@ -11,14 +11,20 @@ export const Features = () => {
             Consider yourself limitless
           </h1>
           <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Focus gets easier when you don’t have to do it alone.
+            Focus gets easier when you don&apos;t have to do it alone.
           </p>
         </div>
 
         {/* 3 features */}
         <div className="flex flex-col gap-8 mt-24 mx-16 items-center justify-between">
           {/* Feature 1 */}
-          <div className="bg-gray-100 dark:bg-gray-800 w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pl-10">
+          <motion.div
+            className="bg-gray-100 dark:bg-gray-800 w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pl-10"
+            initial={{ opacity: 0, y: 100 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
             {/* Left Content */}
             <div className="space-y-6 px-32">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium leading-tight text-gray-900 dark:text-white">
@@ -42,10 +48,16 @@ export const Features = () => {
                 />
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Feature 2 */}
-          <div className="bg-gray-100 dark:bg-gray-800 w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pr-10">
+          <motion.div
+            className="bg-gray-100 dark:bg-gray-800 w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pr-10"
+            initial={{ opacity: 0, y: 100 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+          >
             <div className="relative w-full h-full flex items-center justify-center">
               <div className="rounded-3xl">
                 <Image
@@ -68,7 +80,7 @@ export const Features = () => {
                 Touch me more
               </button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Feature 3 */}
           {/* <div className="bg-gray-100 dark:bg-gray-800 w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center p-10">
