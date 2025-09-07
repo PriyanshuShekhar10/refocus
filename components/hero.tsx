@@ -90,7 +90,7 @@ export function Hero() {
               Get early access
             </button>
 
-            <div className="flex items-center space-x-3 absolute bottom-10">
+            <div className="flex items-center space-x-3 absolute bottom-10 right-5">
               <div className="flex -space-x-2">
                 <Avatar>
                   <AvatarImage src="https://github.com/shadcn.png" />
