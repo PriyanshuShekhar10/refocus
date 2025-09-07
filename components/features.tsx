@@ -4,7 +4,7 @@ import { Graphic2, PastBuddies } from "@/assets/exports";
 import { motion } from "framer-motion";
 export const Features = () => {
   return (
-    <div className="flex flex-col gap-16 items-center my-8">
+    <div id="features" className="flex flex-col gap-16 items-center my-8">
       <section className="w-screen h-max pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-screen-lg mx-auto text-center py-24">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-gray-900 dark:text-white mb-8 leading-normal">
