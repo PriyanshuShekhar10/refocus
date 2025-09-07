@@ -22,7 +22,7 @@ export const Features = () => {
             className="bg-gray-100 dark:bg-gray-800 w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pl-10"
             initial={{ opacity: 0, y: 100 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
+            viewport={{ once: false, amount: 0.2 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             {/* Left Content */}
@@ -55,7 +55,7 @@ export const Features = () => {
             className="bg-gray-100 dark:bg-gray-800 w-full rounded-3xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pr-10"
             initial={{ opacity: 0, y: 100 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
+            viewport={{ once: false, amount: 0.2 }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
           >
             <div className="relative w-full h-full flex items-center justify-center">

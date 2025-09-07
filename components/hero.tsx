@@ -1,8 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
-import { motion } from "framer-motion";
-import { Play } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { VideoModal } from "./video-modal";
 
@@ -43,53 +41,22 @@ export function Hero() {
             Refocus allows you to regain focus, virtual coworking made easy.
           </p>
 
-          {/* Play button */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="relative"
-          >
-            <div
-              className="
-                rounded-2xl max-w-80 mx-auto my-10
-                backdrop-blur-xl
-                bg-white/20 dark:bg-slate-700/20
-                border border-white/30 dark:border-slate-500/30
-                shadow-md
-              "
-            >
-              <div
-                className="aspect-video rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer"
+          {/* CTA buttons */}
+          <div className="flex flex-col items-center mt-10 space-y-3">
+            <div className="flex space-x-3">
+              <button className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+                Get early access
+              </button>
+
+              <button
                 onClick={() => setIsOpen(true)}
+                className="text-white bg-[#4674ffcf] hover:bg-[#355ed4] focus:ring-4 focus:ring-blue-200 font-medium rounded-lg text-sm px-5 py-2.5"
               >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                />
-                <div className="text-center relative z-10">
-                  <motion.div
-                    className="w-12 h-12 bg-[#ff875eb3] dark:bg-[#4674ffcf] rounded-full flex items-center justify-center mx-auto mb-4"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Play className="w-6 h-6 text-white ml-1" />
-                  </motion.div>
-                  <p className="text-slate-600 dark:text-slate-300 font-medium text-sm">
-                    Demo
-                  </p>
-                </div>
-              </div>
+                Watch demo
+              </button>
             </div>
-          </motion.div>
 
-          {/* CTA */}
-          <div className="flex flex-col items-center mt-6 space-y-3">
-            <button className="mb-64 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
-              Get early access
-            </button>
-
+            {/* Waitlist stays in place */}
             <div className="flex items-center space-x-3 absolute bottom-10 right-5">
               <div className="flex -space-x-2">
                 <Avatar>
