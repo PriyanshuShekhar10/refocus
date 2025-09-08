@@ -16,13 +16,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function SignUpForm({
+export function DetailsForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [repeatPassword, setRepeatPassword] = useState("");
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -33,24 +32,30 @@ export function SignUpForm({
     setIsLoading(true);
     setError(null);
 
-    if (password !== repeatPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
+    // if (password !== repeatPassword) {
+    //   setError("Passwords do not match");
+    //   setIsLoading(false);
+    //   return;
+    // }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          // emailRedirectTo: `${window.location.origin}/profile`,
-          emailRedirectTo: `${window.location.origin}/auth/sign-up/details`,
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error("User not authenticated");
+      const { error } = await supabase.from("users").insert([
+        {
+          id: user.id,
+          email: user.email,
+          firstname,
+          lastname,
         },
-      });
+      ]);
+      console.log("error: ", error);
       if (error) throw error;
-      router.push("/auth/sign-up-success");
-      // router.push("/auth/sign-up/details");
+      router.push("/profile");
+      //   router.push("/auth/sign-up/details");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -69,38 +74,26 @@ export function SignUpForm({
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="firstname">First Name</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id="firstname"
+                  type="text"
+                  placeholder="John"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={firstname}
+                  onChange={(e) => setFirstname(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="lastname">Last Name</Label>
                 </div>
                 <Input
-                  id="password"
-                  type="password"
+                  id="lastname"
+                  type="text"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
-                </div>
-                <Input
-                  id="repeat-password"
-                  type="password"
-                  required
-                  value={repeatPassword}
-                  onChange={(e) => setRepeatPassword(e.target.value)}
+                  value={lastname}
+                  onChange={(e) => setLastname(e.target.value)}
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
