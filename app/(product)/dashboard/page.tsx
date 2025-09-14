@@ -1,16 +1,27 @@
-import React from "react";
+// app/(product)/dashboard/page.tsx
+"use client";
+
+import React, { useState } from "react";
 import SideBar from "../components/Sidebar/sidebar";
+import Profile from "../components/profile";
+import Settings from "../components/settings";
+import Friends from "../components/friends";
+import Dashboard from "../components/dashboard";
+
+type TabKey = "profile" | "dashboard" | "settings" | "friends";
 
 export default function DashboardPage() {
+  const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
+
   return (
-    <>
-      <SideBar />
-      <div className="ml-16">
-        <main className="p-6">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="mt-2 text-gray-600">Welcome to your dashboard! 🎉</p>
-        </main>
-      </div>
-    </>
+    <div className="flex">
+      <SideBar activeTab={activeTab} onSelect={setActiveTab} />
+      <main className="ml-16 flex-1 p-6">
+        {activeTab === "dashboard" && <Dashboard />}
+        {activeTab === "profile" && <Profile />}
+        {activeTab === "settings" && <Settings />}
+        {activeTab === "friends" && <Friends />}
+      </main>
+    </div>
   );
 }
