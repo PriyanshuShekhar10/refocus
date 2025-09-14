@@ -168,3 +168,23 @@ html {
   border-radius: 4px; */
   width: 0px;
 }
+
+/* Sidebar-specific global fixes */
+
+/* Ensure box-sizing + margin reset (if not already applied) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Optional: transparent scrollbar background (if you want visible scrollbar) */
+::-webkit-scrollbar {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-500 dark:bg-green-400;
+}

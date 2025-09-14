@@ -13,13 +13,7 @@ import { Button } from "../ui/button";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 
-export const NavbarLogo = ({
-  width,
-  height,
-}: {
-  width?: string;
-  height?: string;
-}) => {
+export const NavbarLogo = () => {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   React.useEffect(() => {
@@ -123,6 +117,9 @@ function NavbarAuthButton() {
       <div className="flex items-center gap-4">
         <Link href="/profile" className={styles.signUpBtn}>
           My Profile
+        </Link>
+        <Link href="/dashboard" className={styles.signUpBtn}>
+          Dashboard
         </Link>
         <button className={styles.signInBtn} onClick={logout}>
           Logout
