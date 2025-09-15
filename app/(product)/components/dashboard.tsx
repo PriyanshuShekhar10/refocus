@@ -1,5 +1,10 @@
 import React from "react";
-
+// import CalendarBooking from "./CalendarBooking";
 export default function Dashboard() {
-  return <div>Dashboard Content</div>;
+  return (
+    <div>
+      {/* <CalendarBooking /> */}
+      Dashboard Content
+    </div>
+  );
 }

@@ -1,0 +1,214 @@
+/* Using CSS variables for easy theming */
+:root {
+  --border-color: #e3e6ea;
+  --border-color-light: #f1f5f9;
+  --bg-color-light: #fafbfc;
+  --text-color-primary: #1f2937;
+  --text-color-secondary: #6b7280;
+  --brand-color: #2b6cb0;
+  --brand-color-contrast: #fff;
+  --grid-height: 640px;
+}
+
+.container {
+  font-family: Inter, Roboto, system-ui, -apple-system, sans-serif;
+  width: 100%;
+  max-width: 1000px;
+  margin: 2rem auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(20, 20, 40, 0.06);
+}
+
+/* --- Controls Bar --- */
+.controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  align-items: center;
+  background: var(--bg-color-light);
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.controlLabel {
+  font-weight: 700;
+  margin-right: 0.75rem;
+}
+
+.btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: #fff;
+  color: var(--text-color-primary);
+  cursor: pointer;
+  font-weight: 600;
+  margin: 0 4px;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  border-color: #b0b5bb;
+}
+
+.btn.active {
+  background: var(--brand-color);
+  color: var(--brand-color-contrast);
+  border-color: var(--brand-color);
+}
+
+/* --- Calendar Grid --- */
+.gridWrap {
+  display: flex;
+  height: var(--grid-height);
+  min-height: 300px;
+}
+
+.daysContainer {
+  flex: 1;
+  display: flex;
+  position: relative;
+  cursor: cell;
+}
+
+.daysContainer.noDrop {
+  cursor: not-allowed;
+}
+
+/* --- Time Gutter (Left Column) --- */
+.timeColumn {
+  width: 70px;
+  border-right: 1px solid var(--border-color);
+  background: #fbfdff;
+  padding-top: 40px; /* Header offset */
+  box-sizing: border-box;
+  position: relative;
+}
+
+.timeLabel {
+  position: absolute;
+  transform: translateY(-50%);
+  left: 6px;
+  right: 6px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-color-secondary);
+}
+
+/* --- Day Columns --- */
+.dayColumn {
+  flex: 1;
+  border-left: 1px solid var(--border-color-light);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.dayColumn:first-child {
+  border-left: none;
+}
+
+.dayHeader {
+  height: 40px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.dayGrid {
+  position: relative;
+  flex: 1;
+}
+
+.hourLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-color-light);
+  z-index: 1;
+}
+
+/* --- Booking & Hover Items --- */
+.bookingBlock {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #fff;
+  box-shadow: 0 4px 8px rgba(20, 20, 40, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.bookingTime {
+  font-weight: 700;
+}
+
+.removeBtn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.removeBtn:hover {
+  opacity: 1;
+}
+
+.hoverOverlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-radius: 6px;
+  border: 2px dashed rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.08);
+  pointer-events: none;
+  z-index: 5;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.hoverOverlay.colliding {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* --- Tooltip --- */
+.hoverTooltip {
+  position: fixed;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #111827;
+  color: #fff;
+  font-size: 12px;
+  z-index: 50;
+  transform: translate(12px, -50%);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.tooltipHint {
+  opacity: 0.7;
+  margin-left: 8px;
+}
+
+.tooltipHint::before {
+  content: "·";
+  margin-right: 8px;
+}
