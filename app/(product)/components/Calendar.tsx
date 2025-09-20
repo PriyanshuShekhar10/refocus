@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
 /* =========================
     Types
@@ -20,10 +21,12 @@ export type CalendarEvent = {
   end: string; // ISO
   durationMin: 25 | 50 | 75;
   sessionType: "focus" | "deep-work" | "learning";
-  // Simplified partner model for the frontend
-  partner: { id: string; name: string; avatarUrl?: string } | null | "anyone";
+  // Simplified partner model for the frontend (kept for UI text)
+  partner?: { id: string; name: string; avatarUrl?: string } | null | "anyone";
   // Status to manage the booking flow
   status: "available" | "booked" | "in-progress" | "completed";
+  owner_id?: string;
+  participants?: { user_id: string; joined_at: string }[];
 };
 
 export type PresenceDot = {
@@ -71,7 +74,7 @@ const clamp = (val: number, min: number, max: number) =>
   Math.min(max, Math.max(min, val));
 const minutesBetween = (a: Date, b: Date) =>
   Math.round((b.getTime() - a.getTime()) / 60000);
-const snapMinutes = (m: number, step: number) => Math.round(m / step) * step;
+// const snapMinutes = (m: number, step: number) => Math.round(m / step) * step;
 
 /* =========================
     Calendar Component
@@ -83,7 +86,7 @@ export default function Calendar({
   visibleDays = 3,
   startDate: startDateProp,
   events: eventsProp,
-  presence = [],
+  // presence,
   locale = "en-US",
   onEventsChange,
   className = "",
@@ -104,7 +107,7 @@ export default function Calendar({
   const totalMinutes = (endHour - startHour) * 60;
 
   const [internalEvents, setInternalEvents] = useState<CalendarEvent[]>(
-    () => eventsProp ?? demoEvents(startDate, visibleDays)
+    () => eventsProp ?? []
   );
   const events = eventsProp ?? internalEvents;
 
@@ -129,6 +132,9 @@ export default function Calendar({
   const [durationFilter, setDurationFilter] = useState<number[]>([25, 50, 75]);
   const [bookingModalEvent, setBookingModalEvent] =
     useState<CalendarEvent | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [createDuration, setCreateDuration] = useState<25 | 50 | 75>(25);
+  const [toast, setToast] = useState<string | null>(null);
 
   const handleDurationFilterChange = (duration: number) => {
     setDurationFilter((prev) =>
@@ -142,18 +148,25 @@ export default function Calendar({
     setBookingModalEvent(event);
   };
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     if (!bookingModalEvent) return;
-    // TODO: This is where you would make an API call to your backend.
-    // The backend should validate availability and confirm the booking.
-
-    // Optimistic UI update:
-    setEvents((prevEvents) =>
-      prevEvents.map((ev) =>
-        ev.id === bookingModalEvent.id ? { ...ev, status: "booked" } : ev
-      )
+    const id = bookingModalEvent.id;
+    // Optimistic update
+    setEvents((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, status: "booked" } : e))
     );
-    setBookingModalEvent(null); // Close modal on success
+    setBookingModalEvent(null);
+    try {
+      const res = await fetch(`/api/sessions/${id}/join`, { method: "POST" });
+      if (!res.ok)
+        throw new Error((await res.json()).error || "Failed to join");
+    } catch (e) {
+      // revert
+      setEvents((prev) =>
+        prev.map((ev) => (ev.id === id ? { ...ev, status: "available" } : ev))
+      );
+      alert((e as Error).message);
+    }
   };
 
   const [now, setNow] = useState<Date>(new Date());
@@ -202,6 +215,166 @@ export default function Calendar({
     return y;
   })();
 
+  // Realtime: notify owner when someone joins their session
+  useEffect(() => {
+    if (!currentUserId) return;
+    const supabase = createSupabaseClient();
+    const channel = supabase
+      .channel("notif-session-joined")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${currentUserId}`,
+        } as any,
+        (payload: any) => {
+          if (payload?.new?.type === "session_joined") {
+            setToast("Someone joined your session");
+            setTimeout(() => setToast(null), 4000);
+          }
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId]);
+
+  // Fetch sessions for visible range
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const from = toISO(days[0]);
+      const to = toISO(addDays(days[days.length - 1], 1));
+      try {
+        const res = await fetch(
+          `/api/sessions?from=${encodeURIComponent(
+            from
+          )}&to=${encodeURIComponent(to)}`
+        );
+        if (!res.ok) throw new Error("Failed to load sessions");
+        const data = await res.json();
+        if (cancelled) return;
+        setCurrentUserId(data.currentUserId ?? null);
+        const mapped: CalendarEvent[] = (data.sessions ?? []).map((s: any) => ({
+          id: s.id,
+          start: s.start,
+          end: s.end,
+          durationMin: s.durationMin,
+          sessionType: s.sessionType,
+          status: s.status,
+          owner_id: s.owner_id,
+          participants: s.participants,
+        }));
+        setInternalEvents(mapped);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [startDate, visibleDays]);
+
+  const createSession = async (start: Date, durationMin: 25 | 50 | 75) => {
+    const tempId = `temp_${Date.now()}`;
+    const end = addMinutes(start, durationMin);
+    const optimistic: CalendarEvent = {
+      id: tempId,
+      start: toISO(start),
+      end: toISO(end),
+      durationMin,
+      sessionType: "focus",
+      status: "available",
+      owner_id: currentUserId ?? undefined,
+      participants: currentUserId
+        ? [{ user_id: currentUserId, joined_at: new Date().toISOString() }]
+        : [],
+    };
+    setEvents((prev) => [...prev, optimistic]);
+    try {
+      const res = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          start: optimistic.start,
+          durationMin,
+          sessionType: optimistic.sessionType,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create");
+      setEvents((prev) =>
+        prev.map((e) => (e.id === tempId ? { ...e, id: data.id } : e))
+      );
+    } catch (e) {
+      setEvents((prev) => prev.filter((e) => e.id !== tempId));
+      alert((e as Error).message);
+    }
+  };
+
+  const deleteSession = async (id: string) => {
+    const existing = events.find((e) => e.id === id);
+    if (!existing) return;
+    setEvents((prev) => prev.filter((e) => e.id !== id));
+    try {
+      const res = await fetch(`/api/sessions/${id}`, { method: "DELETE" });
+      if (!res.ok)
+        throw new Error((await res.json()).error || "Failed to delete");
+    } catch (e) {
+      // revert
+      setEvents((prev) => [...prev, existing]);
+      alert((e as Error).message);
+    }
+  };
+
+  // Clicking empty space to create your own session
+  const handleGridClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    if (!gridRef.current) return;
+    const rect = gridRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const gutter = 64; // w-16 time gutter
+    const contentWidth = Math.max(0, rect.width - gutter);
+    const xAdjusted = Math.max(0, x - gutter);
+    // Determine which day column was clicked (inside content area only)
+    const dayWidth = contentWidth / visibleDays;
+    const dayIndex = clamp(
+      Math.floor(xAdjusted / dayWidth),
+      0,
+      visibleDays - 1
+    );
+    const dayDate = days[dayIndex];
+    // Y to minutes
+    const y = e.clientY - rect.top;
+    const minutesFromTop = Math.round(y / rowPx) * stepMinutes;
+    const minutesOfDay = clamp(
+      minutesFromTop + startHour * 60,
+      startHour * 60,
+      endHour * 60 - 25
+    );
+    const start = new Date(startOfDay(dayDate));
+    start.setMinutes(minutesOfDay);
+    // use selected creation duration
+    const preferred = createDuration;
+    // prevent overlap with existing events on the same day
+    const dayKey = ymd(dayDate);
+    const overlaps = (eventsByDay[dayKey] ?? []).some((ev) => {
+      const s = new Date(ev.start);
+      const eEnd = new Date(ev.end);
+      const newEnd = addMinutes(start, preferred);
+      return new Date(start) < eEnd && newEnd > s;
+    });
+    if (overlaps) {
+      setToast("Slot unavailable");
+      setTimeout(() => setToast(null), 2000);
+      return;
+    }
+    createSession(start, preferred);
+  };
+
   return (
     <div className={`flex h-[calc(100vh-2rem)] w-full gap-4 ${className}`}>
       {/* --- REPURPOSED: Left panel is now for filters and timezone --- */}
@@ -239,6 +412,27 @@ export default function Calendar({
             </div>
           </div>
           {/* TODO: Add more filters for session type, partner, etc. here */}
+          <div className="mt-4">
+            <p className="text-xs text-gray-500">New session length</p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {[25, 50, 75].map((m) => (
+                <button
+                  key={`create-${m}`}
+                  onClick={() => setCreateDuration(m as 25 | 50 | 75)}
+                  className={`rounded-md border px-3 py-2 text-sm ${
+                    createDuration === m
+                      ? "border-green-600 bg-green-50 text-green-700"
+                      : "border-gray-200"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-[11px] text-gray-500">
+              Tip: click an empty slot to create your own session.
+            </p>
+          </div>
         </div>
       </aside>
 
@@ -274,6 +468,7 @@ export default function Calendar({
         <div
           ref={gridRef}
           className="relative flex h-[calc(100%-3.75rem)] overflow-auto"
+          onClick={handleGridClick}
         >
           {/* Time Gutter */}
           <div className="w-16 shrink-0 border-r bg-gray-50/80 pt-12">
@@ -291,7 +486,7 @@ export default function Calendar({
             className="grid flex-1"
             style={{ gridTemplateColumns: `repeat(${visibleDays}, 1fr)` }}
           >
-            {days.map((d, dayIdx) => (
+            {days.map((d) => (
               <div key={ymd(d)} className="relative border-r">
                 {/* Horizontal Lines */}
                 {Array.from({ length: endHour - startHour }).map((_, i) => (
@@ -317,6 +512,10 @@ export default function Calendar({
                     );
                     const height = minuteToPx(ev.durationMin);
                     const isBooked = ev.status === "booked";
+                    const isOwner =
+                      ev.owner_id &&
+                      currentUserId &&
+                      ev.owner_id === currentUserId;
 
                     return (
                       <div
@@ -331,7 +530,10 @@ export default function Calendar({
                               ? "bg-gray-200 border border-gray-300"
                               : "bg-indigo-50 border border-indigo-200 hover:border-indigo-400 cursor-pointer"
                           }`}
-                          onClick={() => !isBooked && handleBookSlot(ev)}
+                          onClick={(evt) => {
+                            evt.stopPropagation();
+                            if (!isBooked && !isOwner) handleBookSlot(ev);
+                          }}
                         >
                           <div>
                             <p className="font-semibold text-sm text-gray-800">
@@ -348,15 +550,33 @@ export default function Calendar({
 
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-indigo-700 font-medium">
-                              {ev.partner === "anyone" && "Partner needed"}
-                              {ev.partner === null && "Instant"}
+                              {isOwner
+                                ? "Your session"
+                                : isBooked
+                                ? "Booked"
+                                : "Partner needed"}
                             </span>
-                            {!isBooked && (
-                              <button className="text-xs font-semibold text-indigo-600">
+                            {isOwner ? (
+                              <button
+                                className="text-xs font-semibold text-red-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteSession(ev.id);
+                                }}
+                              >
+                                Delete
+                              </button>
+                            ) : !isBooked ? (
+                              <button
+                                className="text-xs font-semibold text-indigo-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleBookSlot(ev);
+                                }}
+                              >
                                 Book
                               </button>
-                            )}
-                            {isBooked && (
+                            ) : (
                               <span className="text-xs font-bold text-gray-600">
                                 Booked
                               </span>
@@ -381,6 +601,16 @@ export default function Calendar({
           onConfirm={handleConfirmBooking}
         />
       )}
+      {toast && <Toast message={toast} />}
+    </div>
+  );
+}
+
+// Simple toast notification
+function Toast({ message }: { message: string }) {
+  return (
+    <div className="fixed right-4 top-4 z-[100] rounded-md bg-gray-900 px-4 py-2 text-sm text-white shadow-lg">
+      {message}
     </div>
   );
 }
@@ -440,42 +670,7 @@ function BookingModal({
 /* =========================
     Demo data + utilities
 ========================= */
-function demoEvents(base: Date, days: number): CalendarEvent[] {
-  const out: CalendarEvent[] = [];
-  const first = startOfDay(base);
-  const types: CalendarEvent["sessionType"][] = [
-    "focus",
-    "deep-work",
-    "learning",
-  ];
-  const durations: CalendarEvent["durationMin"][] = [25, 50, 75];
-
-  for (let i = 0; i < days; i++) {
-    for (let j = 0; j < 5; j++) {
-      // Create 5 sample events per day
-      const d = addDays(first, i);
-      const startHour = 8 + Math.floor(Math.random() * 8);
-      const startMinutes = [0, 15, 30, 45][Math.floor(Math.random() * 4)];
-      const s1 = new Date(d);
-      s1.setHours(startHour, startMinutes, 0, 0);
-
-      const duration = durations[Math.floor(Math.random() * 3)];
-      const e1 = addMinutes(s1, duration);
-
-      out.push({
-        id: `seed_${i}_${j}`,
-        title: "Available Slot",
-        start: toISO(s1),
-        end: toISO(e1),
-        durationMin: duration,
-        sessionType: types[Math.floor(Math.random() * 3)],
-        partner: Math.random() > 0.6 ? null : "anyone",
-        status: "available",
-      });
-    }
-  }
-  return out;
-}
+// demoEvents removed; using real data
 
 function formatHour(h24: number) {
   const h = ((h24 + 11) % 12) + 1;
