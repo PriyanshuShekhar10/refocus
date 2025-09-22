@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
 import { NavbarLogo } from "@/components/navbar/navbar";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export default async function NotFound() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const user = data?.claims;
+  const session = await getServerSession(authOptions);
+  const isAuthed = !!session?.user;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
@@ -31,7 +31,7 @@ export default async function NotFound() {
           <Button asChild>
             <Link href="/">Go Home</Link>
           </Button>
-          {!user && (
+          {!isAuthed && (
             <Button variant="outline" asChild>
               <Link href="/auth/login">Sign In</Link>
             </Button>

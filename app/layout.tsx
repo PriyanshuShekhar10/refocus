@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Quicksand } from "next/font/google";
-import { ThemeProvider } from "next-themes";
 import "./globals.css";
+import Providers from "@/components/providers";
 // import Navbar from "@/components/navbar/navbar";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -31,14 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${quicksandSans.className} antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getDb } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 
 // GET /api/sessions?from=ISO&to=ISO
 export async function GET(req: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userErr,
-  } = await supabase.auth.getUser();
-  if (userErr || !user) {
+  const session = await getServerSession(authOptions);
+  const userId = (session as any)?.user?.id as string | undefined;
+  if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
@@ -25,42 +24,21 @@ export async function GET(req: NextRequest) {
   }
 
   // Fetch sessions in range with participants
-  const { data: sessions, error } = await supabase
-    .from("sessions")
-    .select(
-      `id, owner_id, start_time, end_time, duration_min, session_type, status,
-       session_participants ( user_id, joined_at )`
-    )
-    .gte("start_time", from)
-    .lt("start_time", to)
-    .order("start_time", { ascending: true });
-
-  if (error) {
-    const msg = (error.message || "").toLowerCase();
-    // If the schema hasn't been applied yet, avoid breaking the UI
-    if (msg.includes("relation") && msg.includes("does not exist")) {
-      return NextResponse.json({
-        currentUserId: user.id,
-        sessions: [],
-        hint: "sessions table not found",
-      });
-    }
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const db = await getDb();
+  const sessions: any[] = await db
+    .collection("sessions")
+    .find({ start_time: { $gte: new Date(from), $lt: new Date(to) } })
+    .sort({ start_time: 1 })
+    .toArray();
 
   // Collect unique user IDs (owner + participants) to hydrate with user profile info
   const userIdSet = new Set<string>();
-  (sessions ?? []).forEach(
-    (s: {
-      owner_id: string;
-      session_participants?: Array<{ user_id: string }>;
-    }) => {
-      if (s.owner_id) userIdSet.add(s.owner_id);
-      (s.session_participants ?? []).forEach((p: { user_id: string }) =>
-        userIdSet.add(p.user_id)
-      );
-    }
-  );
+  (sessions ?? []).forEach((s: any) => {
+    if (s.owner_id) userIdSet.add(String(s.owner_id));
+    (s.session_participants ?? []).forEach((p: any) =>
+      userIdSet.add(String(p.user_id))
+    );
+  });
 
   let usersById: Record<
     string,
@@ -68,46 +46,26 @@ export async function GET(req: NextRequest) {
   > = {};
   if (userIdSet.size > 0) {
     const ids = Array.from(userIdSet);
-    const { data: users, error: usersErr } = await supabase
-      .from("users")
-      .select("id, email, firstname, lastname")
-      .in("id", ids);
-    if (!usersErr && users) {
-      usersById = Object.fromEntries(
-        users.map(
-          (u: {
-            id: string;
-            email?: string;
-            firstname?: string;
-            lastname?: string;
-          }) => [
-            u.id,
-            {
-              id: u.id,
-              email: u.email,
-              firstname: u.firstname,
-              lastname: u.lastname,
-            },
-          ]
-        )
-      );
-    }
+    const users = (await db
+      .collection("users")
+      .find({ _id: { $in: ids.map((i) => new ObjectId(i)) } })
+      .project({ email: 1, name: 1 })
+      .toArray()) as any[];
+    usersById = Object.fromEntries(
+      users.map((u: any) => [
+        String(u._id),
+        {
+          id: String(u._id),
+          email: u.email,
+          firstname: u.name || undefined,
+          lastname: undefined,
+        },
+      ])
+    );
   }
 
   const now = new Date();
-  type SessionRow = {
-    id: string;
-    owner_id: string;
-    start_time: string;
-    end_time: string;
-    duration_min: 25 | 50 | 75;
-    session_type: "focus" | "deep-work" | "learning";
-    status: "available" | "booked" | "in-progress" | "completed" | null;
-    name?: string | null;
-    color?: string | null;
-    session_participants?: Array<{ user_id: string; joined_at: string }>;
-  };
-  const mapped = (sessions ?? []).map((s: SessionRow) => {
+  const mapped = (sessions ?? []).map((s: any) => {
     const start = new Date(s.start_time);
     const end = new Date(s.end_time);
     let status: "available" | "booked" | "in-progress" | "completed" =
@@ -118,7 +76,7 @@ export async function GET(req: NextRequest) {
     else if (count >= 2) status = "booked";
 
     return {
-      id: s.id,
+      id: String(s._id),
       owner_id: s.owner_id,
       start: start.toISOString(),
       end: end.toISOString(),
@@ -140,16 +98,14 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return NextResponse.json({ currentUserId: user.id, sessions: mapped });
+  return NextResponse.json({ currentUserId: userId, sessions: mapped });
 }
 
 // POST /api/sessions
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user)
+  const session = await getServerSession(authOptions);
+  const userId = (session as any)?.user?.id as string | undefined;
+  if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
@@ -168,29 +124,17 @@ export async function POST(req: NextRequest) {
   const e = new Date(s.getTime() + durationMin * 60_000);
 
   // Create session
-  const { data: created, error } = await supabase
-    .from("sessions")
-    .insert({
-      owner_id: user.id,
-      start_time: s.toISOString(),
-      end_time: e.toISOString(),
-      duration_min: durationMin,
-      session_type: sessionType,
-      status: "available",
-    })
-    .select("id")
-    .single();
-  if (error || !created) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to create" },
-      { status: 500 }
-    );
-  }
-
-  // Add owner as a participant by default
-  await supabase
-    .from("session_participants")
-    .insert({ session_id: created.id, user_id: user.id });
-
-  return NextResponse.json({ id: created.id });
+  const db = await getDb();
+  const insert = await db.collection("sessions").insertOne({
+    owner_id: userId,
+    start_time: s,
+    end_time: e,
+    duration_min: durationMin,
+    session_type: sessionType,
+    status: "available",
+    session_participants: [{ user_id: userId, joined_at: new Date() }],
+    created_at: new Date(),
+    updated_at: new Date(),
+  });
+  return NextResponse.json({ id: String(insert.insertedId) });
 }

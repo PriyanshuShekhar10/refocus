@@ -1,16 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import type { User } from "@supabase/supabase-js";
+import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import styles from "./Navbar.module.css";
 import Image from "next/image";
 import { Logo } from "@/assets/exports";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { hasEnvVars } from "@/lib/utils";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 
@@ -37,40 +33,14 @@ export const NavbarLogo = () => {
 
 // Client-side authentication component for the navbar
 function NavbarAuthButton() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    setMounted(true);
-    const supabase = createClient();
-
-    // Get initial session
-    const getSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setUser(session?.user || null);
-      setLoading(false);
-    };
-
-    getSession();
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   const logout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await signOut({ redirect: false });
     router.push("/auth/login");
   };
 
@@ -85,7 +55,7 @@ function NavbarAuthButton() {
     );
   }
 
-  if (loading) {
+  if (status === "loading") {
     return (
       <div className="flex gap-2">
         <button className={styles.loadingBtn} disabled>
@@ -95,25 +65,7 @@ function NavbarAuthButton() {
     );
   }
 
-  if (!hasEnvVars) {
-    return (
-      <div className="flex gap-4 items-center">
-        <Badge variant={"outline"} className="font-normal">
-          Supabase environment variables required
-        </Badge>
-        <div className="flex gap-2">
-          <Button size="sm" variant={"outline"} disabled>
-            Sign in
-          </Button>
-          <Button size="sm" variant={"default"} disabled>
-            Sign up
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (user) {
+  if (session?.user) {
     return (
       <div className="flex items-center gap-4">
         <Link href="/profile" className={styles.signUpBtn}>

@@ -1,30 +1,38 @@
-import { createClient } from "@/lib/supabase/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getDb } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 import { notFound } from "next/navigation";
 
 export default async function SessionJoinPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return notFound();
+  const { id } = params;
+  const session = await getServerSession(authOptions);
+  if (!(session as any)?.user?.id) return notFound();
 
-  const { data: s } = await supabase
-    .from("sessions")
-    .select("id, start_time, end_time, session_type, duration_min, name")
-    .eq("id", id)
-    .single();
+  const db = await getDb();
+  const s = await db.collection("sessions").findOne(
+    { _id: new ObjectId(id) },
+    {
+      projection: {
+        start_time: 1,
+        end_time: 1,
+        session_type: 1,
+        duration_min: 1,
+        name: 1,
+      },
+    }
+  );
   if (!s) return notFound();
 
   return (
     <div className="mx-auto max-w-2xl p-6">
       <h1 className="text-2xl font-semibold">Session</h1>
       <div className="mt-4 space-y-2">
-        <div className="text-sm text-gray-700">ID: {s.id}</div>
+        <div className="text-sm text-gray-700">ID: {id}</div>
         {s.name && <div className="text-sm text-gray-700">Name: {s.name}</div>}
         <div className="text-sm text-gray-700">
           Type: {s.session_type} • {s.duration_min} min

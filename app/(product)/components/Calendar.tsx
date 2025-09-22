@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { createClient as createSupabaseClient } from "@/lib/supabase/client";
+// Realtime removed during migration from Supabase
 
 /* =========================
     Types
@@ -281,36 +281,7 @@ export default function Calendar({
   })();
 
   // Realtime: notify owner when someone joins their session
-  useEffect(() => {
-    if (!currentUserId) return;
-    const supabase = createSupabaseClient();
-    const channel = supabase
-      .channel("notif-session-joined")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${currentUserId}`,
-        } as unknown as {
-          event: "INSERT";
-          schema: string;
-          table: string;
-          filter: string;
-        },
-        (payload: { new?: { type?: string } } | null) => {
-          if (payload?.new?.type === "session_joined") {
-            setToast("Someone joined your session");
-            setTimeout(() => setToast(null), 4000);
-          }
-        }
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentUserId]);
+  // Realtime notifications removed; consider WebSockets or Pusher here
 
   // Fetch sessions for visible range
   useEffect(() => {

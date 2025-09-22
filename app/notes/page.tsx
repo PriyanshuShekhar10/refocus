@@ -1,8 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { getDb } from "@/lib/mongodb";
 
 export default async function Page() {
-  const supabase = await createClient();
-  const { data: notes } = await supabase.from("notes").select();
+  const db = await getDb();
+  const notes = await db
+    .collection("notes")
+    .find({}, { projection: { _id: 0 } })
+    .toArray();
 
   return <pre>{JSON.stringify(notes, null, 2)}</pre>;
 }

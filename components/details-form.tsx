@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,7 +27,6 @@ export function DetailsForm({
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
@@ -39,23 +37,14 @@ export function DetailsForm({
     // }
 
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("User not authenticated");
-      const { error } = await supabase.from("users").insert([
-        {
-          id: user.id,
-          email: user.email,
-          firstname,
-          lastname,
-        },
-      ]);
-      console.log("error: ", error);
-      if (error) throw error;
+      const res = await fetch("/api/users/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstname, lastname }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || "Failed to save details");
       router.push("/profile");
-      //   router.push("/auth/sign-up/details");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {

@@ -18,36 +18,7 @@ create policy "Allow public read access" on notes
 for select
 using (true);`.trim();
 
-const server = `import { createClient } from '@/utils/supabase/server'
-
-export default async function Page() {
-  const supabase = await createClient()
-  const { data: notes } = await supabase.from('notes').select()
-
-  return <pre>{JSON.stringify(notes, null, 2)}</pre>
-}
-`.trim();
-
-const client = `'use client'
-
-import { createClient } from '@/utils/supabase/client'
-import { useEffect, useState } from 'react'
-
-export default function Page() {
-  const [notes, setNotes] = useState<any[] | null>(null)
-  const supabase = createClient()
-
-  useEffect(() => {
-    const getData = async () => {
-      const { data } = await supabase.from('notes').select()
-      setNotes(data)
-    }
-    getData()
-  }, [])
-
-  return <pre>{JSON.stringify(notes, null, 2)}</pre>
-}
-`.trim();
+// Example snippets adjusted for generic data fetching
 
 export function FetchDataSteps() {
   return (
@@ -56,18 +27,18 @@ export function FetchDataSteps() {
         <p>
           Head over to the{" "}
           <a
-            href="https://supabase.com/dashboard/project/_/editor"
+            href="#"
             className="font-bold hover:underline text-foreground/80"
             target="_blank"
             rel="noreferrer"
           >
             Table Editor
           </a>{" "}
-          for your Supabase project to create a table and insert some example
-          data. If you&apos;re stuck for creativity, you can copy and paste the
+          for your database to create a collection and insert some example data.
+          If you&apos;re stuck for creativity, you can copy and paste the
           following into the{" "}
           <a
-            href="https://supabase.com/dashboard/project/_/sql/new"
+            href="#"
             className="font-bold hover:underline text-foreground/80"
             target="_blank"
             rel="noreferrer"
@@ -81,11 +52,11 @@ export function FetchDataSteps() {
 
       <TutorialStep title="Enable Row Level Security (RLS)">
         <p>
-          Supabase enables Row Level Security (RLS) by default. To query data
-          from your <code>notes</code> table, you need to add a policy. You can
-          do this in the{" "}
+          Ensure you have proper access control for your API endpoints. from
+          your <code>notes</code> table, you need to add a policy. You can do
+          this in the{" "}
           <a
-            href="https://supabase.com/dashboard/project/_/editor"
+            href="#"
             className="font-bold hover:underline text-foreground/80"
             target="_blank"
             rel="noreferrer"
@@ -94,7 +65,7 @@ export function FetchDataSteps() {
           </a>{" "}
           or via the{" "}
           <a
-            href="https://supabase.com/dashboard/project/_/sql/new"
+            href="#"
             className="font-bold hover:underline text-foreground/80"
             target="_blank"
             rel="noreferrer"
@@ -111,48 +82,45 @@ export function FetchDataSteps() {
         <p>
           You can learn more about RLS in the{" "}
           <a
-            href="https://supabase.com/docs/guides/auth/row-level-security"
+            href="#"
             className="font-bold hover:underline text-foreground/80"
             target="_blank"
             rel="noreferrer"
           >
-            Supabase docs
+            Documentation
           </a>
           .
         </p>
       </TutorialStep>
 
-      <TutorialStep title="Query Supabase data from Next.js">
+      <TutorialStep title="Query data from Next.js">
         <p>
-          To create a Supabase client and query data from an Async Server
-          Component, create a new page.tsx file at{" "}
+          To fetch data from an Async Server Component, create a new page.tsx
+          file at{" "}
           <span className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-xs font-medium text-secondary-foreground border">
             /app/notes/page.tsx
           </span>{" "}
           and add the following.
         </p>
-        <CodeBlock code={server} />
+        <CodeBlock
+          code={`// Example server fetch with Next.js Route Handlers
+  const res = await fetch('/api/notes')
+  const notes = await res.json()`}
+        />
         <p>Alternatively, you can use a Client Component.</p>
-        <CodeBlock code={client} />
+        <CodeBlock
+          code={`// Example client fetch
+  const res = await fetch('/api/notes')
+  const data = await res.json()`}
+        />
       </TutorialStep>
 
-      <TutorialStep title="Explore the Supabase UI Library">
+      <TutorialStep title="Explore UI building blocks">
         <p>
-          Head over to the{" "}
-          <a
-            href="https://supabase.com/ui"
-            className="font-bold hover:underline text-foreground/80"
-          >
-            Supabase UI library
-          </a>{" "}
-          and try installing some blocks. For example, you can install a
-          Realtime Chat block by running:
+          Head over to a UI library and try installing some blocks. For example,
+          you can install a Realtime Chat block by running:
         </p>
-        <CodeBlock
-          code={
-            "npx shadcn@latest add https://supabase.com/ui/r/realtime-chat-nextjs.json"
-          }
-        />
+        <CodeBlock code={"npx shadcn@latest add components.json"} />
       </TutorialStep>
 
       <TutorialStep title="Build in a weekend and scale to millions!">

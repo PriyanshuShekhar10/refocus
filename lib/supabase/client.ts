@@ -1,8 +1,6 @@
-import { createBrowserClient } from "@supabase/ssr";
-
+// Deprecated: Supabase client removed after migration to NextAuth + MongoDB.
 export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!,
+  throw new Error(
+    "Supabase client is removed. Use NextAuth + MongoDB instead."
   );
 }
