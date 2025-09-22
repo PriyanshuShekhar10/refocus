@@ -1,5 +1,4 @@
 import { DetailsForm } from "@/components/details-form";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 export default async function Page() {
   console.log("rendered details page");

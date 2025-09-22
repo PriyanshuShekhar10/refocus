@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createClient();
   const {
@@ -12,7 +12,7 @@ export async function POST(
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const sessionId = params.id;
+  const { id: sessionId } = await context.params;
   // Check existing participants
   const { data: s, error: sErr } = await supabase
     .from("sessions")
@@ -34,7 +34,11 @@ export async function POST(
     );
   }
   // Do not duplicate
-  if (s.session_participants?.some((p: any) => p.user_id === user.id)) {
+  if (
+    s.session_participants?.some(
+      (p: { user_id: string }) => p.user_id === user.id
+    )
+  ) {
     return NextResponse.json({ ok: true });
   }
 
@@ -52,10 +56,13 @@ export async function POST(
 
   // Optional: send a notification via a simple table insert
   await supabase.from("notifications").insert({
-    user_id: s.owner_id,
+    user_id: s.owner_id as string,
     type: "session_joined",
-    payload: { session_id: sessionId, by_user_id: user.id },
-  } as any);
+    payload: {
+      session_id: sessionId,
+      by_user_id: user.id,
+    } as unknown as object,
+  });
 
   return NextResponse.json({ ok: true });
 }

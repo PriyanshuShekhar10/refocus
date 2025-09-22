@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { Logo } from "@/assets/exports";
 import { createClient } from "@/lib/supabase/server";
 import { NavbarLogo } from "@/components/navbar/navbar";
 

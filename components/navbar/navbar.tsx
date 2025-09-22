@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import type { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import styles from "./Navbar.module.css";
 import Image from "next/image";
@@ -21,7 +22,7 @@ export const NavbarLogo = () => {
   }, []);
 
   return (
-    <a href="/">
+    <Link href="/">
       <Image
         src={Logo}
         alt="logo"
@@ -30,13 +31,13 @@ export const NavbarLogo = () => {
           mounted && theme === "dark" && "invert brightness-0"
         )}
       />
-    </a>
+    </Link>
   );
 };
 
 // Client-side authentication component for the navbar
 function NavbarAuthButton() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -59,7 +60,7 @@ function NavbarAuthButton() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
       setLoading(false);
     });

@@ -21,12 +21,52 @@ export type CalendarEvent = {
   end: string; // ISO
   durationMin: 25 | 50 | 75;
   sessionType: "focus" | "deep-work" | "learning";
+  name?: string | null;
+  color?: string | null;
   // Simplified partner model for the frontend (kept for UI text)
   partner?: { id: string; name: string; avatarUrl?: string } | null | "anyone";
   // Status to manage the booking flow
   status: "available" | "booked" | "in-progress" | "completed";
   owner_id?: string;
-  participants?: { user_id: string; joined_at: string }[];
+  owner?: {
+    id: string;
+    email?: string;
+    firstname?: string;
+    lastname?: string;
+  } | null;
+  participants?: {
+    user_id: string;
+    joined_at: string;
+    email?: string;
+    firstname?: string;
+    lastname?: string;
+  }[];
+};
+
+// Shape of sessions returned from /api/sessions endpoint
+type FetchedSession = {
+  id: string;
+  start: string;
+  end: string;
+  durationMin: 25 | 50 | 75;
+  sessionType: "focus" | "deep-work" | "learning";
+  status: "available" | "booked" | "in-progress" | "completed";
+  name?: string | null;
+  color?: string | null;
+  owner_id?: string;
+  owner?: {
+    id: string;
+    email?: string;
+    firstname?: string;
+    lastname?: string;
+  } | null;
+  participants?: Array<{
+    user_id: string;
+    joined_at: string;
+    email?: string;
+    firstname?: string;
+    lastname?: string;
+  }>;
 };
 
 export type PresenceDot = {
@@ -132,6 +172,8 @@ export default function Calendar({
   const [durationFilter, setDurationFilter] = useState<number[]>([25, 50, 75]);
   const [bookingModalEvent, setBookingModalEvent] =
     useState<CalendarEvent | null>(null);
+  const [detailsModalEvent, setDetailsModalEvent] =
+    useState<CalendarEvent | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [createDuration, setCreateDuration] = useState<25 | 50 | 75>(25);
   const [toast, setToast] = useState<string | null>(null);
@@ -165,6 +207,29 @@ export default function Calendar({
       setEvents((prev) =>
         prev.map((ev) => (ev.id === id ? { ...ev, status: "available" } : ev))
       );
+      alert((e as Error).message);
+    }
+  };
+
+  // Update session fields (name/color) then update local state
+  const handleUpdateSessionMeta = async (
+    id: string,
+    patch: { name?: string | null; color?: string | null }
+  ) => {
+    try {
+      const res = await fetch(`/api/sessions/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok)
+        throw new Error((await res.json()).error || "Failed to update");
+      setEvents((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, ...patch } : e))
+      );
+      setToast("Session updated");
+      setTimeout(() => setToast(null), 2000);
+    } catch (e) {
       alert((e as Error).message);
     }
   };
@@ -228,8 +293,13 @@ export default function Calendar({
           schema: "public",
           table: "notifications",
           filter: `user_id=eq.${currentUserId}`,
-        } as any,
-        (payload: any) => {
+        } as unknown as {
+          event: "INSERT";
+          schema: string;
+          table: string;
+          filter: string;
+        },
+        (payload: { new?: { type?: string } } | null) => {
           if (payload?.new?.type === "session_joined") {
             setToast("Someone joined your session");
             setTimeout(() => setToast(null), 4000);
@@ -254,20 +324,33 @@ export default function Calendar({
             from
           )}&to=${encodeURIComponent(to)}`
         );
-        if (!res.ok) throw new Error("Failed to load sessions");
-        const data = await res.json();
+        let data: any = null;
+        try {
+          data = await res.json();
+        } catch {}
+        if (!res.ok) {
+          console.error("/api/sessions failed", data?.error || res.statusText);
+          setToast("Could not load sessions");
+          setTimeout(() => setToast(null), 3000);
+          return;
+        }
         if (cancelled) return;
         setCurrentUserId(data.currentUserId ?? null);
-        const mapped: CalendarEvent[] = (data.sessions ?? []).map((s: any) => ({
-          id: s.id,
-          start: s.start,
-          end: s.end,
-          durationMin: s.durationMin,
-          sessionType: s.sessionType,
-          status: s.status,
-          owner_id: s.owner_id,
-          participants: s.participants,
-        }));
+        const mapped: CalendarEvent[] = (data.sessions ?? []).map(
+          (s: FetchedSession) => ({
+            id: s.id,
+            start: s.start,
+            end: s.end,
+            durationMin: s.durationMin,
+            sessionType: s.sessionType,
+            status: s.status,
+            name: s.name ?? null,
+            color: s.color ?? null,
+            owner_id: s.owner_id,
+            owner: s.owner,
+            participants: s.participants,
+          })
+        );
         setInternalEvents(mapped);
       } catch (e) {
         console.error(e);
@@ -277,7 +360,7 @@ export default function Calendar({
     return () => {
       cancelled = true;
     };
-  }, [startDate, visibleDays]);
+  }, [startDate, visibleDays, days]);
 
   const createSession = async (start: Date, durationMin: 25 | 50 | 75) => {
     const tempId = `temp_${Date.now()}`;
@@ -517,6 +600,22 @@ export default function Calendar({
                       currentUserId &&
                       ev.owner_id === currentUserId;
 
+                    // Determine tooltip for owner on booked sessions: show other participant's name/email
+                    const tooltip = (() => {
+                      if (!(isOwner && isBooked)) return null;
+                      const others = (ev.participants || []).filter(
+                        (p) => p.user_id !== currentUserId
+                      );
+                      const other = others[0];
+                      if (!other) return null;
+                      const name = [other.firstname, other.lastname]
+                        .filter(Boolean)
+                        .join(" ");
+                      const label = name || other.email || other.user_id;
+                      const email = other.email;
+                      return { label, email };
+                    })();
+
                     return (
                       <div
                         key={ev.id}
@@ -524,15 +623,27 @@ export default function Calendar({
                         style={{ top }}
                       >
                         <div
-                          style={{ height }}
+                          style={{
+                            height,
+                            backgroundColor:
+                              ev.color || (isBooked ? "#e5e7eb" : "#eef2ff"),
+                          }}
                           className={`rounded-lg p-2 flex flex-col justify-between ${
                             isBooked
-                              ? "bg-gray-200 border border-gray-300"
-                              : "bg-indigo-50 border border-indigo-200 hover:border-indigo-400 cursor-pointer"
+                              ? "border border-gray-300"
+                              : "border border-indigo-200 hover:border-indigo-400 cursor-pointer"
                           }`}
+                          title={
+                            tooltip
+                              ? `${tooltip.label}${
+                                  tooltip.email ? `\n${tooltip.email}` : ""
+                                }`
+                              : undefined
+                          }
                           onClick={(evt) => {
                             evt.stopPropagation();
                             if (!isBooked && !isOwner) handleBookSlot(ev);
+                            else setDetailsModalEvent(ev);
                           }}
                         >
                           <div>
@@ -551,7 +662,9 @@ export default function Calendar({
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-indigo-700 font-medium">
                               {isOwner
-                                ? "Your session"
+                                ? ev.name
+                                  ? ev.name
+                                  : "Your session"
                                 : isBooked
                                 ? "Booked"
                                 : "Partner needed"}
@@ -599,6 +712,18 @@ export default function Calendar({
           event={bookingModalEvent}
           onClose={() => setBookingModalEvent(null)}
           onConfirm={handleConfirmBooking}
+        />
+      )}
+      {/* --- NEW: Details Modal (scaffold) --- */}
+      {detailsModalEvent && (
+        <SessionDetailsModal
+          event={detailsModalEvent}
+          onClose={() => setDetailsModalEvent(null)}
+          currentUserId={currentUserId}
+          onUpdate={(patch) =>
+            detailsModalEvent &&
+            handleUpdateSessionMeta(detailsModalEvent.id, patch)
+          }
         />
       )}
       {toast && <Toast message={toast} />}
@@ -667,13 +792,182 @@ function BookingModal({
   );
 }
 
-/* =========================
-    Demo data + utilities
-========================= */
-// demoEvents removed; using real data
-
 function formatHour(h24: number) {
   const h = ((h24 + 11) % 12) + 1;
   const suffix = h24 < 12 ? "AM" : "PM";
   return `${h} ${suffix}`;
+}
+
+// --- NEW: Session Details Modal (basic scaffold) ---
+function SessionDetailsModal({
+  event,
+  onClose,
+  currentUserId,
+  onUpdate,
+}: {
+  event: CalendarEvent;
+  onClose: () => void;
+  currentUserId: string | null;
+  onUpdate: (patch: { name?: string | null; color?: string | null }) => void;
+}) {
+  const participants = event.participants || [];
+  const other = participants.find((p) => p.user_id !== currentUserId);
+  const otherName = other
+    ? [other.firstname, other.lastname].filter(Boolean).join(" ") ||
+      other.email ||
+      other.user_id
+    : undefined;
+  const isOwner =
+    event.owner_id && currentUserId && event.owner_id === currentUserId;
+  const [name, setName] = React.useState<string>(event.name || "");
+  const [color, setColor] = React.useState<string>(event.color || "");
+  const [saving, setSaving] = React.useState<boolean>(false);
+  const [friendReqStatus, setFriendReqStatus] = React.useState<string | null>(
+    null
+  );
+  const isColorValid = React.useMemo(() => {
+    if (!color) return true;
+    return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color);
+  }, [color]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onUpdate({ name: name || null, color: color || null });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const sendFriendRequest = async () => {
+    if (!other?.user_id) return;
+    try {
+      const res = await fetch("/api/friends/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to_user_id: other.user_id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send request");
+      setFriendReqStatus("Request sent");
+      setTimeout(() => setFriendReqStatus(null), 2000);
+    } catch (e) {
+      setFriendReqStatus((e as Error).message);
+      setTimeout(() => setFriendReqStatus(null), 3000);
+    }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+        <div className="flex items-start justify-between">
+          <h2 className="text-xl font-bold">Session details</h2>
+          <button onClick={onClose} className="text-sm text-gray-500">
+            Close
+          </button>
+        </div>
+        <div className="mt-4 space-y-2 text-sm text-gray-700">
+          <div>
+            <span className="font-medium">When:</span>
+            <div className="mt-1 rounded bg-gray-50 p-2">
+              {new Date(event.start).toLocaleString()} →{" "}
+              {new Date(event.end).toLocaleTimeString()}
+            </div>
+          </div>
+          <div>
+            <span className="font-medium">Type:</span> {event.sessionType} •{" "}
+            {event.durationMin} min
+          </div>
+          {isOwner && (
+            <div className="grid grid-cols-1 gap-3 pt-2">
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Session name
+                </label>
+                <input
+                  className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                  placeholder="Optional name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Color
+                </label>
+                <div className="mt-1 flex items-center gap-2">
+                  <input
+                    type="color"
+                    className="h-9 w-12 cursor-pointer rounded-md border p-1"
+                    value={color || "#eef2ff"}
+                    onChange={(e) => setColor(e.target.value)}
+                    title="Pick a color"
+                  />
+                  <input
+                    className={`w-40 rounded-md border px-3 py-2 text-sm ${
+                      isColorValid ? "border-gray-300" : "border-red-500"
+                    }`}
+                    placeholder="#eef2ff"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                  />
+                </div>
+                {!isColorValid && (
+                  <p className="mt-1 text-xs text-red-600">
+                    Enter a valid hex color like #abc or #aabbcc
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          {otherName && (
+            <div>
+              <span className="font-medium">Partner:</span> {otherName}
+              {other?.email ? (
+                <div className="text-xs text-gray-500">{other.email}</div>
+              ) : null}
+            </div>
+          )}
+          <div className="pt-2">
+            <span className="font-medium">Join link:</span>
+            <div className="mt-1 text-sm break-all">
+              <a
+                className="text-indigo-600 hover:underline"
+                href={`/sessions/${event.id}`}
+              >
+                /sessions/{event.id}
+              </a>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
+          <div className="text-sm text-green-700">{friendReqStatus}</div>
+          <div className="flex gap-2">
+            {other && (
+              <button
+                onClick={sendFriendRequest}
+                className="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-700 hover:bg-indigo-100"
+              >
+                Send friend request
+              </button>
+            )}
+            {isOwner && (
+              <button
+                onClick={handleSave}
+                disabled={saving || !isColorValid}
+                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="rounded-md border px-4 py-2 text-sm"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

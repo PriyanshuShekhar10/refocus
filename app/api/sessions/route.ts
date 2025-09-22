@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const { data: sessions, error } = await supabase
     .from("sessions")
     .select(
-      `id, owner_id, start_time, end_time, duration_min, session_type, status, created_at, updated_at,
+      `id, owner_id, start_time, end_time, duration_min, session_type, status,
        session_participants ( user_id, joined_at )`
     )
     .gte("start_time", from)
@@ -36,11 +36,78 @@ export async function GET(req: NextRequest) {
     .order("start_time", { ascending: true });
 
   if (error) {
+    const msg = (error.message || "").toLowerCase();
+    // If the schema hasn't been applied yet, avoid breaking the UI
+    if (msg.includes("relation") && msg.includes("does not exist")) {
+      return NextResponse.json({
+        currentUserId: user.id,
+        sessions: [],
+        hint: "sessions table not found",
+      });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // Collect unique user IDs (owner + participants) to hydrate with user profile info
+  const userIdSet = new Set<string>();
+  (sessions ?? []).forEach(
+    (s: {
+      owner_id: string;
+      session_participants?: Array<{ user_id: string }>;
+    }) => {
+      if (s.owner_id) userIdSet.add(s.owner_id);
+      (s.session_participants ?? []).forEach((p: { user_id: string }) =>
+        userIdSet.add(p.user_id)
+      );
+    }
+  );
+
+  let usersById: Record<
+    string,
+    { id: string; email?: string; firstname?: string; lastname?: string }
+  > = {};
+  if (userIdSet.size > 0) {
+    const ids = Array.from(userIdSet);
+    const { data: users, error: usersErr } = await supabase
+      .from("users")
+      .select("id, email, firstname, lastname")
+      .in("id", ids);
+    if (!usersErr && users) {
+      usersById = Object.fromEntries(
+        users.map(
+          (u: {
+            id: string;
+            email?: string;
+            firstname?: string;
+            lastname?: string;
+          }) => [
+            u.id,
+            {
+              id: u.id,
+              email: u.email,
+              firstname: u.firstname,
+              lastname: u.lastname,
+            },
+          ]
+        )
+      );
+    }
+  }
+
   const now = new Date();
-  const mapped = (sessions ?? []).map((s) => {
+  type SessionRow = {
+    id: string;
+    owner_id: string;
+    start_time: string;
+    end_time: string;
+    duration_min: 25 | 50 | 75;
+    session_type: "focus" | "deep-work" | "learning";
+    status: "available" | "booked" | "in-progress" | "completed" | null;
+    name?: string | null;
+    color?: string | null;
+    session_participants?: Array<{ user_id: string; joined_at: string }>;
+  };
+  const mapped = (sessions ?? []).map((s: SessionRow) => {
     const start = new Date(s.start_time);
     const end = new Date(s.end_time);
     let status: "available" | "booked" | "in-progress" | "completed" =
@@ -57,7 +124,18 @@ export async function GET(req: NextRequest) {
       end: end.toISOString(),
       durationMin: s.duration_min as 25 | 50 | 75,
       sessionType: s.session_type as "focus" | "deep-work" | "learning",
-      participants: s.session_participants ?? [],
+      name: s.name ?? null,
+      color: s.color ?? null,
+      participants: (s.session_participants ?? []).map(
+        (p: { user_id: string; joined_at: string }) => ({
+          user_id: p.user_id,
+          joined_at: p.joined_at,
+          email: usersById[p.user_id]?.email,
+          firstname: usersById[p.user_id]?.firstname,
+          lastname: usersById[p.user_id]?.lastname,
+        })
+      ),
+      owner: usersById[s.owner_id] ?? null,
       status,
     };
   });
