@@ -4,7 +4,6 @@ export const config = {
   matcher: [
     "/(product)/(.*)",
     "/profile/:path*",
-    "/notes/:path*",
     "/features/:path*",
     // Explicitly protect API namespaces (avoid regex lookaheads which are unsupported)
     "/api/friends/:path*",

@@ -796,6 +796,30 @@ function SessionDetailsModal({
   const [friendReqStatus, setFriendReqStatus] = React.useState<string | null>(
     null
   );
+  const [isFriend, setIsFriend] = React.useState<boolean>(false);
+  React.useEffect(() => {
+    let cancelled = false;
+    const checkFriend = async () => {
+      if (!other?.user_id) {
+        if (!cancelled) setIsFriend(false);
+        return;
+      }
+      try {
+        const res = await fetch("/api/friends");
+        if (!res.ok) return;
+        const data = await res.json();
+        const list: Array<{ user_id: string }> = data.friends || [];
+        if (!cancelled)
+          setIsFriend(list.some((f) => f.user_id === other.user_id));
+      } catch {
+        // ignore — if it fails, we leave button visible
+      }
+    };
+    checkFriend();
+    return () => {
+      cancelled = true;
+    };
+  }, [other?.user_id]);
   const isColorValid = React.useMemo(() => {
     if (!color) return true;
     return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color);
@@ -913,7 +937,7 @@ function SessionDetailsModal({
         <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
           <div className="text-sm text-green-700">{friendReqStatus}</div>
           <div className="flex gap-2">
-            {other && (
+            {other && !isFriend && (
               <button
                 onClick={sendFriendRequest}
                 className="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-700 hover:bg-indigo-100"

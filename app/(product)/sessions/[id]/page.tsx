@@ -3,6 +3,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { notFound } from "next/navigation";
+import ClientCall from "./ClientCall";
 
 export default async function SessionJoinPage({
   params,
@@ -41,9 +42,7 @@ export default async function SessionJoinPage({
           When: {new Date(s.start_time).toLocaleString()}
         </div>
       </div>
-      <p className="mt-6 text-gray-600">
-        This is a placeholder join page. Embed your meeting provider here.
-      </p>
+      <ClientCall sessionId={id} />
     </div>
   );
 }

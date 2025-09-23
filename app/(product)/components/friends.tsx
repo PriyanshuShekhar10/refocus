@@ -7,10 +7,21 @@ type FriendRequest = {
   to_user_id: string;
   status: "pending" | "accepted" | "declined";
   created_at: string;
+  from_user_email?: string;
+  to_user_email?: string;
+};
+
+type Friend = {
+  user_id: string;
+  email?: string;
+  name?: string | null;
+  since?: string;
 };
 
 export default function Friends() {
   const [incoming, setIncoming] = useState<FriendRequest[]>([]);
+  const [outgoing, setOutgoing] = useState<FriendRequest[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,10 +29,25 @@ export default function Friends() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/friends/requests?type=incoming");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load");
-      setIncoming(data.requests || []);
+      const [resIncoming, resOutgoing, resFriends] = await Promise.all([
+        fetch("/api/friends/requests?type=incoming&status=pending"),
+        fetch("/api/friends/requests?type=outgoing&status=pending"),
+        fetch("/api/friends"),
+      ]);
+      const [dataIncoming, dataOutgoing, dataFriends] = await Promise.all([
+        resIncoming.json(),
+        resOutgoing.json(),
+        resFriends.json(),
+      ]);
+      if (!resIncoming.ok)
+        throw new Error(dataIncoming.error || "Failed to load incoming");
+      if (!resOutgoing.ok)
+        throw new Error(dataOutgoing.error || "Failed to load outgoing");
+      if (!resFriends.ok)
+        throw new Error(dataFriends.error || "Failed to load friends");
+      setIncoming(dataIncoming.requests || []);
+      setOutgoing(dataOutgoing.requests || []);
+      setFriends(dataFriends.friends || []);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -60,7 +86,12 @@ export default function Friends() {
           incoming.map((r) => (
             <div key={r.id} className="flex items-center justify-between p-3">
               <div className="text-sm">
-                From: <span className="font-mono">{r.from_user_id}</span>
+                From:{" "}
+                {r.from_user_email ? (
+                  <span className="font-mono">{r.from_user_email}</span>
+                ) : (
+                  <span className="font-mono">{r.from_user_id}</span>
+                )}
                 <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs uppercase">
                   {r.status}
                 </span>
@@ -81,6 +112,50 @@ export default function Friends() {
                   </button>
                 </div>
               )}
+            </div>
+          ))
+        )}
+      </div>
+
+      <h2 className="text-lg font-semibold">Outgoing requests</h2>
+      <div className="divide-y rounded-md border">
+        {outgoing.length === 0 ? (
+          <div className="p-4 text-sm text-gray-500">No outgoing requests</div>
+        ) : (
+          outgoing.map((r) => (
+            <div key={r.id} className="flex items-center justify-between p-3">
+              <div className="text-sm">
+                To:{" "}
+                {r.to_user_email ? (
+                  <span className="font-mono">{r.to_user_email}</span>
+                ) : (
+                  <span className="font-mono">{r.to_user_id}</span>
+                )}
+                <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs uppercase">
+                  {r.status}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <h2 className="text-lg font-semibold">Friends</h2>
+      <div className="divide-y rounded-md border">
+        {friends.length === 0 ? (
+          <div className="p-4 text-sm text-gray-500">No friends yet</div>
+        ) : (
+          friends.map((f) => (
+            <div
+              key={f.user_id}
+              className="flex items-center justify-between p-3"
+            >
+              <div className="text-sm">
+                <span className="font-mono">{f.email || f.user_id}</span>
+                {f.name ? (
+                  <span className="ml-2 text-gray-500">({f.name})</span>
+                ) : null}
+              </div>
             </div>
           ))
         )}

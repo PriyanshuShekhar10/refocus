@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { InfoIcon } from "lucide-react";
-import { FetchDataSteps } from "@/components/tutorial/fetch-data-steps";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
@@ -43,10 +42,7 @@ export default async function ProtectedPage() {
           )}
         </pre>
       </div>
-      <div>
-        <h2 className="font-bold text-2xl mb-4">Next steps</h2>
-        <FetchDataSteps />
-      </div>
+      {/* Removed tutorial section for production cleanup */}
     </div>
   );
 }
