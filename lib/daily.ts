@@ -36,9 +36,9 @@ export async function createOrGetDailyRoom(sessionId: string) {
     const text = await roomRes.text();
     throw new Error(`Daily room error: ${roomRes.status} ${text}`);
   }
-  const room = await roomRes.json();
+  const room = (await roomRes.json()) as Record<string, unknown>;
   return { room, roomName, domain } as {
-    room: any;
+    room: Record<string, unknown>;
     roomName: string;
     domain: string;
   };

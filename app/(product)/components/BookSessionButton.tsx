@@ -53,7 +53,7 @@ export default function BookSessionButton({
     const mm = pad(ist.getMonth() + 1);
     const dd = pad(ist.getDate());
 
-    let hour24 = ist.getHours(); // 0-23
+    const hour24 = ist.getHours(); // 0-23
     const minute = [0, 15, 30, 45].includes(ist.getMinutes())
       ? ist.getMinutes()
       : 0;

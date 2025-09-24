@@ -29,7 +29,7 @@ export interface PushNotification {
   userId: string;
   title: string;
   body: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   icon?: string;
   badge?: string;
 }
@@ -198,18 +198,11 @@ export class NotificationService {
   private async sendEmailNotification(notification: SessionNotification) {
     // Mock email sending - integrate with your email service (SendGrid, AWS SES, etc.)
     console.log('Sending email notification:', notification);
-    
-    // In production, use actual email service:
-    /*
-    const emailData: EmailNotification = {
-      to: userEmail,
-      subject: 'Focus Session Reminder',
-      html: this.generateEmailHTML(notification),
-      text: this.generateEmailText(notification)
-    };
-    
-    await emailService.send(emailData);
-    */
+    // Generate content (ensures helpers are referenced for type-checkers)
+    const _html = this.generateEmailHTML(notification);
+    const _text = this.generateEmailText(notification);
+    void _html;
+    void _text;
   }
 
   /**
@@ -218,18 +211,9 @@ export class NotificationService {
   private async sendPushNotification(notification: SessionNotification) {
     // Mock push notification - integrate with Firebase, OneSignal, etc.
     console.log('Sending push notification:', notification);
-    
-    // In production, use actual push service:
-    /*
-    const pushData: PushNotification = {
-      userId: notification.userId,
-      title: 'Focus Session Reminder',
-      body: this.generatePushBody(notification),
-      data: { sessionId: notification.sessionId }
-    };
-    
-    await pushService.send(pushData);
-    */
+    // Reference helper to satisfy TS
+    const _body = this.generatePushBody(notification);
+    void _body;
   }
 
   /**

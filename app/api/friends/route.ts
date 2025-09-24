@@ -1,20 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
 // GET /api/friends - list accepted friends for current user with emails
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const session = await getServerSession(authOptions);
-  const userId = (session as any)?.user?.id as string | undefined;
+  const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const db = await getDb();
   // Friends are accepted friend_requests where current user is either side
   const requests = await db
-    .collection("friend_requests")
+    .collection<{ _id: ObjectId; from_user_id: string; to_user_id: string; status: string; created_at: Date; responded_at?: Date; updated_at?: Date }>(
+      "friend_requests"
+    )
     .find({
       status: "accepted",
       $or: [{ from_user_id: userId }, { to_user_id: userId }],
@@ -23,7 +25,7 @@ export async function GET(_req: NextRequest) {
 
   const otherIds = Array.from(
     new Set(
-      requests.map((r: any) =>
+      requests.map((r) =>
         r.from_user_id === userId ? r.to_user_id : r.from_user_id
       )
     )
@@ -32,12 +34,12 @@ export async function GET(_req: NextRequest) {
   let usersById: Record<string, { email?: string; name?: string }> = {};
   if (otherIds.length > 0) {
     const users = await db
-      .collection("users")
+      .collection<{ _id: ObjectId; email?: string; name?: string }>("users")
       .find({ _id: { $in: otherIds.map((id: string) => new ObjectId(id)) } })
       .project({ email: 1, name: 1 })
       .toArray();
     usersById = Object.fromEntries(
-      users.map((u: any) => [String(u._id), { email: u.email, name: u.name }])
+      users.map((u) => [String(u._id), { email: u.email, name: u.name }])
     );
   }
 
