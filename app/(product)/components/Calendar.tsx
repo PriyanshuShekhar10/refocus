@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import BookSessionButton from "./BookSessionButton";
 // Realtime removed during migration from Supabase
 
 /* =========================
@@ -587,6 +588,14 @@ export default function Calendar({
       <aside className="w-72 shrink-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900">Book a Session</h3>
         <div className="mt-6">
+          <BookSessionButton
+            defaultDurationMin={createDuration}
+            onConfirm={(start, quiet) => {
+              // Reuse your existing creator (keeps API + optimistic UI consistent)
+              createSession(start, createDuration, quiet);
+            }}
+          />
+
           <p className="text-xs text-gray-500">Duration (minutes)</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {[25, 50, 75].map((m) => (
