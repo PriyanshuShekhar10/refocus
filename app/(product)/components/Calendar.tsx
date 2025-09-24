@@ -271,8 +271,10 @@ export default function Calendar({
     yPx: number; // snapped top relative to day column
     label: string; // time label
     previewTop: number; // same as yPx
+    overEvent?: boolean; // whether cursor is over an existing event
   }>(null);
   const lastMousePos = useRef<{ x: number; y: number } | null>(null);
+  const autoScrolledKeyRef = useRef<string | null>(null);
 
   const goToday = () => setStartDate(startOfDay(new Date()));
   const shiftRange = (deltaDays: number) =>
@@ -525,13 +527,47 @@ export default function Calendar({
       hour12: false,
       timeZone: "Asia/Kolkata",
     });
+    // Determine if the cursor is over an existing event on this day
+    const dayKey = ymd(d);
+    const overEvent = (eventsByDay[dayKey] ?? []).some((ev) => {
+      const s = new Date(ev.start);
+      const startMin = minutesBetween(startOfDay(s), s);
+      const endMin = startMin + ev.durationMin;
+      return minutesOfDay >= startMin && minutesOfDay < endMin;
+    });
     const topPx = minuteToPx(minutesOfDay - startHour * 60);
-    setHoverState({ dayIndex, yPx: topPx, label, previewTop: topPx });
+    setHoverState({
+      dayIndex,
+      yPx: topPx,
+      label,
+      previewTop: topPx,
+      overEvent,
+    });
   };
   const handleGridMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
     lastMousePos.current = { x: e.clientX, y: e.clientY };
     computeHoverFromClient(e.clientX, e.clientY);
   };
+
+  // Auto-scroll to current time once per visible range
+  useEffect(() => {
+    if (!gridRef.current) return;
+    const day0 = days[0];
+    const dayLast = days[days.length - 1];
+    if (!day0 || !dayLast) return;
+    const start = startOfDay(day0).getTime();
+    const end = addDays(startOfDay(dayLast), 1).getTime();
+    const nowMs = now.getTime();
+    const todayVisible = nowMs >= start && nowMs <= end;
+    if (!todayVisible) return;
+    if (nowLine == null) return;
+    const key = `${ymd(day0)}-${ymd(dayLast)}`;
+    if (autoScrolledKeyRef.current === key) return;
+    const scroller = gridRef.current;
+    const target = Math.max(0, nowLine - scroller.clientHeight / 2);
+    scroller.scrollTop = target;
+    autoScrolledKeyRef.current = key;
+  }, [days, nowLine, now]);
   const handleGridMouseLeave = () => {
     setHoverState(null);
     lastMousePos.current = null;
@@ -693,17 +729,19 @@ export default function Calendar({
                     </div>
                   </div>
                 )}
-                {hoverState && hoverState.dayIndex === dayIdx && (
-                  <div
-                    className="pointer-events-none absolute inset-x-2 z-20"
-                    style={{ top: hoverState.previewTop }}
-                  >
+                {hoverState &&
+                  hoverState.dayIndex === dayIdx &&
+                  !hoverState.overEvent && (
                     <div
-                      className="rounded-lg border border-indigo-400/70 bg-indigo-500/10"
-                      style={{ height: minuteToPx(createDuration) }}
-                    />
-                  </div>
-                )}
+                      className="pointer-events-none absolute inset-x-2 z-20"
+                      style={{ top: hoverState.previewTop }}
+                    >
+                      <div
+                        className="rounded-lg border border-indigo-400/70 bg-indigo-500/10"
+                        style={{ height: minuteToPx(createDuration) }}
+                      />
+                    </div>
+                  )}
 
                 {/* Events */}
                 <div className="absolute inset-0">
@@ -713,7 +751,9 @@ export default function Calendar({
                       minutesBetween(startOfDay(s), s) - startHour * 60
                     );
                     const height = minuteToPx(ev.durationMin);
-                    const isBooked = ev.status === "booked";
+                    const isBooked =
+                      ev.status === "booked" ||
+                      (ev.participants?.length ?? 0) >= 2;
                     const isOwner =
                       ev.owner_id &&
                       currentUserId &&
@@ -734,6 +774,14 @@ export default function Calendar({
                       const email = other.email;
                       return { label, email };
                     })();
+
+                    const otherQuiet = isBooked
+                      ? Boolean(
+                          (ev.participants || []).find(
+                            (p) => p.user_id !== currentUserId
+                          )?.quiet
+                        )
+                      : false;
 
                     return (
                       <div
@@ -781,14 +829,19 @@ export default function Calendar({
 
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-indigo-700 font-medium">
-                              {isOwner
+                              {ev.name
                                 ? ev.name
-                                  ? ev.name
-                                  : "Your session"
+                                : isOwner
+                                ? "Your session"
                                 : isBooked
                                 ? "Booked"
                                 : "Partner needed"}
                             </span>
+                            {isBooked && otherQuiet && (
+                              <span className="ml-2 inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700">
+                                🔇 Quiet
+                              </span>
+                            )}
                             {isOwner ? (
                               <button
                                 className="text-xs font-semibold text-red-600"
@@ -1060,7 +1113,9 @@ function SessionDetailsModal({
 }) {
   const participants = event.participants || [];
   const other = participants.find((p) => p.user_id !== currentUserId);
-  const quietLabel = other?.quiet ? "Yes" : "No";
+  const self = participants.find((p) => p.user_id === currentUserId);
+  const selfQuiet = Boolean(self?.quiet);
+  const partnerQuiet = Boolean(other?.quiet);
   const otherName = other
     ? [other.firstname, other.lastname].filter(Boolean).join(" ") ||
       other.email ||
@@ -1203,8 +1258,9 @@ function SessionDetailsModal({
               {other?.email ? (
                 <div className="text-xs text-gray-500">{other.email}</div>
               ) : null}
-              <div className="text-xs text-gray-500 mt-1">
-                Quiet session: {quietLabel}
+              <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                <div>You selected quiet: {selfQuiet ? "Yes" : "No"}</div>
+                <div>Partner selected quiet: {partnerQuiet ? "Yes" : "No"}</div>
               </div>
             </div>
           )}

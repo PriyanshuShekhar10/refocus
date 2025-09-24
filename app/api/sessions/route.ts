@@ -112,17 +112,13 @@ export async function GET(req: NextRequest) {
   const mapped = (sessions ?? []).map((s) => {
     const start = new Date(s.start_time);
     const end = new Date(s.end_time);
-    let status: "available" | "booked" | "in-progress" | "completed" =
-      s.status === "available" ||
-      s.status === "booked" ||
-      s.status === "in-progress" ||
-      s.status === "completed"
-        ? s.status
-        : "available";
     const count = (s.session_participants?.length ?? 0) as number;
+    // Compute status deterministically from time and participants
+    let status: "available" | "booked" | "in-progress" | "completed";
     if (now > end) status = "completed";
     else if (now >= start && now <= end) status = "in-progress";
     else if (count >= 2) status = "booked";
+    else status = "available";
 
     return {
       id: String(s._id),
