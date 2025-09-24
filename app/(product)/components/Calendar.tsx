@@ -39,7 +39,9 @@ export type CalendarEvent = {
     joined_at: string;
     email?: string;
     firstname?: string;
+    confirmVariant?: "danger" | "success";
     lastname?: string;
+    quiet?: boolean;
   }[];
 };
 
@@ -120,14 +122,14 @@ const minutesBetween = (a: Date, b: Date) =>
     Calendar Component
 ========================= */
 export default function Calendar({
-  startHour = 7,
-  endHour = 22,
+  startHour = 0,
+  endHour = 24,
   stepMinutes = 15,
   visibleDays = 3,
   startDate: startDateProp,
   events: eventsProp,
   // presence,
-  locale = "en-US",
+  locale = "en-IN",
   onEventsChange,
   className = "",
 }: CalendarProps) {
@@ -172,10 +174,25 @@ export default function Calendar({
   const [durationFilter, setDurationFilter] = useState<number[]>([25, 50, 75]);
   const [bookingModalEvent, setBookingModalEvent] =
     useState<CalendarEvent | null>(null);
+  const [bookingQuiet, setBookingQuiet] = useState<boolean>(false);
   const [detailsModalEvent, setDetailsModalEvent] =
     useState<CalendarEvent | null>(null);
+  const [confirmModal, setConfirmModal] = useState<null | {
+    title: string;
+    description?: React.ReactNode;
+    confirmText?: string;
+    cancelText?: string;
+    confirmVariant?: "danger" | "success";
+    onConfirm: () => void | Promise<void>;
+  }>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [createDuration, setCreateDuration] = useState<25 | 50 | 75>(25);
+  const [createQuiet, setCreateQuiet] = useState<boolean>(false);
+  const [createModalInfo, setCreateModalInfo] = useState<null | {
+    start: Date;
+    preferred: 25 | 50 | 75;
+    whenIst: string;
+  }>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const handleDurationFilterChange = (duration: number) => {
@@ -187,23 +204,28 @@ export default function Calendar({
   };
 
   const handleBookSlot = (event: CalendarEvent) => {
+    setBookingQuiet(false);
     setBookingModalEvent(event);
   };
 
   const handleConfirmBooking = async () => {
     if (!bookingModalEvent) return;
     const id = bookingModalEvent.id;
-    // Optimistic update
+    // Optimistic update: mark as booked locally
     setEvents((prev) =>
       prev.map((e) => (e.id === id ? { ...e, status: "booked" } : e))
     );
     setBookingModalEvent(null);
     try {
-      const res = await fetch(`/api/sessions/${id}/join`, { method: "POST" });
+      const res = await fetch(`/api/sessions/${id}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quiet: bookingQuiet }),
+      });
       if (!res.ok)
         throw new Error((await res.json()).error || "Failed to join");
     } catch (e) {
-      // revert
+      // revert on failure
       setEvents((prev) =>
         prev.map((ev) => (ev.id === id ? { ...ev, status: "available" } : ev))
       );
@@ -244,6 +266,13 @@ export default function Calendar({
   const gridRef = useRef<HTMLDivElement | null>(null);
   const rowPx = 28;
   const minuteToPx = (m: number) => (m / stepMinutes) * rowPx;
+  const [hoverState, setHoverState] = useState<null | {
+    dayIndex: number;
+    yPx: number; // snapped top relative to day column
+    label: string; // time label
+    previewTop: number; // same as yPx
+  }>(null);
+  const lastMousePos = useRef<{ x: number; y: number } | null>(null);
 
   const goToday = () => setStartDate(startOfDay(new Date()));
   const shiftRange = (deltaDays: number) =>
@@ -295,19 +324,25 @@ export default function Calendar({
             from
           )}&to=${encodeURIComponent(to)}`
         );
-        let data: any = null;
+        let data: unknown = null;
         try {
           data = await res.json();
         } catch {}
         if (!res.ok) {
-          console.error("/api/sessions failed", data?.error || res.statusText);
+          const errMsg =
+            (data as { error?: string } | null)?.error || res.statusText;
+          console.error("/api/sessions failed", errMsg);
           setToast("Could not load sessions");
           setTimeout(() => setToast(null), 3000);
           return;
         }
         if (cancelled) return;
-        setCurrentUserId(data.currentUserId ?? null);
-        const mapped: CalendarEvent[] = (data.sessions ?? []).map(
+        const payload = (data || {}) as {
+          currentUserId?: string | null;
+          sessions?: FetchedSession[];
+        };
+        setCurrentUserId(payload.currentUserId ?? null);
+        const mapped: CalendarEvent[] = (payload.sessions ?? []).map(
           (s: FetchedSession) => ({
             id: s.id,
             start: s.start,
@@ -333,7 +368,11 @@ export default function Calendar({
     };
   }, [startDate, visibleDays, days]);
 
-  const createSession = async (start: Date, durationMin: 25 | 50 | 75) => {
+  const createSession = async (
+    start: Date,
+    durationMin: 25 | 50 | 75,
+    quietOwner: boolean = false
+  ) => {
     const tempId = `temp_${Date.now()}`;
     const end = addMinutes(start, durationMin);
     const optimistic: CalendarEvent = {
@@ -345,7 +384,13 @@ export default function Calendar({
       status: "available",
       owner_id: currentUserId ?? undefined,
       participants: currentUserId
-        ? [{ user_id: currentUserId, joined_at: new Date().toISOString() }]
+        ? [
+            {
+              user_id: currentUserId,
+              joined_at: new Date().toISOString(),
+              quiet: quietOwner,
+            },
+          ]
         : [],
     };
     setEvents((prev) => [...prev, optimistic]);
@@ -357,6 +402,7 @@ export default function Calendar({
           start: optimistic.start,
           durationMin,
           sessionType: optimistic.sessionType,
+          quietOwner,
         }),
       });
       const data = await res.json();
@@ -402,17 +448,19 @@ export default function Calendar({
     );
     const dayDate = days[dayIndex];
     // Y to minutes
+    const scroller = gridRef.current;
     const y = e.clientY - rect.top;
-    const minutesFromTop = Math.round(y / rowPx) * stepMinutes;
+    const yContent = y + (scroller?.scrollTop ?? 0);
+    // use selected creation duration
+    const preferred = createDuration;
+    const minutesFromTop = Math.round(yContent / rowPx) * stepMinutes;
     const minutesOfDay = clamp(
       minutesFromTop + startHour * 60,
       startHour * 60,
-      endHour * 60 - 25
+      endHour * 60 - preferred
     );
     const start = new Date(startOfDay(dayDate));
     start.setMinutes(minutesOfDay);
-    // use selected creation duration
-    const preferred = createDuration;
     // prevent overlap with existing events on the same day
     const dayKey = ymd(dayDate);
     const overlaps = (eventsByDay[dayKey] ?? []).some((ev) => {
@@ -426,67 +474,121 @@ export default function Calendar({
       setTimeout(() => setToast(null), 2000);
       return;
     }
-    createSession(start, preferred);
+    // Ask confirmation before creating a session using modal
+    const whenIst = start.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+    setCreateQuiet(false);
+    setCreateModalInfo({ start, preferred, whenIst });
+    setConfirmModal({
+      title: "Create session",
+      confirmText: "Create",
+      cancelText: "Cancel",
+      confirmVariant: "success",
+      onConfirm: () => {
+        setConfirmModal(null);
+        createSession(start, preferred, createQuiet);
+        setCreateModalInfo(null);
+      },
+    });
+  };
+
+  // Hover: show a precise time cursor and slot preview
+  const computeHoverFromClient = (clientX: number, clientY: number) => {
+    if (!gridRef.current) return;
+    const rect = gridRef.current.getBoundingClientRect();
+    const scroller = gridRef.current;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const gutter = 64; // w-16 time gutter
+    const contentWidth = Math.max(0, rect.width - gutter);
+    const xAdjusted = Math.max(0, x - gutter);
+    const dayWidth = contentWidth / visibleDays;
+    const dayIndex = clamp(
+      Math.floor(xAdjusted / dayWidth),
+      0,
+      visibleDays - 1
+    );
+    const yContent = y + (scroller?.scrollTop ?? 0);
+    const minutesFromTopRaw = (yContent / rowPx) * stepMinutes;
+    const minutesFromTop =
+      Math.round(minutesFromTopRaw / stepMinutes) * stepMinutes; // snap
+    const minutesOfDay = clamp(
+      minutesFromTop + startHour * 60,
+      startHour * 60,
+      endHour * 60 - createDuration
+    );
+    const d = days[dayIndex];
+    const when = new Date(startOfDay(d));
+    when.setMinutes(minutesOfDay);
+    const label = when.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Kolkata",
+    });
+    const topPx = minuteToPx(minutesOfDay - startHour * 60);
+    setHoverState({ dayIndex, yPx: topPx, label, previewTop: topPx });
+  };
+  const handleGridMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    lastMousePos.current = { x: e.clientX, y: e.clientY };
+    computeHoverFromClient(e.clientX, e.clientY);
+  };
+  const handleGridMouseLeave = () => {
+    setHoverState(null);
+    lastMousePos.current = null;
+  };
+  const handleGridScroll: React.UIEventHandler<HTMLDivElement> = () => {
+    // Keep hover preview under the cursor on scroll; if no cursor, hide it
+    if (!lastMousePos.current) {
+      setHoverState(null);
+      return;
+    }
+    computeHoverFromClient(lastMousePos.current.x, lastMousePos.current.y);
   };
 
   return (
     <div className={`flex h-[calc(100vh-2rem)] w-full gap-4 ${className}`}>
-      {/* --- REPURPOSED: Left panel is now for filters and timezone --- */}
+      {/* Left panel: Filters; times are shown in IST */}
       <aside className="w-72 shrink-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900">Book a Session</h3>
-
-        <div className="mt-4">
-          <label className="text-sm font-medium text-gray-700">Timezone</label>
-          {/* TODO: Integrate a real timezone picker library here */}
-          <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-            <option>Asia/Kolkata (Auto)</option>
-            <option>America/New_York</option>
-            <option>Europe/London</option>
-          </select>
-        </div>
-
         <div className="mt-6">
-          <h4 className="text-sm font-medium text-gray-700">Filters</h4>
-          <div className="mt-3">
-            <p className="text-xs text-gray-500">Duration (minutes)</p>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {[25, 50, 75].map((m) => (
-                <button
-                  key={m}
-                  onClick={() => handleDurationFilterChange(m)}
-                  className={`rounded-md border px-3 py-2 text-sm ${
-                    durationFilter.includes(m)
-                      ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                      : "border-gray-200"
-                  }`}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
+          <p className="text-xs text-gray-500">Duration (minutes)</p>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {[25, 50, 75].map((m) => (
+              <button
+                key={m}
+                onClick={() => handleDurationFilterChange(m)}
+                className={`rounded-md border px-3 py-2 text-sm ${
+                  durationFilter.includes(m)
+                    ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                    : "border-gray-200"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
           </div>
-          {/* TODO: Add more filters for session type, partner, etc. here */}
-          <div className="mt-4">
-            <p className="text-xs text-gray-500">New session length</p>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {[25, 50, 75].map((m) => (
-                <button
-                  key={`create-${m}`}
-                  onClick={() => setCreateDuration(m as 25 | 50 | 75)}
-                  className={`rounded-md border px-3 py-2 text-sm ${
-                    createDuration === m
-                      ? "border-green-600 bg-green-50 text-green-700"
-                      : "border-gray-200"
-                  }`}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-            <p className="mt-1 text-[11px] text-gray-500">
-              Tip: click an empty slot to create your own session.
-            </p>
+        </div>
+        {/* TODO: Add more filters for session type, partner, etc. here */}
+        <div className="mt-4">
+          <p className="text-xs text-gray-500">New session length</p>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {[25, 50, 75].map((m) => (
+              <button
+                key={`create-${m}`}
+                onClick={() => setCreateDuration(m as 25 | 50 | 75)}
+                className={`rounded-md border px-3 py-2 text-sm ${
+                  createDuration === m
+                    ? "border-green-600 bg-green-50 text-green-700"
+                    : "border-gray-200"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
           </div>
+          <p className="mt-1 text-[11px] text-gray-500">
+            Tip: click an empty slot to create your own session.
+          </p>
         </div>
       </aside>
 
@@ -523,13 +625,21 @@ export default function Calendar({
           ref={gridRef}
           className="relative flex h-[calc(100%-3.75rem)] overflow-auto"
           onClick={handleGridClick}
+          onMouseMove={handleGridMouseMove}
+          onMouseLeave={handleGridMouseLeave}
+          onScroll={handleGridScroll}
         >
           {/* Time Gutter */}
           <div className="w-16 shrink-0 border-r bg-gray-50/80 pt-12">
             {Array.from({ length: endHour - startHour }).map((_, i) => (
               <div key={i} className="relative h-[112px] text-right">
-                <span className="absolute -top-2 right-2 text-xs text-gray-400">
-                  {formatHour(startHour + i)}
+                {/* Top boundary corresponds to :30 of previous hour */}
+                <span className="absolute right-2 top-0 text-[10px] text-gray-400">
+                  :30
+                </span>
+                {/* Midpoint corresponds to the start of the next hour */}
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                  {formatHour(startHour + i + 1)}
                 </span>
               </div>
             ))}
@@ -540,11 +650,25 @@ export default function Calendar({
             className="grid flex-1"
             style={{ gridTemplateColumns: `repeat(${visibleDays}, 1fr)` }}
           >
-            {days.map((d) => (
+            {days.map((d, dayIdx) => (
               <div key={ymd(d)} className="relative border-r">
                 {/* Horizontal Lines */}
                 {Array.from({ length: endHour - startHour }).map((_, i) => (
-                  <div key={i} className="h-[112px] border-t border-gray-100" />
+                  <div
+                    key={i}
+                    className="relative h-[112px] border-t border-gray-100"
+                  >
+                    {/* 15/30/45 min minor lines */}
+                    {[28, 56, 84].map((yy, j) => (
+                      <div
+                        key={j}
+                        className="pointer-events-none absolute inset-x-0"
+                        style={{ top: yy }}
+                      >
+                        <div className="border-t border-dashed border-gray-100" />
+                      </div>
+                    ))}
+                  </div>
                 ))}
                 {/* Now Line */}
                 {nowLine !== null && ymd(now) === ymd(d) && (
@@ -554,6 +678,30 @@ export default function Calendar({
                   >
                     <div className="h-0.5 w-full bg-red-500" />
                     <div className="absolute -left-1 -top-1.5 h-3 w-3 rounded-full bg-red-500" />
+                  </div>
+                )}
+
+                {/* Hover time + slot preview */}
+                {hoverState && hoverState.dayIndex === dayIdx && (
+                  <div
+                    className="pointer-events-none absolute inset-x-0 z-30"
+                    style={{ top: hoverState.yPx }}
+                  >
+                    <div className="h-px w-full bg-indigo-400/70" />
+                    <div className="absolute left-2 -top-3 rounded bg-indigo-600 px-2 py-0.5 text-[10px] font-medium text-white shadow">
+                      {hoverState.label} IST
+                    </div>
+                  </div>
+                )}
+                {hoverState && hoverState.dayIndex === dayIdx && (
+                  <div
+                    className="pointer-events-none absolute inset-x-2 z-20"
+                    style={{ top: hoverState.previewTop }}
+                  >
+                    <div
+                      className="rounded-lg border border-indigo-400/70 bg-indigo-500/10"
+                      style={{ height: minuteToPx(createDuration) }}
+                    />
                   </div>
                 )}
 
@@ -619,10 +767,11 @@ export default function Calendar({
                         >
                           <div>
                             <p className="font-semibold text-sm text-gray-800">
-                              {s.toLocaleTimeString(locale, {
+                              {s.toLocaleTimeString("en-IN", {
                                 hour: "2-digit",
                                 minute: "2-digit",
                                 hour12: false,
+                                timeZone: "Asia/Kolkata",
                               })}
                             </p>
                             <p className="text-xs text-gray-600">
@@ -645,7 +794,21 @@ export default function Calendar({
                                 className="text-xs font-semibold text-red-600"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  deleteSession(ev.id);
+                                  setConfirmModal({
+                                    title: "Delete session",
+                                    description: (
+                                      <span>
+                                        This action cannot be undone. Do you
+                                        want to delete this session?
+                                      </span>
+                                    ),
+                                    confirmText: "Delete",
+                                    cancelText: "Cancel",
+                                    onConfirm: () => {
+                                      setConfirmModal(null);
+                                      deleteSession(ev.id);
+                                    },
+                                  });
                                 }}
                               >
                                 Delete
@@ -682,6 +845,8 @@ export default function Calendar({
         <BookingModal
           event={bookingModalEvent}
           onClose={() => setBookingModalEvent(null)}
+          quiet={bookingQuiet}
+          onChangeQuiet={setBookingQuiet}
           onConfirm={handleConfirmBooking}
         />
       )}
@@ -698,6 +863,43 @@ export default function Calendar({
         />
       )}
       {toast && <Toast message={toast} />}
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          description={
+            confirmModal.description ??
+            (confirmModal.title === "Create session" && createModalInfo ? (
+              <div className="space-y-4">
+                <div>
+                  Create a <strong>{createModalInfo.preferred}-minute</strong>{" "}
+                  session at
+                  <br />
+                  <strong>{createModalInfo.whenIst} (IST)</strong>?
+                </div>
+                <label className="flex items-center gap-3 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={createQuiet}
+                    onChange={(e) => setCreateQuiet(e.target.checked)}
+                  />
+                  Quiet session (start muted for you)
+                </label>
+              </div>
+            ) : undefined)
+          }
+          confirmText={confirmModal.confirmText}
+          cancelText={confirmModal.cancelText}
+          confirmVariant={
+            confirmModal.title === "Create session" ? "success" : "danger"
+          }
+          onCancel={() => {
+            setConfirmModal(null);
+            setCreateModalInfo(null);
+          }}
+          onConfirm={confirmModal.onConfirm}
+        />
+      )}
     </div>
   );
 }
@@ -711,14 +913,76 @@ function Toast({ message }: { message: string }) {
   );
 }
 
+// Reusable confirmation modal
+function ConfirmModal({
+  title,
+  description,
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  confirmVariant = "danger",
+  onCancel,
+  onConfirm,
+}: {
+  title: string;
+  description?: React.ReactNode;
+  confirmText?: string;
+  cancelText?: string;
+  confirmVariant?: "danger" | "success";
+  onCancel: () => void;
+  onConfirm: () => void | Promise<void>;
+}) {
+  const [busy, setBusy] = React.useState(false);
+  const handleConfirm = async () => {
+    try {
+      setBusy(true);
+      await onConfirm();
+    } finally {
+      setBusy(false);
+    }
+  };
+  const confirmClasses =
+    confirmVariant === "success"
+      ? "rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+      : "rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50";
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        {description && (
+          <div className="mt-3 text-sm text-gray-700">{description}</div>
+        )}
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            className="rounded-md border px-4 py-2 text-sm"
+            onClick={onCancel}
+            disabled={busy}
+          >
+            {cancelText}
+          </button>
+          <button
+            className={confirmClasses}
+            onClick={handleConfirm}
+            disabled={busy}
+          >
+            {busy ? "Please wait…" : confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 // --- NEW: Booking Modal Component ---
 function BookingModal({
   event,
   onClose,
+  quiet,
+  onChangeQuiet,
   onConfirm,
 }: {
   event: CalendarEvent;
   onClose: () => void;
+  quiet: boolean;
+  onChangeQuiet: (v: boolean) => void;
   onConfirm: () => void;
 }) {
   return (
@@ -733,16 +997,29 @@ function BookingModal({
           session for:
         </p>
         <div className="mt-4 rounded-md bg-gray-100 p-3 text-center font-medium">
-          {new Date(event.start).toLocaleString(undefined, {
+          {new Date(event.start).toLocaleString("en-IN", {
             weekday: "long",
             month: "long",
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
+            timeZone: "Asia/Kolkata",
           })}
         </div>
 
         {/* TODO: Add other booking options like partner selection, goal text box */}
+        <div className="mt-4 flex items-center gap-3">
+          <input
+            id="quiet-toggle"
+            type="checkbox"
+            className="h-4 w-4"
+            checked={quiet}
+            onChange={(e) => onChangeQuiet(e.target.checked)}
+          />
+          <label htmlFor="quiet-toggle" className="text-sm text-gray-700">
+            Quiet session (start muted)
+          </label>
+        </div>
 
         <div className="mt-6 flex justify-end gap-3">
           <button
@@ -783,6 +1060,7 @@ function SessionDetailsModal({
 }) {
   const participants = event.participants || [];
   const other = participants.find((p) => p.user_id !== currentUserId);
+  const quietLabel = other?.quiet ? "Yes" : "No";
   const otherName = other
     ? [other.firstname, other.lastname].filter(Boolean).join(" ") ||
       other.email ||
@@ -864,8 +1142,13 @@ function SessionDetailsModal({
           <div>
             <span className="font-medium">When:</span>
             <div className="mt-1 rounded bg-gray-50 p-2">
-              {new Date(event.start).toLocaleString()} →{" "}
-              {new Date(event.end).toLocaleTimeString()}
+              {new Date(event.start).toLocaleString("en-IN", {
+                timeZone: "Asia/Kolkata",
+              })}{" "}
+              →{" "}
+              {new Date(event.end).toLocaleTimeString("en-IN", {
+                timeZone: "Asia/Kolkata",
+              })}
             </div>
           </div>
           <div>
@@ -920,6 +1203,9 @@ function SessionDetailsModal({
               {other?.email ? (
                 <div className="text-xs text-gray-500">{other.email}</div>
               ) : null}
+              <div className="text-xs text-gray-500 mt-1">
+                Quiet session: {quietLabel}
+              </div>
             </div>
           )}
           <div className="pt-2">

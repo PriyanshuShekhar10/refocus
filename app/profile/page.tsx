@@ -1,48 +1,87 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { InfoIcon } from "lucide-react";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-export default async function ProtectedPage() {
+export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    redirect("/auth/login");
-  }
+  const currentUserId = (session?.user as { id?: string } | undefined)?.id;
+  if (!currentUserId) redirect("/auth/login");
 
   const db = await getDb();
-  const userId = (session as any).user.id as string;
-  const userProfile = await db
+  const user = (await db
     .collection("users")
-    .findOne({ _id: new ObjectId(userId) });
+    .findOne(
+      { _id: new ObjectId(currentUserId) },
+      { projection: { email: 1, name: 1, firstname: 1, lastname: 1 } }
+    )) as null | {
+    _id: ObjectId;
+    email?: string;
+    name?: string | null;
+    firstname?: string | null;
+    lastname?: string | null;
+  };
+
+  if (!user) redirect("/auth/login");
+
+  const firstname = user.firstname ?? undefined;
+  const lastname = user.lastname ?? undefined;
+  const displayName =
+    [firstname, lastname].filter(Boolean).join(" ") ||
+    user.name ||
+    user.email ||
+    "User";
+  const initials = `${(
+    firstname?.[0] ||
+    user.name?.[0] ||
+    user.email?.[0] ||
+    "U"
+  ).toUpperCase()}${(lastname?.[0] || "").toUpperCase()}`;
 
   return (
-    <div className="flex-1 w-full flex flex-col gap-12">
-      <div className="w-full">
-        <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
-          <InfoIcon size="16" strokeWidth={2} />
-          This is a protected page that you can only see as an authenticated
-          user
-        </div>
-      </div>
-      <div className="flex flex-col gap-2 items-start">
-        <h2 className="font-bold text-2xl mb-4">Your user details</h2>
-        <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-          {JSON.stringify(
-            userProfile
-              ? {
-                  id: String(userProfile._id),
-                  email: userProfile.email,
-                  name: userProfile.name,
-                }
-              : null,
-            null,
-            2
-          )}
-        </pre>
-      </div>
-      {/* Removed tutorial section for production cleanup */}
+    <div className="flex-1 w-full flex flex-col gap-8">
+      <Card>
+        <CardHeader className="flex flex-row items-center gap-4">
+          <Avatar className="h-16 w-16">
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle className="text-2xl">{displayName}</CardTitle>
+            <p className="text-sm text-gray-500">{user.email}</p>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <div className="text-xs uppercase text-gray-500">First name</div>
+              <div className="mt-1 text-base">{firstname || "—"}</div>
+            </div>
+            <div>
+              <div className="text-xs uppercase text-gray-500">Last name</div>
+              <div className="mt-1 text-base">{lastname || "—"}</div>
+            </div>
+            <div className="sm:col-span-2">
+              <div className="text-xs uppercase text-gray-500">Email</div>
+              <div className="mt-1 text-base">{user.email || "—"}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Placeholder for future edits */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600">
+            Editing profile fields will be available soon.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

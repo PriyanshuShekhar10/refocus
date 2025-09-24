@@ -4,10 +4,12 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
-  const { email, password, name } = body as {
+  const { email, password, name, firstName, lastName } = body as {
     email?: string;
     password?: string;
     name?: string;
+    firstName?: string;
+    lastName?: string;
   };
   if (!email || !password) {
     return NextResponse.json(
@@ -23,9 +25,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "User already exists" }, { status: 409 });
   }
   const hashedPassword = await bcrypt.hash(password, 10);
+  const firstname = (firstName ?? name ?? "").trim() || null;
+  const lastname = (lastName ?? "").trim() || null;
+  const fullName =
+    [firstname || undefined, lastname || undefined].filter(Boolean).join(" ") ||
+    null;
   const doc = {
     email: email.toLowerCase(),
-    name: name || null,
+    name: fullName,
+    firstname,
+    lastname,
     hashedPassword,
     emailVerified: null,
     createdAt: new Date(),

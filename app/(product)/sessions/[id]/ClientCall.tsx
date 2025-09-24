@@ -25,12 +25,20 @@ export default function ClientCall({ sessionId }: { sessionId: string }) {
           const data = await resJoin.json().catch(() => ({}));
           throw new Error(data.error || "Failed to join session");
         }
+        // Fetch session details to know if user selected quiet
+        const resInfo = await fetch(`/api/sessions/${sessionId}`);
+        const info = await resInfo.json().catch(() => ({}));
+        const youQuiet: boolean = Boolean(info?.youQuiet);
         // FREE ALTERNATIVE: Jitsi Meet on public meet.jit.si (no API key required)
         // We derive a deterministic room name per session. sessionId is hex-safe for URLs.
         const rn = `session-${sessionId}`;
         // You can pass more config via hash params (e.g., disable prejoin, etc.)
         // See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe
-        const url = `https://meet.jit.si/${rn}#config.prejoinConfig.enabled=true`;
+        const baseHash = `#config.prejoinConfig.enabled=true`;
+        const muteHash = youQuiet
+          ? `&config.startWithAudioMuted=true&config.startWithVideoMuted=true`
+          : ``;
+        const url = `https://meet.jit.si/${rn}${baseHash}${muteHash}`;
         if (cancelled) return;
         setJitsiUrl(url);
       } catch (e) {
