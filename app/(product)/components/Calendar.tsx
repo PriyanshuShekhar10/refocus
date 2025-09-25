@@ -585,12 +585,12 @@ export default function Calendar({
   return (
     <div className={`flex h-[calc(100vh-2rem)] w-full gap-4 ${className}`}>
       {/* Left panel: Filters; times are shown in IST */}
-      <aside className="w-72 shrink-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900">Book a Session</h3>
+      <aside className="w-72 shrink-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Book a Session</h3>
         <div className="mt-6">
           <BookSessionButton />
 
-          <p className="text-xs text-gray-500">Duration (minutes)</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Duration (minutes)</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {[25, 50, 75].map((m) => (
               <button
@@ -598,8 +598,8 @@ export default function Calendar({
                 onClick={() => handleDurationFilterChange(m)}
                 className={`rounded-md border px-3 py-2 text-sm ${
                   durationFilter.includes(m)
-                    ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                    : "border-gray-200"
+                    ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                    : "border-gray-200 dark:border-gray-700"
                 }`}
               >
                 {m}
@@ -609,7 +609,7 @@ export default function Calendar({
         </div>
         {/* TODO: Add more filters for session type, partner, etc. here */}
         <div className="mt-4">
-          <p className="text-xs text-gray-500">New session length</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">New session length</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {[25, 50, 75].map((m) => (
               <button
@@ -617,43 +617,43 @@ export default function Calendar({
                 onClick={() => setCreateDuration(m as 25 | 50 | 75)}
                 className={`rounded-md border px-3 py-2 text-sm ${
                   createDuration === m
-                    ? "border-green-600 bg-green-50 text-green-700"
-                    : "border-gray-200"
+                    ? "border-green-600 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"
+                    : "border-gray-200 dark:border-gray-700"
                 }`}
               >
                 {m}
               </button>
             ))}
           </div>
-          <p className="mt-1 text-[11px] text-gray-500">
+          <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
             Tip: click an empty slot to create your own session.
           </p>
         </div>
       </aside>
 
       {/* Right: Calendar Area */}
-      <section className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <div className="flex items-center justify-between border-b px-4 py-3">
+      <section className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+        <div className="flex items-center justify-between border-b px-4 py-3 dark:border-gray-700">
           <div className="flex items-center gap-2">
             <button
               onClick={() => shiftRange(-1)}
-              className="rounded-md border p-2"
+              className="rounded-md border p-2 dark:border-gray-600"
             >
               ◀︎
             </button>
             <button
               onClick={goToday}
-              className="rounded-md border px-3 py-1.5 text-sm"
+              className="rounded-md border px-3 py-1.5 text-sm dark:border-gray-600"
             >
               Today
             </button>
             <button
               onClick={() => shiftRange(1)}
-              className="rounded-md border p-2"
+              className="rounded-md border p-2 dark:border-gray-600"
             >
               ▶︎
             </button>
-            <span className="ml-4 text-lg font-semibold">
+            <span className="ml-4 text-lg font-semibold dark:text-gray-100">
               {formatDayLabel(startDate, locale)}
             </span>
           </div>
@@ -669,15 +669,15 @@ export default function Calendar({
           onScroll={handleGridScroll}
         >
           {/* Time Gutter */}
-          <div className="w-16 shrink-0 border-r bg-gray-50/80 pt-12">
+          <div className="w-16 shrink-0 border-r bg-gray-50/80 pt-12 dark:border-gray-700 dark:bg-gray-800/80">
             {Array.from({ length: endHour - startHour }).map((_, i) => (
               <div key={i} className="relative h-[112px] text-right">
                 {/* Top boundary corresponds to :30 of previous hour */}
-                <span className="absolute right-2 top-0 text-[10px] text-gray-400">
+                <span className="absolute right-2 top-0 text-[10px] text-gray-400 dark:text-gray-500">
                   :30
                 </span>
                 {/* Midpoint corresponds to the start of the next hour */}
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
                   {formatHour(startHour + i + 1)}
                 </span>
               </div>
@@ -690,12 +690,12 @@ export default function Calendar({
             style={{ gridTemplateColumns: `repeat(${visibleDays}, 1fr)` }}
           >
             {days.map((d, dayIdx) => (
-              <div key={ymd(d)} className="relative border-r">
+              <div key={ymd(d)} className="relative border-r dark:border-gray-700">
                 {/* Horizontal Lines */}
                 {Array.from({ length: endHour - startHour }).map((_, i) => (
                   <div
                     key={i}
-                    className="relative h-[112px] border-t border-gray-100"
+                    className="relative h-[112px] border-t border-gray-100 dark:border-gray-800"
                   >
                     {/* 15/30/45 min minor lines */}
                     {[28, 56, 84].map((yy, j) => (
@@ -704,7 +704,7 @@ export default function Calendar({
                         className="pointer-events-none absolute inset-x-0"
                         style={{ top: yy }}
                       >
-                        <div className="border-t border-dashed border-gray-100" />
+                        <div className="border-t border-dashed border-gray-100 dark:border-gray-800" />
                       </div>
                     ))}
                   </div>
@@ -796,12 +796,12 @@ export default function Calendar({
                           style={{
                             height,
                             backgroundColor:
-                              ev.color || (isBooked ? "#e5e7eb" : "#eef2ff"),
+                              ev.color || (isBooked ? (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#374151' : '#e5e7eb') : (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#312e81' : '#eef2ff')),
                           }}
                           className={`rounded-lg p-2 flex flex-col justify-between ${
                             isBooked
-                              ? "border border-gray-300"
-                              : "border border-indigo-200 hover:border-indigo-400 cursor-pointer"
+                              ? "border border-gray-300 dark:border-gray-600"
+                              : "border border-indigo-200 hover:border-indigo-400 cursor-pointer dark:border-indigo-900"
                           }`}
                           title={
                             tooltip
@@ -817,7 +817,7 @@ export default function Calendar({
                           }}
                         >
                           <div>
-                            <p className="font-semibold text-sm text-gray-800">
+                            <p className="font-semibold text-sm text-gray-800 dark:text-gray-100">
                               {s.toLocaleTimeString("en-IN", {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -825,13 +825,13 @@ export default function Calendar({
                                 timeZone: "Asia/Kolkata",
                               })}
                             </p>
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs text-gray-600 dark:text-gray-300">
                               {ev.durationMin} min • {ev.sessionType}
                             </p>
                           </div>
 
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-indigo-700 font-medium">
+                            <span className="text-xs text-indigo-700 font-medium dark:text-indigo-300">
                               {ev.name
                                 ? ev.name
                                 : isOwner
@@ -841,7 +841,7 @@ export default function Calendar({
                                 : "Partner needed"}
                             </span>
                             {isBooked && otherQuiet && (
-                              <span className="ml-2 inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700">
+                              <span className="ml-2 inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100">
                                 🔇 Quiet
                               </span>
                             )}
@@ -871,7 +871,7 @@ export default function Calendar({
                               </button>
                             ) : !isBooked ? (
                               <button
-                                className="text-xs font-semibold text-indigo-600"
+                                className="text-xs font-semibold text-indigo-600 dark:text-indigo-300"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleBookSlot(ev);
@@ -880,7 +880,7 @@ export default function Calendar({
                                 Book
                               </button>
                             ) : (
-                              <span className="text-xs font-bold text-gray-600">
+                              <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
                                 Booked
                               </span>
                             )}
