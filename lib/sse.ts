@@ -1,4 +1,4 @@
-type Subscriber = (event: { type: string; payload?: any }) => void;
+type Subscriber = (event: { type: string; payload?: unknown }) => void;
 
 type BusState = {
   channels: Map<string, Set<Subscriber>>;
@@ -23,7 +23,7 @@ export function subscribe(channel: string, fn: Subscriber) {
   };
 }
 
-export function publish(channel: string, event: { type: string; payload?: any }) {
+export function publish(channel: string, event: { type: string; payload?: unknown }) {
   const state = getState();
   const set = state.channels.get(channel);
   if (!set) return;

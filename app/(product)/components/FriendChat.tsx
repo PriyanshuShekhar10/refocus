@@ -1,5 +1,17 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+
+type SessionRequestPayload = {
+  sessionRequestId: string;
+  start: string;
+  durationMin: 25 | 50 | 75;
+  message?: string | null;
+  status: "pending" | "accepted" | "declined" | "cancelled";
+  from_user_id: string;
+  to_user_id: string;
+  responseMessage?: string | null;
+  sessionId?: string | null;
+};
 
 type ChatMessage = {
   id: string;
@@ -7,7 +19,7 @@ type ChatMessage = {
   to_user_id: string;
   type: "text" | "session-request" | "system";
   content?: string | null;
-  payload?: any;
+  payload?: SessionRequestPayload | null;
   created_at: string;
 };
 
@@ -32,7 +44,7 @@ export default function FriendChat({
   const [respondNoteById, setRespondNoteById] = useState<Record<string, string>>({});
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -53,7 +65,7 @@ export default function FriendChat({
     } finally {
       setLoading(false);
     }
-  };
+  }, [friendId]);
 
   useEffect(() => {
     load();
@@ -76,7 +88,7 @@ export default function FriendChat({
     return () => {
       if (es) es.close();
     };
-  }, [friendId]);
+  }, [friendId, load]);
 
   const sendText = async () => {
     const value = text.trim();
@@ -166,24 +178,24 @@ export default function FriendChat({
       );
     }
     if (m.type === "session-request") {
-      const p = m.payload || {};
-      const isOwn = p.from_user_id && currentUserId ? p.from_user_id === currentUserId : m.from_user_id === currentUserId;
+      const p = (m.payload as SessionRequestPayload | null) || undefined;
+      const isOwn = (p?.from_user_id ?? m.from_user_id) === currentUserId;
       return (
         <div className="text-sm">
           <div className={`rounded-md border inline-flex items-center gap-2 px-2 py-1 text-xs font-medium ${
-            p.status === "accepted"
+            p?.status === "accepted"
               ? "bg-green-100 text-green-700 border-green-200"
-              : p.status === "declined"
+              : p?.status === "declined"
               ? "bg-red-100 text-red-700 border-red-200"
-              : p.status === "cancelled"
+              : p?.status === "cancelled"
               ? "bg-gray-100 text-gray-700 border-gray-200"
               : "bg-amber-50 text-amber-700 border-amber-200"
           }`}>Session request</div>
           <div className="mt-1 text-sm">
-            {new Date(p.start ?? "").toLocaleString()} · {p.durationMin} min
-            {p.message ? <span className="ml-2 italic">“{p.message}”</span> : null}
+            {new Date(p?.start ?? "").toLocaleString()} · {p?.durationMin} min
+            {p?.message ? <span className="ml-2 italic">“{p.message}”</span> : null}
           </div>
-          {p.status === "pending" ? (
+          {p?.status === "pending" ? (
             <div className="mt-2 flex items-center gap-2">
               {!isOwn ? (
                 <>
@@ -191,19 +203,25 @@ export default function FriendChat({
                     type="text"
                     placeholder="Optional message"
                     className="w-44 rounded border px-2 py-1 text-xs"
-                    value={respondNoteById[p.sessionRequestId] || ""}
+                    value={respondNoteById[p?.sessionRequestId ?? ""] || ""}
                     onChange={(e) =>
-                      setRespondNoteById((prev) => ({ ...prev, [p.sessionRequestId]: e.target.value }))
+                      setRespondNoteById((prev) => ({ ...prev, [p?.sessionRequestId ?? ""]: e.target.value }))
                     }
                   />
                   <button
-                    onClick={() => actOnSessionRequest(p.sessionRequestId, "accept")}
+                    onClick={() => {
+                      if (!p?.sessionRequestId) return;
+                      actOnSessionRequest(p.sessionRequestId, "accept");
+                    }}
                     className="rounded-md bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700"
                   >
                     Accept
                   </button>
                   <button
-                    onClick={() => actOnSessionRequest(p.sessionRequestId, "decline")}
+                    onClick={() => {
+                      if (!p?.sessionRequestId) return;
+                      actOnSessionRequest(p.sessionRequestId, "decline");
+                    }}
                     className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700"
                   >
                     Decline
@@ -211,7 +229,10 @@ export default function FriendChat({
                 </>
               ) : (
                 <button
-                  onClick={() => deleteSessionRequest(p.sessionRequestId)}
+                  onClick={() => {
+                    if (!p?.sessionRequestId) return;
+                    deleteSessionRequest(p.sessionRequestId);
+                  }}
                   className="rounded-md bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300"
                 >
                   Delete request
@@ -219,7 +240,7 @@ export default function FriendChat({
               )}
             </div>
           ) : (
-            <div className="mt-2 text-xs text-gray-500 capitalize">Status: {p.status}</div>
+            <div className="mt-2 text-xs text-gray-500 capitalize">Status: {p?.status}</div>
           )}
         </div>
       );

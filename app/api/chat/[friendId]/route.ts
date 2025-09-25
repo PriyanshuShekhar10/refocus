@@ -11,7 +11,17 @@ type MessageDoc = {
   to_user_id: string;
   type: "text" | "session-request" | "system";
   content?: string | null;
-  payload?: any;
+  payload?: {
+    sessionRequestId?: string;
+    start?: string;
+    durationMin?: 25 | 50 | 75;
+    message?: string | null;
+    status?: "pending" | "accepted" | "declined" | "cancelled";
+    from_user_id?: string;
+    to_user_id?: string;
+    responseMessage?: string | null;
+    sessionId?: string | null;
+  };
   created_at: Date;
 };
 
