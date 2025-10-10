@@ -586,11 +586,15 @@ export default function Calendar({
     <div className={`flex h-[calc(100vh-2rem)] w-full gap-4 ${className}`}>
       {/* Left panel: Filters; times are shown in IST */}
       <aside className="w-72 shrink-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Book a Session</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Book a Session
+        </h3>
         <div className="mt-6">
           <BookSessionButton />
 
-          <p className="text-xs text-gray-500 dark:text-gray-400">Duration (minutes)</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Duration (minutes)
+          </p>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {[25, 50, 75].map((m) => (
               <button
@@ -609,7 +613,9 @@ export default function Calendar({
         </div>
         {/* TODO: Add more filters for session type, partner, etc. here */}
         <div className="mt-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400">New session length</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            New session length
+          </p>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {[25, 50, 75].map((m) => (
               <button
@@ -690,7 +696,10 @@ export default function Calendar({
             style={{ gridTemplateColumns: `repeat(${visibleDays}, 1fr)` }}
           >
             {days.map((d, dayIdx) => (
-              <div key={ymd(d)} className="relative border-r dark:border-gray-700">
+              <div
+                key={ymd(d)}
+                className="relative border-r dark:border-gray-700"
+              >
                 {/* Horizontal Lines */}
                 {Array.from({ length: endHour - startHour }).map((_, i) => (
                   <div
@@ -796,7 +805,22 @@ export default function Calendar({
                           style={{
                             height,
                             backgroundColor:
-                              ev.color || (isBooked ? (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#374151' : '#e5e7eb') : (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#312e81' : '#eef2ff')),
+                              ev.color ||
+                              (isBooked
+                                ? typeof window !== "undefined" &&
+                                  window.matchMedia &&
+                                  window.matchMedia(
+                                    "(prefers-color-scheme: dark)"
+                                  ).matches
+                                  ? "#374151"
+                                  : "#e5e7eb"
+                                : typeof window !== "undefined" &&
+                                  window.matchMedia &&
+                                  window.matchMedia(
+                                    "(prefers-color-scheme: dark)"
+                                  ).matches
+                                ? "#312e81"
+                                : "#eef2ff"),
                           }}
                           className={`rounded-lg p-2 flex flex-col justify-between ${
                             isBooked
