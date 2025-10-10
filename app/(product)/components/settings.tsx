@@ -6,7 +6,7 @@ export default function Settings() {
   const handleLogout = async () => {
     try {
       await signOut({ callbackUrl: "/" });
-    } catch (e) {
+    } catch {
       // no-op
     }
   };
