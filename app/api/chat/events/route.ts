@@ -9,32 +9,36 @@ export async function GET() {
   if (!currentUserId) return new Response("Unauthorized", { status: 401 });
 
   const channel = userChannel(currentUserId);
+  let pingInterval: NodeJS.Timeout | null = null;
+  
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       const encoder = new TextEncoder();
       const send = (data: unknown) => {
         try {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
-        } catch (error) {
+        } catch {
           // Controller is closed, stop trying to send
           console.log('SSE controller closed, stopping ping interval');
-          clearInterval(pingInterval);
+          if (pingInterval) {
+            clearInterval(pingInterval);
+            pingInterval = null;
+          }
         }
       };
       
       send({ type: "hello" });
       subscribe(channel, (ev) => send(ev));
       
-      const pingInterval = setInterval(() => send({ type: "ping", t: Date.now() }), 25000);
-      
-      // Cleanup function to clear interval when stream is closed
-      controller.signal?.addEventListener('abort', () => {
-        clearInterval(pingInterval);
-      });
+      pingInterval = setInterval(() => send({ type: "ping", t: Date.now() }), 25000);
     },
     cancel() {
       // This is called when the client disconnects
       console.log('SSE stream cancelled, cleaning up');
+      if (pingInterval) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+      }
     }
   });
 
