@@ -12,13 +12,30 @@ export async function GET() {
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       const encoder = new TextEncoder();
-      const send = (data: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+      const send = (data: unknown) => {
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        } catch (error) {
+          // Controller is closed, stop trying to send
+          console.log('SSE controller closed, stopping ping interval');
+          clearInterval(pingInterval);
+        }
+      };
+      
       send({ type: "hello" });
       subscribe(channel, (ev) => send(ev));
-      setInterval(() => send({ type: "ping", t: Date.now() }), 25000);
-      // best-effort cleanup on GC; the platform may not expose an abort signal here
-      // rely on client disconnect closing the stream implicitly
+      
+      const pingInterval = setInterval(() => send({ type: "ping", t: Date.now() }), 25000);
+      
+      // Cleanup function to clear interval when stream is closed
+      controller.signal?.addEventListener('abort', () => {
+        clearInterval(pingInterval);
+      });
     },
+    cancel() {
+      // This is called when the client disconnects
+      console.log('SSE stream cancelled, cleaning up');
+    }
   });
 
   return new Response(stream, {

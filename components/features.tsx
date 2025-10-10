@@ -35,7 +35,7 @@ export const Features = () => {
                 keep you moving forward.
               </p>
               <button className="px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium shadow-md hover:opacity-90 transition">
-                Touch me
+                Placeholder
               </button>
             </div>
             <div className="relative w-full h-full flex items-center justify-center">
@@ -77,7 +77,7 @@ export const Features = () => {
                 anytime.
               </p>
               <button className="px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium shadow-md hover:opacity-90 transition">
-                Touch me more
+                Placeholder
               </button>
             </div>
           </motion.div>
