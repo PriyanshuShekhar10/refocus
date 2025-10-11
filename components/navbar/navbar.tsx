@@ -9,21 +9,23 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
+import { Menu, X } from "lucide-react";
 
 export const NavbarLogo = () => {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  React.useEffect(() => {
+
+  useEffect(() => {
     setMounted(true);
   }, []);
 
   return (
-    <Link href="/">
+    <Link href="/" className="flex items-center">
       <Image
         src={Logo}
         alt="logo"
         className={cn(
-          `py-3 h-20`,
+          `h-12 w-auto py-2 sm:h-16 sm:py-3 md:h-20`,
           mounted && theme === "dark" && "invert brightness-0"
         )}
       />
@@ -32,7 +34,7 @@ export const NavbarLogo = () => {
 };
 
 // Client-side authentication component for the navbar
-function NavbarAuthButton() {
+function NavbarAuthButton({ isMobile = false, onClose }: { isMobile?: boolean; onClose?: () => void }) {
   const { data: session, status } = useSession();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -42,12 +44,17 @@ function NavbarAuthButton() {
   const logout = async () => {
     await signOut({ redirect: false });
     router.push("/auth/login");
+    onClose?.();
+  };
+
+  const handleNavigation = () => {
+    onClose?.();
   };
 
   // Don't render anything until mounted to prevent hydration mismatch
   if (!mounted) {
     return (
-      <div className="flex gap-2">
+      <div className={isMobile ? styles.mobileAuthButtons : "flex gap-2"}>
         <button className={styles.loadingBtn} disabled>
           Loading...
         </button>
@@ -57,7 +64,7 @@ function NavbarAuthButton() {
 
   if (status === "loading") {
     return (
-      <div className="flex gap-2">
+      <div className={isMobile ? styles.mobileAuthButtons : "flex gap-2"}>
         <button className={styles.loadingBtn} disabled>
           Loading...
         </button>
@@ -67,11 +74,11 @@ function NavbarAuthButton() {
 
   if (session?.user) {
     return (
-      <div className="flex items-center gap-4">
-        <Link href="/profile" className={styles.signUpBtn}>
+      <div className={isMobile ? styles.mobileAuthButtons : "flex items-center gap-4"}>
+        <Link href="/profile" className={styles.signUpBtn} onClick={handleNavigation}>
           My Profile
         </Link>
-        <Link href="/dashboard" className={styles.signUpBtn}>
+        <Link href="/dashboard" className={styles.signUpBtn} onClick={handleNavigation}>
           Dashboard
         </Link>
         <button className={styles.signInBtn} onClick={logout}>
@@ -82,11 +89,11 @@ function NavbarAuthButton() {
   }
 
   return (
-    <div className="flex gap-3">
-      <Link href="/auth/login" className={styles.signInBtn}>
+    <div className={isMobile ? styles.mobileAuthButtons : "flex gap-3"}>
+      <Link href="/auth/login" className={styles.signInBtn} onClick={handleNavigation}>
         Sign in
       </Link>
-      <Link href="/auth/sign-up" className={styles.signUpBtn}>
+      <Link href="/auth/sign-up" className={styles.signUpBtn} onClick={handleNavigation}>
         Sign up
       </Link>
     </div>
@@ -95,6 +102,7 @@ function NavbarAuthButton() {
 
 const Navbar = () => {
   const [isFixed, setIsFixed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -108,6 +116,28 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close mobile menu on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    if (isMobileMenuOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+      // Prevent body scroll when menu is open
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "unset";
+    };
+  }, [isMobileMenuOpen]);
 
   const navItems = [
     {
@@ -124,29 +154,72 @@ const Navbar = () => {
     },
   ];
 
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    <nav
-      className={`${styles.navbar + " rounded-full"} ${
-        isFixed ? styles.fixed + " rounded-none" : ""
-      } backdrop-blur-md`}
-    >
-      <div className={styles.logo}>
-        <NavbarLogo />
-      </div>
+    <>
+      <nav
+        className={`${styles.navbar} ${isFixed ? styles.fixed : styles.rounded}`}
+      >
+        <div className={styles.logo}>
+          <NavbarLogo />
+        </div>
 
-      <ul className={styles.navLinks}>
-        {navItems.map((item, idx) => (
-          <li key={`nav-item-${idx}`}>
-            <a href={item.link}>{item.name}</a>
-          </li>
-        ))}
-      </ul>
+        {/* Desktop Navigation */}
+        <ul className={styles.navLinks}>
+          {navItems.map((item, idx) => (
+            <li key={`nav-item-${idx}`}>
+              <a href={item.link}>{item.name}</a>
+            </li>
+          ))}
+        </ul>
 
-      <div className={styles.authButtons}>
-        <ThemeSwitcher />
-        <NavbarAuthButton />
+        {/* Desktop Auth Buttons */}
+        <div className={styles.authButtons}>
+          <ThemeSwitcher />
+          <NavbarAuthButton />
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          className={styles.mobileMenuButton}
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle mobile menu"
+          aria-expanded={isMobileMenuOpen}
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className={styles.mobileMenuOverlay} onClick={closeMobileMenu} />
+      )}
+
+      {/* Mobile Menu */}
+      <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ""}`}>
+        <div className={styles.mobileMenuContent}>
+          <ul className={styles.mobileNavLinks}>
+            {navItems.map((item, idx) => (
+              <li key={`mobile-nav-item-${idx}`}>
+                <a href={item.link} onClick={closeMobileMenu}>
+                  {item.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          <div className={styles.mobileMenuFooter}>
+            <div className={styles.mobileThemeSwitcher}>
+              <ThemeSwitcher />
+            </div>
+            <NavbarAuthButton isMobile onClose={closeMobileMenu} />
+          </div>
+        </div>
       </div>
-    </nav>
+    </>
   );
 };
 
