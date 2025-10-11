@@ -168,13 +168,15 @@ export default function BookSessionButton({
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+          {/* Changed popup background to dark theme */}
+          <div className="w-full max-w-md rounded-lg bg-[#181c2a] p-6 shadow-xl border border-[#23263a] text-white">
             <div className="flex items-start justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
+              {/* Heading color changed to white */}
+              <h2 className="text-lg font-semibold text-white">
                 Book a session
               </h2>
               <button
-                className="text-sm text-gray-500"
+                className="text-sm text-gray-400 hover:text-white"
                 onClick={() => setOpen(false)}
                 disabled={busy}
               >
@@ -185,7 +187,8 @@ export default function BookSessionButton({
             <div className="mt-4 space-y-4">
               {/* Date + 12-hour time in 15-min slots (IST) */}
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                {/* Label color changed to gray-300 */}
+                <label className="text-sm font-medium text-gray-300">
                   Date &amp; time (IST)
                 </label>
 
@@ -193,7 +196,7 @@ export default function BookSessionButton({
                   {/* Date */}
                   <input
                     type="date"
-                    className="w-full rounded-md border px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-[#23263a] bg-[#23263a] text-white px-3 py-2 text-sm"
                     value={dateIst}
                     onChange={(e) => setDateIst(e.target.value)}
                     disabled={busy}
@@ -203,7 +206,7 @@ export default function BookSessionButton({
                   <div className="grid grid-cols-3 gap-2">
                     {/* Hour 12h */}
                     <select
-                      className="rounded-md border px-2 py-2 text-sm"
+                      className="rounded-md border border-[#23263a] bg-[#23263a] text-white px-2 py-2 text-sm"
                       value={hour12}
                       onChange={(e) =>
                         setHour12(
@@ -233,7 +236,7 @@ export default function BookSessionButton({
 
                     {/* Minute (15-min steps) */}
                     <select
-                      className="rounded-md border px-2 py-2 text-sm"
+                      className="rounded-md border border-[#23263a] bg-[#23263a] text-white px-2 py-2 text-sm"
                       value={minute}
                       onChange={(e) =>
                         setMinute(Number(e.target.value) as 0 | 15 | 30 | 45)
@@ -249,7 +252,7 @@ export default function BookSessionButton({
 
                     {/* AM/PM */}
                     <select
-                      className="rounded-md border px-2 py-2 text-sm"
+                      className="rounded-md border border-[#23263a] bg-[#23263a] text-white px-2 py-2 text-sm"
                       value={ampm}
                       onChange={(e) => setAmpm(e.target.value as "AM" | "PM")}
                       disabled={busy}
@@ -263,13 +266,13 @@ export default function BookSessionButton({
                   </div>
                 </div>
 
-                <p className="mt-1 text-[11px] text-gray-500">
+                <p className="mt-1 text-[11px] text-gray-400">
                   Time uses 15-minute increments (Asia/Kolkata).
                 </p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-300">
                   Duration
                 </label>
                 <div className="mt-2 grid grid-cols-3 gap-2">
@@ -280,8 +283,8 @@ export default function BookSessionButton({
                       onClick={() => setDuration(m as 25 | 50 | 75)}
                       className={`rounded-md border px-3 py-2 text-sm ${
                         duration === m
-                          ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                          : "border-gray-200"
+                          ? "border-indigo-600 bg-indigo-900 text-indigo-300"
+                          : "border-[#23263a] bg-[#23263a] text-gray-300"
                       }`}
                       disabled={busy}
                     >
@@ -290,9 +293,9 @@ export default function BookSessionButton({
                   ))}
                 </div>
               </div>
-
               <div>
-                <label className="text-sm font-medium text-gray-700">
+
+                <label className="text-sm font-medium text-gray-300">
                   Session type
                 </label>
                 <div className="mt-2 grid grid-cols-3 gap-2">
@@ -303,8 +306,8 @@ export default function BookSessionButton({
                       onClick={() => setSessionType(t)}
                       className={`rounded-md border px-3 py-2 text-sm capitalize ${
                         sessionType === t
-                          ? "border-green-600 bg-green-50 text-green-700"
-                          : "border-gray-200"
+                          ? "border-green-600 bg-green-900 text-green-300"
+                          : "border-[#23263a] bg-[#23263a] text-gray-300"
                       }`}
                       disabled={busy}
                     >
@@ -314,10 +317,10 @@ export default function BookSessionButton({
                 </div>
               </div>
 
-              <label className="flex items-center gap-3 text-sm text-gray-700">
+              <label className="flex items-center gap-3 text-sm text-gray-300">
                 <input
                   type="checkbox"
-                  className="h-4 w-4"
+                  className="h-4 w-4 accent-[#23263a]"
                   checked={quietOwner}
                   onChange={(e) => setQuietOwner(e.target.checked)}
                   disabled={busy}
@@ -326,27 +329,28 @@ export default function BookSessionButton({
               </label>
 
               {error && (
-                <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="rounded-md bg-red-900/40 px-3 py-2 text-sm text-red-300">
                   {error}
                 </div>
               )}
               {success && (
-                <div className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+                <div className="rounded-md bg-green-900/40 px-3 py-2 text-sm text-green-300">
                   {success}
                 </div>
               )}
             </div>
 
+
             <div className="mt-6 flex justify-end gap-3">
               <button
-                className="rounded-md border px-4 py-2 text-sm"
+                className="rounded-md border border-[#23263a] bg-[#23263a] text-gray-300 px-4 py-2 text-sm hover:bg-[#23263a]/80"
                 onClick={() => setOpen(false)}
                 disabled={busy}
               >
                 Cancel
               </button>
               <button
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:opacity-50"
                 onClick={handleCreate}
                 disabled={busy}
               >
