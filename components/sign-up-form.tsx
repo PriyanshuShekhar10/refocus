@@ -14,7 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { validatePassword } from "@/lib/validatePassword";
+import { PasswordStrengthMeter } from "./PasswordStrengthMeter";
 
 export function SignUpForm({
   className,
@@ -27,7 +29,15 @@ export function SignUpForm({
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordValidation, setPasswordValidation] = useState<ReturnType<typeof validatePassword>>(validatePassword(""));
   const router = useRouter();
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setPasswordValidation(validatePassword(password));
+    }, 300); // debounce for performance
+    return () => clearTimeout(timeout);
+  }, [password]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +71,8 @@ export function SignUpForm({
       setIsLoading(false);
     }
   };
+
+  const isPasswordWeak = passwordValidation.strength === "weak";
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -116,6 +128,7 @@ export function SignUpForm({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                {password.length > 0 && <PasswordStrengthMeter validation={passwordValidation} />}
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
@@ -130,7 +143,7 @@ export function SignUpForm({
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading || isPasswordWeak}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
             </div>
