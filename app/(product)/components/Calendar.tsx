@@ -8,6 +8,7 @@ import React, {
   useState,
 } from "react";
 import BookSessionButton from "./BookSessionButton";
+import {Avatar, AvatarImage, AvatarFallback} from "@/components/ui/avatar";
 // Realtime removed during migration from Supabase
 
 /* =========================
@@ -43,6 +44,7 @@ export type CalendarEvent = {
     confirmVariant?: "danger" | "success";
     lastname?: string;
     quiet?: boolean;
+    avatar_url?: string;
   }[];
 };
 
@@ -69,6 +71,7 @@ type FetchedSession = {
     email?: string;
     firstname?: string;
     lastname?: string;
+    avatar_url?: string;
   }>;
 };
 
@@ -845,6 +848,40 @@ export default function Calendar({
                                 ? "Booked"
                                 : "Partner needed"}
                             </span>
+                            {ev.participants && ev.participants.length > 0 && (
+                                <div className="flex -space-x-1 ml-1">
+                                  {ev.participants.slice(0, 2).map((participant, idx) => {
+                                    const displayName = [participant.firstname, participant.lastname]
+                                      .filter(Boolean)
+                                      .join(" ") || participant.email || participant.user_id || "User";
+                                    const initials = displayName
+                                      .split(" ")
+                                      .map(n => n[0])
+                                      .join("")
+                                      .substring(0, 2)
+                                      .toUpperCase();
+                                    
+                                    return (
+                                      <Avatar key={participant.user_id || idx} className="h-4 w-4 border border-white">
+                                        {participant.avatar_url ? (
+                                          <AvatarImage src={participant.avatar_url} alt={displayName} />
+                                        ) : null}
+                                        <AvatarFallback className="text-[8px] font-medium bg-indigo-100 text-indigo-600">
+                                          {initials}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    );
+                                  })}
+                                  {ev.participants.length > 2 && (
+                                    <div className="h-4 w-4 rounded-full bg-gray-200 border border-white flex items-center justify-center">
+                                      <span className="text-[6px] font-medium text-gray-600">
+                                        +{ev.participants.length - 2}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                             {isBooked && otherQuiet && (
                               <span className="ml-2 inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100">
                                 🔇 Quiet
@@ -891,7 +928,6 @@ export default function Calendar({
                             )}
                           </div>
                         </div>
-                      </div>
                     );
                   })}
                 </div>
