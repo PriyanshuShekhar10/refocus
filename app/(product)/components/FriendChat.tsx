@@ -250,19 +250,19 @@ export default function FriendChat({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="flex w-full max-w-lg flex-col rounded-md bg-[#18181b] shadow-2xl border border-gray-800">
-        <div className="flex items-center justify-between border-b border-gray-800 p-3">
+      <div className="flex w-full max-w-lg flex-col rounded-md bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 p-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-700 text-[10px] font-semibold text-white">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-[10px] font-semibold text-white">
               {friendLabel?.[0]?.toUpperCase?.() || "F"}
             </div>
-            <div className="text-sm font-semibold text-gray-100">{friendLabel}</div>
+            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{friendLabel}</div>
           </div>
-          <button onClick={onClose} className="text-xs text-gray-400 hover:text-gray-200">
+          <button onClick={onClose} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
             Close
           </button>
         </div>
-        {error && <div className="px-3 py-2 text-xs text-red-400">{error}</div>}
+        {error && <div className="px-3 py-2 text-xs text-red-700 dark:text-red-400">{error}</div>}
         <div ref={listRef} className="flex max-h-[70vh] flex-1 flex-col overflow-y-auto p-3">
           {loading && messages.length === 0 ? (
             <div className="text-xs text-gray-500">Loading…</div>
@@ -274,7 +274,7 @@ export default function FriendChat({
                   <div key={m.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
                     <div
                       className={`max-w-[75%] rounded-lg border p-2 shadow-sm ${
-                        isOwn ? "bg-indigo-900 border-indigo-700 text-indigo-100" : "bg-gray-900 border-gray-700 text-gray-200"
+                        isOwn ? "bg-indigo-50 border-indigo-600 text-indigo-700 dark:bg-indigo-900 dark:border-indigo-700 dark:text-indigo-100" : "bg-gray-100 border-gray-300 text-gray-900 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200"
                       }`}
                     >
                       {renderMessage(m)}
@@ -288,12 +288,12 @@ export default function FriendChat({
             </div>
           )}
         </div>
-        <div className="sticky bottom-0 border-t border-gray-800 bg-[#18181b] p-3">
+        <div className="sticky bottom-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3">
           <div className="flex items-center gap-2">
             <input
               type="text"
               placeholder="Type a message"
-              className="flex-1 rounded border border-gray-700 bg-gray-900 text-gray-100 px-2 py-1 text-sm focus:outline-none focus:border-indigo-700"
+              className="flex-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-sm focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-700"
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
@@ -302,13 +302,13 @@ export default function FriendChat({
             />
             <button
               onClick={sendText}
-              className="rounded-md bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-800"
+              className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800"
             >
               Send (Ctrl+Enter)
             </button>
             <button
               onClick={() => setSrOpen((v) => !v)}
-              className="rounded-md bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-800"
+              className="rounded-md bg-green-600 dark:bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 dark:hover:bg-green-800"
             >
               Session
             </button>
@@ -317,12 +317,12 @@ export default function FriendChat({
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <input
                 type="datetime-local"
-                className="rounded border border-gray-700 bg-gray-900 text-gray-100 px-2 py-1 text-xs"
+                className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-xs"
                 value={srAt}
                 onChange={(e) => setSrAt(e.target.value)}
               />
               <select
-                className="rounded border border-gray-700 bg-gray-900 text-gray-100 px-2 py-1 text-xs"
+                className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-xs"
                 value={srDuration}
                 onChange={(e) => setSrDuration(Number(e.target.value) as 25 | 50 | 75)}
               >
@@ -333,13 +333,13 @@ export default function FriendChat({
               <input
                 type="text"
                 placeholder="Message (optional)"
-                className="w-48 rounded border border-gray-700 bg-gray-900 text-gray-100 px-2 py-1 text-xs"
+                className="w-48 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-xs"
                 value={srMessage}
                 onChange={(e) => setSrMessage(e.target.value)}
               />
               <button
                 onClick={sendSessionRequest}
-                className="rounded-md bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-800"
+                className="rounded-md bg-green-600 dark:bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 dark:hover:bg-green-800"
               >
                 Send request
               </button>

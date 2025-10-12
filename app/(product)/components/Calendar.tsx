@@ -802,31 +802,12 @@ export default function Calendar({
                         style={{ top }}
                       >
                         <div
-                          style={{
-                            height,
-                            backgroundColor:
-                              ev.color ||
-                              (isBooked
-                                ? typeof window !== "undefined" &&
-                                  window.matchMedia &&
-                                  window.matchMedia(
-                                    "(prefers-color-scheme: dark)"
-                                  ).matches
-                                  ? "#374151"
-                                  : "#e5e7eb"
-                                : typeof window !== "undefined" &&
-                                  window.matchMedia &&
-                                  window.matchMedia(
-                                    "(prefers-color-scheme: dark)"
-                                  ).matches
-                                ? "#312e81"
-                                : "#eef2ff"),
-                          }}
-                          className={`rounded-lg p-2 flex flex-col justify-between ${
-                            isBooked
-                              ? "border border-gray-300 dark:border-gray-600"
-                              : "border border-indigo-200 hover:border-indigo-400 cursor-pointer dark:border-indigo-900"
-                          }`}
+                          style={{ height, ...(ev.color ? { backgroundColor: ev.color } : {}) }}
+                          className={`rounded-lg p-2 flex flex-col justify-between transition-colors
+                            ${isBooked
+                              ? 'border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800'
+                              : 'border border-indigo-200 hover:border-indigo-400 cursor-pointer bg-indigo-50 dark:bg-indigo-900/30 dark:border-indigo-900'}
+                          `}
                           title={
                             tooltip
                               ? `${tooltip.label}${
@@ -1027,14 +1008,14 @@ function ConfirmModal({
       : "rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50";
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-[#181c2a] p-6 shadow-xl border border-[#23263a] text-white">
-        <h2 className="text-lg font-semibold text-white">{title}</h2>
+      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
         {description && (
-          <div className="mt-3 text-sm text-gray-300">{description}</div>
+          <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">{description}</div>
         )}
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="rounded-md border border-[#23263a] bg-[#23263a] text-gray-300 px-4 py-2 text-sm hover:bg-[#23263a]/80"
+            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={onCancel}
             disabled={busy}
           >
@@ -1068,16 +1049,16 @@ function BookingModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="w-full max-w-md rounded-lg bg-[#18181b] p-6 shadow-2xl border border-gray-800">
-        <h2 className="text-xl font-bold text-gray-100">Confirm Booking</h2>
-        <p className="mt-2 text-gray-300">
+      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Confirm Booking</h2>
+        <p className="mt-2 text-gray-700 dark:text-gray-300">
           You are booking a{" "}
-          <strong className="text-white">
+          <strong className="text-indigo-700 dark:text-indigo-300">
             {event.durationMin}-minute {event.sessionType}
           </strong>{" "}
           session for:
         </p>
-        <div className="mt-4 rounded-md bg-gray-900/60 p-3 text-center font-medium text-gray-100">
+        <div className="mt-4 rounded-md bg-gray-100 dark:bg-gray-900/60 p-3 text-center font-medium text-gray-900 dark:text-gray-100">
           {new Date(event.start).toLocaleString("en-IN", {
             weekday: "long",
             month: "long",
@@ -1097,7 +1078,7 @@ function BookingModal({
             checked={quiet}
             onChange={(e) => onChangeQuiet(e.target.checked)}
           />
-          <label htmlFor="quiet-toggle" className="text-sm text-gray-200">
+          <label htmlFor="quiet-toggle" className="text-sm text-gray-700 dark:text-gray-200">
             Quiet session (start muted)
           </label>
         </div>
@@ -1105,13 +1086,13 @@ function BookingModal({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="rounded-md border border-gray-700 bg-gray-900 text-gray-100 px-4 py-2 text-sm hover:bg-gray-800"
+            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800"
+            className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800"
           >
             Confirm
           </button>
@@ -1214,17 +1195,17 @@ function SessionDetailsModal({
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="w-full max-w-lg rounded-lg bg-[#18181b] p-6 shadow-2xl border border-gray-800">
+      <div className="w-full max-w-lg rounded-lg bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
         <div className="flex items-start justify-between">
-          <h2 className="text-xl font-bold text-gray-100">Session details</h2>
-          <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-200">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Session details</h2>
+          <button onClick={onClose} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
             Close
           </button>
         </div>
-        <div className="mt-4 space-y-2 text-sm text-gray-200">
+        <div className="mt-4 space-y-2 text-sm text-gray-700 dark:text-gray-200">
           <div>
             <span className="font-medium">When:</span>
-            <div className="mt-1 rounded bg-gray-900/60 p-2 text-gray-100">
+            <div className="mt-1 rounded bg-gray-100 dark:bg-gray-900/60 p-2 text-gray-900 dark:text-gray-100">
               {new Date(event.start).toLocaleString("en-IN", {
                 timeZone: "Asia/Kolkata",
               })}{" "}
@@ -1241,31 +1222,31 @@ function SessionDetailsModal({
           {isOwner && (
             <div className="grid grid-cols-1 gap-3 pt-2">
               <div>
-                <label className="text-sm font-medium text-gray-300">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Session name
                 </label>
                 <input
-                  className="mt-1 w-full rounded-md border border-gray-700 bg-gray-900 text-gray-100 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
                   placeholder="Optional name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-300">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Color
                 </label>
                 <div className="mt-1 flex items-center gap-2">
                   <input
                     type="color"
-                    className="h-9 w-12 cursor-pointer rounded-md border border-gray-700 bg-gray-900 p-1"
+                    className="h-9 w-12 cursor-pointer rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-1"
                     value={color || "#eef2ff"}
                     onChange={(e) => setColor(e.target.value)}
                     title="Pick a color"
                   />
                   <input
-                    className={`w-40 rounded-md border px-3 py-2 text-sm bg-gray-900 text-gray-100 ${
-                      isColorValid ? "border-gray-700" : "border-red-500"
+                    className={`w-40 rounded-md border px-3 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
+                      isColorValid ? "border-gray-300 dark:border-gray-700" : "border-red-500"
                     }`}
                     placeholder="#eef2ff"
                     value={color}
@@ -1273,7 +1254,7 @@ function SessionDetailsModal({
                   />
                 </div>
                 {!isColorValid && (
-                  <p className="mt-1 text-xs text-red-400">
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                     Enter a valid hex color like #abc or #aabbcc
                   </p>
                 )}
@@ -1284,9 +1265,9 @@ function SessionDetailsModal({
             <div>
               <span className="font-medium">Partner:</span> {otherName}
               {other?.email ? (
-                <div className="text-xs text-gray-400">{other.email}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{other.email}</div>
               ) : null}
-              <div className="text-xs text-gray-400 mt-1 space-y-0.5">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
                 <div>You selected quiet: {selfQuiet ? "Yes" : "No"}</div>
                 <div>Partner selected quiet: {partnerQuiet ? "Yes" : "No"}</div>
               </div>
@@ -1296,7 +1277,7 @@ function SessionDetailsModal({
             <span className="font-medium">Join link:</span>
             <div className="mt-1 text-sm break-all">
               <a
-                className="text-indigo-400 hover:underline"
+                className="text-indigo-700 dark:text-indigo-300 hover:underline"
                 href={`/sessions/${event.id}`}
               >
                 /sessions/{event.id}
@@ -1305,12 +1286,12 @@ function SessionDetailsModal({
           </div>
         </div>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-          <div className="text-sm text-green-400">{friendReqStatus}</div>
+          <div className="text-sm text-green-700 dark:text-green-400">{friendReqStatus}</div>
           <div className="flex gap-2">
             {other && !isFriend && (
               <button
                 onClick={sendFriendRequest}
-                className="rounded-md border border-indigo-700 bg-indigo-900 px-3 py-2 text-sm text-indigo-300 hover:bg-indigo-800"
+                className="rounded-md border border-indigo-600 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900 px-3 py-2 text-sm text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800"
               >
                 Send friend request
               </button>
@@ -1319,14 +1300,14 @@ function SessionDetailsModal({
               <button
                 onClick={handleSave}
                 disabled={saving || !isColorValid}
-                className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:opacity-50"
+                className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800 disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save"}
               </button>
             )}
             <button
               onClick={onClose}
-              className="rounded-md border border-gray-700 bg-gray-900 text-gray-100 px-4 py-2 text-sm hover:bg-gray-800"
+              className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Close
             </button>
