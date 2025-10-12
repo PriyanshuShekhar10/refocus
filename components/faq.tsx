@@ -18,7 +18,7 @@ const faqItems: FaqItem[] = [
   {
     question: "Who is Refocus for?",
     answer:
-      "Refocus is for anyone who wants more structure and accountability in their day. Whether you’re a student, freelancer, remote worker, or just looking to stay consistent with personal goals, Refocus provides a supportive environment to help you stay on track.",
+      "Refocus is for anyone who wants more structure and accountability in their day. Whether you're a student, freelancer, remote worker, or just looking to stay consistent with personal goals, Refocus provides a supportive environment to help you stay on track.",
   },
   {
     question: "What kind of work can I do on Refocus?",
@@ -33,12 +33,12 @@ const faqItems: FaqItem[] = [
   {
     question: "Who am I working with?",
     answer:
-      "On Refocus, you’re matched with another member who’s also looking to stay productive. Everyone on the platform shares the same goal: to support each other in getting things done.",
+      "On Refocus, you're matched with another member who's also looking to stay productive. Everyone on the platform shares the same goal: to support each other in getting things done.",
   },
   {
     question: "Do I have to download another video call app?",
     answer:
-      "No. Refocus has a built-in video experience, so you don’t need to install or manage any additional apps. Everything happens right inside the platform.",
+      "No. Refocus has a built-in video experience, so you don't need to install or manage any additional apps. Everything happens right inside the platform.",
   },
   {
     question: "Is Refocus free?",
@@ -69,12 +69,17 @@ export default function Faq({
   };
 
   return (
-    <section id="faq" className={`mx-auto max-w-5xl px-6 ${className}`}>
-      <h2 className="mb-6 text-4xl/[1.1] font-semibold md:text-6xl">{title}</h2>
+    <section 
+      id="faq" 
+      className={`mx-auto max-w-5xl px-3 xs:px-4 sm:px-6 py-8 xs:py-12 md:py-16 ${className}`}
+    >
+      <h2 className="mb-4 xs:mb-5 sm:mb-6 text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight sm:leading-[1.1]">
+        {title}
+      </h2>
 
       <ul
         role="list"
-        className="divide-y divide-black/15  dark:divide-white/15"
+        className="divide-y divide-black/15 dark:divide-white/15"
       >
         {faqItems.map((item, i) => {
           const isOpen = open.includes(i);
@@ -89,9 +94,9 @@ export default function Faq({
                 aria-controls={panelId}
                 onClick={() => toggle(i)}
                 className={[
-                  "flex w-full items-center justify-between gap-4 py-7 text-left",
-                  "text-[clamp(1rem,1.8vw,1.375rem)] leading-snug",
-                  "cursor-pointer",
+                  "flex w-full items-center justify-between gap-3 xs:gap-4 py-5 xs:py-6 sm:py-7 text-left",
+                  "text-base xs:text-lg sm:text-xl md:text-[clamp(1rem,1.8vw,1.375rem)] leading-snug",
+                  "cursor-pointer transition-colors hover:text-gray-600 dark:hover:text-gray-300",
                 ].join(" ")}
                 style={
                   pointerCursorUrl
@@ -99,22 +104,26 @@ export default function Faq({
                     : undefined
                 }
               >
-                <span>{item.question}</span>
+                <span className="pr-2">{item.question}</span>
                 <span
                   aria-hidden
-                  className="relative inline-flex h-[22px] w-[22px] flex-none items-center justify-center"
+                  className="relative inline-flex h-[18px] w-[18px] xs:h-[20px] xs:w-[20px] sm:h-[22px] sm:w-[22px] flex-none items-center justify-center"
                 >
                   <svg
                     viewBox="0 0 24 24"
-                    width="22"
-                    height="22"
-                    className="text-[#0f1226] dark:text-white/15"
+                    width="100%"
+                    height="100%"
+                    className="text-[#0f1226] dark:text-white/15 transition-transform duration-300"
+                    style={{
+                      transform: isOpen ? 'rotate(0deg)' : 'rotate(0deg)',
+                    }}
                   >
                     <path
                       d="M5 12h14"
                       stroke="currentColor"
                       strokeWidth="2"
                       strokeLinecap="round"
+                      className="transition-all duration-300"
                     />
                     {!isOpen && (
                       <path
@@ -122,6 +131,7 @@ export default function Faq({
                         stroke="currentColor"
                         strokeWidth="2"
                         strokeLinecap="round"
+                        className="transition-all duration-300"
                       />
                     )}
                   </svg>
@@ -129,7 +139,7 @@ export default function Faq({
               </button>
 
               <Collapse id={panelId} labelledBy={btnId} open={isOpen}>
-                <div className="pb-6 pr-10 text-base leading-relaxed text-black/80 dark:text-white">
+                <div className="pb-4 xs:pb-5 sm:pb-6 pr-6 xs:pr-8 sm:pr-10 text-sm xs:text-base leading-relaxed text-black/80 dark:text-white/90">
                   {item.answer}
                 </div>
               </Collapse>
