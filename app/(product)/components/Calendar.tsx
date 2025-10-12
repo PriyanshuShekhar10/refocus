@@ -1090,14 +1090,14 @@ function ConfirmModal({
       : "rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50";
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-[#181c2a] p-6 shadow-xl border border-[#23263a] text-white">
-        <h2 className="text-lg font-semibold text-white">{title}</h2>
+      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
         {description && (
-          <div className="mt-3 text-sm text-gray-300">{description}</div>
+          <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">{description}</div>
         )}
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="rounded-md border border-[#23263a] bg-[#23263a] text-gray-300 px-4 py-2 text-sm hover:bg-[#23263a]/80"
+            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={onCancel}
             disabled={busy}
           >
@@ -1130,17 +1130,17 @@ function BookingModal({
   onConfirm: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <h2 className="text-xl font-bold">Confirm Booking</h2>
-        <p className="mt-2 text-gray-600">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Confirm Booking</h2>
+        <p className="mt-2 text-gray-700 dark:text-gray-300">
           You are booking a{" "}
-          <strong>
+          <strong className="text-indigo-700 dark:text-indigo-300">
             {event.durationMin}-minute {event.sessionType}
           </strong>{" "}
           session for:
         </p>
-        <div className="mt-4 rounded-md bg-gray-100 p-3 text-center font-medium">
+        <div className="mt-4 rounded-md bg-gray-100 dark:bg-gray-900/60 p-3 text-center font-medium text-gray-900 dark:text-gray-100">
           {new Date(event.start).toLocaleString("en-IN", {
             weekday: "long",
             month: "long",
@@ -1156,11 +1156,11 @@ function BookingModal({
           <input
             id="quiet-toggle"
             type="checkbox"
-            className="h-4 w-4"
+            className="h-4 w-4 accent-gray-700"
             checked={quiet}
             onChange={(e) => onChangeQuiet(e.target.checked)}
           />
-          <label htmlFor="quiet-toggle" className="text-sm text-gray-700">
+          <label htmlFor="quiet-toggle" className="text-sm text-gray-700 dark:text-gray-200">
             Quiet session (start muted)
           </label>
         </div>
@@ -1168,13 +1168,13 @@ function BookingModal({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium"
+            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800"
           >
             Confirm
           </button>
