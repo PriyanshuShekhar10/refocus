@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Monitor, Smartphone } from "lucide-react";
+import Link from "next/link";
 
 interface DesktopOnlyWrapperProps {
   children: React.ReactNode;
@@ -120,12 +121,12 @@ export default function DesktopOnlyWrapper({
 
         {/* Button */}
         <div className="pt-4">
-          <a
+          <Link
             href="/"
             className="inline-block w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:opacity-90 transition-opacity"
           >
             Back to Home
-          </a>
+          </Link>
         </div>
 
         {/* Current Screen Size (for debugging) */}
