@@ -8,7 +8,7 @@ import React, {
   useState,
 } from "react";
 import BookSessionButton from "./BookSessionButton";
-import {Avatar, AvatarImage, AvatarFallback} from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 // Realtime removed during migration from Supabase
 
 /* =========================
@@ -868,22 +868,37 @@ export default function Calendar({
                                 : "Partner needed"}
                             </span>
                             {ev.participants && ev.participants.length > 0 && (
-                                <div className="flex -space-x-1 ml-1">
-                                  {ev.participants.slice(0, 2).map((participant, idx) => {
-                                    const displayName = [participant.firstname, participant.lastname]
-                                      .filter(Boolean)
-                                      .join(" ") || participant.email || participant.user_id || "User";
+                              <div className="flex -space-x-1 ml-1">
+                                {ev.participants
+                                  .slice(0, 2)
+                                  .map((participant, idx) => {
+                                    const displayName =
+                                      [
+                                        participant.firstname,
+                                        participant.lastname,
+                                      ]
+                                        .filter(Boolean)
+                                        .join(" ") ||
+                                      participant.email ||
+                                      participant.user_id ||
+                                      "User";
                                     const initials = displayName
                                       .split(" ")
-                                      .map(n => n[0])
+                                      .map((n) => n[0])
                                       .join("")
                                       .substring(0, 2)
                                       .toUpperCase();
-                                    
+
                                     return (
-                                      <Avatar key={participant.user_id || idx} className="h-4 w-4 border border-white">
+                                      <Avatar
+                                        key={participant.user_id || idx}
+                                        className="h-4 w-4 border border-white"
+                                      >
                                         {participant.avatar_url ? (
-                                          <AvatarImage src={participant.avatar_url} alt={displayName} />
+                                          <AvatarImage
+                                            src={participant.avatar_url}
+                                            alt={displayName}
+                                          />
                                         ) : null}
                                         <AvatarFallback className="text-[8px] font-medium bg-indigo-100 text-indigo-600">
                                           {initials}
@@ -891,62 +906,62 @@ export default function Calendar({
                                       </Avatar>
                                     );
                                   })}
-                                  {ev.participants.length > 2 && (
-                                    <div className="h-4 w-4 rounded-full bg-gray-200 border border-white flex items-center justify-center">
-                                      <span className="text-[6px] font-medium text-gray-600">
-                                        +{ev.participants.length - 2}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            {isBooked && otherQuiet && (
-                              <span className="ml-2 inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100">
-                                🔇 Quiet
-                              </span>
-                            )}
-                            {isOwner ? (
-                              <button
-                                className="text-xs font-semibold text-red-600"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setConfirmModal({
-                                    title: "Delete session",
-                                    description: (
-                                      <span>
-                                        This action cannot be undone. Do you
-                                        want to delete this session?
-                                      </span>
-                                    ),
-                                    confirmText: "Delete",
-                                    cancelText: "Cancel",
-                                    onConfirm: () => {
-                                      setConfirmModal(null);
-                                      deleteSession(ev.id);
-                                    },
-                                  });
-                                }}
-                              >
-                                Delete
-                              </button>
-                            ) : !isBooked ? (
-                              <button
-                                className="text-xs font-semibold text-indigo-600 dark:text-indigo-300"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleBookSlot(ev);
-                                }}
-                              >
-                                Book
-                              </button>
-                            ) : (
-                              <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                                Booked
-                              </span>
+                                {ev.participants.length > 2 && (
+                                  <div className="h-4 w-4 rounded-full bg-gray-200 border border-white flex items-center justify-center">
+                                    <span className="text-[6px] font-medium text-gray-600">
+                                      +{ev.participants.length - 2}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
+                          {isBooked && otherQuiet && (
+                            <span className="ml-2 inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100">
+                              🔇 Quiet
+                            </span>
+                          )}
+                          {isOwner ? (
+                            <button
+                              className="text-xs font-semibold text-red-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmModal({
+                                  title: "Delete session",
+                                  description: (
+                                    <span>
+                                      This action cannot be undone. Do you want
+                                      to delete this session?
+                                    </span>
+                                  ),
+                                  confirmText: "Delete",
+                                  cancelText: "Cancel",
+                                  onConfirm: () => {
+                                    setConfirmModal(null);
+                                    deleteSession(ev.id);
+                                  },
+                                });
+                              }}
+                            >
+                              Delete
+                            </button>
+                          ) : !isBooked ? (
+                            <button
+                              className="text-xs font-semibold text-indigo-600 dark:text-indigo-300"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleBookSlot(ev);
+                              }}
+                            >
+                              Book
+                            </button>
+                          ) : (
+                            <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
+                              Booked
+                            </span>
+                          )}
                         </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -1250,17 +1265,24 @@ function SessionDetailsModal({
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+      <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900 dark:text-gray-100">
         <div className="flex items-start justify-between">
-          <h2 className="text-xl font-bold">Session details</h2>
-          <button onClick={onClose} className="text-sm text-gray-500">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            Session details
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
             Close
           </button>
         </div>
-        <div className="mt-4 space-y-2 text-sm text-gray-700">
+        <div className="mt-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">
           <div>
-            <span className="font-medium">When:</span>
-            <div className="mt-1 rounded bg-gray-50 p-2">
+            <span className="font-medium text-gray-900 dark:text-gray-100">
+              When:
+            </span>
+            <div className="mt-1 rounded bg-gray-50 p-2 dark:bg-gray-800">
               {new Date(event.start).toLocaleString("en-IN", {
                 timeZone: "Asia/Kolkata",
               })}{" "}
@@ -1271,37 +1293,41 @@ function SessionDetailsModal({
             </div>
           </div>
           <div>
-            <span className="font-medium">Type:</span> {event.sessionType} •{" "}
-            {event.durationMin} min
+            <span className="font-medium text-gray-900 dark:text-gray-100">
+              Type:
+            </span>{" "}
+            {event.sessionType} • {event.durationMin} min
           </div>
           {isOwner && (
             <div className="grid grid-cols-1 gap-3 pt-2">
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label className="font-medium text-gray-900 dark:text-gray-100">
                   Session name
                 </label>
                 <input
-                  className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   placeholder="Optional name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label className="font-medium text-gray-900 dark:text-gray-100">
                   Color
                 </label>
                 <div className="mt-1 flex items-center gap-2">
                   <input
                     type="color"
-                    className="h-9 w-12 cursor-pointer rounded-md border p-1"
+                    className="h-9 w-12 cursor-pointer rounded-md border border-gray-300 p-1 dark:border-gray-700 dark:bg-gray-800"
                     value={color || "#eef2ff"}
                     onChange={(e) => setColor(e.target.value)}
                     title="Pick a color"
                   />
                   <input
                     className={`w-40 rounded-md border px-3 py-2 text-sm ${
-                      isColorValid ? "border-gray-300" : "border-red-500"
+                      isColorValid
+                        ? "border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        : "border-red-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     }`}
                     placeholder="#eef2ff"
                     value={color}
@@ -1309,7 +1335,7 @@ function SessionDetailsModal({
                   />
                 </div>
                 {!isColorValid && (
-                  <p className="mt-1 text-xs text-red-600">
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                     Enter a valid hex color like #abc or #aabbcc
                   </p>
                 )}
@@ -1318,21 +1344,28 @@ function SessionDetailsModal({
           )}
           {otherName && (
             <div>
-              <span className="font-medium">Partner:</span> {otherName}
-              {other?.email ? (
-                <div className="text-xs text-gray-500">{other.email}</div>
-              ) : null}
-              <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+              <span className="font-medium text-gray-900 dark:text-gray-100">
+                Partner:
+              </span>{" "}
+              {otherName}
+              {other?.email && (
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {other.email}
+                </div>
+              )}
+              <div className="text-xs text-gray-500 mt-1 space-y-0.5 dark:text-gray-400">
                 <div>You selected quiet: {selfQuiet ? "Yes" : "No"}</div>
                 <div>Partner selected quiet: {partnerQuiet ? "Yes" : "No"}</div>
               </div>
             </div>
           )}
           <div className="pt-2">
-            <span className="font-medium">Join link:</span>
+            <span className="font-medium text-gray-900 dark:text-gray-100">
+              Join link:
+            </span>
             <div className="mt-1 text-sm break-all">
               <a
-                className="text-indigo-600 hover:underline"
+                className="text-indigo-600 hover:underline dark:text-indigo-400"
                 href={`/sessions/${event.id}`}
               >
                 /sessions/{event.id}
@@ -1341,12 +1374,14 @@ function SessionDetailsModal({
           </div>
         </div>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-          <div className="text-sm text-green-700">{friendReqStatus}</div>
+          <div className="text-sm text-green-700 dark:text-green-400">
+            {friendReqStatus}
+          </div>
           <div className="flex gap-2">
             {other && !isFriend && (
               <button
                 onClick={sendFriendRequest}
-                className="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-700 hover:bg-indigo-100"
+                className="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800"
               >
                 Send friend request
               </button>
@@ -1355,14 +1390,14 @@ function SessionDetailsModal({
               <button
                 onClick={handleSave}
                 disabled={saving || !isColorValid}
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600"
               >
                 {saving ? "Saving..." : "Save"}
               </button>
             )}
             <button
               onClick={onClose}
-              className="rounded-md border px-4 py-2 text-sm"
+              className="rounded-md border px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
             >
               Close
             </button>
