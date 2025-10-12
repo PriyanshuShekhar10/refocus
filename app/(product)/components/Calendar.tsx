@@ -816,16 +816,16 @@ export default function Calendar({
                                     "(prefers-color-scheme: dark)"
                                   ).matches
                                   ? "#374151"
-                                  : "#e5e7eb"
+                                  : "#d1d5db"
                                 : typeof window !== "undefined" &&
                                   window.matchMedia &&
                                   window.matchMedia(
                                     "(prefers-color-scheme: dark)"
                                   ).matches
                                 ? "#312e81"
-                                : "#eef2ff"),
+                                : "#e0e7ff"),
                           }}
-                          className={`rounded-lg p-2 flex flex-col justify-between ${
+                          className={`rounded-lg p-2 flex flex-col justify-between shadow-sm${
                             isBooked
                               ? "border border-gray-300 dark:border-gray-600"
                               : "border border-indigo-200 hover:border-indigo-400 cursor-pointer dark:border-indigo-900"
@@ -844,7 +844,7 @@ export default function Calendar({
                           }}
                         >
                           <div>
-                            <p className="font-semibold text-sm text-gray-800 dark:text-gray-100">
+                            <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
                               {s.toLocaleTimeString("en-IN", {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -852,13 +852,25 @@ export default function Calendar({
                                 timeZone: "Asia/Kolkata",
                               })}
                             </p>
-                            <p className="text-xs text-gray-600 dark:text-gray-300">
+                            <p
+                              className={`text-xs font-semibold leading-tight ${
+                                isBooked
+                                  ? "text-gray-900 dark:text-white"
+                                  : "text-gray-800 dark:text-white"
+                              }`}
+                            >
                               {ev.durationMin} min • {ev.sessionType}
                             </p>
                           </div>
 
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-indigo-700 font-medium dark:text-indigo-300">
+                          <div className="flex items-center justify-between mt-1">
+                            <span
+                              className={`text-xs font-medium ${
+                                isBooked
+                                  ? "text-gray-800 dark:text-indigo-200"
+                                  : "text-indigo-700 dark:text-indigo-300"
+                              }`}
+                            >
                               {ev.name
                                 ? ev.name
                                 : isOwner
