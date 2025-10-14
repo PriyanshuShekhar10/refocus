@@ -7,8 +7,10 @@ import Profile from "../components/profile";
 import Settings from "../components/settings";
 import Friends from "../components/friends";
 import Dashboard from "../components/dashboard";
+import GlobalChat from "../components/globalchat";
 
-type TabKey = "profile" | "dashboard" | "settings" | "friends";
+
+type TabKey = "profile" | "dashboard" | "settings" | "friends" | "chat";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
@@ -21,6 +23,7 @@ export default function DashboardPage() {
         {activeTab === "profile" && <Profile />}
         {activeTab === "settings" && <Settings />}
         {activeTab === "friends" && <Friends />}
+        {activeTab === "chat" && <GlobalChat />}
       </main>
     </div>
   );
