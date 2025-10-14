@@ -43,4 +43,8 @@ export function userChannel(userId: string) {
   return `user:${userId}:chat`;
 }
 
+export function globalChatChannel() {
+  return `chat:global`;
+}
+
 
