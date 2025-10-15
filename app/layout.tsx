@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Quicksand } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers";
+import { ChatDock } from "@/components/chat-dock";
 // import Navbar from "@/components/navbar/navbar";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -31,7 +32,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${quicksandSans.className} antialiased`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <ChatDock />
+        </Providers>
       </body>
     </html>
   );

@@ -8,7 +8,7 @@ import { FaUserFriends } from "react-icons/fa";
 import { HiSun, HiMoon } from "react-icons/hi";
 import { useTheme } from "next-themes";
 import { CgProfile } from "react-icons/cg";
-import { RiChat3Line } from "react-icons/ri";
+import { RiChat3Line, RiMessage3Line } from "react-icons/ri";
 import Link from "next/link";
 
 export type TabKey = "profile" | "dashboard" | "settings" | "friends" | "chat";
@@ -19,6 +19,16 @@ interface SideBarProps {
 }
 
 const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
+  const [friendsUnread, setFriendsUnread] = useState(0);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ count: number }>;
+      setFriendsUnread(Math.max(0, ce.detail?.count || 0));
+    };
+    window.addEventListener("chatdock:unread", handler as EventListener);
+    return () => window.removeEventListener("chatdock:unread", handler as EventListener);
+  }, []);
+
   return (
     <aside
       className="fixed top-0 left-0 h-screen w-16 flex flex-col
@@ -54,6 +64,7 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
         active={activeTab === "friends"}
       />
 
+      {/* Global Chat (full page/tab) */}
       <SideBarIcon
         icon={<RiChat3Line size={18} />}
         text="Global Chat"
@@ -70,8 +81,27 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
         active={activeTab === "settings"}
       />
 
-      {/* push the theme toggle to the bottom */}
+      {/* push the chat dock + theme toggle to the bottom */}
       <div className="mt-auto mb-4">
+        {/* Friends Chat (dock) - anchored near bottom */}
+        <SideBarIcon
+          icon={
+            <div className="relative">
+              <RiMessage3Line size={18} />
+              {friendsUnread > 0 ? (
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-white dark:ring-gray-900"></span>
+              ) : null}
+            </div>
+          }
+          text="Friends Chat"
+          onClick={() => {
+            try {
+              window.dispatchEvent(new Event("chatdock:toggle"));
+            } catch {}
+          }}
+          active={false}
+        />
+        <Divider />
         <ThemeToggle />
       </div>
     </aside>

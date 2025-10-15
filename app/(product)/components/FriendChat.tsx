@@ -1,5 +1,6 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { FiMinus, FiMaximize2, FiX } from "react-icons/fi";
 
 type SessionRequestPayload = {
   sessionRequestId: string;
@@ -23,15 +24,24 @@ type ChatMessage = {
   created_at: string;
 };
 
+export type FriendChatProps = {
+  friendId: string;
+  friendLabel: string;
+  onClose: () => void;
+  layout?: "modal" | "docked";
+  minimized?: boolean;
+  onMinimizeToggle?: () => void;
+  className?: string;
+};
+
 export default function FriendChat({
   friendId,
   friendLabel,
   onClose,
-}: {
-  friendId: string;
-  friendLabel: string;
-  onClose: () => void;
-}) {
+  layout = "modal",
+  minimized = false,
+  onMinimizeToggle,
+}: FriendChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -248,104 +258,144 @@ export default function FriendChat({
     return <div className="text-xs text-gray-500">Unsupported message</div>;
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="flex w-full max-w-lg flex-col rounded-md bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800">
-        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 p-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-[10px] font-semibold text-white">
-              {friendLabel?.[0]?.toUpperCase?.() || "F"}
-            </div>
-            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{friendLabel}</div>
+  const header = (
+    <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 px-3 h-10">
+      <div className="flex items-center gap-2">
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-[10px] font-semibold text-white">
+          {friendLabel?.[0]?.toUpperCase?.() || "F"}
+        </div>
+        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[200px]">{friendLabel}</div>
+      </div>
+      <div className="flex items-center gap-2">
+        {onMinimizeToggle ? (
+          <button
+            onClick={onMinimizeToggle}
+            aria-label={minimized ? "Maximize chat" : "Minimize chat"}
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            {minimized ? <FiMaximize2 size={14} /> : <FiMinus size={14} />}
+          </button>
+        ) : null}
+        <button
+          onClick={onClose}
+          aria-label="Close chat"
+          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+        >
+          <FiX size={14} />
+        </button>
+      </div>
+    </div>
+  );
+
+  const body = (
+    <>
+      {error && <div className="px-3 py-2 text-xs text-red-700 dark:text-red-400">{error}</div>}
+      <div ref={listRef} className="flex flex-1 flex-col overflow-y-auto p-3">
+        {loading && messages.length === 0 ? (
+          <div className="text-xs text-gray-500">Loading…</div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {messages.map((m) => {
+              const isOwn = currentUserId ? m.from_user_id === currentUserId : false;
+              return (
+                <div key={m.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[75%] rounded-lg border p-2 shadow-sm ${
+                      isOwn ? "bg-indigo-50 border-indigo-600 text-indigo-700 dark:bg-indigo-900 dark:border-indigo-700 dark:text-indigo-100" : "bg-gray-100 border-gray-300 text-gray-900 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200"
+                    }`}
+                  >
+                    {renderMessage(m)}
+                    <div className="mt-1 text-[10px] text-gray-500">{new Date(m.created_at).toLocaleString()}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <button onClick={onClose} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
-            Close
+        )}
+      </div>
+      <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Type a message"
+            className="flex-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-sm focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-700"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendText();
+              }
+            }}
+          />
+          <button
+            onClick={sendText}
+            className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800"
+          >
+            Send
+          </button>
+          <button
+            onClick={() => setSrOpen((v) => !v)}
+            className="rounded-md bg-green-600 dark:bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 dark:hover:bg-green-800"
+          >
+            Session
           </button>
         </div>
-        {error && <div className="px-3 py-2 text-xs text-red-700 dark:text-red-400">{error}</div>}
-        <div ref={listRef} className="flex max-h-[70vh] flex-1 flex-col overflow-y-auto p-3">
-          {loading && messages.length === 0 ? (
-            <div className="text-xs text-gray-500">Loading…</div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {messages.map((m) => {
-                const isOwn = currentUserId ? m.from_user_id === currentUserId : false;
-                return (
-                  <div key={m.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
-                    <div
-                      className={`max-w-[75%] rounded-lg border p-2 shadow-sm ${
-                        isOwn ? "bg-indigo-50 border-indigo-600 text-indigo-700 dark:bg-indigo-900 dark:border-indigo-700 dark:text-indigo-100" : "bg-gray-100 border-gray-300 text-gray-900 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200"
-                      }`}
-                    >
-                      {renderMessage(m)}
-                      <div className="mt-1 text-[10px] text-gray-500">
-                        {new Date(m.created_at).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-        <div className="sticky bottom-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3">
-          <div className="flex items-center gap-2">
+        {srOpen && (
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <input
+              type="datetime-local"
+              className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-xs"
+              value={srAt}
+              onChange={(e) => setSrAt(e.target.value)}
+            />
+            <select
+              className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-xs"
+              value={srDuration}
+              onChange={(e) => setSrDuration(Number(e.target.value) as 25 | 50 | 75)}
+            >
+              <option value={25}>25 min</option>
+              <option value={50}>50 min</option>
+              <option value={75}>75 min</option>
+            </select>
             <input
               type="text"
-              placeholder="Type a message"
-              className="flex-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-sm focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-700"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) sendText();
-              }}
+              placeholder="Message (optional)"
+              className="w-48 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-xs"
+              value={srMessage}
+              onChange={(e) => setSrMessage(e.target.value)}
             />
             <button
-              onClick={sendText}
-              className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800"
-            >
-              Send (Ctrl+Enter)
-            </button>
-            <button
-              onClick={() => setSrOpen((v) => !v)}
+              onClick={sendSessionRequest}
               className="rounded-md bg-green-600 dark:bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 dark:hover:bg-green-800"
             >
-              Session
+              Send request
             </button>
           </div>
-          {srOpen && (
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              <input
-                type="datetime-local"
-                className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-xs"
-                value={srAt}
-                onChange={(e) => setSrAt(e.target.value)}
-              />
-              <select
-                className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-xs"
-                value={srDuration}
-                onChange={(e) => setSrDuration(Number(e.target.value) as 25 | 50 | 75)}
-              >
-                <option value={25}>25 min</option>
-                <option value={50}>50 min</option>
-                <option value={75}>75 min</option>
-              </select>
-              <input
-                type="text"
-                placeholder="Message (optional)"
-                className="w-48 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-xs"
-                value={srMessage}
-                onChange={(e) => setSrMessage(e.target.value)}
-              />
-              <button
-                onClick={sendSessionRequest}
-                className="rounded-md bg-green-600 dark:bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 dark:hover:bg-green-800"
-              >
-                Send request
-              </button>
-            </div>
-          )}
-        </div>
+        )}
+      </div>
+    </>
+  );
+
+  if (layout === "docked") {
+    return (
+      <div
+        className={`flex w-[320px] h-[380px] min-w-[300px] min-h-[320px] flex-col rounded-md bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 animate-[slide-up_180ms_ease-out] ${
+          minimized ? "h-10" : ""
+        }`}
+        style={{ transformOrigin: "bottom left" }}
+      >
+        {header}
+        {minimized ? <div className="hidden" /> : body}
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <div className="flex w-full max-w-lg max-h-[80vh] flex-col rounded-md bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 animate-[scale-in_180ms_ease-out]" style={{ transformOrigin: "center" }}>
+        {header}
+        {body}
       </div>
     </div>
   );
