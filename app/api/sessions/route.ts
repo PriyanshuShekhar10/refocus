@@ -166,6 +166,18 @@ export async function POST(req: NextRequest) {
     );
   }
   const s = new Date(start);
+  if (isNaN(s.getTime())) {
+    return NextResponse.json({ error: "Invalid start time" }, { status: 400 });
+  }
+
+  // --- 🚫 Block past or current sessions ---
+  const now = new Date();
+  if (s.getTime() <= now.getTime()) {
+    return NextResponse.json(
+      { error: "Cannot book a session in the past or for current time" },
+      { status: 400 }
+    );
+  }
   const e = new Date(s.getTime() + durationMin * 60_000);
 
   // Create session

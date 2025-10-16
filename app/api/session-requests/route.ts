@@ -51,6 +51,14 @@ export async function POST(req: NextRequest) {
   if (isNaN(s.getTime()))
     return NextResponse.json({ error: "Invalid start time" }, { status: 400 });
 
+  const now = new Date();
+  if (s < now) {
+  return NextResponse.json(
+    { error: "Cannot book a session in the past" },
+    { status: 400 }
+  );
+  }
+
   const db = await getDb();
   await db.collection("session_requests").insertOne({
     from_user_id: currentUserId,
@@ -128,5 +136,3 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ requests });
 }
-
-
