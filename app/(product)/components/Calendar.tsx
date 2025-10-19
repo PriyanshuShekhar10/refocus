@@ -894,7 +894,7 @@ export default function Calendar({
                                 ? ev.name
                                 : isOwner
                                 ? "Your session"
-                                : isBooked
+                                : isBooked 
                                 ? "Booked"
                                 : "Partner needed"}
                             </span>
@@ -986,11 +986,7 @@ export default function Calendar({
                             >
                               Book
                             </button>
-                          ) : (
-                            <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                              Booked
-                            </span>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     );

@@ -33,8 +33,8 @@ const TimeGutter = ({ startHour, endHour }) => {
             {hour === 12
               ? "12 PM"
               : hour > 12
-              ? `${hour - 12} PM`
-              : `${hour} AM`}
+                ? `${hour - 12} PM`
+                : `${hour} AM`}
           </div>
         );
       })}
@@ -84,9 +84,8 @@ const HoverPreview = ({ hover, visibleStartMin, visibleMinutes, duration }) => {
 
   return (
     <div
-      className={`${styles.hoverOverlay} ${
-        hover.isColliding ? styles.colliding : ""
-      }`}
+      className={`${styles.hoverOverlay} ${hover.isColliding ? styles.colliding : ""
+        }`}
       style={{ top: `${top}%`, height: `${height}%` }}
     />
   );
@@ -237,6 +236,10 @@ export default function CalendarBooking({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [hover, addBooking]);
 
+  // Filter the bookings to show only those that match the selected duration.
+  const filteredBookings = bookings.filter(
+    (booking) => booking.duration === selectedDuration
+  );
   // Date labels for headers
   const today = new Date();
   const dateLabel = (offset) =>
@@ -260,9 +263,8 @@ export default function CalendarBooking({
             <button
               key={d}
               onClick={() => setSelectedDuration(d)}
-              className={`${styles.btn} ${
-                selectedDuration === d ? styles.active : ""
-              }`}
+              className={`${styles.btn} ${selectedDuration === d ? styles.active : ""
+                }`}
             >
               {d} min
             </button>
@@ -274,9 +276,8 @@ export default function CalendarBooking({
             <button
               key={n}
               onClick={() => setDaysToShow(n)}
-              className={`${styles.btn} ${
-                daysToShow === n ? styles.active : ""
-              }`}
+              className={`${styles.btn} ${daysToShow === n ? styles.active : ""
+                }`}
             >
               {n} day{n > 1 ? "s" : ""}
             </button>
@@ -292,16 +293,15 @@ export default function CalendarBooking({
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHover((h) => ({ ...h, visible: false }))}
           onClick={addBooking}
-          className={`${styles.daysContainer} ${
-            hover.isColliding ? styles.noDrop : ""
-          }`}
+          className={`${styles.daysContainer} ${hover.isColliding ? styles.noDrop : ""
+            }`}
         >
           {Array.from({ length: daysToShow }).map((_, dayIdx) => (
             <DayColumn
               key={dayIdx}
               dayIndex={dayIdx}
               dateLabel={dateLabel(dayIdx)}
-              bookings={bookings.filter((b) => b.dayIndex === dayIdx)}
+              bookings={filteredBookings.filter((b) => b.dayIndex === dayIdx)}
               hover={hover}
               onRemove={removeBooking}
               visibleStartMin={visibleStartMin}
