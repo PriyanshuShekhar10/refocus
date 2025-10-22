@@ -37,41 +37,80 @@ export default function BookSessionButton({
   >(defaultSessionType);
   const [quietOwner, setQuietOwner] = React.useState(false);
 
-  // --- helpers ---
   const pad = (n: number) => String(n).padStart(2, "0");
 
-  // Compute default IST date + time (rounded *up* to the next 15-min mark)
+  // ---------- Helper: get current IST time ----------
+  const getISTParts = () => {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(new Date());
+
+    const kv: Record<string, string> = {};
+    for (const p of parts) {
+      if (p.type !== "literal") kv[p.type] = p.value;
+    }
+
+    const year = Number(kv.year);
+    const month = Number(kv.month);
+    const day = Number(kv.day);
+    const hour24 = Number(kv.hour);
+    const minute = Number(kv.minute);
+
+    return { year, month, day, hour24, minute };
+  };
+
+  // ---------- Defaults (next 15-min slot in IST) ----------
   const defaults = React.useMemo(() => {
-    const now = new Date();
-    const istMs = now.getTime() + (5 * 60 + 30) * 60_000; // UTC -> IST
-    const ist = new Date(istMs);
-    const mins = ist.getMinutes();
-    const next = Math.ceil((mins + 1) / 15) * 15;
-    ist.setMinutes(next, 0, 0);
+    const { year, month, day, hour24, minute } = getISTParts();
 
-    const yyyy = ist.getFullYear();
-    const mm = pad(ist.getMonth() + 1);
-    const dd = pad(ist.getDate());
+    const nextMinute = Math.ceil((minute + 1) / 15) * 15;
+    let hour = hour24;
+    let minuteRounded = nextMinute;
+    if (minuteRounded >= 60) {
+      minuteRounded = 0;
+      hour = (hour + 1) % 24;
+    }
 
-    const hour24 = ist.getHours(); // 0-23
-    const minute = [0, 15, 30, 45].includes(ist.getMinutes())
-      ? ist.getMinutes()
-      : 0;
+    const yyyy = year;
+    const mm = String(month).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
 
-    // Convert to 12-hour parts
-    const ampm: "AM" | "PM" = hour24 >= 12 ? "PM" : "AM";
-    let hour12 = hour24 % 12;
+    const ampm: "AM" | "PM" = hour >= 12 ? "PM" : "AM";
+    let hour12 = hour % 12;
     if (hour12 === 0) hour12 = 12;
 
     return {
-      dateIst: `${yyyy}-${mm}-${dd}`, // YYYY-MM-DD
+      dateIst: `${yyyy}-${mm}-${dd}`,
       hour12: hour12 as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12,
-      minute: minute as 0 | 15 | 30 | 45,
+      minute: minuteRounded as 0 | 15 | 30 | 45,
       ampm,
     };
   }, []);
 
-  // --- state for date + time parts ---
+  // ---------- Reliable now & today in IST ----------
+  const nowISTParts = React.useMemo(() => getISTParts(), []);
+  const nowIST = React.useMemo(() => ({
+    hour24: nowISTParts.hour24,
+    minute: nowISTParts.minute,
+    year: nowISTParts.year,
+    month: nowISTParts.month,
+    day: nowISTParts.day,
+  }), [nowISTParts]);
+
+  const todayIST = React.useMemo(() => {
+    const yyyy = String(nowIST.year).padStart(4, "0");
+    const mm = String(nowIST.month).padStart(2, "0");
+    const dd = String(nowIST.day).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }, [nowIST]);
+
+  // ---------- States ----------
   const [dateIst, setDateIst] = React.useState<string>(defaults.dateIst);
   const [hour12, setHour12] = React.useState<
     1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
@@ -79,7 +118,7 @@ export default function BookSessionButton({
   const [minute, setMinute] = React.useState<0 | 15 | 30 | 45>(defaults.minute);
   const [ampm, setAmpm] = React.useState<"AM" | "PM">(defaults.ampm);
 
-  // IST parts -> ISO (UTC)
+  // ---------- Convert IST to UTC ----------
   const istPartsToIsoUtc = (
     dateYYYYMMDD: string,
     hour12Val: number,
@@ -88,30 +127,36 @@ export default function BookSessionButton({
   ) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateYYYYMMDD)) return null;
 
-    // 12h -> 24h
     let hour24 = hour12Val % 12;
     if (ampmVal === "PM") hour24 += 12;
 
     const [y, m, d] = dateYYYYMMDD.split("-").map(Number);
-    // IST is UTC+5:30 -> UTC = IST - 5:30
     const utcMs = Date.UTC(y, m - 1, d, hour24 - 5, minuteVal - 30, 0, 0);
     return new Date(utcMs).toISOString();
   };
 
+  // ---------- Add minutes ----------
   const addMinutesIso = (isoStart: string, minutes: number) => {
     const start = new Date(isoStart).getTime();
     return new Date(start + minutes * 60_000).toISOString();
   };
 
+  // ---------- Past check ----------
+  const isPast = React.useMemo(() => {
+    const isoStart = istPartsToIsoUtc(dateIst, hour12, minute, ampm);
+    if (!isoStart) return false;
+    return new Date(isoStart).getTime() < Date.now();
+  }, [dateIst, hour12, minute, ampm]);
+
+  // ---------- Duration clamp ----------
   const clampDuration = (d: number): 25 | 50 | 75 =>
     d <= 25 ? 25 : d <= 50 ? 50 : 75;
 
-  // --- handlers ---
+  // ---------- Create handler ----------
   const handleCreate = async () => {
     setError(null);
     setSuccess(null);
 
-    // Only 15-min options are available in the UI, so no extra snapping needed
     const isoStart = istPartsToIsoUtc(dateIst, hour12, minute, ampm);
     if (!isoStart) {
       setError("Please pick a valid date & time.");
@@ -157,6 +202,37 @@ export default function BookSessionButton({
     }
   };
 
+  // ---------- Hour options ----------
+  const hourOptions = React.useMemo(() => {
+    const allHours = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+    if (dateIst !== todayIST) return allHours;
+
+    const currentHour24 = nowIST.hour24;
+    const currentAmpm: "AM" | "PM" = currentHour24 >= 12 ? "PM" : "AM";
+
+    if (ampm === "PM" && currentAmpm === "AM") return allHours;
+    if (ampm === "AM" && currentAmpm === "PM") return [];
+
+    const currentHour12 = currentHour24 % 12 === 0 ? 12 : currentHour24 % 12;
+    return allHours.filter((h) => h >= currentHour12);
+  }, [dateIst, ampm, nowIST, todayIST]);
+
+  // ---------- Minute options ----------
+  const minuteOptions = React.useMemo(() => {
+    const allMinutes = [0, 15, 30, 45];
+    if (dateIst !== todayIST) return allMinutes;
+
+    const currentHour24 = nowIST.hour24;
+    const currentMinute = nowIST.minute;
+    const selectedHour24 = hour12 % 12 + (ampm === "PM" ? 12 : 0);
+
+    if (selectedHour24 > currentHour24) return allMinutes;
+    if (selectedHour24 < currentHour24) return [];
+    return allMinutes.filter((m) => m > currentMinute);
+  }, [dateIst, hour12, ampm, nowIST, todayIST]);
+
+  // ---------- JSX ----------
   return (
     <>
       <button
@@ -183,20 +259,20 @@ export default function BookSessionButton({
             </div>
 
             <div className="mt-4 space-y-4">
+              {/* Date & Time */}
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Date &amp; time (IST)
                 </label>
-
                 <div className="mt-1 grid grid-cols-2 gap-2">
                   <input
                     type="date"
                     className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white px-3 py-2 text-sm"
                     value={dateIst}
+                    min={todayIST}
                     onChange={(e) => setDateIst(e.target.value)}
                     disabled={busy}
                   />
-
                   <div className="grid grid-cols-3 gap-2">
                     <select
                       className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white px-2 py-2 text-sm"
@@ -220,7 +296,7 @@ export default function BookSessionButton({
                       }
                       disabled={busy}
                     >
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((h) => (
+                      {hourOptions.map((h) => (
                         <option key={h} value={h}>
                           {h}
                         </option>
@@ -235,7 +311,7 @@ export default function BookSessionButton({
                       }
                       disabled={busy}
                     >
-                      {[0, 15, 30, 45].map((m) => (
+                      {minuteOptions.map((m) => (
                         <option key={m} value={m}>
                           {pad(m)}
                         </option>
@@ -256,12 +332,12 @@ export default function BookSessionButton({
                     </select>
                   </div>
                 </div>
-
                 <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                   Time uses 15-minute increments (Asia/Kolkata).
                 </p>
               </div>
 
+              {/* Duration */}
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Duration
@@ -284,6 +360,8 @@ export default function BookSessionButton({
                   ))}
                 </div>
               </div>
+
+              {/* Session type */}
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Session type
@@ -307,6 +385,7 @@ export default function BookSessionButton({
                 </div>
               </div>
 
+              {/* Quiet mode */}
               <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
@@ -318,6 +397,7 @@ export default function BookSessionButton({
                 Quiet session (start muted for you)
               </label>
 
+              {/* Messages */}
               {error && (
                 <div className="rounded-md bg-red-100 dark:bg-red-900/40 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                   {error}
@@ -330,6 +410,7 @@ export default function BookSessionButton({
               )}
             </div>
 
+            {/* Buttons */}
             <div className="mt-6 flex justify-end gap-3">
               <button
                 className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -341,9 +422,13 @@ export default function BookSessionButton({
               <button
                 className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800 disabled:opacity-50"
                 onClick={handleCreate}
-                disabled={busy}
+                disabled={busy || isPast}
               >
-                {busy ? "Creating…" : "Create session"}
+                {busy
+                  ? "Creating…"
+                  : isPast
+                  ? "Cannot create past session"
+                  : "Create session"}
               </button>
             </div>
           </div>

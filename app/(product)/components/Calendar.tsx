@@ -465,6 +465,16 @@ export default function Calendar({
       startHour * 60,
       endHour * 60 - preferred
     );
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  if (
+  ymd(dayDate) < ymd(now) || 
+  (ymd(dayDate) === ymd(now) && minutesOfDay < nowMinutes)
+  ) {
+  setToast("Cannot create a session in the past");
+  setTimeout(() => setToast(null), 2000);
+  return;
+  }
+
     const start = new Date(startOfDay(dayDate));
     start.setMinutes(minutesOfDay);
     // prevent overlap with existing events on the same day
@@ -540,6 +550,15 @@ export default function Calendar({
       return minutesOfDay >= startMin && minutesOfDay < endMin;
     });
     const topPx = minuteToPx(minutesOfDay - startHour * 60);
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    if (
+      ymd(d) < ymd(now) || // previous day
+      (ymd(d) === ymd(now) && minutesOfDay < nowMinutes) // past minutes today
+      ) {
+    setHoverState(null); // hide hover for past
+    return;
+    }
+
     setHoverState({
       dayIndex,
       yPx: topPx,
