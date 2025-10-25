@@ -25,7 +25,7 @@ export default function GlobalChat() {
   const [isLoading, setIsLoading] = useState(true);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [onlineUsers, setOnlineUsers] = useState<number>(0);
+  const [onlineUsers] = useState<number>(0);
   const [isTyping, setIsTyping] = useState<Set<string>>(new Set());
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -222,10 +222,6 @@ export default function GlobalChat() {
     } catch (e) {
       console.error('Failed to add reaction:', e);
     }
-  };
-
-  const getReactionCount = (message: GlobalMessage, emoji: string) => {
-    return message.reactions?.[emoji]?.length || 0;
   };
 
   const hasUserReacted = (message: GlobalMessage, emoji: string) => {
