@@ -268,8 +268,10 @@ export default function Calendar({
   }, []);
 
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const columnsGridRef = useRef<HTMLDivElement | null>(null);
   const rowPx = 28;
-  const minuteToPx = (m: number) => (m / stepMinutes) * rowPx;
+  const totalHeight = gridRef.current?.scrollHeight || (rowPx * (totalMinutes / stepMinutes));
+  const minuteToPx = (m: number) => (m / totalMinutes) * totalHeight;
   const [hoverState, setHoverState] = useState<null | {
     dayIndex: number;
     yPx: number; // snapped top relative to day column
@@ -308,11 +310,12 @@ export default function Calendar({
     const dayLast = days[days.length - 1];
     if (!day0 || !dayLast) return null;
     const n = now;
-    if (n < startOfDay(day0) || n > addDays(startOfDay(dayLast), 1))
-      return null;
+    const startOfDayLocal = new Date(day0.getFullYear(), day0.getMonth(), day0.getDate());
+    const endOfRangeLocal = new Date(dayLast.getFullYear(), dayLast.getMonth(), dayLast.getDate() + 1);
+    if (n < startOfDayLocal || n > endOfRangeLocal) return null;
     const m = n.getHours() * 60 + n.getMinutes() - startHour * 60;
     const y = clamp(minuteToPx(m), 0, minuteToPx(totalMinutes));
-    return y;
+    return y > 0 ? y - 50 : y; 
   })();
 
   // Realtime: notify owner when someone joins their session
@@ -439,8 +442,8 @@ export default function Calendar({
 
   // Clicking empty space to create your own session
   const handleGridClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    if (!gridRef.current) return;
-    const rect = gridRef.current.getBoundingClientRect();
+    if (!columnsGridRef.current) return;
+    const rect = columnsGridRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const gutter = 64; // w-16 time gutter
     const contentWidth = Math.max(0, rect.width - gutter);
@@ -459,7 +462,8 @@ export default function Calendar({
     const yContent = y + (scroller?.scrollTop ?? 0);
     // use selected creation duration
     const preferred = createDuration;
-    const minutesFromTop = Math.round(yContent / rowPx) * stepMinutes;
+    const minutesFromTopRaw = ((yContent) / rowPx) * stepMinutes;
+    const minutesFromTop = Math.floor((minutesFromTopRaw + stepMinutes / 2) / stepMinutes) * stepMinutes - stepMinutes / 2;
     const minutesOfDay = clamp(
       minutesFromTop + startHour * 60,
       startHour * 60,
@@ -509,8 +513,8 @@ export default function Calendar({
 
   // Hover: show a precise time cursor and slot preview
   const computeHoverFromClient = (clientX: number, clientY: number) => {
-    if (!gridRef.current) return;
-    const rect = gridRef.current.getBoundingClientRect();
+    if (!columnsGridRef.current) return;
+    const rect = columnsGridRef.current.getBoundingClientRect();
     const scroller = gridRef.current;
     const x = clientX - rect.left;
     const y = clientY - rect.top;
@@ -526,7 +530,7 @@ export default function Calendar({
     const yContent = y + (scroller?.scrollTop ?? 0);
     const minutesFromTopRaw = (yContent / rowPx) * stepMinutes;
     const minutesFromTop =
-      Math.round(minutesFromTopRaw / stepMinutes) * stepMinutes; // snap
+      Math.floor((minutesFromTopRaw + stepMinutes / 2) / stepMinutes) * stepMinutes - stepMinutes / 2; // snap
     const minutesOfDay = clamp(
       minutesFromTop + startHour * 60,
       startHour * 60,
@@ -549,7 +553,7 @@ export default function Calendar({
       const endMin = startMin + ev.durationMin;
       return minutesOfDay >= startMin && minutesOfDay < endMin;
     });
-    const topPx = minuteToPx(minutesOfDay - startHour * 60);
+    const topPx = minuteToPx(minutesOfDay - startHour * 60) - 50;
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
     if (
       ymd(d) < ymd(now) || // previous day
@@ -561,7 +565,7 @@ export default function Calendar({
 
     setHoverState({
       dayIndex,
-      yPx: topPx,
+      yPx:  y + (scroller?.scrollTop ?? 0) - 50,
       label,
       previewTop: topPx,
       overEvent,
@@ -660,7 +664,7 @@ export default function Calendar({
       </aside>
 
       {/* Right: Calendar Area */}
-      <section className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+      <section className="flex-1 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
         <div className="flex items-center justify-between border-b px-4 py-3 dark:border-gray-700">
           <div className="flex items-center gap-2">
             <button
@@ -714,14 +718,21 @@ export default function Calendar({
 
           {/* Columns */}
           <div
+            ref={columnsGridRef}
             className="grid flex-1"
             style={{ gridTemplateColumns: `repeat(${visibleDays}, 1fr)` }}
           >
             {days.map((d, dayIdx) => (
-              <div
-                key={ymd(d)}
-                className="relative border-r dark:border-gray-700"
-              >
+                <div key={ymd(d)} className="relative border-r dark:border-gray-700 flex flex-col">
+                  <div id = "calendar-day-header" className="sticky top-0 z-10 text-center py-2 border-b dark:border-gray-700 shrink-0 bg-white dark:bg-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {d.toLocaleDateString(locale, { weekday: 'short' })}
+                    </p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      {d.toLocaleDateString(locale, { day: 'numeric' })}
+                    </p>
+                  </div>
+                  <div className="relative flex-1">
                 {/* Horizontal Lines */}
                 {Array.from({ length: endHour - startHour }).map((_, i) => (
                   <div
@@ -992,6 +1003,7 @@ export default function Calendar({
                     );
                   })}
                 </div>
+              </div>
               </div>
             ))}
           </div>
