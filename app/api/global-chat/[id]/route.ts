@@ -7,25 +7,30 @@ import { globalChatChannel, publish } from "@/lib/sse";
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getServerSession(authOptions);
-  const currentUser = session?.user as { id?: string; name?: string } | undefined;
+  const currentUser = session?.user as
+    | { id?: string; name?: string }
+    | undefined;
   const currentUserId = currentUser?.id;
-  
+
   if (!currentUserId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id: messageId } = await params;
-  
+
   if (!messageId) {
-    return NextResponse.json({ error: "Message ID is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Message ID is required" },
+      { status: 400 },
+    );
   }
 
   try {
     const db = await getDb();
-    
+
     // First, check if the message exists and belongs to the current user
     const message = await db.collection("global_messages").findOne({
       _id: new ObjectId(messageId),
@@ -38,7 +43,7 @@ export async function DELETE(
     if (message.user_id !== currentUserId) {
       return NextResponse.json(
         { error: "You can only delete your own messages" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -51,22 +56,28 @@ export async function DELETE(
           deleted_at: new Date(),
           content: "[This message was deleted]",
         },
-      }
+      },
     );
 
     if (result.modifiedCount === 0) {
-      return NextResponse.json({ error: "Failed to delete message" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to delete message" },
+        { status: 500 },
+      );
     }
 
-    // Publish update event
-    publish(globalChatChannel(), { type: "message:deleted", payload: { id: messageId } });
+    // Publish update event (async for Redis support)
+    await publish(globalChatChannel(), {
+      type: "message:deleted",
+      payload: { id: messageId },
+    });
 
     return NextResponse.json({ success: true, id: messageId });
   } catch (error) {
     console.error("Error deleting message:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

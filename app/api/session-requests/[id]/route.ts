@@ -9,7 +9,7 @@ import { chatChannel, publish } from "@/lib/sse";
 // On accept: create a session and add both users as participants
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getServerSession(authOptions);
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
@@ -21,12 +21,15 @@ export async function POST(
     action?: "accept" | "decline";
     message?: string;
   };
-  if (!action) return NextResponse.json({ error: "Missing action" }, { status: 400 });
+  if (!action)
+    return NextResponse.json({ error: "Missing action" }, { status: 400 });
 
   const { id } = await params;
   const db = await getDb();
 
-  const reqDoc = await db.collection("session_requests").findOne({ _id: new ObjectId(id) });
+  const reqDoc = await db
+    .collection("session_requests")
+    .findOne({ _id: new ObjectId(id) });
   if (!reqDoc)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (reqDoc.to_user_id !== currentUserId)
@@ -40,7 +43,9 @@ export async function POST(
   let createdSessionId: string | null = null;
   if (action === "accept") {
     const start = new Date(reqDoc.start_time);
-    const end = new Date(start.getTime() + (reqDoc.duration_min ?? 25) * 60_000);
+    const end = new Date(
+      start.getTime() + (reqDoc.duration_min ?? 25) * 60_000,
+    );
     const insert = await db.collection("sessions").insertOne({
       owner_id: reqDoc.from_user_id,
       start_time: start,
@@ -66,7 +71,7 @@ export async function POST(
         response_message: message ?? null,
         responded_at: new Date(),
       },
-    }
+    },
   );
 
   // Best-effort: update any chat message payload that references this request
@@ -79,11 +84,14 @@ export async function POST(
           "payload.responseMessage": message ?? null,
           "payload.sessionId": createdSessionId ?? null,
         },
-      }
+      },
     );
-    // Publish to chat channel for both users
+    // Publish to chat channel for both users (async for Redis support)
     const channel = chatChannel(reqDoc.from_user_id, reqDoc.to_user_id);
-    publish(channel, { type: "session-request:update", payload: { id: String(reqDoc._id), status: nextStatus } });
+    await publish(channel, {
+      type: "session-request:update",
+      payload: { id: String(reqDoc._id), status: nextStatus },
+    });
   } catch {}
 
   return NextResponse.json({ ok: true, sessionId: createdSessionId });
@@ -92,7 +100,7 @@ export async function POST(
 // DELETE /api/session-requests/:id (only requester can delete when pending)
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getServerSession(authOptions);
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
@@ -101,26 +109,36 @@ export async function DELETE(
 
   const { id } = await params;
   const db = await getDb();
-  const reqDoc = await db.collection("session_requests").findOne({ _id: new ObjectId(id) });
-  if (!reqDoc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const reqDoc = await db
+    .collection("session_requests")
+    .findOne({ _id: new ObjectId(id) });
+  if (!reqDoc)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (reqDoc.from_user_id !== currentUserId)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   if (reqDoc.status !== "pending")
-    return NextResponse.json({ error: "Cannot delete after response" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Cannot delete after response" },
+      { status: 400 },
+    );
 
   await db.collection("session_requests").deleteOne({ _id: new ObjectId(id) });
 
   // Mark any chat message as cancelled
   try {
-    await db.collection("messages").updateMany(
-      { "payload.sessionRequestId": String(reqDoc._id) },
-      { $set: { "payload.status": "cancelled" } }
-    );
+    await db
+      .collection("messages")
+      .updateMany(
+        { "payload.sessionRequestId": String(reqDoc._id) },
+        { $set: { "payload.status": "cancelled" } },
+      );
+    // Publish event (async for Redis support)
     const channel = chatChannel(reqDoc.from_user_id, reqDoc.to_user_id);
-    publish(channel, { type: "session-request:update", payload: { id: String(reqDoc._id), status: "cancelled" } });
+    await publish(channel, {
+      type: "session-request:update",
+      payload: { id: String(reqDoc._id), status: "cancelled" },
+    });
   } catch {}
 
   return NextResponse.json({ ok: true });
 }
-
-

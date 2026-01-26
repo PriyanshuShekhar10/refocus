@@ -7,7 +7,7 @@ import { userChannel, publish } from "@/lib/sse";
 // POST /api/chat/:friendId/read
 export async function POST(
   _req: NextRequest,
-  { params }: { params: Promise<{ friendId: string }> }
+  { params }: { params: Promise<{ friendId: string }> },
 ) {
   const session = await getServerSession(authOptions);
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
@@ -18,14 +18,25 @@ export async function POST(
   const now = new Date();
   await db
     .collection("messages")
-    .updateMany({ from_user_id: friendId, to_user_id: currentUserId, read_at: null }, { $set: { read_at: now } });
+    .updateMany(
+      { from_user_id: friendId, to_user_id: currentUserId, read_at: null },
+      { $set: { read_at: now } },
+    );
 
   // publish to current user channel with updated count for that friend
   const unread = await db
     .collection("messages")
-    .countDocuments({ from_user_id: friendId, to_user_id: currentUserId, read_at: null });
-  publish(userChannel(currentUserId), { type: "unread:update", payload: { friendId, count: unread } });
+    .countDocuments({
+      from_user_id: friendId,
+      to_user_id: currentUserId,
+      read_at: null,
+    });
+
+  // Publish event (async for Redis support)
+  await publish(userChannel(currentUserId), {
+    type: "unread:update",
+    payload: { friendId, count: unread },
+  });
+
   return NextResponse.json({ ok: true });
 }
-
-

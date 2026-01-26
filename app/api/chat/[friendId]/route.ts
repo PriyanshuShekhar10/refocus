@@ -4,6 +4,11 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { chatChannel, publish, userChannel } from "@/lib/sse";
+import {
+  checkRateLimit,
+  rateLimitedResponse,
+  addRateLimitHeaders,
+} from "@/lib/ratelimit";
 
 type MessageDoc = {
   _id: ObjectId;
@@ -28,7 +33,7 @@ type MessageDoc = {
 // GET /api/chat/:friendId
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ friendId: string }> }
+  { params }: { params: Promise<{ friendId: string }> },
 ) {
   const session = await getServerSession(authOptions);
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
@@ -69,24 +74,34 @@ export async function GET(
 // - { type: 'session-request', start, durationMin, message? }
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ friendId: string }> }
+  { params }: { params: Promise<{ friendId: string }> },
 ) {
   const session = await getServerSession(authOptions);
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
-  if (!currentUserId)
+  if (!currentUserId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Apply rate limiting for chat messages
+  const rateLimitResult = await checkRateLimit(currentUserId, "chat");
+  if (!rateLimitResult.success) {
+    return rateLimitedResponse(rateLimitResult);
+  }
 
   const { friendId } = await params;
   const db = await getDb();
 
   const body = await req.json().catch(() => ({}));
   const { type } = body as { type?: "text" | "session-request" };
-  if (!type) return NextResponse.json({ error: "Missing type" }, { status: 400 });
+  if (!type) {
+    return NextResponse.json({ error: "Missing type" }, { status: 400 });
+  }
 
   if (type === "text") {
     const { content } = body as { content?: string };
-    if (!content || !content.trim())
+    if (!content || !content.trim()) {
       return NextResponse.json({ error: "Empty content" }, { status: 400 });
+    }
     const insert = await db.collection("messages").insertOne({
       from_user_id: currentUserId,
       to_user_id: friendId,
@@ -95,10 +110,20 @@ export async function POST(
       created_at: new Date(),
       read_at: null,
     });
-    // Publish event
+
+    // Publish events (async for Redis support)
     const channel = chatChannel(currentUserId, friendId);
-    publish(channel, { type: "message:new", payload: { id: String(insert.insertedId) } });
-    publish(userChannel(friendId), { type: "unread:inc", payload: { friendId: currentUserId, delta: 1 } });
+    await Promise.all([
+      publish(channel, {
+        type: "message:new",
+        payload: { id: String(insert.insertedId) },
+      }),
+      publish(userChannel(friendId), {
+        type: "unread:inc",
+        payload: { friendId: currentUserId, delta: 1 },
+      }),
+    ]);
+
     return NextResponse.json({ id: String(insert.insertedId) });
   }
 
@@ -111,7 +136,7 @@ export async function POST(
     if (!start || !durationMin)
       return NextResponse.json(
         { error: "Missing start or durationMin" },
-        { status: 400 }
+        { status: 400 },
       );
     const s = new Date(start);
     if (isNaN(s.getTime()))
@@ -149,17 +174,27 @@ export async function POST(
       read_at: null,
     });
 
-    // Publish event
+    // Publish events (async for Redis support)
     const channel = chatChannel(currentUserId, friendId);
-    publish(channel, {
-      type: "session-request:new",
-      payload: { messageId: String(insert.insertedId), sessionRequestId: String(sr.insertedId) },
+    await Promise.all([
+      publish(channel, {
+        type: "session-request:new",
+        payload: {
+          messageId: String(insert.insertedId),
+          sessionRequestId: String(sr.insertedId),
+        },
+      }),
+      publish(userChannel(friendId), {
+        type: "unread:inc",
+        payload: { friendId: currentUserId, delta: 1 },
+      }),
+    ]);
+
+    return NextResponse.json({
+      id: String(insert.insertedId),
+      sessionRequestId: String(sr.insertedId),
     });
-    publish(userChannel(friendId), { type: "unread:inc", payload: { friendId: currentUserId, delta: 1 } });
-    return NextResponse.json({ id: String(insert.insertedId), sessionRequestId: String(sr.insertedId) });
   }
 
   return NextResponse.json({ error: "Unsupported type" }, { status: 400 });
 }
-
-
