@@ -1,4 +1,10 @@
-import { getPublisher, getSubscriber, isRedisConfigured } from "./redis";
+import {
+  getPublisher,
+  getSubscriber,
+  isRedisConfigured,
+  isMessageHandlerAttached,
+  setMessageHandlerAttached,
+} from "./redis";
 
 /**
  * SSE Event Bus Module
@@ -22,7 +28,7 @@ type Subscriber = (event: EventPayload) => void;
 
 type BusState = {
   channels: Map<string, Set<Subscriber>>;
-  redisSubscriptions: Set<string>;
+  redisSubscribedChannels: Set<string>;
 };
 
 const getState = (): BusState => {
@@ -30,11 +36,63 @@ const getState = (): BusState => {
   if (!g.__SSE_BUS__) {
     g.__SSE_BUS__ = {
       channels: new Map(),
-      redisSubscriptions: new Set(),
+      redisSubscribedChannels: new Set(),
     };
   }
   return g.__SSE_BUS__!;
 };
+
+/**
+ * Initialize the global Redis message handler (called once)
+ * This single handler routes messages to all local subscribers
+ */
+function initializeRedisMessageHandler(): void {
+  if (!isRedisConfigured() || isMessageHandlerAttached()) {
+    return;
+  }
+
+  try {
+    const subscriber = getSubscriber();
+
+    // Single message handler for ALL channels
+    subscriber.on("message", (channel: string, message: string) => {
+      try {
+        const event = JSON.parse(message) as EventPayload;
+        notifyLocalSubscribers(channel, event);
+      } catch (err) {
+        console.error("[SSE] Failed to parse Redis message:", err);
+      }
+    });
+
+    setMessageHandlerAttached(true);
+    console.log("[SSE] Redis message handler initialized");
+  } catch (err) {
+    console.error("[SSE] Failed to initialize Redis message handler:", err);
+  }
+}
+
+/**
+ * Subscribe to a Redis channel (if not already subscribed)
+ */
+async function subscribeToRedisChannel(channel: string): Promise<void> {
+  const state = getState();
+
+  if (state.redisSubscribedChannels.has(channel)) {
+    return; // Already subscribed
+  }
+
+  try {
+    // Initialize the message handler if not done yet
+    initializeRedisMessageHandler();
+
+    const subscriber = getSubscriber();
+    await subscriber.subscribe(channel);
+    state.redisSubscribedChannels.add(channel);
+    console.log(`[SSE] Subscribed to Redis channel: ${channel}`);
+  } catch (err) {
+    console.error(`[SSE] Failed to subscribe to Redis channel ${channel}:`, err);
+  }
+}
 
 /**
  * Subscribe to a channel for SSE events
@@ -54,10 +112,12 @@ export function subscribe(channel: string, fn: Subscriber): () => void {
   const set = state.channels.get(channel)!;
   set.add(fn);
 
-  // Setup Redis subscription if configured and not already subscribed
-  if (isRedisConfigured() && !state.redisSubscriptions.has(channel)) {
-    state.redisSubscriptions.add(channel);
-    setupRedisSubscription(channel);
+  // Setup Redis subscription if configured
+  if (isRedisConfigured()) {
+    // Fire and forget - subscription happens asynchronously
+    subscribeToRedisChannel(channel).catch((err) => {
+      console.error("[SSE] Error setting up Redis subscription:", err);
+    });
   }
 
   // Return unsubscribe function
@@ -65,36 +125,10 @@ export function subscribe(channel: string, fn: Subscriber): () => void {
     set.delete(fn);
     if (set.size === 0) {
       state.channels.delete(channel);
-      // Note: We don't unsubscribe from Redis here to avoid race conditions
+      // Note: We don't unsubscribe from Redis to avoid race conditions
       // Redis subscriptions are lightweight and can persist
     }
   };
-}
-
-/**
- * Setup Redis subscription for a channel
- * Messages received from Redis are forwarded to local subscribers
- */
-async function setupRedisSubscription(channel: string): Promise<void> {
-  try {
-    const subscriber = getSubscriber();
-
-    subscriber.on("message", (receivedChannel: string, message: string) => {
-      if (receivedChannel !== channel) return;
-
-      try {
-        const event = JSON.parse(message) as EventPayload;
-        notifyLocalSubscribers(channel, event);
-      } catch (err) {
-        console.error("[SSE] Failed to parse Redis message:", err);
-      }
-    });
-
-    await subscriber.subscribe(channel);
-  } catch (err) {
-    console.error("[SSE] Failed to setup Redis subscription:", err);
-    // Fall back to local-only mode silently
-  }
 }
 
 /**
