@@ -7,120 +7,28 @@ import React, {
   useRef,
   useState,
 } from "react";
-import BookSessionButton from "./BookSessionButton";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-// Realtime removed during migration from Supabase
-
-/* =========================
-    Types
-========================= */
-
-// ENHANCED: Event type now includes booking-specific details
-export type CalendarEvent = {
-  id: string;
-  title?: string;
-  start: string; // ISO
-  end: string; // ISO
-  durationMin: 25 | 50 | 75;
-  sessionType: "focus" | "deep-work" | "learning";
-  name?: string | null;
-  color?: string | null;
-  // Simplified partner model for the frontend (kept for UI text)
-  partner?: { id: string; name: string; avatarUrl?: string } | null | "anyone";
-  // Status to manage the booking flow
-  status: "available" | "booked" | "in-progress" | "completed";
-  owner_id?: string;
-  owner?: {
-    id: string;
-    email?: string;
-    firstname?: string;
-    lastname?: string;
-  } | null;
-  participants?: {
-    user_id: string;
-    joined_at: string;
-    email?: string;
-    firstname?: string;
-    confirmVariant?: "danger" | "success";
-    lastname?: string;
-    quiet?: boolean;
-    avatar_url?: string;
-  }[];
-};
-
-// Shape of sessions returned from /api/sessions endpoint
-type FetchedSession = {
-  id: string;
-  start: string;
-  end: string;
-  durationMin: 25 | 50 | 75;
-  sessionType: "focus" | "deep-work" | "learning";
-  status: "available" | "booked" | "in-progress" | "completed";
-  name?: string | null;
-  color?: string | null;
-  owner_id?: string;
-  owner?: {
-    id: string;
-    email?: string;
-    firstname?: string;
-    lastname?: string;
-  } | null;
-  participants?: Array<{
-    user_id: string;
-    joined_at: string;
-    email?: string;
-    firstname?: string;
-    lastname?: string;
-    avatar_url?: string;
-  }>;
-};
-
-export type PresenceDot = {
-  id: string;
-  time: string; // ISO
-  columnDate: string; // YYYY-MM-DD
-  avatarUrl: string;
-  name?: string;
-};
-
-export type CalendarProps = {
-  startHour?: number;
-  endHour?: number;
-  stepMinutes?: 15 | 30;
-  visibleDays?: number;
-  startDate?: Date;
-  events?: CalendarEvent[];
-  presence?: PresenceDot[];
-  locale?: string;
-  onEventsChange?: (next: CalendarEvent[]) => void;
-  className?: string;
-};
-
-/* =========================
-    Small time helpers
-========================= */
-const pad = (n: number) => String(n).padStart(2, "0");
-const toISO = (d: Date) => new Date(d).toISOString();
-const startOfDay = (d: Date) => {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
-};
-const addMinutes = (d: Date, m: number) => new Date(d.getTime() + m * 60_000);
-const addDays = (d: Date, n: number) => {
-  const x = new Date(d);
-  x.setDate(x.getDate() + n);
-  return x;
-};
-const formatDayLabel = (d: Date, locale = "en-US") =>
-  d.toLocaleDateString(locale, { weekday: "short", day: "numeric" });
-const ymd = (d: Date) =>
-  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const clamp = (val: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, val));
-const minutesBetween = (a: Date, b: Date) =>
-  Math.round((b.getTime() - a.getTime()) / 60000);
-// const snapMinutes = (m: number, step: number) => Math.round(m / step) * step;
+import type {
+  CalendarEvent,
+  FetchedSession,
+  CalendarProps,
+} from "@/types/calendar";
+import {
+  toISO,
+  startOfDay,
+  addMinutes,
+  addDays,
+  ymd,
+  clamp,
+  minutesBetween,
+  formatHour,
+} from "@/lib/utils";
+import { BookingModal } from "./Calendar/Modals/BookingModal";
+import { Toast } from "./Calendar/Modals/Toast";
+import { ConfirmModal } from "./Calendar/Modals/ConfirmModal";
+import { SessionDetailsModal } from "./Calendar/Modals/SessionDetailsModal";
+import { CalendarSidebar } from "./Calendar/CalendarSidebar";
+import { CalendarHeader } from "./Calendar/CalendarHeader";
+import { CalendarEventCard } from "./Calendar/CalendarEventCard";
 
 /* =========================
     Calendar Component
@@ -314,11 +222,6 @@ export default function Calendar({
     const y = clamp(minuteToPx(m), 0, minuteToPx(totalMinutes));
     return y;
   })();
-
-  // Realtime: notify owner when someone joins their session
-  // Realtime notifications removed; consider WebSockets or Pusher here
-
-  // Fetch sessions for visible range
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -445,7 +348,6 @@ export default function Calendar({
     const gutter = 64; // w-16 time gutter
     const contentWidth = Math.max(0, rect.width - gutter);
     const xAdjusted = Math.max(0, x - gutter);
-    // Determine which day column was clicked (inside content area only)
     const dayWidth = contentWidth / visibleDays;
     const dayIndex = clamp(
       Math.floor(xAdjusted / dayWidth),
@@ -606,87 +508,21 @@ export default function Calendar({
 
   return (
     <div className={`flex h-[calc(100vh-2rem)] w-full gap-4 ${className}`}>
-      {/* Left panel: Filters; times are shown in IST */}
-      <aside className="w-72 shrink-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Book a Session
-        </h3>
-        <div className="mt-6">
-          <BookSessionButton />
-
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Duration (minutes)
-          </p>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {[25, 50, 75].map((m) => (
-              <button
-                key={m}
-                onClick={() => handleDurationFilterChange(m)}
-                className={`rounded-md border px-3 py-2 text-sm ${
-                  durationFilter.includes(m)
-                    ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
-                    : "border-gray-200 dark:border-gray-700"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-        </div>
-        {/* TODO: Add more filters for session type, partner, etc. here */}
-        <div className="mt-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            New session length
-          </p>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {[25, 50, 75].map((m) => (
-              <button
-                key={`create-${m}`}
-                onClick={() => setCreateDuration(m as 25 | 50 | 75)}
-                className={`rounded-md border px-3 py-2 text-sm ${
-                  createDuration === m
-                    ? "border-green-600 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"
-                    : "border-gray-200 dark:border-gray-700"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-          <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-            Tip: click an empty slot to create your own session.
-          </p>
-        </div>
-      </aside>
+      <CalendarSidebar
+        durationFilter={durationFilter}
+        onDurationFilterChange={handleDurationFilterChange}
+        createDuration={createDuration}
+        onCreateDurationChange={(d) => setCreateDuration(d as 25 | 50 | 75)}
+      />
 
       {/* Right: Calendar Area */}
       <section className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-        <div className="flex items-center justify-between border-b px-4 py-3 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => shiftRange(-1)}
-              className="rounded-md border p-2 dark:border-gray-600"
-            >
-              ◀︎
-            </button>
-            <button
-              onClick={goToday}
-              className="rounded-md border px-3 py-1.5 text-sm dark:border-gray-600"
-            >
-              Today
-            </button>
-            <button
-              onClick={() => shiftRange(1)}
-              className="rounded-md border p-2 dark:border-gray-600"
-            >
-              ▶︎
-            </button>
-            <span className="ml-4 text-lg font-semibold dark:text-gray-100">
-              {formatDayLabel(startDate, locale)}
-            </span>
-          </div>
-          {/* TODO: Add layout toggle (List/Grid) and search bar here */}
-        </div>
+        <CalendarHeader
+          startDate={startDate}
+          locale={locale}
+          onShiftRange={shiftRange}
+          onGoToday={goToday}
+        />
 
         <div
           ref={gridRef}
@@ -818,177 +654,35 @@ export default function Calendar({
                       : false;
 
                     return (
-                      <div
+                      <CalendarEventCard
                         key={ev.id}
-                        className="absolute inset-x-2 z-20"
-                        style={{ top }}
-                      >
-                        <div
-                          style={{
-                            height,
-                            backgroundColor:
-                              ev.color ||
-                              (isBooked
-                                ? typeof window !== "undefined" &&
-                                  window.matchMedia &&
-                                  window.matchMedia(
-                                    "(prefers-color-scheme: dark)",
-                                  ).matches
-                                  ? "#374151"
-                                  : "#d1d5db"
-                                : typeof window !== "undefined" &&
-                                    window.matchMedia &&
-                                    window.matchMedia(
-                                      "(prefers-color-scheme: dark)",
-                                    ).matches
-                                  ? "#312e81"
-                                  : "#e0e7ff"),
-                          }}
-                          className={`rounded-lg p-2 flex flex-col justify-between shadow-sm${
-                            isBooked
-                              ? "border border-gray-300 dark:border-gray-600"
-                              : "border border-indigo-200 hover:border-indigo-400 cursor-pointer dark:border-indigo-900"
-                          }`}
-                          title={
-                            tooltip
-                              ? `${tooltip.label}${
-                                  tooltip.email ? `\n${tooltip.email}` : ""
-                                }`
-                              : undefined
-                          }
-                          onClick={(evt) => {
-                            evt.stopPropagation();
-                            if (!isBooked && !isOwner) handleBookSlot(ev);
-                            else setDetailsModalEvent(ev);
-                          }}
-                        >
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
-                              {s.toLocaleTimeString("en-IN", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                                timeZone: "Asia/Kolkata",
-                              })}
-                            </p>
-                            <p
-                              className={`text-xs font-semibold leading-tight ${
-                                isBooked
-                                  ? "text-gray-900 dark:text-white"
-                                  : "text-gray-800 dark:text-white"
-                              }`}
-                            >
-                              {ev.durationMin} min • {ev.sessionType}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center justify-between mt-1">
-                            <span
-                              className={`text-xs font-medium ${
-                                isBooked
-                                  ? "text-gray-800 dark:text-indigo-200"
-                                  : "text-indigo-700 dark:text-indigo-300"
-                              }`}
-                            >
-                              {ev.name
-                                ? ev.name
-                                : isOwner
-                                  ? "Your session"
-                                  : isBooked
-                                    ? "Booked"
-                                    : "Partner needed"}
-                            </span>
-                            {ev.participants && ev.participants.length > 0 && (
-                              <div className="flex -space-x-1 ml-1">
-                                {ev.participants
-                                  .slice(0, 2)
-                                  .map((participant, idx) => {
-                                    const displayName =
-                                      [
-                                        participant.firstname,
-                                        participant.lastname,
-                                      ]
-                                        .filter(Boolean)
-                                        .join(" ") ||
-                                      participant.email ||
-                                      participant.user_id ||
-                                      "User";
-                                    const initials = displayName
-                                      .split(" ")
-                                      .map((n) => n[0])
-                                      .join("")
-                                      .substring(0, 2)
-                                      .toUpperCase();
-
-                                    return (
-                                      <Avatar
-                                        key={participant.user_id || idx}
-                                        className="h-4 w-4 border border-white"
-                                      >
-                                        {participant.avatar_url ? (
-                                          <AvatarImage
-                                            src={participant.avatar_url}
-                                            alt={displayName}
-                                          />
-                                        ) : null}
-                                        <AvatarFallback className="text-[8px] font-medium bg-indigo-100 text-indigo-600">
-                                          {initials}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                    );
-                                  })}
-                                {ev.participants.length > 2 && (
-                                  <div className="h-4 w-4 rounded-full bg-gray-200 border border-white flex items-center justify-center">
-                                    <span className="text-[6px] font-medium text-gray-600">
-                                      +{ev.participants.length - 2}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          {isBooked && otherQuiet && (
-                            <span className="ml-2 inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100">
-                              🔇 Quiet
-                            </span>
-                          )}
-                          {isOwner ? (
-                            <button
-                              className="text-xs font-semibold text-red-600"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setConfirmModal({
-                                  title: "Delete session",
-                                  description: (
-                                    <span>
-                                      This action cannot be undone. Do you want
-                                      to delete this session?
-                                    </span>
-                                  ),
-                                  confirmText: "Delete",
-                                  cancelText: "Cancel",
-                                  onConfirm: () => {
-                                    setConfirmModal(null);
-                                    deleteSession(ev.id);
-                                  },
-                                });
-                              }}
-                            >
-                              Delete
-                            </button>
-                          ) : !isBooked ? (
-                            <button
-                              className="text-xs font-semibold text-indigo-600 dark:text-indigo-300"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleBookSlot(ev);
-                              }}
-                            >
-                              Book
-                            </button>
-                          ) : null}
-                        </div>
-                      </div>
+                        event={ev}
+                        isBooked={isBooked}
+                        isOwner={!!isOwner}
+                        otherQuiet={otherQuiet}
+                        tooltip={tooltip}
+                        top={top}
+                        height={height}
+                        onBook={() => handleBookSlot(ev)}
+                        onDetails={() => setDetailsModalEvent(ev)}
+                        onDelete={() => {
+                          setConfirmModal({
+                            title: "Delete session",
+                            description: (
+                              <span>
+                                This action cannot be undone. Do you want to
+                                delete this session?
+                              </span>
+                            ),
+                            confirmText: "Delete",
+                            cancelText: "Cancel",
+                            onConfirm: () => {
+                              setConfirmModal(null);
+                              deleteSession(ev.id);
+                            },
+                          });
+                        }}
+                      />
                     );
                   })}
                 </div>
@@ -1058,388 +752,6 @@ export default function Calendar({
           onConfirm={confirmModal.onConfirm}
         />
       )}
-    </div>
-  );
-}
-
-// Simple toast notification
-function Toast({ message }: { message: string }) {
-  return (
-    <div className="fixed right-4 top-4 z-[100] rounded-md bg-gray-900 px-4 py-2 text-sm text-white shadow-lg">
-      {message}
-    </div>
-  );
-}
-
-// Reusable confirmation modal
-function ConfirmModal({
-  title,
-  description,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
-  confirmVariant = "danger",
-  onCancel,
-  onConfirm,
-}: {
-  title: string;
-  description?: React.ReactNode;
-  confirmText?: string;
-  cancelText?: string;
-  confirmVariant?: "danger" | "success";
-  onCancel: () => void;
-  onConfirm: () => void | Promise<void>;
-}) {
-  const [busy, setBusy] = React.useState(false);
-  const handleConfirm = async () => {
-    try {
-      setBusy(true);
-      await onConfirm();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const confirmClasses =
-    confirmVariant === "success"
-      ? "rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-50"
-      : "rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50";
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          {title}
-        </h2>
-        {description && (
-          <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">
-            {description}
-          </div>
-        )}
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
-            onClick={onCancel}
-            disabled={busy}
-          >
-            {cancelText}
-          </button>
-          <button
-            className={confirmClasses}
-            onClick={handleConfirm}
-            disabled={busy}
-          >
-            {busy ? "Please wait…" : confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-// --- NEW: Booking Modal Component ---
-function BookingModal({
-  event,
-  onClose,
-  quiet,
-  onChangeQuiet,
-  onConfirm,
-}: {
-  event: CalendarEvent;
-  onClose: () => void;
-  quiet: boolean;
-  onChangeQuiet: (v: boolean) => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-          Confirm Booking
-        </h2>
-        <p className="mt-2 text-gray-700 dark:text-gray-300">
-          You are booking a{" "}
-          <strong className="text-indigo-700 dark:text-indigo-300">
-            {event.durationMin}-minute {event.sessionType}
-          </strong>{" "}
-          session for:
-        </p>
-        <div className="mt-4 rounded-md bg-gray-100 dark:bg-gray-900/60 p-3 text-center font-medium text-gray-900 dark:text-gray-100">
-          {new Date(event.start).toLocaleString("en-IN", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: "Asia/Kolkata",
-          })}
-        </div>
-
-        {/* TODO: Add other booking options like partner selection, goal text box */}
-        <div className="mt-4 flex items-center gap-3">
-          <input
-            id="quiet-toggle"
-            type="checkbox"
-            className="h-4 w-4 accent-gray-700"
-            checked={quiet}
-            onChange={(e) => onChangeQuiet(e.target.checked)}
-          />
-          <label
-            htmlFor="quiet-toggle"
-            className="text-sm text-gray-700 dark:text-gray-200"
-          >
-            Quiet session (start muted)
-          </label>
-        </div>
-
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800"
-          >
-            Confirm
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function formatHour(h24: number) {
-  const h = ((h24 + 11) % 12) + 1;
-  const suffix = h24 < 12 ? "AM" : "PM";
-  return `${h} ${suffix}`;
-}
-
-// --- NEW: Session Details Modal (basic scaffold) ---
-function SessionDetailsModal({
-  event,
-  onClose,
-  currentUserId,
-  onUpdate,
-}: {
-  event: CalendarEvent;
-  onClose: () => void;
-  currentUserId: string | null;
-  onUpdate: (patch: { name?: string | null; color?: string | null }) => void;
-}) {
-  const participants = event.participants || [];
-  const other = participants.find((p) => p.user_id !== currentUserId);
-  const self = participants.find((p) => p.user_id === currentUserId);
-  const selfQuiet = Boolean(self?.quiet);
-  const partnerQuiet = Boolean(other?.quiet);
-  const otherName = other
-    ? [other.firstname, other.lastname].filter(Boolean).join(" ") ||
-      other.email ||
-      other.user_id
-    : undefined;
-  const isOwner =
-    event.owner_id && currentUserId && event.owner_id === currentUserId;
-  const [name, setName] = React.useState<string>(event.name || "");
-  const [color, setColor] = React.useState<string>(event.color || "");
-  const [saving, setSaving] = React.useState<boolean>(false);
-  const [friendReqStatus, setFriendReqStatus] = React.useState<string | null>(
-    null,
-  );
-  const [isFriend, setIsFriend] = React.useState<boolean>(false);
-  React.useEffect(() => {
-    let cancelled = false;
-    const checkFriend = async () => {
-      if (!other?.user_id) {
-        if (!cancelled) setIsFriend(false);
-        return;
-      }
-      try {
-        const res = await fetch("/api/friends");
-        if (!res.ok) return;
-        const data = await res.json();
-        const list: Array<{ user_id: string }> = data.friends || [];
-        if (!cancelled)
-          setIsFriend(list.some((f) => f.user_id === other.user_id));
-      } catch {
-        // ignore — if it fails, we leave button visible
-      }
-    };
-    checkFriend();
-    return () => {
-      cancelled = true;
-    };
-  }, [other?.user_id]);
-  const isColorValid = React.useMemo(() => {
-    if (!color) return true;
-    return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color);
-  }, [color]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await onUpdate({ name: name || null, color: color || null });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const sendFriendRequest = async () => {
-    if (!other?.user_id) return;
-    try {
-      const res = await fetch("/api/friends/requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to_user_id: other.user_id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send request");
-      setFriendReqStatus("Request sent");
-      setTimeout(() => setFriendReqStatus(null), 2000);
-    } catch (e) {
-      setFriendReqStatus((e as Error).message);
-      setTimeout(() => setFriendReqStatus(null), 3000);
-    }
-  };
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900 dark:text-gray-100">
-        <div className="flex items-start justify-between">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            Session details
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            Close
-          </button>
-        </div>
-        <div className="mt-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">
-          <div>
-            <span className="font-medium text-gray-900 dark:text-gray-100">
-              When:
-            </span>
-            <div className="mt-1 rounded bg-gray-50 p-2 dark:bg-gray-800">
-              {new Date(event.start).toLocaleString("en-IN", {
-                timeZone: "Asia/Kolkata",
-              })}{" "}
-              →{" "}
-              {new Date(event.end).toLocaleTimeString("en-IN", {
-                timeZone: "Asia/Kolkata",
-              })}
-            </div>
-          </div>
-          <div>
-            <span className="font-medium text-gray-900 dark:text-gray-100">
-              Type:
-            </span>{" "}
-            {event.sessionType} • {event.durationMin} min
-          </div>
-          {isOwner && (
-            <div className="grid grid-cols-1 gap-3 pt-2">
-              <div>
-                <label className="font-medium text-gray-900 dark:text-gray-100">
-                  Session name
-                </label>
-                <input
-                  className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                  placeholder="Optional name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="font-medium text-gray-900 dark:text-gray-100">
-                  Color
-                </label>
-                <div className="mt-1 flex items-center gap-2">
-                  <input
-                    type="color"
-                    className="h-9 w-12 cursor-pointer rounded-md border border-gray-300 p-1 dark:border-gray-700 dark:bg-gray-800"
-                    value={color || "#eef2ff"}
-                    onChange={(e) => setColor(e.target.value)}
-                    title="Pick a color"
-                  />
-                  <input
-                    className={`w-40 rounded-md border px-3 py-2 text-sm ${
-                      isColorValid
-                        ? "border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        : "border-red-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    }`}
-                    placeholder="#eef2ff"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                  />
-                </div>
-                {!isColorValid && (
-                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                    Enter a valid hex color like #abc or #aabbcc
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-          {otherName && (
-            <div>
-              <span className="font-medium text-gray-900 dark:text-gray-100">
-                Partner:
-              </span>{" "}
-              {otherName}
-              {other?.email && (
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  {other.email}
-                </div>
-              )}
-              <div className="text-xs text-gray-500 mt-1 space-y-0.5 dark:text-gray-400">
-                <div>You selected quiet: {selfQuiet ? "Yes" : "No"}</div>
-                <div>Partner selected quiet: {partnerQuiet ? "Yes" : "No"}</div>
-              </div>
-            </div>
-          )}
-          <div className="pt-2">
-            <span className="font-medium text-gray-900 dark:text-gray-100">
-              Join link:
-            </span>
-            <div className="mt-1 text-sm break-all">
-              <a
-                className="text-indigo-600 hover:underline dark:text-indigo-400"
-                href={`/sessions/${event.id}`}
-              >
-                /sessions/{event.id}
-              </a>
-            </div>
-          </div>
-        </div>
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-          <div className="text-sm text-green-700 dark:text-green-400">
-            {friendReqStatus}
-          </div>
-          <div className="flex gap-2">
-            {other && !isFriend && (
-              <button
-                onClick={sendFriendRequest}
-                className="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800"
-              >
-                Send friend request
-              </button>
-            )}
-            {isOwner && (
-              <button
-                onClick={handleSave}
-                disabled={saving || !isColorValid}
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600"
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="rounded-md border px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

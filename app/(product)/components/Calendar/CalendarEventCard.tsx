@@ -1,0 +1,170 @@
+import React from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import type { CalendarEvent } from "@/types/calendar";
+
+interface CalendarEventCardProps {
+  event: CalendarEvent;
+  isBooked: boolean;
+  isOwner: boolean;
+  otherQuiet: boolean;
+  tooltip: { label: string; email?: string } | null;
+  top: number;
+  height: number;
+  onBook: (e: React.MouseEvent) => void;
+  onDetails: (e: React.MouseEvent) => void;
+  onDelete: (e: React.MouseEvent) => void;
+}
+
+export function CalendarEventCard({
+  event,
+  isBooked,
+  isOwner,
+  otherQuiet,
+  tooltip,
+  top,
+  height,
+  onBook,
+  onDetails,
+  onDelete,
+}: CalendarEventCardProps) {
+  const s = new Date(event.start);
+
+  return (
+    <div className="absolute inset-x-2 z-20" style={{ top }}>
+      <div
+        style={{
+          height,
+          backgroundColor:
+            event.color ||
+            (isBooked
+              ? typeof window !== "undefined" &&
+                window.matchMedia &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "#374151"
+                : "#d1d5db"
+              : typeof window !== "undefined" &&
+                  window.matchMedia &&
+                  window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "#312e81"
+                : "#e0e7ff"),
+        }}
+        className={`rounded-lg p-2 flex flex-col justify-between shadow-sm${
+          isBooked
+            ? "border border-gray-300 dark:border-gray-600"
+            : "border border-indigo-200 hover:border-indigo-400 cursor-pointer dark:border-indigo-900"
+        }`}
+        title={
+          tooltip
+            ? `${tooltip.label}${tooltip.email ? `\n${tooltip.email}` : ""}`
+            : undefined
+        }
+        onClick={(evt) => {
+          evt.stopPropagation();
+          if (!isBooked && !isOwner) onBook(evt);
+          else onDetails(evt);
+        }}
+      >
+        <div>
+          <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
+            {s.toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+              timeZone: "Asia/Kolkata",
+            })}
+          </p>
+          <p
+            className={`text-xs font-semibold leading-tight ${
+              isBooked
+                ? "text-gray-900 dark:text-white"
+                : "text-gray-800 dark:text-white"
+            }`}
+          >
+            {event.durationMin} min • {event.sessionType}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between mt-1">
+          <span
+            className={`text-xs font-medium ${
+              isBooked
+                ? "text-gray-800 dark:text-indigo-200"
+                : "text-indigo-700 dark:text-indigo-300"
+            }`}
+          >
+            {event.name
+              ? event.name
+              : isOwner
+                ? "Your session"
+                : isBooked
+                  ? "Booked"
+                  : "Partner needed"}
+          </span>
+          {event.participants && event.participants.length > 0 && (
+            <div className="flex -space-x-1 ml-1">
+              {event.participants.slice(0, 2).map((participant, idx) => {
+                const displayName =
+                  [participant.firstname, participant.lastname]
+                    .filter(Boolean)
+                    .join(" ") ||
+                  participant.email ||
+                  participant.user_id ||
+                  "User";
+                const initials = displayName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase();
+
+                return (
+                  <Avatar
+                    key={participant.user_id || idx}
+                    className="h-4 w-4 border border-white"
+                  >
+                    {participant.avatar_url ? (
+                      <AvatarImage
+                        src={participant.avatar_url}
+                        alt={displayName}
+                      />
+                    ) : null}
+                    <AvatarFallback className="text-[8px] font-medium bg-indigo-100 text-indigo-600">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                );
+              })}
+              {event.participants.length > 2 && (
+                <div className="h-4 w-4 rounded-full bg-gray-200 border border-white flex items-center justify-center">
+                  <span className="text-[6px] font-medium text-gray-600">
+                    +{event.participants.length - 2}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        {isBooked && otherQuiet && (
+          <span className="ml-2 inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100">
+            🔇 Quiet
+          </span>
+        )}
+        {isOwner ? (
+          <button
+            className="text-xs font-semibold text-red-600"
+            onClick={onDelete}
+          >
+            Delete
+          </button>
+        ) : !isBooked ? (
+          <button
+            className="text-xs font-semibold text-indigo-600 dark:text-indigo-300"
+            onClick={onBook}
+          >
+            Book
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
