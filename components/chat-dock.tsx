@@ -49,11 +49,17 @@ export function ChatDock() {
         try {
           const d = JSON.parse(ev.data || "{}");
           if (d?.type === "unread:update") {
-            setUnreadCounts((prev) => ({ ...prev, [d.payload.friendId]: d.payload.count }));
+            setUnreadCounts((prev) => ({
+              ...prev,
+              [d.payload.friendId]: d.payload.count,
+            }));
           } else if (d?.type === "unread:inc") {
             setUnreadCounts((prev) => {
               const curr = prev[d.payload.friendId] || 0;
-              return { ...prev, [d.payload.friendId]: curr + (d.payload.delta || 1) };
+              return {
+                ...prev,
+                [d.payload.friendId]: curr + (d.payload.delta || 1),
+              };
             });
           }
         } catch {}
@@ -64,12 +70,17 @@ export function ChatDock() {
     };
   }, []);
 
-  const totalUnread = useMemo(() => Object.values(unreadCounts).reduce((a, b) => a + (b || 0), 0), [unreadCounts]);
+  const totalUnread = useMemo(
+    () => Object.values(unreadCounts).reduce((a, b) => a + (b || 0), 0),
+    [unreadCounts],
+  );
 
   // Broadcast unread changes to sidebar for badge updates
   useEffect(() => {
     try {
-      const ev = new CustomEvent("chatdock:unread", { detail: { count: totalUnread } });
+      const ev = new CustomEvent("chatdock:unread", {
+        detail: { count: totalUnread },
+      });
       window.dispatchEvent(ev);
     } catch {}
   }, [totalUnread]);
@@ -80,7 +91,10 @@ export function ChatDock() {
     const openHandler = (e: Event) => {
       const ce = e as CustomEvent<{ friendId: string; friendLabel?: string }>;
       if (ce.detail?.friendId) {
-        openOrFocusChat(ce.detail.friendId, ce.detail.friendLabel || ce.detail.friendId);
+        openOrFocusChat(
+          ce.detail.friendId,
+          ce.detail.friendLabel || ce.detail.friendId,
+        );
       } else {
         setPanelOpen(true);
       }
@@ -113,7 +127,11 @@ export function ChatDock() {
   };
 
   const toggleMinimize = (friendId: string) => {
-    setOpenChats((prev) => prev.map((c) => (c.friendId === friendId ? { ...c, minimized: !c.minimized } : c)));
+    setOpenChats((prev) =>
+      prev.map((c) =>
+        c.friendId === friendId ? { ...c, minimized: !c.minimized } : c,
+      ),
+    );
   };
 
   const overflowCount = Math.max(0, openChats.length - 3);
@@ -144,16 +162,23 @@ export function ChatDock() {
               friends.map((f) => (
                 <button
                   key={f.user_id}
-                  onClick={() => openOrFocusChat(f.user_id, f.email || f.user_id)}
+                  onClick={() =>
+                    openOrFocusChat(f.user_id, f.email || f.user_id)
+                  }
                   className="flex w-full items-center justify-between gap-2 px-3 py-2 hover:bg-accent text-left"
                 >
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
-                      {(f.name || f.email || f.user_id)?.[0]?.toUpperCase?.() || "F"}
+                      {(f.name || f.email || f.user_id)?.[0]?.toUpperCase?.() ||
+                        "F"}
                     </div>
                     <div>
-                      <div className="text-sm font-medium">{f.name || f.email || f.user_id}</div>
-                      <div className="text-xs text-gray-500 truncate max-w-[160px]">{f.lastMessage || ""}</div>
+                      <div className="text-sm font-medium">
+                        {f.name || f.email || f.user_id}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate max-w-[160px]">
+                        {f.lastMessage || ""}
+                      </div>
                     </div>
                   </div>
                   {!!unreadCounts[f.user_id] && (
@@ -171,7 +196,9 @@ export function ChatDock() {
       <div className="pointer-events-auto flex flex-row-reverse gap-2">
         {visibleChats.map((c) => (
           <div key={c.friendId}>
-            <div className={`flex w-[320px] ${c.minimized ? "h-10" : "h-[380px]"}`}>
+            <div
+              className={`flex w-[320px] ${c.minimized ? "h-10" : "h-[380px]"}`}
+            >
               <FriendChat
                 friendId={c.friendId}
                 friendLabel={c.friendLabel}
@@ -184,11 +211,11 @@ export function ChatDock() {
           </div>
         ))}
         {overflowCount > 0 ? (
-          <div className="self-end mb-1 rounded-full bg-gray-800 text-white text-xs px-2 py-1 shadow">+{overflowCount}</div>
+          <div className="self-end mb-1 rounded-full bg-gray-800 text-white text-xs px-2 py-1 shadow">
+            +{overflowCount}
+          </div>
         ) : null}
       </div>
     </div>
   );
 }
-
-

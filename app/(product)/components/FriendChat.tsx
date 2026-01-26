@@ -51,7 +51,9 @@ export default function FriendChat({
   const [srAt, setSrAt] = useState("");
   const [srDuration, setSrDuration] = useState<25 | 50 | 75>(25);
   const [srMessage, setSrMessage] = useState("");
-  const [respondNoteById, setRespondNoteById] = useState<Record<string, string>>({});
+  const [respondNoteById, setRespondNoteById] = useState<
+    Record<string, string>
+  >({});
   const listRef = useRef<HTMLDivElement | null>(null);
 
   const load = useCallback(async () => {
@@ -85,8 +87,8 @@ export default function FriendChat({
       es = new EventSource(`/api/chat/${friendId}/events`);
       es.onmessage = (ev) => {
         try {
-          const data = JSON.parse(ev.data || '{}');
-          if (data?.type === 'hello' || data?.type === 'ping') return;
+          const data = JSON.parse(ev.data || "{}");
+          if (data?.type === "hello" || data?.type === "ping") return;
           // For any event, refresh messages for simplicity
           load();
         } catch {}
@@ -148,7 +150,7 @@ export default function FriendChat({
 
   const actOnSessionRequest = async (
     sessionRequestId: string,
-    action: "accept" | "decline"
+    action: "accept" | "decline",
   ) => {
     try {
       const note = respondNoteById[sessionRequestId] || undefined;
@@ -192,18 +194,24 @@ export default function FriendChat({
       const isOwn = (p?.from_user_id ?? m.from_user_id) === currentUserId;
       return (
         <div className="text-sm">
-          <div className={`rounded-md border inline-flex items-center gap-2 px-2 py-1 text-xs font-medium ${
-            p?.status === "accepted"
-              ? "bg-green-100 text-green-700 border-green-200"
-              : p?.status === "declined"
-              ? "bg-red-100 text-red-700 border-red-200"
-              : p?.status === "cancelled"
-              ? "bg-gray-100 text-gray-700 border-gray-200"
-              : "bg-amber-50 text-amber-700 border-amber-200"
-          }`}>Session request</div>
+          <div
+            className={`rounded-md border inline-flex items-center gap-2 px-2 py-1 text-xs font-medium ${
+              p?.status === "accepted"
+                ? "bg-green-100 text-green-700 border-green-200"
+                : p?.status === "declined"
+                  ? "bg-red-100 text-red-700 border-red-200"
+                  : p?.status === "cancelled"
+                    ? "bg-gray-100 text-gray-700 border-gray-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200"
+            }`}
+          >
+            Session request
+          </div>
           <div className="mt-1 text-sm">
             {new Date(p?.start ?? "").toLocaleString()} · {p?.durationMin} min
-            {p?.message ? <span className="ml-2 italic">“{p.message}”</span> : null}
+            {p?.message ? (
+              <span className="ml-2 italic">“{p.message}”</span>
+            ) : null}
           </div>
           {p?.status === "pending" ? (
             <div className="mt-2 flex items-center gap-2">
@@ -215,7 +223,10 @@ export default function FriendChat({
                     className="w-44 rounded border px-2 py-1 text-xs"
                     value={respondNoteById[p?.sessionRequestId ?? ""] || ""}
                     onChange={(e) =>
-                      setRespondNoteById((prev) => ({ ...prev, [p?.sessionRequestId ?? ""]: e.target.value }))
+                      setRespondNoteById((prev) => ({
+                        ...prev,
+                        [p?.sessionRequestId ?? ""]: e.target.value,
+                      }))
                     }
                   />
                   <button
@@ -250,7 +261,9 @@ export default function FriendChat({
               )}
             </div>
           ) : (
-            <div className="mt-2 text-xs text-gray-500 capitalize">Status: {p?.status}</div>
+            <div className="mt-2 text-xs text-gray-500 capitalize">
+              Status: {p?.status}
+            </div>
           )}
         </div>
       );
@@ -264,7 +277,9 @@ export default function FriendChat({
         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-[10px] font-semibold text-white">
           {friendLabel?.[0]?.toUpperCase?.() || "F"}
         </div>
-        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[200px]">{friendLabel}</div>
+        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[200px]">
+          {friendLabel}
+        </div>
       </div>
       <div className="flex items-center gap-2">
         {onMinimizeToggle ? (
@@ -289,23 +304,36 @@ export default function FriendChat({
 
   const body = (
     <>
-      {error && <div className="px-3 py-2 text-xs text-red-700 dark:text-red-400">{error}</div>}
+      {error && (
+        <div className="px-3 py-2 text-xs text-red-700 dark:text-red-400">
+          {error}
+        </div>
+      )}
       <div ref={listRef} className="flex flex-1 flex-col overflow-y-auto p-3">
         {loading && messages.length === 0 ? (
           <div className="text-xs text-gray-500">Loading…</div>
         ) : (
           <div className="flex flex-col gap-2">
             {messages.map((m) => {
-              const isOwn = currentUserId ? m.from_user_id === currentUserId : false;
+              const isOwn = currentUserId
+                ? m.from_user_id === currentUserId
+                : false;
               return (
-                <div key={m.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
+                <div
+                  key={m.id}
+                  className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                >
                   <div
                     className={`max-w-[75%] rounded-lg border p-2 shadow-sm ${
-                      isOwn ? "bg-indigo-50 border-indigo-600 text-indigo-700 dark:bg-indigo-900 dark:border-indigo-700 dark:text-indigo-100" : "bg-gray-100 border-gray-300 text-gray-900 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200"
+                      isOwn
+                        ? "bg-indigo-50 border-indigo-600 text-indigo-700 dark:bg-indigo-900 dark:border-indigo-700 dark:text-indigo-100"
+                        : "bg-gray-100 border-gray-300 text-gray-900 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200"
                     }`}
                   >
                     {renderMessage(m)}
-                    <div className="mt-1 text-[10px] text-gray-500">{new Date(m.created_at).toLocaleString()}</div>
+                    <div className="mt-1 text-[10px] text-gray-500">
+                      {new Date(m.created_at).toLocaleString()}
+                    </div>
                   </div>
                 </div>
               );
@@ -352,7 +380,9 @@ export default function FriendChat({
             <select
               className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-xs"
               value={srDuration}
-              onChange={(e) => setSrDuration(Number(e.target.value) as 25 | 50 | 75)}
+              onChange={(e) =>
+                setSrDuration(Number(e.target.value) as 25 | 50 | 75)
+              }
             >
               <option value={25}>25 min</option>
               <option value={50}>50 min</option>
@@ -393,12 +423,13 @@ export default function FriendChat({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="flex w-full max-w-lg max-h-[80vh] flex-col rounded-md bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 animate-[scale-in_180ms_ease-out]" style={{ transformOrigin: "center" }}>
+      <div
+        className="flex w-full max-w-lg max-h-[80vh] flex-col rounded-md bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 animate-[scale-in_180ms_ease-out]"
+        style={{ transformOrigin: "center" }}
+      >
         {header}
         {body}
       </div>
     </div>
   );
 }
-
-

@@ -2,7 +2,6 @@
 
 import React, {
   useCallback,
-
   useEffect,
   useMemo,
   useRef,
@@ -140,7 +139,7 @@ export default function Calendar({
 }: CalendarProps) {
   const today = new Date();
   const [startDate, setStartDate] = useState<Date>(() =>
-    startDateProp ? new Date(startDateProp) : startOfDay(today)
+    startDateProp ? new Date(startDateProp) : startOfDay(today),
   );
   useEffect(() => {
     if (startDateProp) setStartDate(startOfDay(new Date(startDateProp)));
@@ -148,13 +147,13 @@ export default function Calendar({
 
   const days = useMemo(
     () => new Array(visibleDays).fill(0).map((_, i) => addDays(startDate, i)),
-    [visibleDays, startDate]
+    [visibleDays, startDate],
   );
 
   const totalMinutes = (endHour - startHour) * 60;
 
   const [internalEvents, setInternalEvents] = useState<CalendarEvent[]>(
-    () => eventsProp ?? []
+    () => eventsProp ?? [],
   );
   const events = eventsProp ?? internalEvents;
 
@@ -172,7 +171,7 @@ export default function Calendar({
         setInternalEvents(next);
       }
     },
-    [onEventsChange, eventsProp, events]
+    [onEventsChange, eventsProp, events],
   );
 
   // --- NEW: State for filters and booking modal ---
@@ -204,7 +203,7 @@ export default function Calendar({
     setDurationFilter((prev) =>
       prev.includes(duration)
         ? prev.filter((d) => d !== duration)
-        : [...prev, duration]
+        : [...prev, duration],
     );
   };
 
@@ -218,7 +217,7 @@ export default function Calendar({
     const id = bookingModalEvent.id;
     // Optimistic update: mark as booked locally
     setEvents((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, status: "booked" } : e))
+      prev.map((e) => (e.id === id ? { ...e, status: "booked" } : e)),
     );
     setBookingModalEvent(null);
     try {
@@ -232,7 +231,7 @@ export default function Calendar({
     } catch (e) {
       // revert on failure
       setEvents((prev) =>
-        prev.map((ev) => (ev.id === id ? { ...ev, status: "available" } : ev))
+        prev.map((ev) => (ev.id === id ? { ...ev, status: "available" } : ev)),
       );
       alert((e as Error).message);
     }
@@ -241,7 +240,7 @@ export default function Calendar({
   // Update session fields (name/color) then update local state
   const handleUpdateSessionMeta = async (
     id: string,
-    patch: { name?: string | null; color?: string | null }
+    patch: { name?: string | null; color?: string | null },
   ) => {
     try {
       const res = await fetch(`/api/sessions/${id}`, {
@@ -252,7 +251,7 @@ export default function Calendar({
       if (!res.ok)
         throw new Error((await res.json()).error || "Failed to update");
       setEvents((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, ...patch } : e))
+        prev.map((e) => (e.id === id ? { ...e, ...patch } : e)),
       );
       setToast("Session updated");
       setTimeout(() => setToast(null), 2000);
@@ -291,7 +290,7 @@ export default function Calendar({
     for (const d of days) map[ymd(d)] = [];
 
     const filteredEvents = events.filter((ev) =>
-      durationFilter.includes(ev.durationMin)
+      durationFilter.includes(ev.durationMin),
     );
 
     for (const ev of filteredEvents) {
@@ -328,8 +327,8 @@ export default function Calendar({
       try {
         const res = await fetch(
           `/api/sessions?from=${encodeURIComponent(
-            from
-          )}&to=${encodeURIComponent(to)}`
+            from,
+          )}&to=${encodeURIComponent(to)}`,
         );
         let data: unknown = null;
         try {
@@ -362,7 +361,7 @@ export default function Calendar({
             owner_id: s.owner_id,
             owner: s.owner,
             participants: s.participants,
-          })
+          }),
         );
         setInternalEvents(mapped);
       } catch (e) {
@@ -378,7 +377,7 @@ export default function Calendar({
   const createSession = async (
     start: Date,
     durationMin: 25 | 50 | 75,
-    quietOwner: boolean = false
+    quietOwner: boolean = false,
   ) => {
     const tempId = `temp_${Date.now()}`;
     const end = addMinutes(start, durationMin);
@@ -415,7 +414,7 @@ export default function Calendar({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create");
       setEvents((prev) =>
-        prev.map((e) => (e.id === tempId ? { ...e, id: data.id } : e))
+        prev.map((e) => (e.id === tempId ? { ...e, id: data.id } : e)),
       );
     } catch (e) {
       setEvents((prev) => prev.filter((e) => e.id !== tempId));
@@ -451,7 +450,7 @@ export default function Calendar({
     const dayIndex = clamp(
       Math.floor(xAdjusted / dayWidth),
       0,
-      visibleDays - 1
+      visibleDays - 1,
     );
     const dayDate = days[dayIndex];
     // Y to minutes
@@ -464,17 +463,17 @@ export default function Calendar({
     const minutesOfDay = clamp(
       minutesFromTop + startHour * 60,
       startHour * 60,
-      endHour * 60 - preferred
+      endHour * 60 - preferred,
     );
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  if (
-  ymd(dayDate) < ymd(now) || 
-  (ymd(dayDate) === ymd(now) && minutesOfDay < nowMinutes)
-  ) {
-  setToast("Cannot create a session in the past");
-  setTimeout(() => setToast(null), 2000);
-  return;
-  }
+    if (
+      ymd(dayDate) < ymd(now) ||
+      (ymd(dayDate) === ymd(now) && minutesOfDay < nowMinutes)
+    ) {
+      setToast("Cannot create a session in the past");
+      setTimeout(() => setToast(null), 2000);
+      return;
+    }
 
     const start = new Date(startOfDay(dayDate));
     start.setMinutes(minutesOfDay);
@@ -522,7 +521,7 @@ export default function Calendar({
     const dayIndex = clamp(
       Math.floor(xAdjusted / dayWidth),
       0,
-      visibleDays - 1
+      visibleDays - 1,
     );
     const yContent = y + (scroller?.scrollTop ?? 0);
     const minutesFromTopRaw = (yContent / rowPx) * stepMinutes;
@@ -531,7 +530,7 @@ export default function Calendar({
     const minutesOfDay = clamp(
       minutesFromTop + startHour * 60,
       startHour * 60,
-      endHour * 60 - createDuration
+      endHour * 60 - createDuration,
     );
     const d = days[dayIndex];
     const when = new Date(startOfDay(d));
@@ -555,9 +554,9 @@ export default function Calendar({
     if (
       ymd(d) < ymd(now) || // previous day
       (ymd(d) === ymd(now) && minutesOfDay < nowMinutes) // past minutes today
-      ) {
-    setHoverState(null); // hide hover for past
-    return;
+    ) {
+      setHoverState(null); // hide hover for past
+      return;
     }
 
     setHoverState({
@@ -783,7 +782,7 @@ export default function Calendar({
                   {(eventsByDay[ymd(d)] ?? []).map((ev) => {
                     const s = new Date(ev.start);
                     const top = minuteToPx(
-                      minutesBetween(startOfDay(s), s) - startHour * 60
+                      minutesBetween(startOfDay(s), s) - startHour * 60,
                     );
                     const height = minuteToPx(ev.durationMin);
                     const isBooked =
@@ -798,7 +797,7 @@ export default function Calendar({
                     const tooltip = (() => {
                       if (!(isOwner && isBooked)) return null;
                       const others = (ev.participants || []).filter(
-                        (p) => p.user_id !== currentUserId
+                        (p) => p.user_id !== currentUserId,
                       );
                       const other = others[0];
                       if (!other) return null;
@@ -813,8 +812,8 @@ export default function Calendar({
                     const otherQuiet = isBooked
                       ? Boolean(
                           (ev.participants || []).find(
-                            (p) => p.user_id !== currentUserId
-                          )?.quiet
+                            (p) => p.user_id !== currentUserId,
+                          )?.quiet,
                         )
                       : false;
 
@@ -833,17 +832,17 @@ export default function Calendar({
                                 ? typeof window !== "undefined" &&
                                   window.matchMedia &&
                                   window.matchMedia(
-                                    "(prefers-color-scheme: dark)"
+                                    "(prefers-color-scheme: dark)",
                                   ).matches
                                   ? "#374151"
                                   : "#d1d5db"
                                 : typeof window !== "undefined" &&
-                                  window.matchMedia &&
-                                  window.matchMedia(
-                                    "(prefers-color-scheme: dark)"
-                                  ).matches
-                                ? "#312e81"
-                                : "#e0e7ff"),
+                                    window.matchMedia &&
+                                    window.matchMedia(
+                                      "(prefers-color-scheme: dark)",
+                                    ).matches
+                                  ? "#312e81"
+                                  : "#e0e7ff"),
                           }}
                           className={`rounded-lg p-2 flex flex-col justify-between shadow-sm${
                             isBooked
@@ -894,10 +893,10 @@ export default function Calendar({
                               {ev.name
                                 ? ev.name
                                 : isOwner
-                                ? "Your session"
-                                : isBooked 
-                                ? "Booked"
-                                : "Partner needed"}
+                                  ? "Your session"
+                                  : isBooked
+                                    ? "Booked"
+                                    : "Partner needed"}
                             </span>
                             {ev.participants && ev.participants.length > 0 && (
                               <div className="flex -space-x-1 ml-1">
@@ -1107,9 +1106,13 @@ function ConfirmModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          {title}
+        </h2>
         {description && (
-          <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">{description}</div>
+          <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">
+            {description}
+          </div>
         )}
         <div className="mt-6 flex justify-end gap-3">
           <button
@@ -1148,7 +1151,9 @@ function BookingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Confirm Booking</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+          Confirm Booking
+        </h2>
         <p className="mt-2 text-gray-700 dark:text-gray-300">
           You are booking a{" "}
           <strong className="text-indigo-700 dark:text-indigo-300">
@@ -1176,7 +1181,10 @@ function BookingModal({
             checked={quiet}
             onChange={(e) => onChangeQuiet(e.target.checked)}
           />
-          <label htmlFor="quiet-toggle" className="text-sm text-gray-700 dark:text-gray-200">
+          <label
+            htmlFor="quiet-toggle"
+            className="text-sm text-gray-700 dark:text-gray-200"
+          >
             Quiet session (start muted)
           </label>
         </div>
@@ -1234,7 +1242,7 @@ function SessionDetailsModal({
   const [color, setColor] = React.useState<string>(event.color || "");
   const [saving, setSaving] = React.useState<boolean>(false);
   const [friendReqStatus, setFriendReqStatus] = React.useState<string | null>(
-    null
+    null,
   );
   const [isFriend, setIsFriend] = React.useState<boolean>(false);
   React.useEffect(() => {

@@ -94,13 +94,16 @@ export default function BookSessionButton({
 
   // ---------- Reliable now & today in IST ----------
   const nowISTParts = useMemo(() => getISTParts(), []);
-  const nowIST = useMemo(() => ({
-    hour24: nowISTParts.hour24,
-    minute: nowISTParts.minute,
-    year: nowISTParts.year,
-    month: nowISTParts.month,
-    day: nowISTParts.day,
-  }), [nowISTParts]);
+  const nowIST = useMemo(
+    () => ({
+      hour24: nowISTParts.hour24,
+      minute: nowISTParts.minute,
+      year: nowISTParts.year,
+      month: nowISTParts.month,
+      day: nowISTParts.day,
+    }),
+    [nowISTParts],
+  );
 
   const todayIST = useMemo(() => {
     const yyyy = String(nowIST.year).padStart(4, "0");
@@ -122,7 +125,7 @@ export default function BookSessionButton({
     dateYYYYMMDD: string,
     hour12Val: number,
     minuteVal: number,
-    ampmVal: "AM" | "PM"
+    ampmVal: "AM" | "PM",
   ) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateYYYYMMDD)) return null;
 
@@ -224,7 +227,7 @@ export default function BookSessionButton({
 
     const currentHour24 = nowIST.hour24;
     const currentMinute = nowIST.minute;
-    const selectedHour24 = hour12 % 12 + (ampm === "PM" ? 12 : 0);
+    const selectedHour24 = (hour12 % 12) + (ampm === "PM" ? 12 : 0);
 
     if (selectedHour24 > currentHour24) return allMinutes;
     if (selectedHour24 < currentHour24) return [];
@@ -290,7 +293,7 @@ export default function BookSessionButton({
                             | 9
                             | 10
                             | 11
-                            | 12
+                            | 12,
                         )
                       }
                       disabled={busy}
@@ -426,8 +429,8 @@ export default function BookSessionButton({
                 {busy
                   ? "Creating…"
                   : isPast
-                  ? "Cannot create past session"
-                  : "Create session"}
+                    ? "Cannot create past session"
+                    : "Create session"}
               </button>
             </div>
           </div>

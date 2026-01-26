@@ -46,7 +46,9 @@ export default function Friends() {
   const [composeAt, setComposeAt] = useState<string>(""); // datetime-local value
   const [composeDuration, setComposeDuration] = useState<25 | 50 | 75>(25);
   const [composeMessage, setComposeMessage] = useState<string>("");
-  const [respondNoteById, setRespondNoteById] = useState<Record<string, string>>({});
+  const [respondNoteById, setRespondNoteById] = useState<
+    Record<string, string>
+  >({});
   const [openChatFriendId, setOpenChatFriendId] = useState<string | null>(null);
   const [openChatFriendLabel, setOpenChatFriendLabel] = useState<string>("");
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -78,9 +80,13 @@ export default function Friends() {
       if (!resFriends.ok)
         throw new Error(dataFriends.error || "Failed to load friends");
       if (!resSessIn.ok)
-        throw new Error(dataSessIn.error || "Failed to load incoming session requests");
+        throw new Error(
+          dataSessIn.error || "Failed to load incoming session requests",
+        );
       if (!resSessOut.ok)
-        throw new Error(dataSessOut.error || "Failed to load outgoing session requests");
+        throw new Error(
+          dataSessOut.error || "Failed to load outgoing session requests",
+        );
       setIncoming(dataIncoming.requests || []);
       setOutgoing(dataOutgoing.requests || []);
       setFriends(dataFriends.friends || []);
@@ -109,13 +115,19 @@ export default function Friends() {
       es = new EventSource("/api/chat/events");
       es.onmessage = (ev) => {
         try {
-          const d = JSON.parse(ev.data || '{}');
-          if (d?.type === 'unread:update') {
-            setUnreadCounts((prev) => ({ ...prev, [d.payload.friendId]: d.payload.count }));
-          } else if (d?.type === 'unread:inc') {
+          const d = JSON.parse(ev.data || "{}");
+          if (d?.type === "unread:update") {
+            setUnreadCounts((prev) => ({
+              ...prev,
+              [d.payload.friendId]: d.payload.count,
+            }));
+          } else if (d?.type === "unread:inc") {
             setUnreadCounts((prev) => {
               const curr = prev[d.payload.friendId] || 0;
-              return { ...prev, [d.payload.friendId]: curr + (d.payload.delta || 1) };
+              return {
+                ...prev,
+                [d.payload.friendId]: curr + (d.payload.delta || 1),
+              };
             });
           }
         } catch {}
@@ -156,7 +168,8 @@ export default function Friends() {
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Failed to send session request");
+      if (!res.ok)
+        throw new Error(data.error || "Failed to send session request");
       setComposeFor(null);
       setComposeAt("");
       setComposeDuration(25);
@@ -169,7 +182,7 @@ export default function Friends() {
 
   const respondSessionRequest = async (
     id: string,
-    action: "accept" | "decline"
+    action: "accept" | "decline",
   ) => {
     try {
       const note = respondNoteById[id] || undefined;
@@ -256,12 +269,15 @@ export default function Friends() {
       <h2 className="text-lg font-semibold">Incoming session requests</h2>
       <div className="divide-y rounded-md border">
         {sessIncoming.length === 0 ? (
-          <div className="p-4 text-sm text-gray-500">No incoming session requests</div>
+          <div className="p-4 text-sm text-gray-500">
+            No incoming session requests
+          </div>
         ) : (
           sessIncoming.map((r) => (
             <div key={r.id} className="flex items-center justify-between p-3">
               <div className="text-sm">
-                From: {r.from_user_email ? (
+                From:{" "}
+                {r.from_user_email ? (
                   <span className="font-mono">{r.from_user_email}</span>
                 ) : (
                   <span className="font-mono">{r.from_user_id}</span>
@@ -271,7 +287,9 @@ export default function Friends() {
                 </span>
                 <div className="text-xs text-gray-500 mt-1">
                   {new Date(r.start).toLocaleString()} · {r.durationMin} min
-                  {r.message ? <span className="ml-2 italic">“{r.message}”</span> : null}
+                  {r.message ? (
+                    <span className="ml-2 italic">“{r.message}”</span>
+                  ) : null}
                 </div>
               </div>
               {r.status === "pending" && (
@@ -282,7 +300,10 @@ export default function Friends() {
                     className="w-40 rounded border px-2 py-1 text-xs"
                     value={respondNoteById[r.id] || ""}
                     onChange={(e) =>
-                      setRespondNoteById((prev) => ({ ...prev, [r.id]: e.target.value }))
+                      setRespondNoteById((prev) => ({
+                        ...prev,
+                        [r.id]: e.target.value,
+                      }))
                     }
                   />
                   <button
@@ -307,12 +328,15 @@ export default function Friends() {
       <h2 className="text-lg font-semibold">Outgoing session requests</h2>
       <div className="divide-y rounded-md border">
         {sessOutgoing.length === 0 ? (
-          <div className="p-4 text-sm text-gray-500">No outgoing session requests</div>
+          <div className="p-4 text-sm text-gray-500">
+            No outgoing session requests
+          </div>
         ) : (
           sessOutgoing.map((r) => (
             <div key={r.id} className="flex items-center justify-between p-3">
               <div className="text-sm">
-                To: {r.to_user_email ? (
+                To:{" "}
+                {r.to_user_email ? (
                   <span className="font-mono">{r.to_user_email}</span>
                 ) : (
                   <span className="font-mono">{r.to_user_id}</span>
@@ -322,10 +346,14 @@ export default function Friends() {
                 </span>
                 <div className="text-xs text-gray-500 mt-1">
                   {new Date(r.start).toLocaleString()} · {r.durationMin} min
-                  {r.message ? <span className="ml-2 italic">“{r.message}”</span> : null}
+                  {r.message ? (
+                    <span className="ml-2 italic">“{r.message}”</span>
+                  ) : null}
                 </div>
                 {r.responseMessage ? (
-                  <div className="text-xs text-gray-500 mt-1">Response: “{r.responseMessage}”</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Response: “{r.responseMessage}”
+                  </div>
                 ) : null}
               </div>
             </div>
@@ -367,7 +395,9 @@ export default function Friends() {
                       className="rounded border px-2 py-1 text-xs"
                       value={composeDuration}
                       onChange={(e) =>
-                        setComposeDuration(Number(e.target.value) as 25 | 50 | 75)
+                        setComposeDuration(
+                          Number(e.target.value) as 25 | 50 | 75,
+                        )
                       }
                     >
                       <option value={25}>25 min</option>
@@ -401,7 +431,6 @@ export default function Friends() {
                   </div>
                 ) : (
                   <>
-
                     <button
                       onClick={() => {
                         setOpenChatFriendId(f.user_id);

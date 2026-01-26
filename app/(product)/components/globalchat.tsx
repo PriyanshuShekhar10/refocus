@@ -41,7 +41,7 @@ export default function GlobalChat() {
           setIsLoading(false);
         }
       },
-    []
+    [],
   );
 
   useEffect(() => {
@@ -69,11 +69,11 @@ export default function GlobalChat() {
   const send = async () => {
     const content = text.trim();
     if (!content || isSending) return;
-    
+
     setText("");
     setIsSending(true);
     setError(null);
-    
+
     try {
       const res = await fetch("/api/global-chat", {
         method: "POST",
@@ -101,10 +101,10 @@ export default function GlobalChat() {
 
   const deleteMessage = async (messageId: string) => {
     if (deletingIds.has(messageId)) return;
-    
-    setDeletingIds(prev => new Set(prev).add(messageId));
+
+    setDeletingIds((prev) => new Set(prev).add(messageId));
     setDeleteConfirmId(null);
-    
+
     try {
       const res = await fetch(`/api/global-chat/${messageId}`, {
         method: "DELETE",
@@ -115,7 +115,7 @@ export default function GlobalChat() {
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setDeletingIds(prev => {
+      setDeletingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(messageId);
         return newSet;
@@ -127,11 +127,14 @@ export default function GlobalChat() {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     }
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString([], { month: "short", day: "numeric" });
   };
 
   return (
@@ -142,7 +145,7 @@ export default function GlobalChat() {
           Global Chat
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {messages.length} {messages.length === 1 ? 'message' : 'messages'}
+          {messages.length} {messages.length === 1 ? "message" : "messages"}
         </p>
       </div>
 
@@ -169,7 +172,8 @@ export default function GlobalChat() {
               Delete Message?
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              Are you sure you want to delete this message? This action cannot be undone.
+              Are you sure you want to delete this message? This action cannot
+              be undone.
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -214,74 +218,81 @@ export default function GlobalChat() {
               .filter((m) => {
                 const messageDate = new Date(m.created_at);
                 const now = new Date();
-                const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+                const diffInHours =
+                  (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
                 return diffInHours < 24;
               })
               .map((m, idx, filteredMessages) => {
-              const showDate = idx === 0 || 
-                new Date(filteredMessages[idx - 1].created_at).toDateString() !== 
-                new Date(m.created_at).toDateString();
-              
-              const isOwnMessage = m.user_id === currentUserId;
-              const isDeleting = deletingIds.has(m.id);
-              
-              return (
-                <Fragment key={m.id}>
-                  {showDate && (
-                    <div className="flex items-center justify-center py-4">
-                      <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
-                        {new Date(m.created_at).toLocaleDateString([], { 
-                          month: 'long', 
-                          day: 'numeric',
-                          year: new Date(m.created_at).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-                        })}
-                      </span>
-                    </div>
-                  )}
-                  <div className="group rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 px-4 py-2 transition-colors relative">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-sm font-medium text-white">
-                          {(m.user_name || m.user_id).charAt(0).toUpperCase()}
+                const showDate =
+                  idx === 0 ||
+                  new Date(
+                    filteredMessages[idx - 1].created_at,
+                  ).toDateString() !== new Date(m.created_at).toDateString();
+
+                const isOwnMessage = m.user_id === currentUserId;
+                const isDeleting = deletingIds.has(m.id);
+
+                return (
+                  <Fragment key={m.id}>
+                    {showDate && (
+                      <div className="flex items-center justify-center py-4">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+                          {new Date(m.created_at).toLocaleDateString([], {
+                            month: "long",
+                            day: "numeric",
+                            year:
+                              new Date(m.created_at).getFullYear() !==
+                              new Date().getFullYear()
+                                ? "numeric"
+                                : undefined,
+                          })}
                         </span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {m.user_name || m.user_id}
-                          </span>
-                          <span className="text-xs text-gray-400 dark:text-gray-500">
-                            {formatTime(m.created_at)}
+                    )}
+                    <div className="group rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 px-4 py-2 transition-colors relative">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-sm font-medium text-white">
+                            {(m.user_name || m.user_id).charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        {m.deleted ? (
-                          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 italic">
-                            This message was deleted
-                          </p>
-                        ) : (
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap break-words leading-relaxed">
-                            {m.content}
-                          </p>
-                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              {m.user_name || m.user_id}
+                            </span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                              {formatTime(m.created_at)}
+                            </span>
+                          </div>
+                          {m.deleted ? (
+                            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 italic">
+                              This message was deleted
+                            </p>
+                          ) : (
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap break-words leading-relaxed">
+                              {m.content}
+                            </p>
+                          )}
+                        </div>
                       </div>
+                      {!m.deleted && isOwnMessage && (
+                        <div className="absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <button
+                            onClick={() => setDeleteConfirmId(m.id)}
+                            disabled={isDeleting}
+                            className="pointer-events-auto mr-3 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg px-3 py-1.5 flex items-center gap-1.5 shadow-sm transition-colors"
+                            title="Delete message"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span className="text-xs font-medium">Delete</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    {!m.deleted && isOwnMessage && (
-                      <div className="absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        <button
-                          onClick={() => setDeleteConfirmId(m.id)}
-                          disabled={isDeleting}
-                          className="pointer-events-auto mr-3 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg px-3 py-1.5 flex items-center gap-1.5 shadow-sm transition-colors"
-                          title="Delete message"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span className="text-xs font-medium">Delete</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </Fragment>
-              );
-            })}
+                  </Fragment>
+                );
+              })}
             <div ref={bottomRef} />
           </div>
         )}
@@ -306,7 +317,7 @@ export default function GlobalChat() {
           >
             <Send className="w-4 h-4" />
             <span className="text-sm font-medium hidden sm:inline">
-              {isSending ? 'Sending...' : 'Send'}
+              {isSending ? "Sending..." : "Send"}
             </span>
           </button>
         </div>

@@ -26,14 +26,16 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
       setFriendsUnread(Math.max(0, ce.detail?.count || 0));
     };
     window.addEventListener("chatdock:unread", handler as EventListener);
-    return () => window.removeEventListener("chatdock:unread", handler as EventListener);
+    return () =>
+      window.removeEventListener("chatdock:unread", handler as EventListener);
   }, []);
 
   return (
     <aside
       className="fixed top-0 left-0 h-screen w-16 flex flex-col
                  bg-white dark:bg-gray-900 shadow-sm z-40"
-      aria-label="Sidebar">
+      aria-label="Sidebar"
+    >
       <SideBarIcon
         icon={<MdDashboard size={20} />}
         text="Dashboard"
@@ -139,7 +141,8 @@ const SideBarIcon: FC<SideBarIconProps> = ({
                    bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900
                    transform -translate-x-1 opacity-0
                    group-hover:translate-x-0 group-hover:opacity-100
-                   transition-all duration-150 ease-out">
+                   transition-all duration-150 ease-out"
+      >
         {text}
       </span>
     </>
@@ -151,7 +154,8 @@ const SideBarIcon: FC<SideBarIconProps> = ({
         href={href}
         aria-label={text}
         title={text}
-        className={`${base} ${activeClasses}`}>
+        className={`${base} ${activeClasses}`}
+      >
         {content}
       </Link>
     );
@@ -163,7 +167,8 @@ const SideBarIcon: FC<SideBarIconProps> = ({
       onClick={onClick}
       aria-label={text}
       title={text}
-      className={`${base} ${activeClasses}`}>
+      className={`${base} ${activeClasses}`}
+    >
       {content}
     </button>
   );
@@ -187,7 +192,8 @@ const ThemeToggle: FC = () => {
                    h-12 w-12 mt-2 mx-auto
                    bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700
                    rounded-3xl shadow-sm"
-        aria-hidden>
+        aria-hidden
+      >
         <HiSun size={18} />
       </div>
     );
@@ -208,7 +214,8 @@ const ThemeToggle: FC = () => {
                  transition-all duration-200 ease-linear
                  cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-300"
       aria-label={`Switch to ${next} mode`}
-      title={`Switch to ${next} mode`}>
+      title={`Switch to ${next} mode`}
+    >
       {current === "dark" ? <HiSun size={18} /> : <HiMoon size={18} />}
 
       <span
@@ -218,7 +225,8 @@ const ThemeToggle: FC = () => {
                    bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900
                    transform -translate-x-1 opacity-0
                    group-hover:translate-x-0 group-hover:opacity-100
-                   transition-all duration-150 ease-out">
+                   transition-all duration-150 ease-out"
+      >
         {current === "dark" ? "Light mode" : "Dark mode"}
       </span>
     </button>

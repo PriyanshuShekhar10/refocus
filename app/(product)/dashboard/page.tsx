@@ -9,7 +9,6 @@ import Friends from "../components/friends";
 import Dashboard from "../components/dashboard";
 import GlobalChat from "../components/globalchat";
 
-
 type TabKey = "profile" | "dashboard" | "settings" | "friends" | "chat";
 
 export default function DashboardPage() {

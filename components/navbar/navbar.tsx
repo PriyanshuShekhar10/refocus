@@ -26,7 +26,7 @@ export const NavbarLogo = () => {
         alt="logo"
         className={cn(
           `h-12 w-auto py-2 sm:h-16 sm:py-3 md:h-20`,
-          mounted && theme === "dark" && "invert brightness-0"
+          mounted && theme === "dark" && "invert brightness-0",
         )}
       />
     </Link>
@@ -34,7 +34,13 @@ export const NavbarLogo = () => {
 };
 
 // Client-side authentication component for the navbar
-function NavbarAuthButton({ isMobile = false, onClose }: { isMobile?: boolean; onClose?: () => void }) {
+function NavbarAuthButton({
+  isMobile = false,
+  onClose,
+}: {
+  isMobile?: boolean;
+  onClose?: () => void;
+}) {
   const { data: session, status } = useSession();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -74,11 +80,23 @@ function NavbarAuthButton({ isMobile = false, onClose }: { isMobile?: boolean; o
 
   if (session?.user) {
     return (
-      <div className={isMobile ? styles.mobileAuthButtons : "flex items-center gap-4"}>
-        <Link href="/profile" className={styles.signUpBtn} onClick={handleNavigation}>
+      <div
+        className={
+          isMobile ? styles.mobileAuthButtons : "flex items-center gap-4"
+        }
+      >
+        <Link
+          href="/profile"
+          className={styles.signUpBtn}
+          onClick={handleNavigation}
+        >
           My Profile
         </Link>
-        <Link href="/dashboard" className={styles.signUpBtn} onClick={handleNavigation}>
+        <Link
+          href="/dashboard"
+          className={styles.signUpBtn}
+          onClick={handleNavigation}
+        >
           Dashboard
         </Link>
         <button className={styles.signInBtn} onClick={logout}>
@@ -90,10 +108,18 @@ function NavbarAuthButton({ isMobile = false, onClose }: { isMobile?: boolean; o
 
   return (
     <div className={isMobile ? styles.mobileAuthButtons : "flex gap-3"}>
-      <Link href="/auth/login" className={styles.signInBtn} onClick={handleNavigation}>
+      <Link
+        href="/auth/login"
+        className={styles.signInBtn}
+        onClick={handleNavigation}
+      >
         Sign in
       </Link>
-      <Link href="/auth/sign-up" className={styles.signUpBtn} onClick={handleNavigation}>
+      <Link
+        href="/auth/sign-up"
+        className={styles.signUpBtn}
+        onClick={handleNavigation}
+      >
         Sign up
       </Link>
     </div>
@@ -199,7 +225,9 @@ const Navbar = () => {
       )}
 
       {/* Mobile Menu */}
-      <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ""}`}>
+      <div
+        className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ""}`}
+      >
         <div className={styles.mobileMenuContent}>
           <ul className={styles.mobileNavLinks}>
             {navItems.map((item, idx) => (

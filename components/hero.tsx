@@ -37,7 +37,7 @@ export function Hero() {
             </span>{" "}
             a little more productive
           </h1>
-          
+
           {/* Subtitle */}
           <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed px-2 xs:px-4">
             Refocus allows you to regain focus, virtual coworking made easy.

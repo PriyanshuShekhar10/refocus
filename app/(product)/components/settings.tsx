@@ -17,7 +17,9 @@ export default function Settings() {
         <div className="flex items-center justify-between">
           <div>
             <div className="text-sm font-medium">Logout</div>
-            <div className="text-xs text-gray-500">Sign out and return to the homepage</div>
+            <div className="text-xs text-gray-500">
+              Sign out and return to the homepage
+            </div>
           </div>
           <button
             onClick={handleLogout}
