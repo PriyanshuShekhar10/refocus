@@ -1,6 +1,5 @@
 "use client";
-
-import React from "react";
+import { useState, useMemo } from "react";
 
 export type CreatedSession = {
   id: string;
@@ -26,16 +25,16 @@ export default function BookSessionButton({
   defaultSessionType = "focus",
   onCreated,
 }: Props) {
-  const [open, setOpen] = React.useState(false);
-  const [busy, setBusy] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const [duration, setDuration] = React.useState<25 | 50 | 75>(defaultDuration);
-  const [sessionType, setSessionType] = React.useState<
+  const [duration, setDuration] = useState<25 | 50 | 75>(defaultDuration);
+  const [sessionType, setSessionType] = useState<
     "focus" | "deep-work" | "learning"
   >(defaultSessionType);
-  const [quietOwner, setQuietOwner] = React.useState(false);
+  const [quietOwner, setQuietOwner] = useState(false);
 
   const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -66,7 +65,7 @@ export default function BookSessionButton({
   };
 
   // ---------- Defaults (next 15-min slot in IST) ----------
-  const defaults = React.useMemo(() => {
+  const defaults = useMemo(() => {
     const { year, month, day, hour24, minute } = getISTParts();
 
     const nextMinute = Math.ceil((minute + 1) / 15) * 15;
@@ -94,8 +93,8 @@ export default function BookSessionButton({
   }, []);
 
   // ---------- Reliable now & today in IST ----------
-  const nowISTParts = React.useMemo(() => getISTParts(), []);
-  const nowIST = React.useMemo(() => ({
+  const nowISTParts = useMemo(() => getISTParts(), []);
+  const nowIST = useMemo(() => ({
     hour24: nowISTParts.hour24,
     minute: nowISTParts.minute,
     year: nowISTParts.year,
@@ -103,7 +102,7 @@ export default function BookSessionButton({
     day: nowISTParts.day,
   }), [nowISTParts]);
 
-  const todayIST = React.useMemo(() => {
+  const todayIST = useMemo(() => {
     const yyyy = String(nowIST.year).padStart(4, "0");
     const mm = String(nowIST.month).padStart(2, "0");
     const dd = String(nowIST.day).padStart(2, "0");
@@ -111,12 +110,12 @@ export default function BookSessionButton({
   }, [nowIST]);
 
   // ---------- States ----------
-  const [dateIst, setDateIst] = React.useState<string>(defaults.dateIst);
-  const [hour12, setHour12] = React.useState<
+  const [dateIst, setDateIst] = useState<string>(defaults.dateIst);
+  const [hour12, setHour12] = useState<
     1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
   >(defaults.hour12);
-  const [minute, setMinute] = React.useState<0 | 15 | 30 | 45>(defaults.minute);
-  const [ampm, setAmpm] = React.useState<"AM" | "PM">(defaults.ampm);
+  const [minute, setMinute] = useState<0 | 15 | 30 | 45>(defaults.minute);
+  const [ampm, setAmpm] = useState<"AM" | "PM">(defaults.ampm);
 
   // ---------- Convert IST to UTC ----------
   const istPartsToIsoUtc = (
@@ -142,7 +141,7 @@ export default function BookSessionButton({
   };
 
   // ---------- Past check ----------
-  const isPast = React.useMemo(() => {
+  const isPast = useMemo(() => {
     const isoStart = istPartsToIsoUtc(dateIst, hour12, minute, ampm);
     if (!isoStart) return false;
     return new Date(isoStart).getTime() < Date.now();
@@ -203,7 +202,7 @@ export default function BookSessionButton({
   };
 
   // ---------- Hour options ----------
-  const hourOptions = React.useMemo(() => {
+  const hourOptions = useMemo(() => {
     const allHours = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
     if (dateIst !== todayIST) return allHours;
@@ -219,7 +218,7 @@ export default function BookSessionButton({
   }, [dateIst, ampm, nowIST, todayIST]);
 
   // ---------- Minute options ----------
-  const minuteOptions = React.useMemo(() => {
+  const minuteOptions = useMemo(() => {
     const allMinutes = [0, 15, 30, 45];
     if (dateIst !== todayIST) return allMinutes;
 

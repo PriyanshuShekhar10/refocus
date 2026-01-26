@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import FriendChat from "@/app/(product)/components/FriendChat";
 import { FiX } from "react-icons/fi";
 

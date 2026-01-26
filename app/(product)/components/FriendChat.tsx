@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FiMinus, FiMaximize2, FiX } from "react-icons/fi";
 
 type SessionRequestPayload = {

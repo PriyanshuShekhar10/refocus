@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Send, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -226,7 +226,7 @@ export default function GlobalChat() {
               const isDeleting = deletingIds.has(m.id);
               
               return (
-                <React.Fragment key={m.id}>
+                <Fragment key={m.id}>
                   {showDate && (
                     <div className="flex items-center justify-center py-4">
                       <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
@@ -279,7 +279,7 @@ export default function GlobalChat() {
                       </div>
                     )}
                   </div>
-                </React.Fragment>
+                </Fragment>
               );
             })}
             <div ref={bottomRef} />

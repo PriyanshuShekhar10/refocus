@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -11,10 +11,10 @@ type UserInfo = {
 };
 
 export default function Profile() {
-  const [user, setUser] = React.useState<UserInfo | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {

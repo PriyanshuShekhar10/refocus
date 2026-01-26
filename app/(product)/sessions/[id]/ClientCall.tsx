@@ -1,17 +1,17 @@
 "use client";
-import React from "react";
+import { useState, useEffect } from "react";
 
 export default function ClientCall({ sessionId }: { sessionId: string }) {
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   // DAILY: preserved but unused for now (free alternative in use)
   // const [domain, setDomain] = React.useState<string | null>(null);
   // const [roomName, setRoomName] = React.useState<string | null>(null);
   // const [token, setToken] = React.useState<string | null>(null);
   // JITSI (free alternative)
-  const [jitsiUrl, setJitsiUrl] = React.useState<string | null>(null);
+  const [jitsiUrl, setJitsiUrl] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let cancelled = false;
     const run = async () => {
       setLoading(true);

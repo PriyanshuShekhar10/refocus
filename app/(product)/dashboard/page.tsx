@@ -1,7 +1,7 @@
 // app/(product)/dashboard/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import SideBar from "../components/Sidebar/sidebar";
 import Profile from "../components/profile";
 import Settings from "../components/settings";

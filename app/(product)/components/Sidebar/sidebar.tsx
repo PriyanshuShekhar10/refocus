@@ -1,7 +1,7 @@
 // app/(product)/components/Sidebar/sidebar.tsx
 "use client";
 
-import React, { FC, ReactNode, useEffect, useState } from "react";
+import { FC, ReactNode, useEffect, useState } from "react";
 import { BsGearFill } from "react-icons/bs";
 import { MdDashboard } from "react-icons/md";
 import { FaUserFriends } from "react-icons/fa";
