@@ -1,29 +1,29 @@
 import Redis from "ioredis";
 
-/**
- * Redis Client Configuration
- *
- * This module provides Redis clients for Pub/Sub messaging.
- * It enables horizontal scaling by allowing multiple server instances
- * to communicate through a shared Redis channel.
- *
- * Environment Variables:
- * - REDIS_URL: Redis connection string (e.g., redis://localhost:6379)
- *
- * For production, use a managed Redis service like:
- * - Upstash Redis (recommended for serverless)
- * - Redis Cloud
- * - AWS ElastiCache
- */
-
 const redisUrl = process.env.REDIS_URL;
 
-// Check if Redis is configured
 export const isRedisConfigured = (): boolean => {
   return Boolean(redisUrl);
 };
 
-// Store clients in globalThis to persist across hot reloads
+const isUpstash = redisUrl?.includes("upstash.io");
+
+const baseOptions = {
+  enableReadyCheck: true,
+  retryStrategy: (times: number) => {
+    if (times > 10) {
+      console.error("[Redis] Max reconnection attempts reached");
+      return null;
+    }
+    return Math.min(times * 200, 5000);
+  },
+  reconnectOnError: (err: Error) => {
+    const targetErrors = ["READONLY", "ECONNRESET", "ETIMEDOUT"];
+    return targetErrors.some((e) => err.message.includes(e));
+  },
+  ...(isUpstash && { tls: { rejectUnauthorized: false } }),
+};
+
 type RedisState = {
   publisher: Redis | null;
   subscriber: Redis | null;
@@ -44,10 +44,6 @@ const getRedisState = (): RedisState => {
   return g.__REDIS_STATE__;
 };
 
-/**
- * Get the Redis publisher client (singleton)
- * Used for publishing messages to channels
- */
 export const getPublisher = (): Redis => {
   if (!redisUrl) {
     throw new Error(
@@ -60,9 +56,9 @@ export const getPublisher = (): Redis => {
 
   if (!state.publisher) {
     state.publisher = new Redis(redisUrl, {
+      ...baseOptions,
       maxRetriesPerRequest: 3,
-      enableReadyCheck: true,
-      retryStrategy: (times) => Math.min(times * 100, 3000),
+      lazyConnect: true,
     });
 
     state.publisher.on("error", (err) => {
@@ -72,19 +68,22 @@ export const getPublisher = (): Redis => {
     state.publisher.on("connect", () => {
       console.log("[Redis Publisher] Connected");
     });
+
+    state.publisher.on("reconnecting", () => {
+      console.log("[Redis Publisher] Reconnecting...");
+    });
+
+    state.publisher.connect().catch((err) => {
+      console.error(
+        "[Redis Publisher] Initial connection failed:",
+        err.message,
+      );
+    });
   }
 
   return state.publisher;
 };
 
-/**
- * Get the Redis subscriber client (singleton)
- * Used for subscribing to channels
- *
- * IMPORTANT: This client is configured for Pub/Sub mode which requires:
- * - No maxRetriesPerRequest (Pub/Sub blocks indefinitely)
- * - A single message handler that routes to all channels
- */
 export const getSubscriber = (): Redis => {
   if (!redisUrl) {
     throw new Error(
@@ -96,12 +95,10 @@ export const getSubscriber = (): Redis => {
   const state = getRedisState();
 
   if (!state.subscriber) {
-    // CRITICAL: maxRetriesPerRequest must be null for Pub/Sub
-    // Pub/Sub connections block waiting for messages and should not timeout
     state.subscriber = new Redis(redisUrl, {
-      maxRetriesPerRequest: null, // Disable for Pub/Sub
-      enableReadyCheck: true,
-      retryStrategy: (times) => Math.min(times * 100, 3000),
+      ...baseOptions,
+      maxRetriesPerRequest: null,
+      lazyConnect: true,
     });
 
     state.subscriber.on("error", (err) => {
@@ -117,35 +114,34 @@ export const getSubscriber = (): Redis => {
       console.log("[Redis Subscriber] Disconnected");
       state.subscriberReady = false;
     });
+
+    state.subscriber.on("reconnecting", () => {
+      console.log("[Redis Subscriber] Reconnecting...");
+    });
+
+    state.subscriber.connect().catch((err) => {
+      console.error(
+        "[Redis Subscriber] Initial connection failed:",
+        err.message,
+      );
+    });
   }
 
   return state.subscriber;
 };
 
-/**
- * Check if subscriber is ready
- */
 export const isSubscriberReady = (): boolean => {
   return getRedisState().subscriberReady;
 };
 
-/**
- * Check if message handler is already attached
- */
 export const isMessageHandlerAttached = (): boolean => {
   return getRedisState().messageHandlerAttached;
 };
 
-/**
- * Mark message handler as attached
- */
 export const setMessageHandlerAttached = (attached: boolean): void => {
   getRedisState().messageHandlerAttached = attached;
 };
 
-/**
- * Graceful shutdown for Redis connections
- */
 export const closeRedisConnections = async (): Promise<void> => {
   const state = getRedisState();
   const promises: Promise<void>[] = [];
