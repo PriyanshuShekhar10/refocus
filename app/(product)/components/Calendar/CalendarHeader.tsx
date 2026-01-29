@@ -1,4 +1,3 @@
-import React from "react";
 import { formatDayLabel } from "@/lib/utils";
 
 interface CalendarHeaderProps {

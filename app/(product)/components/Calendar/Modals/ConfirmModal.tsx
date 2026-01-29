@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 interface ConfirmModalProps {
   title: string;
-  description?: React.ReactNode;
+  description?: ReactNode;
   confirmText?: string;
   cancelText?: string;
   confirmVariant?: "danger" | "success";

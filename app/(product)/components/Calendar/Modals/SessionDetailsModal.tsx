@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { CalendarEvent } from "@/types/calendar";
 
 export function SessionDetailsModal({

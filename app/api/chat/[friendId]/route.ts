@@ -7,7 +7,6 @@ import { chatChannel, publish, userChannel } from "@/lib/sse";
 import {
   checkRateLimit,
   rateLimitedResponse,
-  addRateLimitHeaders,
 } from "@/lib/ratelimit";
 
 type MessageDoc = {
