@@ -180,7 +180,7 @@ export default function FriendChat({
       const res = await fetch(`/api/chat/${friendId}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load chat");
-      const fromServer = data.messages || [];
+      const fromServer = (data.messages || []) as ChatMessage[];
       setMessages((prev) => {
         const optimisticOnly = prev.filter((m) => m.id.startsWith("temp-"));
         if (optimisticOnly.length === 0) return fromServer;
