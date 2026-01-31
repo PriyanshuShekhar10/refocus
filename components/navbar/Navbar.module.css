@@ -71,11 +71,18 @@
   margin-right: 8px;
 }
 
+/* Wrapper for nav links + auth to keep spacing tight */
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
 /* Nav links - Desktop */
 .navLinks {
   list-style: none;
   display: flex;
-  gap: 40px;
+  gap: 28px;
   margin: 0;
   padding: 0;
 }
@@ -107,7 +114,7 @@
 /* Auth buttons - Desktop */
 .authButtons {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   align-items: center;
 }
 
@@ -426,6 +433,10 @@
     max-width: calc(100% - 4rem);
   }
 
+  .navRight {
+    gap: 24px;
+  }
+
   .navLinks {
     gap: 24px;
   }
@@ -456,8 +467,7 @@
   }
 
   /* Hide desktop nav and show mobile menu button */
-  .navLinks,
-  .authButtons {
+  .navRight {
     display: none;
   }
 

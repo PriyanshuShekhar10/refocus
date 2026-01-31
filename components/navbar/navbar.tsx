@@ -178,6 +178,10 @@ const Navbar = () => {
       name: "About Us",
       link: "/about",
     },
+    {
+      name: "Careers",
+      link: "/career",
+    },
   ];
 
   const closeMobileMenu = () => {
@@ -193,19 +197,19 @@ const Navbar = () => {
           <NavbarLogo />
         </div>
 
-        {/* Desktop Navigation */}
-        <ul className={styles.navLinks}>
-          {navItems.map((item, idx) => (
-            <li key={`nav-item-${idx}`}>
-              <a href={item.link}>{item.name}</a>
-            </li>
-          ))}
-        </ul>
-
-        {/* Desktop Auth Buttons */}
-        <div className={styles.authButtons}>
-          <ThemeSwitcher />
-          <NavbarAuthButton />
+        {/* Desktop Navigation + Auth (grouped for tighter spacing) */}
+        <div className={styles.navRight}>
+          <ul className={styles.navLinks}>
+            {navItems.map((item, idx) => (
+              <li key={`nav-item-${idx}`}>
+                <a href={item.link}>{item.name}</a>
+              </li>
+            ))}
+          </ul>
+          <div className={styles.authButtons}>
+            <ThemeSwitcher />
+            <NavbarAuthButton />
+          </div>
         </div>
 
         {/* Mobile Menu Button */}
