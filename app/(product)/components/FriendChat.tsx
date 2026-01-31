@@ -47,6 +47,7 @@ export default function FriendChat({
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const [srOpen, setSrOpen] = useState(false);
   const [srDate, setSrDate] = useState<Date | null>(null);
   const [srHour, setSrHour] = useState<number | null>(null);
@@ -179,7 +180,13 @@ export default function FriendChat({
       const res = await fetch(`/api/chat/${friendId}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load chat");
-      setMessages(data.messages || []);
+      const fromServer = data.messages || [];
+      setMessages((prev) => {
+        const optimisticOnly = prev.filter((m) => m.id.startsWith("temp-"));
+        if (optimisticOnly.length === 0) return fromServer;
+        const serverIds = new Set(fromServer.map((m) => m.id));
+        return [...fromServer, ...optimisticOnly.filter((m) => !serverIds.has(m.id))];
+      });
       setCurrentUserId(data.currentUserId || null);
       requestAnimationFrame(() => {
         listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
@@ -220,8 +227,20 @@ export default function FriendChat({
 
   const sendText = async () => {
     const value = text.trim();
-    if (!value) return;
+    if (!value || !currentUserId) return;
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const optimisticMessage: ChatMessage = {
+      id: tempId,
+      from_user_id: currentUserId,
+      to_user_id: friendId,
+      type: "text",
+      content: value,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMessage]);
     setText("");
+    setError(null);
+    setIsSending(true);
     try {
       const res = await fetch(`/api/chat/${friendId}`);
       if (!res.ok) throw new Error("auth check failed");
@@ -232,9 +251,16 @@ export default function FriendChat({
       });
       const data = await post.json();
       if (!post.ok) throw new Error(data.error || "Failed to send");
-      await load();
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...m, id: data.id } : m))
+      );
+      listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
     } catch (e) {
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setText(value);
       setError((e as Error).message);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -487,9 +513,10 @@ export default function FriendChat({
           />
           <button
             onClick={sendText}
-            className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800"
+            disabled={isSending}
+            className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Send
+            {isSending ? "Sending…" : "Send"}
           </button>
           <button
             onClick={() => setSrOpen((v) => !v)}
