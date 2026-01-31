@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { publish, sessionsChannel } from "@/lib/sse";
 
 // Shared session document type for this file
 type SessionDoc = {
@@ -136,5 +137,6 @@ export async function PATCH(
   if (typeof color !== "undefined") updates.color = color;
 
   await col.updateOne({ _id: new ObjectId(sessionId) }, { $set: updates });
+  await publish(sessionsChannel(), { type: "sessions_updated" });
   return NextResponse.json({ ok: true });
 }

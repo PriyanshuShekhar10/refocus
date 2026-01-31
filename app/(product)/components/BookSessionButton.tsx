@@ -189,6 +189,7 @@ export default function BookSessionButton({
   return (
     <>
       <button
+        data-book-session-trigger
         className={`w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 ${className}`}
         onClick={() => setOpen(true)}
       >

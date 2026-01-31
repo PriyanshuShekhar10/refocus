@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { publish, sessionsChannel } from "@/lib/sse";
 
 // GET /api/sessions?from=ISO&to=ISO
 type DbSession = {
@@ -195,5 +196,6 @@ export async function POST(req: NextRequest) {
     created_at: new Date(),
     updated_at: new Date(),
   });
+  await publish(sessionsChannel(), { type: "sessions_updated" });
   return NextResponse.json({ id: String(insert.insertedId) });
 }

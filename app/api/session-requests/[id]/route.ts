@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { chatChannel, publish } from "@/lib/sse";
+import { chatChannel, publish, sessionsChannel } from "@/lib/sse";
 
 // POST /api/session-requests/:id { action: 'accept'|'decline', message?: string }
 // On accept: create a session and add both users as participants
@@ -61,6 +61,7 @@ export async function POST(
       updated_at: new Date(),
     });
     createdSessionId = String(insert.insertedId);
+    await publish(sessionsChannel(), { type: "sessions_updated" });
   }
 
   await db.collection("session_requests").updateOne(

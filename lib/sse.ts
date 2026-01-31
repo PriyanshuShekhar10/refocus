@@ -200,3 +200,8 @@ export function userChannel(userId: string) {
 export function globalChatChannel() {
   return `chat:global`;
 }
+
+/** Channel for calendar/session updates; all clients refetch when any session changes */
+export function sessionsChannel() {
+  return `sessions:updates`;
+}

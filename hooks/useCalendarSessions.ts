@@ -92,6 +92,7 @@ export function useCalendarSessions({
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const events = eventsProp ?? internalEvents;
 
@@ -134,7 +135,7 @@ export function useCalendarSessions({
       }
 
       setCurrentUserId(result.data.currentUserId ?? null);
-      setInternalEvents(result.data.sessions.map(mapFetchedToEvent));
+      setEvents(result.data.sessions.map(mapFetchedToEvent));
       setIsLoading(false);
     }
 
@@ -142,7 +143,33 @@ export function useCalendarSessions({
     return () => {
       cancelled = true;
     };
-  }, [days]);
+  }, [days, refreshTrigger, setEvents]);
+
+  // Real-time: subscribe to session updates via SSE (no polling)
+  useEffect(() => {
+    if (days.length === 0) return;
+
+    const es = new EventSource("/api/sessions/events", { withCredentials: true });
+    const onMessage = (e: MessageEvent<string>) => {
+      try {
+        const data = JSON.parse(e.data) as { type?: string };
+        if (data.type === "sessions_updated") {
+          setRefreshTrigger((t) => t + 1);
+        }
+      } catch {
+        // ignore non-JSON or parse errors
+      }
+    };
+
+    es.onmessage = onMessage;
+    es.onerror = () => {
+      es.close();
+    };
+
+    return () => {
+      es.close();
+    };
+  }, [days.length]);
 
   const createSession = useCallback(
     async (

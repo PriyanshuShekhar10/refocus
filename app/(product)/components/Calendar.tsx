@@ -385,16 +385,22 @@ export default function Calendar({
       return;
     }
 
-    // Check for overlaps using precomputed epoch ms (no Date allocations)
+    // Only block if the overlapping session is one I'm already in (owner or participant).
+    // Other people's slots (different duration or same time) don't block me — we just won't match.
     const dayKey = ymd(dayDate);
     const startMs = start.getTime();
     const newEndMs = addMinutes(start, ui.createDuration).getTime();
-    const overlaps = (eventsByDay[dayKey] ?? []).some(
+    const mySessions = (eventsByDay[dayKey] ?? []).filter(
+      (ev) =>
+        (ev.owner_id && currentUserId && ev.owner_id === currentUserId) ||
+        (ev.participants ?? []).some((p) => p.user_id === currentUserId),
+    );
+    const overlaps = mySessions.some(
       (ev) => startMs < ev.endMs && newEndMs > ev.startMs,
     );
 
     if (overlaps) {
-      dispatch({ type: "SHOW_TOAST", message: "Slot unavailable" });
+      dispatch({ type: "SHOW_TOAST", message: "You already have a session at this time" });
       return;
     }
 
@@ -417,6 +423,12 @@ export default function Calendar({
         onDurationFilterChange={handleDurationFilterChange}
         createDuration={ui.createDuration}
         onCreateDurationChange={handleSetCreateDuration}
+        events={events}
+        currentUserId={currentUserId}
+        onJoinSession={(ev) => dispatch({ type: "OPEN_BOOKING_MODAL", event: ev })}
+        onDetailsSession={(ev) => dispatch({ type: "OPEN_DETAILS_MODAL", event: ev })}
+        onLeaveSession={(ev) => dispatch({ type: "OPEN_LEAVE_CONFIRM", event: ev })}
+        onDeleteSession={(ev) => dispatch({ type: "OPEN_DELETE_CONFIRM", event: ev })}
       />
 
       {/* Right: Calendar Area */}
@@ -560,6 +572,25 @@ export default function Calendar({
                         )
                       : false;
 
+                    const isMySession = isBooked || isOwner;
+                    const isCompact = !isMySession;
+
+                    // Don't show other people's available slots if they overlap my session (I'm ineligible)
+                    const mySessionsOnDay = (eventsByDay[ymd(d)] ?? []).filter(
+                      (e) =>
+                        (e.owner_id && currentUserId && e.owner_id === currentUserId) ||
+                        (e.participants ?? []).some((p) => p.user_id === currentUserId),
+                    );
+                    const ineligibleBecauseOverlapsMine =
+                      isCompact &&
+                      mySessionsOnDay.some(
+                        (e) =>
+                          e.id !== ev.id &&
+                          ev.startMs < e.endMs &&
+                          ev.endMs > e.startMs,
+                      );
+                    if (ineligibleBecauseOverlapsMine) return null;
+
                     return (
                       <CalendarEventCard
                         key={ev.id}
@@ -570,6 +601,7 @@ export default function Calendar({
                         tooltip={tooltip}
                         top={top}
                         height={height}
+                        isCompact={isCompact}
                         onBook={() => handleBookSlot(ev)}
                         onDetails={() =>
                           dispatch({ type: "OPEN_DETAILS_MODAL", event: ev })

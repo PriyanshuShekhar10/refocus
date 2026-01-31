@@ -130,3 +130,48 @@ export function pixelsToMinutes(
 ): number {
   return (pixels / CALENDAR_LAYOUT.rowPx) * stepMinutes;
 }
+
+// ============================================
+// Session Color Presets (theme-aware)
+// ============================================
+
+/**
+ * Five preset colors for session blocks. Each has a light- and dark-mode variant
+ * so blocks look good on both backgrounds. We store the light hex in the API;
+ * the UI resolves to the correct variant based on current theme.
+ */
+export const SESSION_COLOR_PRESETS = [
+  { light: "#e0e7ff", dark: "#3730a3" },   // indigo
+  { light: "#dbeafe", dark: "#1e40af" },  // blue
+  { light: "#d1fae5", dark: "#047857" },   // emerald
+  { light: "#fef3c7", dark: "#b45309" },   // amber
+  { light: "#fce7f3", dark: "#9d174d" },   // pink
+] as const;
+
+/**
+ * Resolve stored session color to the theme-appropriate hex for display.
+ * Stored value is always a preset's light hex (or legacy custom hex).
+ */
+export function getResolvedSessionColor(
+  storedColor: string | null | undefined,
+  isDark: boolean,
+): string | null {
+  if (!storedColor) return null;
+  const preset = SESSION_COLOR_PRESETS.find(
+    (p) => p.light === storedColor || p.dark === storedColor,
+  );
+  if (preset) return isDark ? preset.dark : preset.light;
+  return storedColor;
+}
+
+/**
+ * Index of the preset that matches the stored color, or -1 if none/custom.
+ */
+export function getSessionColorPresetIndex(
+  storedColor: string | null | undefined,
+): number {
+  if (!storedColor) return -1;
+  return SESSION_COLOR_PRESETS.findIndex(
+    (p) => p.light === storedColor || p.dark === storedColor,
+  );
+}

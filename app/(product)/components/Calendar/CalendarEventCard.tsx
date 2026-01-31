@@ -1,5 +1,10 @@
+"use client";
+
+import { useTheme } from "next-themes";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/types/calendar";
+import { getResolvedSessionColor } from "@/constants/calendar";
+import { getLocalSessionColor } from "@/lib/sessionColors";
 
 interface CalendarEventCardProps {
   event: CalendarEvent;
@@ -9,6 +14,8 @@ interface CalendarEventCardProps {
   tooltip: { label: string; email?: string } | null;
   top: number;
   height: number;
+  /** When true, show as small box (available slot not created by me); when false, full-width card */
+  isCompact: boolean;
   onBook: (e: React.MouseEvent) => void;
   onDetails: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
@@ -24,37 +31,74 @@ export function CalendarEventCard({
   tooltip,
   top,
   height,
+  isCompact,
   onBook,
   onDetails,
   onDelete,
   onLeave,
 }: CalendarEventCardProps) {
   const s = new Date(event.start);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const localColor = getLocalSessionColor(event.id);
+  const storedColor =
+    localColor !== undefined ? (localColor || null) : (event.color || null);
+  const resolvedColor = getResolvedSessionColor(storedColor, isDark);
+  const hasCustomColor = Boolean(resolvedColor);
+
+  const timeLabel = s.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Kolkata",
+  });
+
+  if (isCompact) {
+    return (
+      <div
+        className="group absolute left-2 z-20 w-10 rounded-md border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/80 dark:bg-gray-800/50 hover:border-indigo-400 hover:bg-indigo-50/80 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20 cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-colors"
+        style={{ top, height }}
+        title={`${timeLabel} • ${event.durationMin} min • Click to book`}
+        onClick={(evt) => {
+          evt.stopPropagation();
+          onBook(evt);
+        }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 shrink-0 transition-colors"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+          />
+        </svg>
+        <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 tabular-nums">
+          {timeLabel}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-x-2 z-20" style={{ top }}>
       <div
         style={{
           height,
-          backgroundColor:
-            event.color ||
-            (isBooked
-              ? typeof window !== "undefined" &&
-                window.matchMedia &&
-                window.matchMedia("(prefers-color-scheme: dark)").matches
-                ? "#374151"
-                : "#d1d5db"
-              : typeof window !== "undefined" &&
-                  window.matchMedia &&
-                  window.matchMedia("(prefers-color-scheme: dark)").matches
-                ? "#312e81"
-                : "#e0e7ff"),
+          ...(hasCustomColor ? { backgroundColor: resolvedColor! } : {}),
         }}
-        className={`relative rounded-lg p-2 flex flex-col justify-between shadow-sm overflow-hidden ${
-          isBooked
-            ? "border border-gray-300 dark:border-gray-600"
-            : "border border-indigo-200 hover:border-indigo-400 cursor-pointer dark:border-indigo-900"
-        }`}
+        className={`relative rounded-lg p-2 flex flex-col justify-between shadow-sm overflow-hidden border ${
+          hasCustomColor
+            ? "border-transparent"
+            : isBooked
+              ? "border-gray-200/80 dark:border-gray-500/50 bg-gray-200 dark:bg-gray-600"
+              : "border-indigo-200/80 dark:border-indigo-800/80 bg-indigo-100 dark:bg-indigo-900/80 hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer"
+        } ${!hasCustomColor ? "" : "border-black/10 dark:border-white/10"}`}
         title={
           tooltip
             ? `${tooltip.label}${tooltip.email ? `\n${tooltip.email}` : ""}`

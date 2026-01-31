@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { publish, sessionsChannel } from "@/lib/sse";
 
 type SessionDoc = {
   _id: ObjectId;
@@ -62,5 +63,6 @@ export async function POST(
     },
   );
 
+  await publish(sessionsChannel(), { type: "sessions_updated" });
   return NextResponse.json({ ok: true });
 }

@@ -367,16 +367,31 @@ export default function GlobalChat() {
     return date.toLocaleDateString([], { month: "short", day: "numeric" });
   };
 
+  const displayName = (m: GlobalMessage) => {
+    if (m.user_name?.trim()) return m.user_name.trim();
+    if (m.user_id?.length > 20) return "Someone";
+    return m.user_id || "Someone";
+  };
+
   return (
-    <div className="flex flex-col h-[calc(100vh-3rem)]">
+    <div className="flex flex-col h-[calc(100vh-3rem)] bg-white dark:bg-gray-900">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          Global Chat
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {messages.length} {messages.length === 1 ? "message" : "messages"}
-        </p>
+      <div className="shrink-0 border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/50 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-600 text-white">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Global Chat
+            </h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {messages.length} {messages.length === 1 ? "message" : "messages"}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Error Message */}
@@ -426,136 +441,141 @@ export default function GlobalChat() {
       {/* Messages Area */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-6 py-4"
+        className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-6"
       >
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
-              <div className="w-8 h-8 border-4 border-gray-300 dark:border-gray-600 border-t-green-600 dark:border-t-green-500 rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+              <Loader2 className="w-8 h-8 animate-spin text-green-500 mx-auto mb-3" />
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Loading messages...
               </p>
             </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <div className="text-center">
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
-                No messages yet. Start the conversation!
-              </p>
+            <div className="text-center max-w-xs">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">No messages yet</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Start the conversation!</p>
             </div>
           </div>
         ) : (
-          <div className="space-y-1">
-            {/* Infinite scroll trigger - placed at the top */}
+          <div className="space-y-3 max-w-3xl mx-auto">
             <div ref={topRef} className="h-1" />
 
-            {/* Load more indicator */}
             {pagination.isLoadingMore && (
-              <div className="flex items-center justify-center py-4">
+              <div className="flex items-center justify-center py-3">
                 <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
                   Loading older messages...
                 </span>
               </div>
             )}
 
-            {/* Show "no more messages" indicator */}
             {!pagination.hasMore && messages.length > 0 && (
-              <div className="flex items-center justify-center py-4">
-                <span className="text-xs text-gray-400 dark:text-gray-500">
+              <div className="flex items-center justify-center py-3">
+                <span className="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">
                   — Beginning of chat history —
                 </span>
               </div>
             )}
 
-            {messages
-              .filter((m) => {
-                const messageDate = new Date(m.created_at);
-                const now = new Date();
-                const diffInHours =
-                  (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
-                return diffInHours < 24;
-              })
-              .map((m, idx, filteredMessages) => {
-                const showDate =
-                  idx === 0 ||
-                  new Date(
-                    filteredMessages[idx - 1].created_at,
-                  ).toDateString() !== new Date(m.created_at).toDateString();
+            {messages.map((m, idx) => {
+              const showDate =
+                idx === 0 ||
+                new Date(messages[idx - 1].created_at).toDateString() !== new Date(m.created_at).toDateString();
 
-                const isOwnMessage = m.user_id === currentUserId;
-                const isDeleting = deletingIds.has(m.id);
+              const isOwnMessage = m.user_id === currentUserId;
+              const isDeleting = deletingIds.has(m.id);
+              const name = displayName(m);
+              const initial = name.charAt(0).toUpperCase();
 
-                return (
-                  <Fragment key={m.id}>
-                    {showDate && (
-                      <div className="flex items-center justify-center py-4">
-                        <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
-                          {new Date(m.created_at).toLocaleDateString([], {
-                            month: "long",
-                            day: "numeric",
-                            year:
-                              new Date(m.created_at).getFullYear() !==
-                              new Date().getFullYear()
-                                ? "numeric"
-                                : undefined,
-                          })}
+              return (
+                <Fragment key={m.id}>
+                  {showDate && (
+                    <div className="flex items-center justify-center py-2">
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
+                        {new Date(m.created_at).toLocaleDateString([], {
+                          month: "long",
+                          day: "numeric",
+                          year:
+                            new Date(m.created_at).getFullYear() !== new Date().getFullYear()
+                              ? "numeric"
+                              : undefined,
+                        })}
+                      </span>
+                    </div>
+                  )}
+                  <div
+                    className={`group flex gap-2 ${isOwnMessage ? "flex-row-reverse" : ""}`}
+                  >
+                    <div
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-medium ${
+                        isOwnMessage
+                          ? "bg-green-600 text-white order-2"
+                          : "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
+                      }`}
+                    >
+                      {initial}
+                    </div>
+                    <div
+                      className={`flex max-w-[85%] sm:max-w-[75%] flex-col ${isOwnMessage ? "items-end" : "items-start"}`}
+                    >
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                          {isOwnMessage ? "You" : name}
+                        </span>
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                          {formatTime(m.created_at)}
                         </span>
                       </div>
-                    )}
-                    <div className="group rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 px-4 py-2 transition-colors relative">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-sm font-medium text-white">
-                            {(m.user_name || m.user_id).charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                              {m.user_name || m.user_id}
-                            </span>
-                            <span className="text-xs text-gray-400 dark:text-gray-500">
-                              {formatTime(m.created_at)}
-                            </span>
-                          </div>
-                          {m.deleted ? (
-                            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 italic">
-                              This message was deleted
-                            </p>
-                          ) : (
-                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap break-words leading-relaxed">
-                              {m.content}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      {!m.deleted && isOwnMessage && (
-                        <div className="absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <div
+                        className={`relative mt-0.5 rounded-2xl px-3 py-2 ${
+                          m.deleted
+                            ? "bg-gray-100 dark:bg-gray-800"
+                            : isOwnMessage
+                              ? "bg-green-600 text-white dark:bg-green-500"
+                              : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        } ${!m.deleted && isOwnMessage ? "rounded-br-md" : "rounded-bl-md"}`}
+                      >
+                        {m.deleted ? (
+                          <p className="text-xs italic text-gray-500 dark:text-gray-400">
+                            This message was deleted
+                          </p>
+                        ) : (
+                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                            {m.content}
+                          </p>
+                        )}
+                        {!m.deleted && isOwnMessage && (
                           <button
                             onClick={() => setDeleteConfirmId(m.id)}
                             disabled={isDeleting}
-                            className="pointer-events-auto mr-3 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg px-3 py-1.5 flex items-center gap-1.5 shadow-sm transition-colors"
+                            className="absolute -left-1 -top-1 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-1 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
                             title="Delete message"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span className="text-xs font-medium">Delete</span>
+                            <Trash2 className="h-3 w-3" />
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </Fragment>
-                );
-              })}
+                  </div>
+                </Fragment>
+              );
+            })}
             <div ref={bottomRef} />
           </div>
         )}
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800/50">
-        <div className="flex gap-2">
+      <div className="shrink-0 border-t border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/50 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-3xl gap-2">
           <input
             ref={inputRef}
             value={text}
@@ -563,14 +583,15 @@ export default function GlobalChat() {
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             disabled={isSending}
-            className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           />
           <button
+            type="button"
             onClick={send}
             disabled={!text.trim() || isSending}
-            className="rounded-lg bg-green-600 hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-4 py-2.5 flex items-center justify-center gap-2 transition-colors disabled:hover:bg-gray-300 dark:disabled:hover:bg-gray-700"
+            className="shrink-0 rounded-xl bg-green-600 px-4 py-3 text-white shadow-sm hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
-            <Send className="w-4 h-4" />
+            <Send className="h-4 w-4" />
             <span className="text-sm font-medium hidden sm:inline">
               {isSending ? "Sending..." : "Send"}
             </span>
