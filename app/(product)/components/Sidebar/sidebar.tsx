@@ -20,6 +20,8 @@ interface SideBarProps {
 
 const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
   const [friendsUnread, setFriendsUnread] = useState(0);
+  const [pendingSessionRequests, setPendingSessionRequests] = useState(0);
+
   useEffect(() => {
     const handler = (e: Event) => {
       const ce = e as CustomEvent<{ count: number }>;
@@ -29,6 +31,31 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
     return () =>
       window.removeEventListener("chatdock:unread", handler as EventListener);
   }, []);
+
+  const fetchPendingSessionRequests = () => {
+    fetch("/api/session-requests?type=incoming&status=pending")
+      .then((res) => (res.ok ? res.json() : { requests: [] }))
+      .then((data) => setPendingSessionRequests((data.requests || []).length))
+      .catch(() => setPendingSessionRequests(0));
+  };
+
+  useEffect(() => {
+    fetchPendingSessionRequests();
+    const onFocus = () => fetchPendingSessionRequests();
+    const onSessionRequestsUpdated = () => fetchPendingSessionRequests();
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("friends:session-requests-updated", onSessionRequestsUpdated);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("friends:session-requests-updated", onSessionRequestsUpdated);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "friends") {
+      fetchPendingSessionRequests();
+    }
+  }, [activeTab]);
 
   return (
     <aside
@@ -60,8 +87,18 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
       /> */}
 
       <SideBarIcon
-        icon={<FaUserFriends size={18} />}
-        text="Friends"
+        icon={
+          <div className="relative inline-flex">
+            <FaUserFriends size={18} />
+            {pendingSessionRequests > 0 ? (
+              <span
+                className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900"
+                aria-label={`${pendingSessionRequests} pending session request${pendingSessionRequests !== 1 ? "s" : ""}`}
+              />
+            ) : null}
+          </div>
+        }
+        text={pendingSessionRequests > 0 ? `Friends (${pendingSessionRequests} session request${pendingSessionRequests !== 1 ? "s" : ""} pending)` : "Friends"}
         onClick={() => onSelect("friends")}
         active={activeTab === "friends"}
       />
