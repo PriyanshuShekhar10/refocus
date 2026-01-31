@@ -30,6 +30,14 @@ export default function GlobalChat() {
   const [isLoading, setIsLoading] = useState(true);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [profileUser, setProfileUser] = useState<{
+    user_id: string;
+    user_name?: string | null;
+  } | null>(null);
+  const [profileFriendStatus, setProfileFriendStatus] = useState<
+    "loading" | "friend" | "request_sent" | "none"
+  >("none");
+  const [profileFriendReqStatus, setProfileFriendReqStatus] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const topRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -373,6 +381,66 @@ export default function GlobalChat() {
     return m.user_id || "Someone";
   };
 
+  const openProfile = (m: GlobalMessage) => {
+    if (m.user_id === currentUserId) return;
+    setProfileUser({ user_id: m.user_id, user_name: m.user_name });
+    setProfileFriendStatus("loading");
+    setProfileFriendReqStatus(null);
+  };
+
+  useEffect(() => {
+    if (!profileUser?.user_id) return;
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const [resFriends, resOutgoing] = await Promise.all([
+          fetch("/api/friends"),
+          fetch("/api/friends/requests?type=outgoing&status=pending"),
+        ]);
+        if (cancelled) return;
+        const [dataFriends, dataOutgoing] = await Promise.all([
+          resFriends.json().catch(() => ({ friends: [] })),
+          resOutgoing.json().catch(() => ({ requests: [] })),
+        ]);
+        const friends = (dataFriends.friends ?? []) as { user_id: string }[];
+        const requests = (dataOutgoing.requests ?? []) as { to_user_id: string }[];
+        const isFriend = friends.some((f) => f.user_id === profileUser.user_id);
+        const requestSent = requests.some((r) => r.to_user_id === profileUser.user_id);
+        if (cancelled) return;
+        setProfileFriendStatus(isFriend ? "friend" : requestSent ? "request_sent" : "none");
+      } catch {
+        if (!cancelled) setProfileFriendStatus("none");
+      }
+    };
+    check();
+    return () => {
+      cancelled = true;
+    };
+  }, [profileUser?.user_id]);
+
+  const sendFriendRequestFromProfile = async () => {
+    if (!profileUser?.user_id) return;
+    try {
+      const res = await fetch("/api/friends/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to_user_id: profileUser.user_id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to send request");
+      setProfileFriendStatus("request_sent");
+      setProfileFriendReqStatus("Request sent");
+      setTimeout(() => setProfileFriendReqStatus(null), 2000);
+    } catch (e) {
+      setProfileFriendReqStatus((e as Error).message);
+      setTimeout(() => setProfileFriendReqStatus(null), 3000);
+    }
+  };
+
+  const profileDisplayName = profileUser
+    ? profileUser.user_name?.trim() || (profileUser.user_id?.length > 20 ? "Someone" : profileUser.user_id || "Someone")
+    : "";
+
   return (
     <div className="flex flex-col h-[calc(100vh-3rem)] bg-white dark:bg-gray-900">
       {/* Header */}
@@ -432,6 +500,79 @@ export default function GlobalChat() {
                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors text-sm font-medium"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Profile Modal (from Global Chat) */}
+      {profileUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-xl bg-white dark:bg-gray-800 shadow-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Profile
+              </h3>
+              <button
+                type="button"
+                onClick={() => setProfileUser(null)}
+                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-300 transition-colors"
+                aria-label="Close"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-green-600 text-2xl font-semibold text-white mb-3">
+                {profileDisplayName.charAt(0).toUpperCase() || "?"}
+              </div>
+              <p className="text-base font-medium text-gray-900 dark:text-gray-100">
+                {profileDisplayName}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-full">
+                {profileUser.user_id}
+              </p>
+            </div>
+            <div className="mt-6 flex flex-col gap-2">
+              {profileFriendReqStatus && (
+                <p className={`text-sm text-center ${profileFriendReqStatus === "Request sent" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                  {profileFriendReqStatus}
+                </p>
+              )}
+              {profileFriendStatus === "loading" && (
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                </div>
+              )}
+              {profileFriendStatus === "friend" && (
+                <p className="text-sm text-center text-gray-600 dark:text-gray-400 py-2">
+                  You are friends
+                </p>
+              )}
+              {profileFriendStatus === "request_sent" && !profileFriendReqStatus && (
+                <p className="text-sm text-center text-gray-600 dark:text-gray-400 py-2">
+                  Friend request sent
+                </p>
+              )}
+              {profileFriendStatus === "none" && (
+                <button
+                  type="button"
+                  onClick={sendFriendRequestFromProfile}
+                  disabled={!!profileFriendReqStatus}
+                  className="w-full rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 disabled:opacity-50 transition-colors"
+                >
+                  Send friend request
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setProfileUser(null)}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>
@@ -514,22 +655,38 @@ export default function GlobalChat() {
                   <div
                     className={`group flex gap-2 ${isOwnMessage ? "flex-row-reverse" : ""}`}
                   >
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-medium ${
-                        isOwnMessage
-                          ? "bg-green-600 text-white order-2"
-                          : "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
-                      }`}
-                    >
-                      {initial}
-                    </div>
+                    {isOwnMessage ? (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-600 text-sm font-medium text-white order-2">
+                        {initial}
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openProfile(m)}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:ring-2 hover:ring-green-500 dark:hover:ring-green-500 transition-shadow cursor-pointer"
+                        title="View profile"
+                      >
+                        {initial}
+                      </button>
+                    )}
                     <div
                       className={`flex max-w-[85%] sm:max-w-[75%] flex-col ${isOwnMessage ? "items-end" : "items-start"}`}
                     >
                       <div className="flex items-baseline gap-2">
-                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                          {isOwnMessage ? "You" : name}
-                        </span>
+                        {isOwnMessage ? (
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            You
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => openProfile(m)}
+                            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:underline cursor-pointer text-left"
+                            title="View profile"
+                          >
+                            {name}
+                          </button>
+                        )}
                         <span className="text-[10px] text-gray-400 dark:text-gray-500">
                           {formatTime(m.created_at)}
                         </span>
