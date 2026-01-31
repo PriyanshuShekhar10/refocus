@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { CalendarEvent, FetchedSession } from "@/types/calendar";
 import { toISO, addDays, addMinutes } from "@/lib/utils";
 import { type DurationMin } from "@/constants/calendar";
+import * as sessionsApi from "@/lib/api/sessionsApi";
 
 // ============================================
 // Types
@@ -49,27 +50,34 @@ interface UseCalendarSessionsReturn {
 }
 
 // ============================================
+// Helpers
+// ============================================
+
+function mapFetchedToEvent(s: FetchedSession): CalendarEvent {
+  return {
+    id: s.id,
+    start: s.start,
+    end: s.end,
+    durationMin: s.durationMin,
+    sessionType: s.sessionType,
+    status: s.status,
+    name: s.name ?? null,
+    color: s.color ?? null,
+    owner_id: s.owner_id,
+    owner: s.owner,
+    participants: s.participants,
+  };
+}
+
+// ============================================
 // Hook Implementation
 // ============================================
 
 /**
  * useCalendarSessions - Manages session data and CRUD operations.
  *
- * Handles:
- * - Fetching sessions from API based on visible date range
- * - Creating, deleting, and joining sessions
- * - Optimistic updates with rollback on failure
- * - Both controlled and uncontrolled modes
- *
- * @example
- * ```tsx
- * const {
- *   events,
- *   createSession,
- *   deleteSession,
- *   joinSession,
- * } = useCalendarSessions({ days });
- * ```
+ * Uses sessionsApi for all network calls. Implements optimistic updates
+ * with revert + rethrow on failure so callers can show toasts/alerts.
  */
 export function useCalendarSessions({
   days,
@@ -83,31 +91,27 @@ export function useCalendarSessions({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Use external events if provided, otherwise use internal state
   const events = eventsProp ?? internalEvents;
 
-  // Unified setter that handles both controlled and uncontrolled modes
   const setEvents = useCallback(
     (next: CalendarEvent[] | ((prev: CalendarEvent[]) => CalendarEvent[])) => {
-      if (onEventsChange) {
-        if (typeof next === "function") {
-          onEventsChange(next(events));
-        } else {
-          onEventsChange(next);
-        }
-      }
-      if (!eventsProp) {
-        setInternalEvents(next);
-      }
+      // Use functional form to get latest state (avoids stale closure)
+      setInternalEvents((prev) => {
+        const currentEvents = eventsProp ?? prev;
+        const resolved = typeof next === "function" ? next(currentEvents) : next;
+        if (onEventsChange) onEventsChange(resolved);
+        // Only update internal state if not controlled
+        return eventsProp ? prev : resolved;
+      });
     },
-    [onEventsChange, eventsProp, events],
+    [onEventsChange, eventsProp],
   );
 
   // Fetch sessions when visible date range changes
   useEffect(() => {
     let cancelled = false;
 
-    const loadSessions = async () => {
+    async function loadSessions() {
       if (days.length === 0) return;
 
       setIsLoading(true);
@@ -116,70 +120,28 @@ export function useCalendarSessions({
       const from = toISO(days[0]);
       const to = toISO(addDays(days[days.length - 1], 1));
 
-      try {
-        const res = await fetch(
-          `/api/sessions?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
-        );
+      const result = await sessionsApi.list(from, to);
 
-        let data: unknown = null;
-        try {
-          data = await res.json();
-        } catch {
-          // JSON parse failed
-        }
+      if (cancelled) return;
 
-        if (!res.ok) {
-          const errMsg =
-            (data as { error?: string } | null)?.error || res.statusText;
-          console.error("/api/sessions failed", errMsg);
-          setError("Could not load sessions");
-          return;
-        }
-
-        if (cancelled) return;
-
-        const payload = (data || {}) as {
-          currentUserId?: string | null;
-          sessions?: FetchedSession[];
-        };
-
-        setCurrentUserId(payload.currentUserId ?? null);
-
-        const mapped: CalendarEvent[] = (payload.sessions ?? []).map(
-          (s: FetchedSession) => ({
-            id: s.id,
-            start: s.start,
-            end: s.end,
-            durationMin: s.durationMin,
-            sessionType: s.sessionType,
-            status: s.status,
-            name: s.name ?? null,
-            color: s.color ?? null,
-            owner_id: s.owner_id,
-            owner: s.owner,
-            participants: s.participants,
-          }),
-        );
-
-        setInternalEvents(mapped);
-      } catch (e) {
-        console.error(e);
-        setError("Failed to fetch sessions");
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+      if (!result.ok) {
+        console.error("/api/sessions failed", result.error);
+        setError("Could not load sessions");
+        setIsLoading(false);
+        return;
       }
-    };
+
+      setCurrentUserId(result.data.currentUserId ?? null);
+      setInternalEvents(result.data.sessions.map(mapFetchedToEvent));
+      setIsLoading(false);
+    }
 
     loadSessions();
-
     return () => {
       cancelled = true;
     };
   }, [days]);
 
-  // Create a new session
   const createSession = useCallback(
     async (
       start: Date,
@@ -188,7 +150,6 @@ export function useCalendarSessions({
     ) => {
       const tempId = `temp_${Date.now()}`;
       const end = addMinutes(start, durationMin);
-
       const optimistic: CalendarEvent = {
         id: tempId,
         start: toISO(start),
@@ -210,117 +171,76 @@ export function useCalendarSessions({
 
       setEvents((prev) => [...prev, optimistic]);
 
-      try {
-        const res = await fetch("/api/sessions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            start: optimistic.start,
-            durationMin,
-            sessionType: optimistic.sessionType,
-            quietOwner,
-          }),
-        });
+      const result = await sessionsApi.create({
+        start: optimistic.start,
+        durationMin,
+        sessionType: "focus",
+        quietOwner,
+      });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to create session");
-        }
-
-        setEvents((prev) =>
-          prev.map((e) => (e.id === tempId ? { ...e, id: data.id } : e)),
-        );
-      } catch (e) {
-        // Rollback on failure
+      if (!result.ok) {
         setEvents((prev) => prev.filter((e) => e.id !== tempId));
-        throw e;
+        throw new sessionsApi.ApiError(result.error);
       }
+
+      setEvents((prev) =>
+        prev.map((e) => (e.id === tempId ? { ...e, id: result.data.id } : e)),
+      );
     },
     [currentUserId, setEvents],
   );
 
-  // Delete a session
   const deleteSession = useCallback(
     async (id: string) => {
       const existing = events.find((e) => e.id === id);
       if (!existing) return;
 
-      // Optimistic delete
       setEvents((prev) => prev.filter((e) => e.id !== id));
 
-      try {
-        const res = await fetch(`/api/sessions/${id}`, { method: "DELETE" });
+      const result = await sessionsApi.deleteSession(id);
 
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || "Failed to delete session");
-        }
-      } catch (e) {
-        // Rollback on failure
+      if (!result.ok) {
         setEvents((prev) => [...prev, existing]);
-        throw e;
+        throw new sessionsApi.ApiError(result.error);
       }
     },
     [events, setEvents],
   );
 
-  // Join/book a session
   const joinSession = useCallback(
     async (id: string, quiet: boolean = false) => {
-      // Optimistic update
       setEvents((prev) =>
         prev.map((e) => (e.id === id ? { ...e, status: "booked" } : e)),
       );
 
-      try {
-        const res = await fetch(`/api/sessions/${id}/join`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quiet }),
-        });
+      const result = await sessionsApi.join(id, quiet);
 
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || "Failed to join session");
-        }
-      } catch (e) {
-        // Rollback on failure
+      if (!result.ok) {
         setEvents((prev) =>
           prev.map((ev) =>
             ev.id === id ? { ...ev, status: "available" } : ev,
           ),
         );
-        throw e;
+        throw new sessionsApi.ApiError(result.error);
       }
     },
     [setEvents],
   );
 
-  // Update session metadata
   const updateSessionMeta = useCallback(
     async (
       id: string,
       patch: { name?: string | null; color?: string | null },
     ) => {
-      try {
-        const res = await fetch(`/api/sessions/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(patch),
-        });
+      const result = await sessionsApi.patch(id, patch);
 
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || "Failed to update session");
-        }
-
-        setEvents((prev) =>
-          prev.map((e) => (e.id === id ? { ...e, ...patch } : e)),
-        );
-      } catch (e) {
-        throw e;
+      if (!result.ok) {
+        throw new sessionsApi.ApiError(result.error);
       }
+
+      setEvents((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+      );
     },
     [setEvents],
   );

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useCallback } from "react";
 import type { CalendarEvent } from "@/types/calendar";
 import {
   startOfDay,
   addMinutes,
   addDays,
   ymd,
-  minutesBetween,
   formatHour,
 } from "@/lib/utils";
 import {
@@ -43,6 +42,133 @@ interface CalendarProps {
   className?: string;
 }
 
+/** CalendarEvent with precomputed epoch ms for fast overlap checks */
+type ProcessedEvent = CalendarEvent & {
+  startMs: number;
+  endMs: number;
+  /** minutes from midnight for positioning */
+  startMinutes: number;
+};
+
+// ============================================
+// UI State Machine (useReducer)
+// ============================================
+
+/** Modal state – discriminated union ensures only one modal open at a time */
+type ModalState =
+  | { type: "none" }
+  | { type: "booking"; event: CalendarEvent; quiet: boolean }
+  | { type: "details"; event: CalendarEvent }
+  | {
+      type: "confirm-create";
+      start: Date;
+      preferred: DurationMin;
+      whenIst: string;
+      quiet: boolean;
+    }
+  | { type: "confirm-delete"; event: CalendarEvent };
+
+interface UIState {
+  /** Currently visible date */
+  startDate: Date;
+  /** Duration filter for sidebar */
+  durationFilter: DurationMin[];
+  /** Duration for creating new sessions */
+  createDuration: DurationMin;
+  /** Modal state (only one modal can be open) */
+  modal: ModalState;
+  /** Toast message (shown briefly) */
+  toast: string | null;
+}
+
+type UIAction =
+  | { type: "SET_START_DATE"; date: Date }
+  | { type: "SHIFT_RANGE"; delta: number }
+  | { type: "GO_TODAY" }
+  | { type: "TOGGLE_DURATION_FILTER"; duration: DurationMin }
+  | { type: "SET_CREATE_DURATION"; duration: DurationMin }
+  | { type: "OPEN_BOOKING_MODAL"; event: CalendarEvent }
+  | { type: "SET_BOOKING_QUIET"; quiet: boolean }
+  | { type: "OPEN_DETAILS_MODAL"; event: CalendarEvent }
+  | {
+      type: "OPEN_CREATE_CONFIRM";
+      start: Date;
+      preferred: DurationMin;
+      whenIst: string;
+    }
+  | { type: "SET_CREATE_QUIET"; quiet: boolean }
+  | { type: "OPEN_DELETE_CONFIRM"; event: CalendarEvent }
+  | { type: "CLOSE_MODAL" }
+  | { type: "SHOW_TOAST"; message: string }
+  | { type: "CLEAR_TOAST" };
+
+function uiReducer(state: UIState, action: UIAction): UIState {
+  switch (action.type) {
+    case "SET_START_DATE":
+      return { ...state, startDate: startOfDay(action.date) };
+    case "SHIFT_RANGE":
+      return { ...state, startDate: addDays(state.startDate, action.delta) };
+    case "GO_TODAY":
+      return { ...state, startDate: startOfDay(new Date()) };
+    case "TOGGLE_DURATION_FILTER":
+      return {
+        ...state,
+        durationFilter: state.durationFilter.includes(action.duration)
+          ? state.durationFilter.filter((d) => d !== action.duration)
+          : [...state.durationFilter, action.duration],
+      };
+    case "SET_CREATE_DURATION":
+      return { ...state, createDuration: action.duration };
+    case "OPEN_BOOKING_MODAL":
+      return {
+        ...state,
+        modal: { type: "booking", event: action.event, quiet: false },
+      };
+    case "SET_BOOKING_QUIET":
+      if (state.modal.type !== "booking") return state;
+      return { ...state, modal: { ...state.modal, quiet: action.quiet } };
+    case "OPEN_DETAILS_MODAL":
+      return { ...state, modal: { type: "details", event: action.event } };
+    case "OPEN_CREATE_CONFIRM":
+      return {
+        ...state,
+        modal: {
+          type: "confirm-create",
+          start: action.start,
+          preferred: action.preferred,
+          whenIst: action.whenIst,
+          quiet: false,
+        },
+      };
+    case "SET_CREATE_QUIET":
+      if (state.modal.type !== "confirm-create") return state;
+      return { ...state, modal: { ...state.modal, quiet: action.quiet } };
+    case "OPEN_DELETE_CONFIRM":
+      return {
+        ...state,
+        modal: { type: "confirm-delete", event: action.event },
+      };
+    case "CLOSE_MODAL":
+      return { ...state, modal: { type: "none" } };
+    case "SHOW_TOAST":
+      return { ...state, toast: action.message };
+    case "CLEAR_TOAST":
+      return { ...state, toast: null };
+    default:
+      return state;
+  }
+}
+
+function createInitialState(startDateProp?: Date): UIState {
+  return {
+    startDate: startDateProp ? startOfDay(startDateProp) : startOfDay(new Date()),
+    durationFilter: DEFAULT_DURATION_FILTER,
+    createDuration: DEFAULT_DURATION,
+    modal: { type: "none" },
+    toast: null,
+  };
+}
+
 // ============================================
 // Calendar Component
 // ============================================
@@ -60,48 +186,32 @@ export default function Calendar({
 }: CalendarProps) {
   const { hourBlockHeight, minorLinePositions } = CALENDAR_LAYOUT;
 
-  const today = new Date();
-  const [startDate, setStartDate] = useState<Date>(() =>
-    startDateProp ? new Date(startDateProp) : startOfDay(today),
+  // UI state machine
+  const [ui, dispatch] = useReducer(
+    uiReducer,
+    startDateProp,
+    createInitialState,
   );
 
+  // Sync external startDate prop
   useEffect(() => {
-    if (startDateProp) setStartDate(startOfDay(new Date(startDateProp)));
+    if (startDateProp) {
+      dispatch({ type: "SET_START_DATE", date: startDateProp });
+    }
   }, [startDateProp]);
 
   const days = useMemo(
-    () => new Array(visibleDays).fill(0).map((_, i) => addDays(startDate, i)),
-    [visibleDays, startDate],
+    () => new Array(visibleDays).fill(0).map((_, i) => addDays(ui.startDate, i)),
+    [visibleDays, ui.startDate],
   );
 
-  // Duration filter and creation states
-  const [durationFilter, setDurationFilter] = useState<DurationMin[]>(
-    DEFAULT_DURATION_FILTER,
-  );
-  const [createDuration, setCreateDuration] =
-    useState<DurationMin>(DEFAULT_DURATION);
-  const [createQuiet, setCreateQuiet] = useState<boolean>(false);
-
-  // Modal states
-  const [bookingModalEvent, setBookingModalEvent] =
-    useState<CalendarEvent | null>(null);
-  const [bookingQuiet, setBookingQuiet] = useState<boolean>(false);
-  const [detailsModalEvent, setDetailsModalEvent] =
-    useState<CalendarEvent | null>(null);
-  const [confirmModal, setConfirmModal] = useState<null | {
-    title: string;
-    description?: React.ReactNode;
-    confirmText?: string;
-    cancelText?: string;
-    confirmVariant?: "danger" | "success";
-    onConfirm: () => void | Promise<void>;
-  }>(null);
-  const [createModalInfo, setCreateModalInfo] = useState<null | {
-    start: Date;
-    preferred: DurationMin;
-    whenIst: string;
-  }>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  // Toast auto-clear
+  useEffect(() => {
+    if (ui.toast) {
+      const timer = setTimeout(() => dispatch({ type: "CLEAR_TOAST" }), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [ui.toast]);
 
   // Use the sessions hook for data management
   const {
@@ -117,27 +227,35 @@ export default function Calendar({
     eventsProp,
   });
 
-  // Filter events by duration
+  // Filter events by duration and precompute epoch ms for fast overlap checks
   const eventsByDay = useMemo(() => {
-    const map: Record<string, CalendarEvent[]> = {};
+    const map: Record<string, ProcessedEvent[]> = {};
     for (const d of days) map[ymd(d)] = [];
 
     const filteredEvents = events.filter((ev) =>
-      durationFilter.includes(ev.durationMin),
+      ui.durationFilter.includes(ev.durationMin),
     );
 
     for (const ev of filteredEvents) {
-      const s = new Date(ev.start);
-      const key = ymd(s);
-      if (map[key]) map[key].push(ev);
+      const startMs = new Date(ev.start).getTime();
+      const endMs = new Date(ev.end).getTime();
+      const evStartDate = new Date(startMs);
+      const startMinutes =
+        evStartDate.getHours() * 60 + evStartDate.getMinutes();
+      const key = ymd(evStartDate);
+
+      if (map[key]) {
+        map[key].push({ ...ev, startMs, endMs, startMinutes });
+      }
     }
 
+    // Sort by startMs (no Date allocation)
     for (const k in map) {
-      map[k].sort((a, b) => +new Date(a.start) - +new Date(b.start));
+      map[k].sort((a, b) => a.startMs - b.startMs);
     }
 
     return map;
-  }, [days, events, durationFilter]);
+  }, [days, events, ui.durationFilter]);
 
   // Use the grid hook for layout and interactions
   const {
@@ -156,53 +274,80 @@ export default function Calendar({
     endHour,
     stepMinutes,
     visibleDays,
-    createDuration,
+    createDuration: ui.createDuration,
     eventsByDay,
   });
 
-  // Navigation handlers
-  const goToday = () => setStartDate(startOfDay(new Date()));
-  const shiftRange = (deltaDays: number) =>
-    setStartDate((d) => addDays(d, deltaDays));
+  // Navigation handlers (dispatch actions)
+  const goToday = useCallback(() => dispatch({ type: "GO_TODAY" }), []);
+  const shiftRange = useCallback(
+    (delta: number) => dispatch({ type: "SHIFT_RANGE", delta }),
+    [],
+  );
+  const handleDurationFilterChange = useCallback(
+    (duration: DurationMin) =>
+      dispatch({ type: "TOGGLE_DURATION_FILTER", duration }),
+    [],
+  );
+  const handleSetCreateDuration = useCallback(
+    (duration: DurationMin) =>
+      dispatch({ type: "SET_CREATE_DURATION", duration }),
+    [],
+  );
 
-  // Duration filter handler
-  const handleDurationFilterChange = (duration: DurationMin) => {
-    setDurationFilter((prev) =>
-      prev.includes(duration)
-        ? prev.filter((d) => d !== duration)
-        : [...prev, duration],
-    );
-  };
+  // Booking flow
+  const handleBookSlot = useCallback(
+    (event: CalendarEvent) => dispatch({ type: "OPEN_BOOKING_MODAL", event }),
+    [],
+  );
 
-  // Booking handlers
-  const handleBookSlot = (event: CalendarEvent) => {
-    setBookingQuiet(false);
-    setBookingModalEvent(event);
-  };
-
-  const handleConfirmBooking = async () => {
-    if (!bookingModalEvent) return;
-    setBookingModalEvent(null);
+  const handleConfirmBooking = useCallback(async () => {
+    if (ui.modal.type !== "booking") return;
+    const { event, quiet } = ui.modal;
+    dispatch({ type: "CLOSE_MODAL" });
     try {
-      await joinSession(bookingModalEvent.id, bookingQuiet);
+      await joinSession(event.id, quiet);
     } catch (e) {
-      alert((e as Error).message);
+      dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
     }
-  };
+  }, [ui.modal, joinSession]);
 
-  // Session meta update handler
-  const handleUpdateSessionMeta = async (
-    id: string,
-    patch: { name?: string | null; color?: string | null },
-  ) => {
+  // Session meta update
+  const handleUpdateSessionMeta = useCallback(
+    async (id: string, patch: { name?: string | null; color?: string | null }) => {
+      try {
+        await updateSessionMeta(id, patch);
+        dispatch({ type: "SHOW_TOAST", message: "Session updated" });
+      } catch (e) {
+        dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
+      }
+    },
+    [updateSessionMeta],
+  );
+
+  // Delete flow
+  const handleDeleteSession = useCallback(async () => {
+    if (ui.modal.type !== "confirm-delete") return;
+    const { event } = ui.modal;
+    dispatch({ type: "CLOSE_MODAL" });
     try {
-      await updateSessionMeta(id, patch);
-      setToast("Session updated");
-      setTimeout(() => setToast(null), 2000);
+      await deleteSession(event.id);
     } catch (e) {
-      alert((e as Error).message);
+      dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
     }
-  };
+  }, [ui.modal, deleteSession]);
+
+  // Create flow
+  const handleCreateSession = useCallback(async () => {
+    if (ui.modal.type !== "confirm-create") return;
+    const { start, preferred, quiet } = ui.modal;
+    dispatch({ type: "CLOSE_MODAL" });
+    try {
+      await createSession(start, preferred, quiet);
+    } catch (e) {
+      dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
+    }
+  }, [ui.modal, createSession]);
 
   // Grid click handler for creating sessions
   const handleGridClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
@@ -217,23 +362,20 @@ export default function Calendar({
       ymd(dayDate) < ymd(now) ||
       (ymd(dayDate) === ymd(now) && minutesOfDay < nowMinutes)
     ) {
-      setToast("Cannot create a session in the past");
-      setTimeout(() => setToast(null), 2000);
+      dispatch({ type: "SHOW_TOAST", message: "Cannot create a session in the past" });
       return;
     }
 
-    // Check for overlaps
+    // Check for overlaps using precomputed epoch ms (no Date allocations)
     const dayKey = ymd(dayDate);
-    const overlaps = (eventsByDay[dayKey] ?? []).some((ev) => {
-      const s = new Date(ev.start);
-      const eEnd = new Date(ev.end);
-      const newEnd = addMinutes(start, createDuration);
-      return new Date(start) < eEnd && newEnd > s;
-    });
+    const startMs = start.getTime();
+    const newEndMs = addMinutes(start, ui.createDuration).getTime();
+    const overlaps = (eventsByDay[dayKey] ?? []).some(
+      (ev) => startMs < ev.endMs && newEndMs > ev.startMs,
+    );
 
     if (overlaps) {
-      setToast("Slot unavailable");
-      setTimeout(() => setToast(null), 2000);
+      dispatch({ type: "SHOW_TOAST", message: "Slot unavailable" });
       return;
     }
 
@@ -241,38 +383,27 @@ export default function Calendar({
     const whenIst = start.toLocaleString(TIME_CONFIG.locale, {
       timeZone: TIME_CONFIG.timezone,
     });
-    setCreateQuiet(false);
-    setCreateModalInfo({ start, preferred: createDuration, whenIst });
-    setConfirmModal({
-      title: "Create session",
-      confirmText: "Create",
-      cancelText: "Cancel",
-      confirmVariant: "success",
-      onConfirm: async () => {
-        setConfirmModal(null);
-        try {
-          await createSession(start, createDuration, createQuiet);
-        } catch (e) {
-          alert((e as Error).message);
-        }
-        setCreateModalInfo(null);
-      },
+    dispatch({
+      type: "OPEN_CREATE_CONFIRM",
+      start,
+      preferred: ui.createDuration,
+      whenIst,
     });
   };
 
   return (
     <div className={`flex h-[calc(100vh-2rem)] w-full gap-4 ${className}`}>
       <CalendarSidebar
-        durationFilter={durationFilter}
+        durationFilter={ui.durationFilter}
         onDurationFilterChange={handleDurationFilterChange}
-        createDuration={createDuration}
-        onCreateDurationChange={setCreateDuration}
+        createDuration={ui.createDuration}
+        onCreateDurationChange={handleSetCreateDuration}
       />
 
       {/* Right: Calendar Area */}
       <section className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
         <CalendarHeader
-          startDate={startDate}
+          startDate={ui.startDate}
           locale={locale}
           onShiftRange={shiftRange}
           onGoToday={goToday}
@@ -367,7 +498,7 @@ export default function Calendar({
                     >
                       <div
                         className="rounded-lg border border-indigo-400/70 bg-indigo-500/10"
-                        style={{ height: minuteToPx(createDuration) }}
+                        style={{ height: minuteToPx(ui.createDuration) }}
                       />
                     </div>
                   )}
@@ -375,10 +506,8 @@ export default function Calendar({
                 {/* Events */}
                 <div className="absolute inset-0">
                   {(eventsByDay[ymd(d)] ?? []).map((ev) => {
-                    const s = new Date(ev.start);
-                    const top = minuteToPx(
-                      minutesBetween(startOfDay(s), s) - startHour * 60,
-                    );
+                    // Use precomputed startMinutes (no Date allocation)
+                    const top = minuteToPx(ev.startMinutes - startHour * 60);
                     const height = minuteToPx(ev.durationMin);
                     const isBooked =
                       ev.status === "booked" ||
@@ -423,24 +552,12 @@ export default function Calendar({
                         top={top}
                         height={height}
                         onBook={() => handleBookSlot(ev)}
-                        onDetails={() => setDetailsModalEvent(ev)}
-                        onDelete={() => {
-                          setConfirmModal({
-                            title: "Delete session",
-                            description: (
-                              <span>
-                                This action cannot be undone. Do you want to
-                                delete this session?
-                              </span>
-                            ),
-                            confirmText: "Delete",
-                            cancelText: "Cancel",
-                            onConfirm: () => {
-                              setConfirmModal(null);
-                              deleteSession(ev.id);
-                            },
-                          });
-                        }}
+                        onDetails={() =>
+                          dispatch({ type: "OPEN_DETAILS_MODAL", event: ev })
+                        }
+                        onDelete={() =>
+                          dispatch({ type: "OPEN_DELETE_CONFIRM", event: ev })
+                        }
                       />
                     );
                   })}
@@ -451,66 +568,79 @@ export default function Calendar({
         </div>
       </section>
 
-      {/* --- NEW: Booking Modal --- */}
-      {bookingModalEvent && (
+      {/* Modals – only one can be open at a time (enforced by state machine) */}
+      {ui.modal.type === "booking" && (
         <BookingModal
-          event={bookingModalEvent}
-          onClose={() => setBookingModalEvent(null)}
-          quiet={bookingQuiet}
-          onChangeQuiet={setBookingQuiet}
+          event={ui.modal.event}
+          onClose={() => dispatch({ type: "CLOSE_MODAL" })}
+          quiet={ui.modal.quiet}
+          onChangeQuiet={(quiet) =>
+            dispatch({ type: "SET_BOOKING_QUIET", quiet })
+          }
           onConfirm={handleConfirmBooking}
         />
       )}
-      {/* --- NEW: Details Modal (scaffold) --- */}
-      {detailsModalEvent && (
-        <SessionDetailsModal
-          event={detailsModalEvent}
-          onClose={() => setDetailsModalEvent(null)}
-          currentUserId={currentUserId}
-          onUpdate={(patch) =>
-            detailsModalEvent &&
-            handleUpdateSessionMeta(detailsModalEvent.id, patch)
-          }
-        />
-      )}
-      {toast && <Toast message={toast} />}
-      {confirmModal && (
+
+      {ui.modal.type === "details" && (() => {
+        const { event } = ui.modal; // capture for callback
+        return (
+          <SessionDetailsModal
+            event={event}
+            onClose={() => dispatch({ type: "CLOSE_MODAL" })}
+            currentUserId={currentUserId}
+            onUpdate={(patch) => handleUpdateSessionMeta(event.id, patch)}
+          />
+        );
+      })()}
+
+      {ui.modal.type === "confirm-create" && (
         <ConfirmModal
-          title={confirmModal.title}
+          title="Create session"
           description={
-            confirmModal.description ??
-            (confirmModal.title === "Create session" && createModalInfo ? (
-              <div className="space-y-4">
-                <div>
-                  Create a <strong>{createModalInfo.preferred}-minute</strong>{" "}
-                  session at
-                  <br />
-                  <strong>{createModalInfo.whenIst} (IST)</strong>?
-                </div>
-                <label className="flex items-center gap-3 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={createQuiet}
-                    onChange={(e) => setCreateQuiet(e.target.checked)}
-                  />
-                  Quiet session (start muted for you)
-                </label>
+            <div className="space-y-4">
+              <div>
+                Create a <strong>{ui.modal.preferred}-minute</strong> session at
+                <br />
+                <strong>{ui.modal.whenIst} (IST)</strong>?
               </div>
-            ) : undefined)
+              <label className="flex items-center gap-3 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={ui.modal.quiet}
+                  onChange={(e) =>
+                    dispatch({ type: "SET_CREATE_QUIET", quiet: e.target.checked })
+                  }
+                />
+                Quiet session (start muted for you)
+              </label>
+            </div>
           }
-          confirmText={confirmModal.confirmText}
-          cancelText={confirmModal.cancelText}
-          confirmVariant={
-            confirmModal.title === "Create session" ? "success" : "danger"
-          }
-          onCancel={() => {
-            setConfirmModal(null);
-            setCreateModalInfo(null);
-          }}
-          onConfirm={confirmModal.onConfirm}
+          confirmText="Create"
+          cancelText="Cancel"
+          confirmVariant="success"
+          onCancel={() => dispatch({ type: "CLOSE_MODAL" })}
+          onConfirm={handleCreateSession}
         />
       )}
+
+      {ui.modal.type === "confirm-delete" && (
+        <ConfirmModal
+          title="Delete session"
+          description={
+            <span>
+              This action cannot be undone. Do you want to delete this session?
+            </span>
+          }
+          confirmText="Delete"
+          cancelText="Cancel"
+          confirmVariant="danger"
+          onCancel={() => dispatch({ type: "CLOSE_MODAL" })}
+          onConfirm={handleDeleteSession}
+        />
+      )}
+
+      {ui.toast && <Toast message={ui.toast} />}
     </div>
   );
 }

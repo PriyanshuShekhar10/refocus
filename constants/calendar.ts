@@ -17,7 +17,7 @@
  * - Session creation options
  * - Type definitions
  */
-export const DURATION_OPTIONS = [25, 50, 75, 120, 150] as const;
+export const DURATION_OPTIONS = [25, 50, 75 ] as const;
 
 /**
  * Type derived from DURATION_OPTIONS for type safety.

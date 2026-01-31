@@ -15,25 +15,28 @@ export async function GET(
   const { friendId } = await params;
   const channel = chatChannel(currentUserId, friendId);
 
+  let pingInterval: ReturnType<typeof setInterval> | null = null;
+  let unsub: (() => void) | null = null;
+
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       const encoder = new TextEncoder();
-      const send = (data: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
-
-      // initial hello
-      send({ type: "hello" });
-
-      // subscribe to channel
-      subscribe(channel, (event) => {
-        send(event);
-      });
-
-      // keepalive (no explicit cleanup; client disconnect will end stream)
-      setInterval(() => {
+      const send = (data: unknown) => {
         try {
-          send({ type: "ping", t: Date.now() });
-        } catch {}
-      }, 25000);
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        } catch {
+          if (pingInterval) clearInterval(pingInterval);
+          if (unsub) unsub();
+        }
+      };
+
+      send({ type: "hello" });
+      unsub = subscribe(channel, (event) => send(event));
+      pingInterval = setInterval(() => send({ type: "ping", t: Date.now() }), 25000);
+    },
+    cancel() {
+      if (pingInterval) clearInterval(pingInterval);
+      if (unsub) unsub();
     },
   });
 
