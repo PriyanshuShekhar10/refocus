@@ -151,7 +151,25 @@ export async function join(
 }
 
 /**
- * DELETE /api/sessions/:id
+ * POST /api/sessions/:id/leave – leave a session (participant only; session stays available for owner)
+ */
+export async function leave(
+  id: string,
+): Promise<ApiResult<Record<string, never>>> {
+  const res = await fetch(`${BASE}/${id}/leave`, { method: "POST" });
+  const data = await parseJson(res);
+
+  if (!res.ok) {
+    return {
+      ok: false,
+      error: getErrorMessage(data, "Failed to leave session"),
+    };
+  }
+  return { ok: true, data: {} };
+}
+
+/**
+ * DELETE /api/sessions/:id – owner deletes; if session has 2 participants, transfers ownership to the other person
  */
 export async function deleteSession(
   id: string,

@@ -76,9 +76,33 @@ export async function DELETE(
   const col = db.collection<SessionDoc>("sessions");
   const s = await col.findOne({ _id: new ObjectId(sessionId) });
   if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (s.owner_id !== userId)
+  if (String(s.owner_id) !== String(userId))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  await col.deleteOne({ _id: new ObjectId(sessionId) });
+
+  const participants = s.session_participants ?? [];
+  const otherParticipant = participants.find(
+    (p) => String(p.user_id) !== String(userId),
+  );
+
+  if (participants.length >= 2 && otherParticipant) {
+    // Transfer ownership to the other person so they can be matched again
+    const newOwnerId = String(otherParticipant.user_id);
+    const newParticipants = participants.filter(
+      (p) => String(p.user_id) === newOwnerId,
+    );
+    await col.updateOne(
+      { _id: new ObjectId(sessionId) },
+      {
+        $set: {
+          owner_id: newOwnerId,
+          session_participants: newParticipants,
+          updated_at: new Date(),
+        },
+      },
+    );
+  } else {
+    await col.deleteOne({ _id: new ObjectId(sessionId) });
+  }
   return NextResponse.json({ ok: true });
 }
 

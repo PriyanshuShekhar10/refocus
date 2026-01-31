@@ -6,11 +6,14 @@ export function SessionDetailsModal({
   onClose,
   currentUserId,
   onUpdate,
+  onLeave,
 }: {
   event: CalendarEvent;
   onClose: () => void;
   currentUserId: string | null;
   onUpdate: (patch: { name?: string | null; color?: string | null }) => void;
+  /** When provided and user is participant (not owner), shows Leave session button */
+  onLeave?: () => void;
 }) {
   const participants = event.participants || [];
   const other = participants.find((p) => p.user_id !== currentUserId);
@@ -213,6 +216,14 @@ export function SessionDetailsModal({
                 className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600"
               >
                 {saving ? "Saving..." : "Save"}
+              </button>
+            )}
+            {onLeave && (
+              <button
+                onClick={onLeave}
+                className="rounded-md border border-amber-500 px-4 py-2 text-sm font-medium text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-600 dark:hover:bg-amber-900/30"
+              >
+                Leave session
               </button>
             )}
             <button

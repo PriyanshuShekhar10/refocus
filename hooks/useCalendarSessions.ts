@@ -38,8 +38,10 @@ interface UseCalendarSessionsReturn {
     durationMin: DurationMin,
     quietOwner?: boolean,
   ) => Promise<void>;
-  /** Delete a session */
+  /** Delete a session (owner: deletes or transfers to other person if booked) */
   deleteSession: (id: string) => Promise<void>;
+  /** Leave a session (participant only; session stays available for owner) */
+  leaveSession: (id: string) => Promise<void>;
   /** Join/book a session */
   joinSession: (id: string, quiet?: boolean) => Promise<void>;
   /** Update session metadata (name, color) */
@@ -207,6 +209,23 @@ export function useCalendarSessions({
     [events, setEvents],
   );
 
+  const leaveSession = useCallback(
+    async (id: string) => {
+      const existing = events.find((e) => e.id === id);
+      if (!existing) return;
+
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+
+      const result = await sessionsApi.leave(id);
+
+      if (!result.ok) {
+        setEvents((prev) => [...prev, existing]);
+        throw new sessionsApi.ApiError(result.error);
+      }
+    },
+    [events, setEvents],
+  );
+
   const joinSession = useCallback(
     async (id: string, quiet: boolean = false) => {
       setEvents((prev) =>
@@ -253,6 +272,7 @@ export function useCalendarSessions({
     error,
     createSession,
     deleteSession,
+    leaveSession,
     joinSession,
     updateSessionMeta,
   };

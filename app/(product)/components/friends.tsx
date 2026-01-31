@@ -218,7 +218,7 @@ export default function Friends() {
     incoming.length + sessIncoming.length;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-4">
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -235,9 +235,11 @@ export default function Friends() {
         </div>
       )}
 
-      {/* Friends list (primary) */}
-      <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+      {/* Two columns: Friends (left), Requests (right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
+        {/* Friends list (left) */}
+        <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden flex flex-col min-h-0">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <FiUser className="w-4 h-4 text-indigo-500" />
             Your friends
@@ -248,7 +250,7 @@ export default function Friends() {
             )}
           </h2>
         </div>
-        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+        <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-gray-200 dark:divide-gray-700">
           {loading && friends.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
               Loading…
@@ -317,28 +319,28 @@ export default function Friends() {
         </div>
       </section>
 
-      {/* Requests (compact card) */}
-      <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setRequestsExpanded((e) => !e)}
-          className="w-full px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-between gap-2 hover:bg-gray-100/50 dark:hover:bg-gray-800/70 transition-colors text-left"
-        >
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <FiInbox className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-            Requests
-            {requestBadgeCount > 0 && (
-              <span className="rounded-full bg-indigo-500 px-2 py-0.5 text-[10px] font-medium text-white">
-                {requestBadgeCount}
-              </span>
-            )}
-          </h2>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {requestsExpanded ? "Hide" : "Show"}
-          </span>
-        </button>
+        {/* Requests (right) */}
+        <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden flex flex-col min-h-0">
+          <button
+            type="button"
+            onClick={() => setRequestsExpanded((e) => !e)}
+            className="w-full px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-between gap-2 hover:bg-gray-100/50 dark:hover:bg-gray-800/70 transition-colors text-left shrink-0"
+          >
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <FiInbox className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              Requests
+              {requestBadgeCount > 0 && (
+                <span className="rounded-full bg-indigo-500 px-2 py-0.5 text-[10px] font-medium text-white">
+                  {requestBadgeCount}
+                </span>
+              )}
+            </h2>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {requestsExpanded ? "Hide" : "Show"}
+            </span>
+          </button>
         {requestsExpanded && (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-gray-200 dark:divide-gray-700">
             {/* Friend requests */}
             <div className="p-4">
               <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
@@ -526,7 +528,8 @@ export default function Friends() {
             </div>
           </div>
         )}
-      </section>
+        </section>
+      </div>
 
       {openChatFriendId && (
         <FriendChat

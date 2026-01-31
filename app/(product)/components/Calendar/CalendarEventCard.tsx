@@ -12,6 +12,8 @@ interface CalendarEventCardProps {
   onBook: (e: React.MouseEvent) => void;
   onDetails: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
+  /** When provided and user is participant (booked, not owner), shows Leave button */
+  onLeave?: () => void;
 }
 
 export function CalendarEventCard({
@@ -25,6 +27,7 @@ export function CalendarEventCard({
   onBook,
   onDetails,
   onDelete,
+  onLeave,
 }: CalendarEventCardProps) {
   const s = new Date(event.start);
 
@@ -95,6 +98,28 @@ export function CalendarEventCard({
             }}
           >
             Book
+          </button>
+        ) : onLeave ? (
+          <button
+            className="absolute top-1 right-1 p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 dark:text-amber-400 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onLeave();
+            }}
+            title="Leave session"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-3.5 w-3.5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
+                clipRule="evenodd"
+              />
+            </svg>
           </button>
         ) : null}
 

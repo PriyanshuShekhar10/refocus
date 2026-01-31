@@ -66,7 +66,8 @@ type ModalState =
       whenIst: string;
       quiet: boolean;
     }
-  | { type: "confirm-delete"; event: CalendarEvent };
+  | { type: "confirm-delete"; event: CalendarEvent }
+  | { type: "confirm-leave"; event: CalendarEvent };
 
 interface UIState {
   /** Currently visible date */
@@ -98,6 +99,7 @@ type UIAction =
     }
   | { type: "SET_CREATE_QUIET"; quiet: boolean }
   | { type: "OPEN_DELETE_CONFIRM"; event: CalendarEvent }
+  | { type: "OPEN_LEAVE_CONFIRM"; event: CalendarEvent }
   | { type: "CLOSE_MODAL" }
   | { type: "SHOW_TOAST"; message: string }
   | { type: "CLEAR_TOAST" };
@@ -147,6 +149,11 @@ function uiReducer(state: UIState, action: UIAction): UIState {
       return {
         ...state,
         modal: { type: "confirm-delete", event: action.event },
+      };
+    case "OPEN_LEAVE_CONFIRM":
+      return {
+        ...state,
+        modal: { type: "confirm-leave", event: action.event },
       };
     case "CLOSE_MODAL":
       return { ...state, modal: { type: "none" } };
@@ -219,6 +226,7 @@ export default function Calendar({
     currentUserId,
     createSession,
     deleteSession,
+    leaveSession,
     joinSession,
     updateSessionMeta,
   } = useCalendarSessions({
@@ -336,6 +344,17 @@ export default function Calendar({
       dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
     }
   }, [ui.modal, deleteSession]);
+
+  const handleLeaveSession = useCallback(async () => {
+    if (ui.modal.type !== "confirm-leave") return;
+    const { event } = ui.modal;
+    dispatch({ type: "CLOSE_MODAL" });
+    try {
+      await leaveSession(event.id);
+    } catch (e) {
+      dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
+    }
+  }, [ui.modal, leaveSession]);
 
   // Create flow
   const handleCreateSession = useCallback(async () => {
@@ -558,6 +577,12 @@ export default function Calendar({
                         onDelete={() =>
                           dispatch({ type: "OPEN_DELETE_CONFIRM", event: ev })
                         }
+                        onLeave={
+                          isBooked && !isOwner
+                            ? () =>
+                                dispatch({ type: "OPEN_LEAVE_CONFIRM", event: ev })
+                            : undefined
+                        }
                       />
                     );
                   })}
@@ -583,12 +608,20 @@ export default function Calendar({
 
       {ui.modal.type === "details" && (() => {
         const { event } = ui.modal; // capture for callback
+        const isBooked = (event.participants?.length ?? 0) >= 2;
+        const isOwner =
+          event.owner_id && currentUserId && event.owner_id === currentUserId;
         return (
           <SessionDetailsModal
             event={event}
             onClose={() => dispatch({ type: "CLOSE_MODAL" })}
             currentUserId={currentUserId}
             onUpdate={(patch) => handleUpdateSessionMeta(event.id, patch)}
+            onLeave={
+              isBooked && !isOwner
+                ? () => dispatch({ type: "OPEN_LEAVE_CONFIRM", event })
+                : undefined
+            }
           />
         );
       })()}
@@ -637,6 +670,22 @@ export default function Calendar({
           confirmVariant="danger"
           onCancel={() => dispatch({ type: "CLOSE_MODAL" })}
           onConfirm={handleDeleteSession}
+        />
+      )}
+
+      {ui.modal.type === "confirm-leave" && (
+        <ConfirmModal
+          title="Leave session"
+          description={
+            <span>
+              Leave this session? The time slot will be free for the other person to match with someone else.
+            </span>
+          }
+          confirmText="Leave session"
+          cancelText="Cancel"
+          confirmVariant="danger"
+          onCancel={() => dispatch({ type: "CLOSE_MODAL" })}
+          onConfirm={handleLeaveSession}
         />
       )}
 
