@@ -1,27 +1,24 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+import type { CalendarEvent } from "@/types/calendar";
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import type {
-  CalendarEvent,
-  FetchedSession,
-  CalendarProps,
-} from "@/types/calendar";
-import {
-  toISO,
   startOfDay,
   addMinutes,
   addDays,
   ymd,
-  clamp,
   minutesBetween,
   formatHour,
 } from "@/lib/utils";
+import {
+  CALENDAR_LAYOUT,
+  TIME_CONFIG,
+  DEFAULT_DURATION,
+  DEFAULT_DURATION_FILTER,
+  type DurationMin,
+} from "@/constants/calendar";
+import { useCalendarSessions } from "@/hooks/useCalendarSessions";
+import { useCalendarGrid } from "@/hooks/useCalendarGrid";
 import { BookingModal } from "./Calendar/Modals/BookingModal";
 import { Toast } from "./Calendar/Modals/Toast";
 import { ConfirmModal } from "./Calendar/Modals/ConfirmModal";
@@ -30,9 +27,26 @@ import { CalendarSidebar } from "./Calendar/CalendarSidebar";
 import { CalendarHeader } from "./Calendar/CalendarHeader";
 import { CalendarEventCard } from "./Calendar/CalendarEventCard";
 
-/* =========================
-    Calendar Component
-========================= */
+// ============================================
+// Types
+// ============================================
+
+interface CalendarProps {
+  startHour?: number;
+  endHour?: number;
+  stepMinutes?: 15 | 30;
+  visibleDays?: number;
+  startDate?: Date;
+  events?: CalendarEvent[];
+  locale?: string;
+  onEventsChange?: (next: CalendarEvent[]) => void;
+  className?: string;
+}
+
+// ============================================
+// Calendar Component
+// ============================================
+
 export default function Calendar({
   startHour = 0,
   endHour = 24,
@@ -40,15 +54,17 @@ export default function Calendar({
   visibleDays = 3,
   startDate: startDateProp,
   events: eventsProp,
-  // presence,
-  locale = "en-IN",
+  locale = TIME_CONFIG.locale,
   onEventsChange,
   className = "",
 }: CalendarProps) {
+  const { hourBlockHeight, minorLinePositions } = CALENDAR_LAYOUT;
+
   const today = new Date();
   const [startDate, setStartDate] = useState<Date>(() =>
     startDateProp ? new Date(startDateProp) : startOfDay(today),
   );
+
   useEffect(() => {
     if (startDateProp) setStartDate(startOfDay(new Date(startDateProp)));
   }, [startDateProp]);
@@ -58,32 +74,15 @@ export default function Calendar({
     [visibleDays, startDate],
   );
 
-  const totalMinutes = (endHour - startHour) * 60;
-
-  const [internalEvents, setInternalEvents] = useState<CalendarEvent[]>(
-    () => eventsProp ?? [],
+  // Duration filter and creation states
+  const [durationFilter, setDurationFilter] = useState<DurationMin[]>(
+    DEFAULT_DURATION_FILTER,
   );
-  const events = eventsProp ?? internalEvents;
+  const [createDuration, setCreateDuration] =
+    useState<DurationMin>(DEFAULT_DURATION);
+  const [createQuiet, setCreateQuiet] = useState<boolean>(false);
 
-  const setEvents = useCallback(
-    (next: CalendarEvent[] | ((prev: CalendarEvent[]) => CalendarEvent[])) => {
-      if (onEventsChange) {
-        // To support functional updates, we need to resolve the next state first
-        if (typeof next === "function") {
-          onEventsChange(next(events));
-        } else {
-          onEventsChange(next);
-        }
-      }
-      if (!eventsProp) {
-        setInternalEvents(next);
-      }
-    },
-    [onEventsChange, eventsProp, events],
-  );
-
-  // --- NEW: State for filters and booking modal ---
-  const [durationFilter, setDurationFilter] = useState<number[]>([25, 50, 75]);
+  // Modal states
   const [bookingModalEvent, setBookingModalEvent] =
     useState<CalendarEvent | null>(null);
   const [bookingQuiet, setBookingQuiet] = useState<boolean>(false);
@@ -97,102 +96,28 @@ export default function Calendar({
     confirmVariant?: "danger" | "success";
     onConfirm: () => void | Promise<void>;
   }>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [createDuration, setCreateDuration] = useState<25 | 50 | 75>(25);
-  const [createQuiet, setCreateQuiet] = useState<boolean>(false);
   const [createModalInfo, setCreateModalInfo] = useState<null | {
     start: Date;
-    preferred: 25 | 50 | 75;
+    preferred: DurationMin;
     whenIst: string;
   }>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleDurationFilterChange = (duration: number) => {
-    setDurationFilter((prev) =>
-      prev.includes(duration)
-        ? prev.filter((d) => d !== duration)
-        : [...prev, duration],
-    );
-  };
+  // Use the sessions hook for data management
+  const {
+    events,
+    currentUserId,
+    createSession,
+    deleteSession,
+    joinSession,
+    updateSessionMeta,
+  } = useCalendarSessions({
+    days,
+    onEventsChange,
+    eventsProp,
+  });
 
-  const handleBookSlot = (event: CalendarEvent) => {
-    setBookingQuiet(false);
-    setBookingModalEvent(event);
-  };
-
-  const handleConfirmBooking = async () => {
-    if (!bookingModalEvent) return;
-    const id = bookingModalEvent.id;
-    // Optimistic update: mark as booked locally
-    setEvents((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, status: "booked" } : e)),
-    );
-    setBookingModalEvent(null);
-    try {
-      const res = await fetch(`/api/sessions/${id}/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quiet: bookingQuiet }),
-      });
-      if (!res.ok)
-        throw new Error((await res.json()).error || "Failed to join");
-    } catch (e) {
-      // revert on failure
-      setEvents((prev) =>
-        prev.map((ev) => (ev.id === id ? { ...ev, status: "available" } : ev)),
-      );
-      alert((e as Error).message);
-    }
-  };
-
-  // Update session fields (name/color) then update local state
-  const handleUpdateSessionMeta = async (
-    id: string,
-    patch: { name?: string | null; color?: string | null },
-  ) => {
-    try {
-      const res = await fetch(`/api/sessions/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
-      });
-      if (!res.ok)
-        throw new Error((await res.json()).error || "Failed to update");
-      setEvents((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, ...patch } : e)),
-      );
-      setToast("Session updated");
-      setTimeout(() => setToast(null), 2000);
-    } catch (e) {
-      alert((e as Error).message);
-    }
-  };
-
-  const [now, setNow] = useState<Date>(new Date());
-  useEffect(() => {
-    const tick = () => setNow(new Date());
-    const id = setInterval(tick, 60_000);
-    return () => clearInterval(id);
-  }, []);
-
-  const gridRef = useRef<HTMLDivElement | null>(null);
-  const rowPx = 28;
-  const minuteToPx = (m: number) => (m / stepMinutes) * rowPx;
-  const [hoverState, setHoverState] = useState<null | {
-    dayIndex: number;
-    yPx: number; // snapped top relative to day column
-    label: string; // time label
-    previewTop: number; // same as yPx
-    overEvent?: boolean; // whether cursor is over an existing event
-  }>(null);
-  const lastMousePos = useRef<{ x: number; y: number } | null>(null);
-  const autoScrolledKeyRef = useRef<string | null>(null);
-
-  const goToday = () => setStartDate(startOfDay(new Date()));
-  const shiftRange = (deltaDays: number) =>
-    setStartDate((d) => addDays(d, deltaDays));
-
-  // --- UPDATED: Memoized events now filter based on duration ---
+  // Filter events by duration
   const eventsByDay = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};
     for (const d of days) map[ymd(d)] = [];
@@ -206,168 +131,88 @@ export default function Calendar({
       const key = ymd(s);
       if (map[key]) map[key].push(ev);
     }
-    for (const k in map)
+
+    for (const k in map) {
       map[k].sort((a, b) => +new Date(a.start) - +new Date(b.start));
+    }
+
     return map;
   }, [days, events, durationFilter]);
 
-  const nowLine = (() => {
-    const day0 = days[0];
-    const dayLast = days[days.length - 1];
-    if (!day0 || !dayLast) return null;
-    const n = now;
-    if (n < startOfDay(day0) || n > addDays(startOfDay(dayLast), 1))
-      return null;
-    const m = n.getHours() * 60 + n.getMinutes() - startHour * 60;
-    const y = clamp(minuteToPx(m), 0, minuteToPx(totalMinutes));
-    return y;
-  })();
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      const from = toISO(days[0]);
-      const to = toISO(addDays(days[days.length - 1], 1));
-      try {
-        const res = await fetch(
-          `/api/sessions?from=${encodeURIComponent(
-            from,
-          )}&to=${encodeURIComponent(to)}`,
-        );
-        let data: unknown = null;
-        try {
-          data = await res.json();
-        } catch {}
-        if (!res.ok) {
-          const errMsg =
-            (data as { error?: string } | null)?.error || res.statusText;
-          console.error("/api/sessions failed", errMsg);
-          setToast("Could not load sessions");
-          setTimeout(() => setToast(null), 3000);
-          return;
-        }
-        if (cancelled) return;
-        const payload = (data || {}) as {
-          currentUserId?: string | null;
-          sessions?: FetchedSession[];
-        };
-        setCurrentUserId(payload.currentUserId ?? null);
-        const mapped: CalendarEvent[] = (payload.sessions ?? []).map(
-          (s: FetchedSession) => ({
-            id: s.id,
-            start: s.start,
-            end: s.end,
-            durationMin: s.durationMin,
-            sessionType: s.sessionType,
-            status: s.status,
-            name: s.name ?? null,
-            color: s.color ?? null,
-            owner_id: s.owner_id,
-            owner: s.owner,
-            participants: s.participants,
-          }),
-        );
-        setInternalEvents(mapped);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [startDate, visibleDays, days]);
+  // Use the grid hook for layout and interactions
+  const {
+    gridRef,
+    hoverState,
+    now,
+    nowLine,
+    minuteToPx,
+    handleGridClick: getGridClickInfo,
+    handleGridMouseMove,
+    handleGridMouseLeave,
+    handleGridScroll,
+  } = useCalendarGrid({
+    days,
+    startHour,
+    endHour,
+    stepMinutes,
+    visibleDays,
+    createDuration,
+    eventsByDay,
+  });
 
-  const createSession = async (
-    start: Date,
-    durationMin: 25 | 50 | 75,
-    quietOwner: boolean = false,
+  // Navigation handlers
+  const goToday = () => setStartDate(startOfDay(new Date()));
+  const shiftRange = (deltaDays: number) =>
+    setStartDate((d) => addDays(d, deltaDays));
+
+  // Duration filter handler
+  const handleDurationFilterChange = (duration: DurationMin) => {
+    setDurationFilter((prev) =>
+      prev.includes(duration)
+        ? prev.filter((d) => d !== duration)
+        : [...prev, duration],
+    );
+  };
+
+  // Booking handlers
+  const handleBookSlot = (event: CalendarEvent) => {
+    setBookingQuiet(false);
+    setBookingModalEvent(event);
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!bookingModalEvent) return;
+    setBookingModalEvent(null);
+    try {
+      await joinSession(bookingModalEvent.id, bookingQuiet);
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  };
+
+  // Session meta update handler
+  const handleUpdateSessionMeta = async (
+    id: string,
+    patch: { name?: string | null; color?: string | null },
   ) => {
-    const tempId = `temp_${Date.now()}`;
-    const end = addMinutes(start, durationMin);
-    const optimistic: CalendarEvent = {
-      id: tempId,
-      start: toISO(start),
-      end: toISO(end),
-      durationMin,
-      sessionType: "focus",
-      status: "available",
-      owner_id: currentUserId ?? undefined,
-      participants: currentUserId
-        ? [
-            {
-              user_id: currentUserId,
-              joined_at: new Date().toISOString(),
-              quiet: quietOwner,
-            },
-          ]
-        : [],
-    };
-    setEvents((prev) => [...prev, optimistic]);
     try {
-      const res = await fetch("/api/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          start: optimistic.start,
-          durationMin,
-          sessionType: optimistic.sessionType,
-          quietOwner,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create");
-      setEvents((prev) =>
-        prev.map((e) => (e.id === tempId ? { ...e, id: data.id } : e)),
-      );
+      await updateSessionMeta(id, patch);
+      setToast("Session updated");
+      setTimeout(() => setToast(null), 2000);
     } catch (e) {
-      setEvents((prev) => prev.filter((e) => e.id !== tempId));
       alert((e as Error).message);
     }
   };
 
-  const deleteSession = async (id: string) => {
-    const existing = events.find((e) => e.id === id);
-    if (!existing) return;
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-    try {
-      const res = await fetch(`/api/sessions/${id}`, { method: "DELETE" });
-      if (!res.ok)
-        throw new Error((await res.json()).error || "Failed to delete");
-    } catch (e) {
-      // revert
-      setEvents((prev) => [...prev, existing]);
-      alert((e as Error).message);
-    }
-  };
-
-  // Clicking empty space to create your own session
+  // Grid click handler for creating sessions
   const handleGridClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    if (!gridRef.current) return;
-    const rect = gridRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const gutter = 64; // w-16 time gutter
-    const contentWidth = Math.max(0, rect.width - gutter);
-    const xAdjusted = Math.max(0, x - gutter);
-    const dayWidth = contentWidth / visibleDays;
-    const dayIndex = clamp(
-      Math.floor(xAdjusted / dayWidth),
-      0,
-      visibleDays - 1,
-    );
-    const dayDate = days[dayIndex];
-    // Y to minutes
-    const scroller = gridRef.current;
-    const y = e.clientY - rect.top;
-    const yContent = y + (scroller?.scrollTop ?? 0);
-    // use selected creation duration
-    const preferred = createDuration;
-    const minutesFromTop = Math.round(yContent / rowPx) * stepMinutes;
-    const minutesOfDay = clamp(
-      minutesFromTop + startHour * 60,
-      startHour * 60,
-      endHour * 60 - preferred,
-    );
+    const clickInfo = getGridClickInfo(e);
+    if (!clickInfo) return;
+
+    const { dayDate, start, minutesOfDay } = clickInfo;
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+    // Prevent creating sessions in the past
     if (
       ymd(dayDate) < ymd(now) ||
       (ymd(dayDate) === ymd(now) && minutesOfDay < nowMinutes)
@@ -377,133 +222,42 @@ export default function Calendar({
       return;
     }
 
-    const start = new Date(startOfDay(dayDate));
-    start.setMinutes(minutesOfDay);
-    // prevent overlap with existing events on the same day
+    // Check for overlaps
     const dayKey = ymd(dayDate);
     const overlaps = (eventsByDay[dayKey] ?? []).some((ev) => {
       const s = new Date(ev.start);
       const eEnd = new Date(ev.end);
-      const newEnd = addMinutes(start, preferred);
+      const newEnd = addMinutes(start, createDuration);
       return new Date(start) < eEnd && newEnd > s;
     });
+
     if (overlaps) {
       setToast("Slot unavailable");
       setTimeout(() => setToast(null), 2000);
       return;
     }
-    // Ask confirmation before creating a session using modal
-    const whenIst = start.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+    // Show creation confirmation modal
+    const whenIst = start.toLocaleString(TIME_CONFIG.locale, {
+      timeZone: TIME_CONFIG.timezone,
+    });
     setCreateQuiet(false);
-    setCreateModalInfo({ start, preferred, whenIst });
+    setCreateModalInfo({ start, preferred: createDuration, whenIst });
     setConfirmModal({
       title: "Create session",
       confirmText: "Create",
       cancelText: "Cancel",
       confirmVariant: "success",
-      onConfirm: () => {
+      onConfirm: async () => {
         setConfirmModal(null);
-        createSession(start, preferred, createQuiet);
+        try {
+          await createSession(start, createDuration, createQuiet);
+        } catch (e) {
+          alert((e as Error).message);
+        }
         setCreateModalInfo(null);
       },
     });
-  };
-
-  // Hover: show a precise time cursor and slot preview
-  const computeHoverFromClient = (clientX: number, clientY: number) => {
-    if (!gridRef.current) return;
-    const rect = gridRef.current.getBoundingClientRect();
-    const scroller = gridRef.current;
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    const gutter = 64; // w-16 time gutter
-    const contentWidth = Math.max(0, rect.width - gutter);
-    const xAdjusted = Math.max(0, x - gutter);
-    const dayWidth = contentWidth / visibleDays;
-    const dayIndex = clamp(
-      Math.floor(xAdjusted / dayWidth),
-      0,
-      visibleDays - 1,
-    );
-    const yContent = y + (scroller?.scrollTop ?? 0);
-    const minutesFromTopRaw = (yContent / rowPx) * stepMinutes;
-    const minutesFromTop =
-      Math.round(minutesFromTopRaw / stepMinutes) * stepMinutes; // snap
-    const minutesOfDay = clamp(
-      minutesFromTop + startHour * 60,
-      startHour * 60,
-      endHour * 60 - createDuration,
-    );
-    const d = days[dayIndex];
-    const when = new Date(startOfDay(d));
-    when.setMinutes(minutesOfDay);
-    const label = when.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-      timeZone: "Asia/Kolkata",
-    });
-    // Determine if the cursor is over an existing event on this day
-    const dayKey = ymd(d);
-    const overEvent = (eventsByDay[dayKey] ?? []).some((ev) => {
-      const s = new Date(ev.start);
-      const startMin = minutesBetween(startOfDay(s), s);
-      const endMin = startMin + ev.durationMin;
-      return minutesOfDay >= startMin && minutesOfDay < endMin;
-    });
-    const topPx = minuteToPx(minutesOfDay - startHour * 60);
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-    if (
-      ymd(d) < ymd(now) || // previous day
-      (ymd(d) === ymd(now) && minutesOfDay < nowMinutes) // past minutes today
-    ) {
-      setHoverState(null); // hide hover for past
-      return;
-    }
-
-    setHoverState({
-      dayIndex,
-      yPx: topPx,
-      label,
-      previewTop: topPx,
-      overEvent,
-    });
-  };
-  const handleGridMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    lastMousePos.current = { x: e.clientX, y: e.clientY };
-    computeHoverFromClient(e.clientX, e.clientY);
-  };
-
-  // Auto-scroll to current time once per visible range
-  useEffect(() => {
-    if (!gridRef.current) return;
-    const day0 = days[0];
-    const dayLast = days[days.length - 1];
-    if (!day0 || !dayLast) return;
-    const start = startOfDay(day0).getTime();
-    const end = addDays(startOfDay(dayLast), 1).getTime();
-    const nowMs = now.getTime();
-    const todayVisible = nowMs >= start && nowMs <= end;
-    if (!todayVisible) return;
-    if (nowLine == null) return;
-    const key = `${ymd(day0)}-${ymd(dayLast)}`;
-    if (autoScrolledKeyRef.current === key) return;
-    const scroller = gridRef.current;
-    const target = Math.max(0, nowLine - scroller.clientHeight / 2);
-    scroller.scrollTop = target;
-    autoScrolledKeyRef.current = key;
-  }, [days, nowLine, now]);
-  const handleGridMouseLeave = () => {
-    setHoverState(null);
-    lastMousePos.current = null;
-  };
-  const handleGridScroll: React.UIEventHandler<HTMLDivElement> = () => {
-    // Keep hover preview under the cursor on scroll; if no cursor, hide it
-    if (!lastMousePos.current) {
-      setHoverState(null);
-      return;
-    }
-    computeHoverFromClient(lastMousePos.current.x, lastMousePos.current.y);
   };
 
   return (
@@ -512,7 +266,7 @@ export default function Calendar({
         durationFilter={durationFilter}
         onDurationFilterChange={handleDurationFilterChange}
         createDuration={createDuration}
-        onCreateDurationChange={(d) => setCreateDuration(d as 25 | 50 | 75)}
+        onCreateDurationChange={setCreateDuration}
       />
 
       {/* Right: Calendar Area */}
@@ -535,7 +289,11 @@ export default function Calendar({
           {/* Time Gutter */}
           <div className="w-16 shrink-0 border-r bg-gray-50/80 pt-12 dark:border-gray-700 dark:bg-gray-800/80">
             {Array.from({ length: endHour - startHour }).map((_, i) => (
-              <div key={i} className="relative h-[112px] text-right">
+              <div
+                key={i}
+                className="relative text-right"
+                style={{ height: hourBlockHeight }}
+              >
                 {/* Top boundary corresponds to :30 of previous hour */}
                 <span className="absolute right-2 top-0 text-[10px] text-gray-400 dark:text-gray-500">
                   :30
@@ -562,10 +320,11 @@ export default function Calendar({
                 {Array.from({ length: endHour - startHour }).map((_, i) => (
                   <div
                     key={i}
-                    className="relative h-[112px] border-t border-gray-100 dark:border-gray-800"
+                    className="relative border-t border-gray-100 dark:border-gray-800"
+                    style={{ height: hourBlockHeight }}
                   >
                     {/* 15/30/45 min minor lines */}
-                    {[28, 56, 84].map((yy, j) => (
+                    {minorLinePositions.map((yy, j) => (
                       <div
                         key={j}
                         className="pointer-events-none absolute inset-x-0"

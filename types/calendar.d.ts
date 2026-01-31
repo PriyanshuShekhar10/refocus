@@ -1,14 +1,22 @@
+import type {
+  DurationMin,
+  SessionType,
+  SessionStatus,
+} from "@/constants/calendar";
+
+export type { DurationMin, SessionType, SessionStatus };
+
 export type CalendarEvent = {
   id: string;
   title?: string;
   start: string; // ISO
   end: string; // ISO
-  durationMin: 25 | 50 | 75;
-  sessionType: "focus" | "deep-work" | "learning";
+  durationMin: DurationMin;
+  sessionType: SessionType;
   name?: string | null;
   color?: string | null;
   partner?: { id: string; name: string; avatarUrl?: string } | null | "anyone";
-  status: "available" | "booked" | "in-progress" | "completed";
+  status: SessionStatus;
   owner_id?: string;
   owner?: {
     id: string;
@@ -29,13 +37,13 @@ export type CalendarEvent = {
 };
 
 // Shape of sessions returned from /api/sessions endpoint
-type FetchedSession = {
+export type FetchedSession = {
   id: string;
   start: string;
   end: string;
-  durationMin: 25 | 50 | 75;
-  sessionType: "focus" | "deep-work" | "learning";
-  status: "available" | "booked" | "in-progress" | "completed";
+  durationMin: DurationMin;
+  sessionType: SessionType;
+  status: SessionStatus;
   name?: string | null;
   color?: string | null;
   owner_id?: string;
