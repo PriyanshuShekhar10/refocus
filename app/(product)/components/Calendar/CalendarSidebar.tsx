@@ -82,7 +82,7 @@ export function CalendarSidebar({
         <div className="flex-1">
           <BookSessionButton label="Book session" className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600" />
         </div>
-        <button
+        {/* <button
           type="button"
           onClick={() => document.querySelector<HTMLButtonElement>("[data-book-session-trigger]")?.click()}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
@@ -92,7 +92,7 @@ export function CalendarSidebar({
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
-        </button>
+        </button> */}
       </div>
 
       {/* Session Settings (collapsible) */}
