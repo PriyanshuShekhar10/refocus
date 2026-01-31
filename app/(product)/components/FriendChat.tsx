@@ -148,10 +148,10 @@ export default function FriendChat({
     return options;
   }, []);
 
-  // Generate time slots (from 6 AM to 11 PM)
+  // Generate time slots (12 AM to 11 PM, full 24 hours)
   const timeSlots = useMemo(() => {
     const slots: { hour: number; label: string }[] = [];
-    for (let h = 6; h <= 23; h++) {
+    for (let h = 0; h <= 23; h++) {
       const ampm = h >= 12 ? "PM" : "AM";
       const hour12 = h % 12 || 12;
       slots.push({ hour: h, label: `${hour12} ${ampm}` });
@@ -435,7 +435,10 @@ export default function FriendChat({
           {error}
         </div>
       )}
-      <div ref={listRef} className="flex flex-1 flex-col overflow-y-auto p-3">
+      <div
+        ref={listRef}
+        className={`flex flex-1 flex-col overflow-y-auto p-3 ${layout === "docked" ? "min-h-0" : ""}`}
+      >
         {loading && messages.length === 0 ? (
           <div className="text-xs text-gray-500">Loading…</div>
         ) : (
@@ -496,9 +499,15 @@ export default function FriendChat({
           </button>
         </div>
         {srOpen && (
-          <div className="mt-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 space-y-3">
+          <div
+            className={`mt-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 space-y-3 ${
+              layout === "docked"
+                ? "max-h-[200px] overflow-y-auto overflow-x-hidden p-2"
+                : "p-3"
+            }`}
+          >
             {/* Date Selection */}
-            <div>
+            <div className={layout === "docked" ? "space-y-1" : ""}>
               <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 block">
                 Pick a day
               </label>
@@ -527,27 +536,29 @@ export default function FriendChat({
 
             {/* Time Selection */}
             {srDate && (
-              <div>
+              <div className={layout === "docked" ? "space-y-1" : ""}>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                     Pick a time
                   </label>
                   {loadingBusy && (
-                    <span className="text-[10px] text-gray-400">Checking availability...</span>
+                    <span className="text-[10px] text-gray-400">Checking...</span>
                   )}
                 </div>
-                {/* Legend */}
-                <div className="flex gap-3 mb-2 text-[10px]">
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-red-400"></span>
-                    <span className="text-gray-500 dark:text-gray-400">You&apos;re busy</span>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-orange-400"></span>
-                    <span className="text-gray-500 dark:text-gray-400">Friend busy</span>
-                  </span>
-                </div>
-                <div className="grid grid-cols-6 gap-1">
+                {/* Legend - hide in docked to save space */}
+                {layout !== "docked" && (
+                  <div className="flex gap-3 mb-2 text-[10px]">
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-red-400"></span>
+                      <span className="text-gray-500 dark:text-gray-400">You&apos;re busy</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-orange-400"></span>
+                      <span className="text-gray-500 dark:text-gray-400">Friend busy</span>
+                    </span>
+                  </div>
+                )}
+                <div className={`grid gap-1 ${layout === "docked" ? "grid-cols-6" : "grid-cols-6"}`}>
                   {timeSlots.map((slot) => {
                     const isPast = isTimeSlotPast(srDate, slot.hour);
                     // Check conflict for this hour with default duration
@@ -568,7 +579,11 @@ export default function FriendChat({
                                 ? "Friend has a session"
                                 : undefined
                         }
-                        className={`relative px-1.5 py-1.5 rounded text-[11px] font-medium transition-colors ${
+                        className={`relative rounded font-medium transition-colors ${
+                          layout === "docked"
+                            ? "px-1 py-1 text-[10px]"
+                            : "px-1.5 py-1.5 text-[11px]"
+                        } ${
                           isPast
                             ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
                             : conflict.hasConflict
@@ -587,8 +602,8 @@ export default function FriendChat({
                 </div>
                 {/* Fine-tune minutes */}
                 {srHour !== null && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">Minutes:</span>
+                  <div className={`flex items-center gap-2 ${layout === "docked" ? "mt-1" : "mt-2"}`}>
+                    <span className={`text-gray-500 dark:text-gray-400 ${layout === "docked" ? "text-[10px]" : "text-xs"}`}>Minutes:</span>
                     <div className="flex gap-1">
                       {[0, 15, 30, 45].map((m) => {
                         const minuteConflict = getSlotConflict(srDate, srHour, m, srDuration);
@@ -628,7 +643,7 @@ export default function FriendChat({
 
             {/* Duration Selection */}
             {srDate && srHour !== null && (
-              <div>
+              <div className={layout === "docked" ? "space-y-1" : ""}>
                 <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 block">
                   Duration
                 </label>
