@@ -4,7 +4,8 @@ import "./globals.css";
 import Providers from "@/components/providers";
 import { ChatDock } from "@/components/chat-dock";
 // import Navbar from "@/components/navbar/navbar";
-
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
@@ -33,6 +34,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${quicksandSans.className} antialiased`}>
         <Providers>
+          <Analytics />
+          <SpeedInsights />
           {children}
           <ChatDock />
         </Providers>
