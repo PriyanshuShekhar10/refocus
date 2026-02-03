@@ -25,6 +25,7 @@ import { SessionDetailsModal } from "./Calendar/Modals/SessionDetailsModal";
 import { CalendarSidebar } from "./Calendar/CalendarSidebar";
 import { CalendarHeader } from "./Calendar/CalendarHeader";
 import { CalendarEventCard } from "./Calendar/CalendarEventCard";
+import { CalendarRightSidebar } from "./Calendar/CalendarRightSidebar";
 
 // ============================================
 // Types
@@ -69,9 +70,14 @@ type ModalState =
   | { type: "confirm-delete"; event: CalendarEvent }
   | { type: "confirm-leave"; event: CalendarEvent };
 
+/** Available view options for number of days */
+type ViewDays = 3 | 5 | 7;
+
 interface UIState {
   /** Currently visible date */
   startDate: Date;
+  /** Number of days to show */
+  visibleDays: ViewDays;
   /** Duration filter for sidebar */
   durationFilter: DurationMin[];
   /** Duration for creating new sessions */
@@ -86,6 +92,7 @@ type UIAction =
   | { type: "SET_START_DATE"; date: Date }
   | { type: "SHIFT_RANGE"; delta: number }
   | { type: "GO_TODAY" }
+  | { type: "SET_VISIBLE_DAYS"; days: ViewDays }
   | { type: "TOGGLE_DURATION_FILTER"; duration: DurationMin }
   | { type: "SET_CREATE_DURATION"; duration: DurationMin }
   | { type: "OPEN_BOOKING_MODAL"; event: CalendarEvent }
@@ -109,9 +116,11 @@ function uiReducer(state: UIState, action: UIAction): UIState {
     case "SET_START_DATE":
       return { ...state, startDate: startOfDay(action.date) };
     case "SHIFT_RANGE":
-      return { ...state, startDate: addDays(state.startDate, action.delta) };
+      return { ...state, startDate: addDays(state.startDate, action.delta * state.visibleDays) };
     case "GO_TODAY":
       return { ...state, startDate: startOfDay(new Date()) };
+    case "SET_VISIBLE_DAYS":
+      return { ...state, visibleDays: action.days };
     case "TOGGLE_DURATION_FILTER":
       return {
         ...state,
@@ -169,6 +178,7 @@ function uiReducer(state: UIState, action: UIAction): UIState {
 function createInitialState(startDateProp?: Date): UIState {
   return {
     startDate: startDateProp ? startOfDay(startDateProp) : startOfDay(new Date()),
+    visibleDays: 3,
     durationFilter: DEFAULT_DURATION_FILTER,
     createDuration: DEFAULT_DURATION,
     modal: { type: "none" },
@@ -184,13 +194,14 @@ export default function Calendar({
   startHour = 0,
   endHour = 24,
   stepMinutes = 15,
-  visibleDays = 3,
+  visibleDays: _visibleDaysProp = 3, // kept for API compatibility but state is managed internally
   startDate: startDateProp,
   events: eventsProp,
   locale = TIME_CONFIG.locale,
   onEventsChange,
   className = "",
 }: CalendarProps) {
+  void _visibleDaysProp; // silence unused warning
   const { hourBlockHeight, minorLinePositions } = CALENDAR_LAYOUT;
 
   // UI state machine
@@ -208,8 +219,8 @@ export default function Calendar({
   }, [startDateProp]);
 
   const days = useMemo(
-    () => new Array(visibleDays).fill(0).map((_, i) => addDays(ui.startDate, i)),
-    [visibleDays, ui.startDate],
+    () => new Array(ui.visibleDays).fill(0).map((_, i) => addDays(ui.startDate, i)),
+    [ui.visibleDays, ui.startDate],
   );
 
   // Toast auto-clear
@@ -281,7 +292,7 @@ export default function Calendar({
     startHour,
     endHour,
     stepMinutes,
-    visibleDays,
+    visibleDays: ui.visibleDays,
     createDuration: ui.createDuration,
     eventsByDay,
   });
@@ -290,6 +301,10 @@ export default function Calendar({
   const goToday = useCallback(() => dispatch({ type: "GO_TODAY" }), []);
   const shiftRange = useCallback(
     (delta: number) => dispatch({ type: "SHIFT_RANGE", delta }),
+    [],
+  );
+  const setVisibleDays = useCallback(
+    (days: ViewDays) => dispatch({ type: "SET_VISIBLE_DAYS", days }),
     [],
   );
   const handleDurationFilterChange = useCallback(
@@ -438,6 +453,8 @@ export default function Calendar({
           locale={locale}
           onShiftRange={shiftRange}
           onGoToday={goToday}
+          visibleDays={ui.visibleDays}
+          onVisibleDaysChange={setVisibleDays}
         />
 
         <div
@@ -471,7 +488,7 @@ export default function Calendar({
           {/* Columns */}
           <div
             className="grid flex-1"
-            style={{ gridTemplateColumns: `repeat(${visibleDays}, 1fr)` }}
+            style={{ gridTemplateColumns: `repeat(${ui.visibleDays}, 1fr)` }}
           >
             {days.map((d, dayIdx) => (
               <div
@@ -624,6 +641,16 @@ export default function Calendar({
           </div>
         </div>
       </section>
+
+      {/* Right Sidebar - Greeting & Misc */}
+      <CalendarRightSidebar
+        sessionCount={events.filter((ev) => {
+          const isOwner = ev.owner_id === currentUserId;
+          const isParticipant = (ev.participants ?? []).some((p) => p.user_id === currentUserId);
+          return isOwner || isParticipant;
+        }).length}
+        onGoToday={goToday}
+      />
 
       {/* Modals – only one can be open at a time (enforced by state machine) */}
       {ui.modal.type === "booking" && (

@@ -1,10 +1,21 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/types/calendar";
 import { getResolvedSessionColor } from "@/constants/calendar";
 import { getLocalSessionColor } from "@/lib/sessionColors";
+
+/** Check if session starts within the next hour or has already started (but not ended) */
+function isJoinable(startTime: Date | string, endTime?: Date | string): boolean {
+  const now = new Date();
+  const start = new Date(startTime);
+  const end = endTime ? new Date(endTime) : new Date(start.getTime() + 60 * 60 * 1000); // default 1hr if no end
+  const oneHourBefore = new Date(start.getTime() - 60 * 60 * 1000);
+  return now >= oneHourBefore && now <= end;
+}
 
 interface CalendarEventCardProps {
   event: CalendarEvent;
@@ -46,6 +57,17 @@ export function CalendarEventCard({
   const resolvedColor = getResolvedSessionColor(storedColor, isDark);
   const hasCustomColor = Boolean(resolvedColor);
 
+  // Track if session is joinable (within 1 hour of start or in progress)
+  const [canJoin, setCanJoin] = useState(() => isJoinable(event.start, event.end));
+
+  useEffect(() => {
+    // Re-check joinability every 30 seconds
+    const check = () => setCanJoin(isJoinable(event.start, event.end));
+    check();
+    const interval = setInterval(check, 30000);
+    return () => clearInterval(interval);
+  }, [event.start, event.end]);
+
   const timeLabel = s.toLocaleTimeString("en-IN", {
     hour: "2-digit",
     minute: "2-digit",
@@ -84,6 +106,9 @@ export function CalendarEventCard({
       </div>
     );
   }
+
+  // Determine if this is a short card (25 min = ~46px height)
+  const isShortCard = height < 70;
 
   return (
     <div className="absolute inset-x-2 z-20" style={{ top }}>
@@ -143,7 +168,7 @@ export function CalendarEventCard({
           >
             Book
           </button>
-        ) : onLeave ? (
+        ) : onLeave && !canJoin ? (
           <button
             className="absolute top-1 right-1 p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 dark:text-amber-400 transition-colors"
             onClick={(e) => {
@@ -167,7 +192,7 @@ export function CalendarEventCard({
           </button>
         ) : null}
 
-        <div className="pr-8">
+        <div className={`${canJoin && isBooked ? 'pr-8' : 'pr-8'}`}>
           <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
             {s.toLocaleTimeString("en-IN", {
               hour: "2-digit",
@@ -176,79 +201,134 @@ export function CalendarEventCard({
               timeZone: "Asia/Kolkata",
             })}
           </p>
-          <p
-            className={`text-xs font-semibold leading-tight ${
-              isBooked
-                ? "text-gray-900 dark:text-white"
-                : "text-gray-800 dark:text-white"
-            }`}
-          >
-            {event.durationMin} min • {event.sessionType}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between mt-1">
-          <span
-            className={`text-xs font-medium ${
-              isBooked
-                ? "text-gray-800 dark:text-indigo-200"
-                : "text-indigo-700 dark:text-indigo-300"
-            }`}
-          >
-            {event.name
-              ? event.name
-              : isOwner
-                ? "Your session"
-                : isBooked
-                  ? "Booked"
-                  : "Partner needed"}
-          </span>
-          {event.participants && event.participants.length > 0 && (
-            <div className="flex -space-x-1 ml-1">
-              {event.participants.slice(0, 2).map((participant, idx) => {
-                const displayName =
-                  [participant.firstname, participant.lastname]
-                    .filter(Boolean)
-                    .join(" ") ||
-                  participant.email ||
-                  participant.user_id ||
-                  "User";
-                const initials = displayName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase();
-
-                return (
-                  <Avatar
-                    key={participant.user_id || idx}
-                    className="h-4 w-4 border border-white"
-                  >
-                    {participant.avatar_url ? (
-                      <AvatarImage
-                        src={participant.avatar_url}
-                        alt={displayName}
-                      />
-                    ) : null}
-                    <AvatarFallback className="text-[8px] font-medium bg-indigo-100 text-indigo-600">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                );
-              })}
-              {event.participants.length > 2 && (
-                <div className="h-4 w-4 rounded-full bg-gray-200 border border-white flex items-center justify-center">
-                  <span className="text-[6px] font-medium text-gray-600">
-                    +{event.participants.length - 2}
-                  </span>
-                </div>
-              )}
-            </div>
+          {!isShortCard && (
+            <p
+              className={`text-xs font-semibold leading-tight ${
+                isBooked
+                  ? "text-gray-900 dark:text-white"
+                  : "text-gray-800 dark:text-white"
+              }`}
+            >
+              {event.durationMin} min • {event.sessionType}
+            </p>
           )}
         </div>
-        {isBooked && otherQuiet && (
-          <span className="inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100 mt-1">
+
+        {!isShortCard && (
+          <div className="flex items-center justify-between mt-1">
+            {/* Show Join button when joinable, otherwise show status text */}
+            {isBooked && canJoin ? (
+              <Link
+                href={`/sessions/${event.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="group relative inline-flex items-center gap-1"
+                title="Join session"
+              >
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-green-400 animate-ping opacity-30" />
+                <span className="relative flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-green-600 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-2.5 w-2.5 text-white"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                  </svg>
+                </span>
+                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                  Join Now
+                </span>
+              </Link>
+            ) : (
+              <span
+                className={`text-xs font-medium ${
+                  isBooked
+                    ? "text-gray-800 dark:text-indigo-200"
+                    : "text-indigo-700 dark:text-indigo-300"
+                }`}
+              >
+                {event.name
+                  ? event.name
+                  : isOwner
+                    ? "Your session"
+                    : isBooked
+                      ? "Booked"
+                      : "Partner needed"}
+              </span>
+            )}
+            {event.participants && event.participants.length > 0 && (
+              <div className="flex -space-x-1 ml-1">
+                {event.participants.slice(0, 2).map((participant, idx) => {
+                  const displayName =
+                    [participant.firstname, participant.lastname]
+                      .filter(Boolean)
+                      .join(" ") ||
+                    participant.email ||
+                    participant.user_id ||
+                    "User";
+                  const initials = displayName
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .substring(0, 2)
+                    .toUpperCase();
+
+                  return (
+                    <Avatar
+                      key={participant.user_id || idx}
+                      className="h-4 w-4 border border-white"
+                    >
+                      {participant.avatar_url ? (
+                        <AvatarImage
+                          src={participant.avatar_url}
+                          alt={displayName}
+                        />
+                      ) : null}
+                      <AvatarFallback className="text-[8px] font-medium bg-indigo-100 text-indigo-600">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  );
+                })}
+                {event.participants.length > 2 && (
+                  <div className="h-4 w-4 rounded-full bg-gray-200 border border-white flex items-center justify-center">
+                    <span className="text-[6px] font-medium text-gray-600">
+                      +{event.participants.length - 2}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Join button for short cards - inline at bottom */}
+        {isShortCard && isBooked && canJoin && (
+          <Link
+            href={`/sessions/${event.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-1 left-2 group inline-flex items-center gap-1"
+            title="Join session"
+          >
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-green-400 animate-ping opacity-30" />
+            <span className="relative flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-green-600 shadow-sm">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-2 w-2 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+              </svg>
+            </span>
+            <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">
+              Join
+            </span>
+          </Link>
+        )}
+
+        {!isShortCard && isBooked && otherQuiet && (
+          <span className="inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100 mt-1 w-fit">
             🔇 Quiet
           </span>
         )}

@@ -28,7 +28,7 @@ type EditableFields = {
   website: string;
 };
 
-export default function Profile() {
+export default function ProfileClient() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
