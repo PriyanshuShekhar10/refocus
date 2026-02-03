@@ -8,10 +8,11 @@ import { FaUserFriends } from "react-icons/fa";
 import { HiSun, HiMoon } from "react-icons/hi";
 import { useTheme } from "next-themes";
 import { CgProfile } from "react-icons/cg";
-import { RiChat3Line, RiMessage3Line } from "react-icons/ri";
+import { RiMessage3Line } from "react-icons/ri";
+import { HiOutlineUserGroup } from "react-icons/hi";
 import Link from "next/link";
 
-export type TabKey = "profile" | "dashboard" | "settings" | "friends" | "chat";
+export type TabKey = "profile" | "dashboard" | "settings" | "friends" | "community";
 
 interface SideBarProps {
   activeTab: TabKey;
@@ -103,12 +104,12 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
         active={activeTab === "friends"}
       />
 
-      {/* Global Chat (full page/tab) */}
+      {/* Community */}
       <SideBarIcon
-        icon={<RiChat3Line size={18} />}
-        text="Global Chat"
-        onClick={() => onSelect("chat")}
-        active={activeTab === "chat"}
+        icon={<HiOutlineUserGroup size={18} />}
+        text="Community"
+        onClick={() => onSelect("community")}
+        active={activeTab === "community"}
       />
 
       <Divider />
