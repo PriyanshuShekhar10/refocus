@@ -6,7 +6,7 @@ import { ObjectId } from "mongodb";
 
 // POST - Toggle like on a post
 export async function POST(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
   const session = await getServerSession(authOptions);

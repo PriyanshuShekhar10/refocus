@@ -6,7 +6,7 @@ import { ObjectId } from "mongodb";
 
 // GET - Fetch comments for a post
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
   const session = await getServerSession(authOptions);

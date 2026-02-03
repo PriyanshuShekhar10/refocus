@@ -6,7 +6,7 @@ import { ObjectId } from "mongodb";
 
 // DELETE - Delete a post (soft delete)
 export async function DELETE(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
   const session = await getServerSession(authOptions);
