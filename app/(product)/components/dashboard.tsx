@@ -1,17 +1,36 @@
-// import React from "react";
+"use client";
 
+import { useEffect, useState } from "react";
 import Calendar from "./Calendar";
-import DesktopOnlyWrapper from "./DesktopOnlyWrapper";
-// import CalendarBooking from "./CalendarBooking";
+import { MobileCalendar } from "./Mobile";
 
 export default function Dashboard() {
-  return (
-    <DesktopOnlyWrapper minWidth={1024}>
-      <div>
-        {/* <CalendarBooking /> */}
-        <Calendar />
-        {/* Dashboard Content */}
+  const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-gray-400">Loading...</div>
       </div>
-    </DesktopOnlyWrapper>
+    );
+  }
+
+  if (isMobile) {
+    return <MobileCalendar />;
+  }
+
+  return (
+    <div>
+      <Calendar />
+    </div>
   );
 }
