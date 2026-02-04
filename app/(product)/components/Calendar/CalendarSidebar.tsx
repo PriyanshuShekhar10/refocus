@@ -20,8 +20,6 @@ function formatUpcomingDate(d: Date) {
 }
 
 interface CalendarSidebarProps {
-  durationFilter: DurationMin[];
-  onDurationFilterChange: (duration: DurationMin) => void;
   createDuration: DurationMin;
   onCreateDurationChange: (duration: DurationMin) => void;
   /** For Upcoming section */
@@ -34,8 +32,6 @@ interface CalendarSidebarProps {
 }
 
 export function CalendarSidebar({
-  durationFilter,
-  onDurationFilterChange,
   createDuration,
   onCreateDurationChange,
   events = [],
@@ -137,30 +133,6 @@ export function CalendarSidebar({
                       {d} min
                     </button>
                   ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Show on calendar
-                </p>
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {DURATION_OPTIONS.map((d) => {
-                    const on = durationFilter.includes(d);
-                    return (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => onDurationFilterChange(d)}
-                        className={`rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
-                          on
-                            ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-300"
-                            : "border-gray-200 text-gray-500 dark:border-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500"
-                        }`}
-                      >
-                        {d}m
-                      </button>
-                    );
-                  })}
                 </div>
               </div>
             </div>

@@ -577,28 +577,6 @@ export default function MobileCalendar() {
               </div>
             </div>
 
-            {/* Duration Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Show Sessions
-              </label>
-              <div className="flex gap-2">
-                {([25, 50, 75] as DurationMin[]).map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => dispatch({ type: "TOGGLE_DURATION_FILTER", duration: d })}
-                    className={`flex-1 py-2 rounded-lg text-sm transition-all ${
-                      ui.durationFilter.includes(d)
-                        ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-500"
-                    }`}
-                  >
-                    {d}m
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <p className="text-xs text-gray-500 text-center">
               Tap on the timeline to create a session
             </p>

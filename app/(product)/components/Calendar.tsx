@@ -307,11 +307,6 @@ export default function Calendar({
     (days: ViewDays) => dispatch({ type: "SET_VISIBLE_DAYS", days }),
     [],
   );
-  const handleDurationFilterChange = useCallback(
-    (duration: DurationMin) =>
-      dispatch({ type: "TOGGLE_DURATION_FILTER", duration }),
-    [],
-  );
   const handleSetCreateDuration = useCallback(
     (duration: DurationMin) =>
       dispatch({ type: "SET_CREATE_DURATION", duration }),
@@ -430,8 +425,6 @@ export default function Calendar({
   return (
     <div className={`flex h-full w-full gap-4 ${className}`}>
       <CalendarSidebar
-        durationFilter={ui.durationFilter}
-        onDurationFilterChange={handleDurationFilterChange}
         createDuration={ui.createDuration}
         onCreateDurationChange={handleSetCreateDuration}
         events={events}
