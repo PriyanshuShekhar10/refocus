@@ -327,7 +327,6 @@ export default function Calendar({
   const handleConfirmBooking = useCallback(async () => {
     if (ui.modal.type !== "booking") return;
     const { event, quiet } = ui.modal;
-    dispatch({ type: "CLOSE_MODAL" });
     try {
       await joinSession(event.id, quiet);
     } catch (e) {
@@ -352,7 +351,6 @@ export default function Calendar({
   const handleDeleteSession = useCallback(async () => {
     if (ui.modal.type !== "confirm-delete") return;
     const { event } = ui.modal;
-    dispatch({ type: "CLOSE_MODAL" });
     try {
       await deleteSession(event.id);
     } catch (e) {
@@ -363,7 +361,6 @@ export default function Calendar({
   const handleLeaveSession = useCallback(async () => {
     if (ui.modal.type !== "confirm-leave") return;
     const { event } = ui.modal;
-    dispatch({ type: "CLOSE_MODAL" });
     try {
       await leaveSession(event.id);
     } catch (e) {
@@ -375,7 +372,6 @@ export default function Calendar({
   const handleCreateSession = useCallback(async () => {
     if (ui.modal.type !== "confirm-create") return;
     const { start, preferred, quiet } = ui.modal;
-    dispatch({ type: "CLOSE_MODAL" });
     try {
       await createSession(start, preferred, quiet);
     } catch (e) {
@@ -432,7 +428,7 @@ export default function Calendar({
   };
 
   return (
-    <div className={`flex h-[calc(100vh-2rem)] w-full gap-4 ${className}`}>
+    <div className={`flex h-full w-full gap-4 ${className}`}>
       <CalendarSidebar
         durationFilter={ui.durationFilter}
         onDurationFilterChange={handleDurationFilterChange}
@@ -650,6 +646,20 @@ export default function Calendar({
           return isOwner || isParticipant;
         }).length}
         onGoToday={goToday}
+        joinableSession={(() => {
+          const now = new Date();
+          const joinable = events
+            .filter((ev) => {
+              const isBooked = (ev.participants?.length ?? 0) >= 2;
+              if (!isBooked) return false;
+              const start = new Date(ev.start);
+              const end = ev.end ? new Date(ev.end) : new Date(start.getTime() + 60 * 60 * 1000);
+              const oneHourBefore = new Date(start.getTime() - 60 * 60 * 1000);
+              return now >= oneHourBefore && now <= end;
+            })
+            .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())[0];
+          return joinable || null;
+        })()}
       />
 
       {/* Modals – only one can be open at a time (enforced by state machine) */}

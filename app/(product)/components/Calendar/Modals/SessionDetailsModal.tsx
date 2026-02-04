@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
 import type { CalendarEvent } from "@/types/calendar";
+import { ModalWrapper } from "./ModalWrapper";
 import {
   SESSION_COLOR_PRESETS,
   getSessionColorPresetIndex,
@@ -92,6 +93,7 @@ export function SessionDetailsModal({
     setSaving(true);
     try {
       await onUpdate({ name: name || null });
+      onClose();
     } finally {
       setSaving(false);
     }
@@ -144,7 +146,7 @@ export function SessionDetailsModal({
   })}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <ModalWrapper onClose={onClose}>
       <div className="w-full max-w-md rounded-xl bg-white shadow-2xl dark:bg-gray-900 dark:text-gray-100 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -338,6 +340,6 @@ export function SessionDetailsModal({
           </div>
         </div>
       </div>
-    </div>
+    </ModalWrapper>
   );
 }

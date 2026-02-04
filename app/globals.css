@@ -188,3 +188,61 @@ html {
 ::-webkit-scrollbar-thumb {
   @apply bg-gray-500 dark:bg-green-400;
 }
+
+/* Modal enter/exit animations */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: opacity 0.2s ease-out;
+}
+.modal-backdrop-enter {
+  animation: modal-backdrop-enter 0.2s ease-out forwards;
+}
+.modal-backdrop-exit {
+  animation: modal-backdrop-exit 0.2s ease-out forwards;
+}
+.modal-content {
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+.modal-content-enter {
+  animation: modal-content-enter 0.2s ease-out forwards;
+}
+.modal-content-exit {
+  animation: modal-content-exit 0.2s ease-out forwards;
+}
+
+@keyframes modal-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes modal-backdrop-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes modal-content-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes modal-content-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}

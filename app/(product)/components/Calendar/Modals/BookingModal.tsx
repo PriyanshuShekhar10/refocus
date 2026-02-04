@@ -1,4 +1,5 @@
 import type { CalendarEvent } from "@/types/calendar";
+import { ModalWrapper } from "./ModalWrapper";
 
 export function BookingModal({
   event,
@@ -13,8 +14,17 @@ export function BookingModal({
   onChangeQuiet: (v: boolean) => void;
   onConfirm: () => void;
 }) {
+  const handleConfirm = async () => {
+    try {
+      await onConfirm();
+      onClose();
+    } catch {
+      // Error shown by parent toast
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <ModalWrapper onClose={onClose}>
       <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
           Confirm Booking
@@ -62,13 +72,13 @@ export function BookingModal({
             Cancel
           </button>
           <button
-            onClick={onConfirm}
+            onClick={handleConfirm}
             className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800"
           >
             Confirm
           </button>
         </div>
       </div>
-    </div>
+    </ModalWrapper>
   );
 }

@@ -228,7 +228,6 @@ export default function MobileCalendar() {
   const handleConfirmBooking = useCallback(async () => {
     if (ui.modal.type !== "booking") return;
     const { event, quiet } = ui.modal;
-    dispatch({ type: "CLOSE_MODAL" });
     try {
       await joinSession(event.id, quiet);
     } catch (e) {
@@ -253,7 +252,6 @@ export default function MobileCalendar() {
   const handleDeleteSession = useCallback(async () => {
     if (ui.modal.type !== "confirm-delete") return;
     const { event } = ui.modal;
-    dispatch({ type: "CLOSE_MODAL" });
     try {
       await deleteSession(event.id);
     } catch (e) {
@@ -277,7 +275,6 @@ export default function MobileCalendar() {
   const handleCreateSession = useCallback(async () => {
     if (ui.modal.type !== "confirm-create") return;
     const { start, preferred, quiet } = ui.modal;
-    dispatch({ type: "CLOSE_MODAL" });
     try {
       await createSession(start, preferred, quiet);
     } catch (e) {

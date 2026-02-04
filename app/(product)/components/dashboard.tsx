@@ -29,7 +29,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div>
+    <div className="h-full">
       <Calendar />
     </div>
   );

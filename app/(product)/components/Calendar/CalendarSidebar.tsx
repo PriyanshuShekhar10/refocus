@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import BookSessionButton from "../BookSessionButton";
-import { DURATION_OPTIONS, TIME_CONFIG, type DurationMin, type SessionType } from "@/constants/calendar";
+import { DURATION_OPTIONS, TIME_CONFIG, type DurationMin } from "@/constants/calendar";
 import type { CalendarEvent } from "@/types/calendar";
 
 function toYmd(d: Date) {
@@ -32,12 +32,6 @@ interface CalendarSidebarProps {
   onLeaveSession?: (event: CalendarEvent) => void;
   onDeleteSession?: (event: CalendarEvent) => void;
 }
-
-const SESSION_TYPE_LABELS: Record<SessionType, string> = {
-  focus: "Focus",
-  "deep-work": "Deep work",
-  learning: "Learning",
-};
 
 export function CalendarSidebar({
   durationFilter,
@@ -76,7 +70,7 @@ export function CalendarSidebar({
   }, [upcomingSessions]);
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+    <aside className="flex w-72 shrink-0 flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900 h-full overflow-hidden">
       {/* Top: Book session + Quick book */}
       <div className="flex gap-2">
         <div className="flex-1">
@@ -179,14 +173,14 @@ export function CalendarSidebar({
       </p>
 
       {/* Upcoming */}
-      <section className="mt-auto flex flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+      <section className="mt-auto flex flex-1 flex-col min-h-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="shrink-0 px-3 py-2.5">
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Upcoming</h3>
           {upcomingSubtitle && (
             <p className="text-xs text-gray-500 dark:text-gray-400">{upcomingSubtitle}</p>
           )}
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+        <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-2">
           {upcomingSessions.length === 0 ? (
             <p className="px-2 py-4 text-center text-xs text-gray-500 dark:text-gray-400">
               No upcoming sessions
@@ -231,7 +225,8 @@ export function CalendarSidebar({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-1">
                         <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
-                          {ev.durationMin} min · {SESSION_TYPE_LABELS[ev.sessionType] ?? ev.sessionType}
+                          {ev.durationMin} min ·{" "}
+                          {isOwner ? "Your session" : ev.name || "Session"}
                         </span>
                       </div>
                       <p className="mt-0.5 text-xs font-medium text-gray-900 dark:text-gray-100">

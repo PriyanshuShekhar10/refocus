@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { ModalWrapper } from "./ModalWrapper";
 
 interface ConfirmModalProps {
   title: string;
@@ -24,6 +25,7 @@ export function ConfirmModal({
     try {
       setBusy(true);
       await onConfirm();
+      onCancel();
     } finally {
       setBusy(false);
     }
@@ -34,7 +36,7 @@ export function ConfirmModal({
       ? "rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-50"
       : "rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50";
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <ModalWrapper onClose={onCancel}>
       <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           {title}
@@ -61,6 +63,6 @@ export function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </ModalWrapper>
   );
 }

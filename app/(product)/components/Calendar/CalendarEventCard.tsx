@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import Link from "next/link";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/types/calendar";
 import { getResolvedSessionColor } from "@/constants/calendar";
@@ -110,6 +109,8 @@ export function CalendarEventCard({
   // Determine if this is a short card (25 min = ~46px height)
   const isShortCard = height < 70;
 
+  const isJoinableNow = isBooked && canJoin;
+
   return (
     <div className="absolute inset-x-2 z-20" style={{ top }}>
       <div
@@ -117,12 +118,16 @@ export function CalendarEventCard({
           height,
           ...(hasCustomColor ? { backgroundColor: resolvedColor! } : {}),
         }}
-        className={`relative rounded-lg p-2 flex flex-col justify-between shadow-sm overflow-hidden border ${
+        className={`relative group rounded-lg p-2 flex flex-col justify-between shadow-sm overflow-hidden border ${
           hasCustomColor
             ? "border-transparent"
             : isBooked
               ? "border-gray-200/80 dark:border-gray-500/50 bg-gray-200 dark:bg-gray-600"
               : "border-indigo-200/80 dark:border-indigo-800/80 bg-indigo-100 dark:bg-indigo-900/80 hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer"
+        } ${
+          isJoinableNow
+            ? "border-emerald-500 ring-2 ring-emerald-400/80 shadow-md"
+            : ""
         } ${!hasCustomColor ? "" : "border-black/10 dark:border-white/10"}`}
         title={
           tooltip
@@ -192,7 +197,7 @@ export function CalendarEventCard({
           </button>
         ) : null}
 
-        <div className={`${canJoin && isBooked ? 'pr-8' : 'pr-8'}`}>
+        <div className={`${canJoin && isBooked ? "pr-8" : "pr-8"}`}>
           <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
             {s.toLocaleTimeString("en-IN", {
               hour: "2-digit",
@@ -201,61 +206,37 @@ export function CalendarEventCard({
               timeZone: "Asia/Kolkata",
             })}
           </p>
-          {!isShortCard && (
-            <p
-              className={`text-xs font-semibold leading-tight ${
-                isBooked
-                  ? "text-gray-900 dark:text-white"
-                  : "text-gray-800 dark:text-white"
-              }`}
-            >
-              {event.durationMin} min • {event.sessionType}
-            </p>
-          )}
+          <p
+            className={`font-semibold leading-tight ${
+              isShortCard
+                ? "text-[10px]"
+                : "text-xs"
+            } ${
+              isBooked
+                ? "text-gray-900 dark:text-white"
+                : "text-gray-800 dark:text-white"
+            }`}
+          >
+            {(() => {
+              const primaryLabel = isOwner
+                ? "Your session"
+                : event.name || (isBooked ? "Session" : "Partner needed");
+              return `${event.durationMin} min • ${primaryLabel}`;
+            })()}
+          </p>
         </div>
 
         {!isShortCard && (
           <div className="flex items-center justify-between mt-1">
-            {/* Show Join button when joinable, otherwise show status text */}
-            {isBooked && canJoin ? (
-              <Link
-                href={`/sessions/${event.id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="group relative inline-flex items-center gap-1"
-                title="Join session"
-              >
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-green-400 animate-ping opacity-30" />
-                <span className="relative flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-green-600 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-2.5 w-2.5 text-white"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-                  </svg>
-                </span>
-                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
-                  Join Now
-                </span>
-              </Link>
-            ) : (
-              <span
-                className={`text-xs font-medium ${
-                  isBooked
-                    ? "text-gray-800 dark:text-indigo-200"
-                    : "text-indigo-700 dark:text-indigo-300"
-                }`}
-              >
-                {event.name
-                  ? event.name
-                  : isOwner
-                    ? "Your session"
-                    : isBooked
-                      ? "Booked"
-                      : "Partner needed"}
-              </span>
-            )}
+            <span
+              className={`text-xs font-medium ${
+                isBooked
+                  ? "text-gray-800 dark:text-indigo-200"
+                  : "text-indigo-700 dark:text-indigo-300"
+              }`}
+            >
+              {event.name || (isBooked ? "Session" : "Partner needed")}
+            </span>
             {event.participants && event.participants.length > 0 && (
               <div className="flex -space-x-1 ml-1">
                 {event.participants.slice(0, 2).map((participant, idx) => {
@@ -302,30 +283,6 @@ export function CalendarEventCard({
           </div>
         )}
 
-        {/* Join button for short cards - inline at bottom */}
-        {isShortCard && isBooked && canJoin && (
-          <Link
-            href={`/sessions/${event.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-1 left-2 group inline-flex items-center gap-1"
-            title="Join session"
-          >
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-green-400 animate-ping opacity-30" />
-            <span className="relative flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-green-600 shadow-sm">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-2 w-2 text-white"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-              </svg>
-            </span>
-            <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">
-              Join
-            </span>
-          </Link>
-        )}
 
         {!isShortCard && isBooked && otherQuiet && (
           <span className="inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100 mt-1 w-fit">
