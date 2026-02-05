@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Faq from "@/components/faq";
 import { Hero } from "@/components/hero";
 import { Features } from "@/components/features";
+import { WhyItWorks } from "@/components/why-it-works";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import Navbar from "@/components/navbar/navbar";
 
@@ -95,6 +96,7 @@ export default function Home() {
         <div className="flex-1 w-full flex flex-col gap-20 items-center">
           <div className="flex-1 flex flex-col gap-20 max-w-5x">
             <Hero />
+            <WhyItWorks />
             <Features />
             <Faq />
           </div>
