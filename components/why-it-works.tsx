@@ -47,7 +47,8 @@ const cardVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: "easeOut" },
+    // Keep transition simple to satisfy framer-motion's typed Transition
+    transition: { duration: 0.6 },
   },
 };
 
