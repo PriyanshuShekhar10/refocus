@@ -17,7 +17,7 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen overflow-hidden">
       <SideBar activeTab={activeTab} onSelect={setActiveTab} />
-      <main className="ml-16 flex-1 overflow-hidden">
+      <main className={`ml-16 flex-1 overflow-hidden ${activeTab === "dashboard" ? "bg-dotted-grid" : ""}`}>
         {activeTab === "dashboard" && <div className="h-full p-6"><Dashboard /></div>}
         {activeTab === "profile" && <div className="h-full overflow-y-auto p-6"><Profile /></div>}
         {activeTab === "settings" && <div className="h-full overflow-y-auto p-6"><Settings /></div>}

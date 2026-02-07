@@ -180,6 +180,25 @@ html {
   padding: 0;
 }
 
+/* Dotted grid background for dashboard (exposed areas only) */
+.bg-dotted-grid {
+  background-color: hsl(var(--background));
+  background-image: radial-gradient(
+    circle at center,
+    hsl(var(--muted-foreground) / 0.15) 1px,
+    transparent 1px
+  );
+  background-size: 20px 20px;
+}
+
+.dark .bg-dotted-grid {
+  background-image: radial-gradient(
+    circle at center,
+    hsl(var(--muted-foreground) / 0.2) 1px,
+    transparent 1px
+  );
+}
+
 /* Optional: transparent scrollbar background (if you want visible scrollbar) */
 ::-webkit-scrollbar {
   background-color: transparent;
