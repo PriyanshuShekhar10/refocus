@@ -67,8 +67,6 @@ export function SignUpForm({
       });
       if (login?.error) throw new Error(login.error);
 
-      // Successfully registered and logged in.
-      // Now redirect to profile page so they can complete their bio/interests
       router.push("/dashboard?new=true");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");

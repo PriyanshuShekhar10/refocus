@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { signIn } from "next-auth/react";
-import { Link as RouterLink, EyeIcon, EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
