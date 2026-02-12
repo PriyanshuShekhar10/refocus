@@ -2,7 +2,7 @@
 "use client";
 
 import { FC, ReactNode, useEffect, useState } from "react";
-import { BsGearFill } from "react-icons/bs";
+import { BsGearFill, BsStars, BsChatSquareTextFill } from "react-icons/bs";
 import { MdDashboard } from "react-icons/md";
 import { FaUserFriends } from "react-icons/fa";
 import { HiSun, HiMoon } from "react-icons/hi";
@@ -12,7 +12,7 @@ import { RiMessage3Line } from "react-icons/ri";
 import { HiOutlineUserGroup } from "react-icons/hi";
 import Link from "next/link";
 
-export type TabKey = "profile" | "dashboard" | "settings" | "friends" | "community";
+export type TabKey = "profile" | "dashboard" | "settings" | "friends" | "community" | "matches" | "scheduler";
 
 interface SideBarProps {
   activeTab: TabKey;
@@ -111,7 +111,18 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
         onClick={() => onSelect("community")}
         active={activeTab === "community"}
       />
-
+      <SideBarIcon
+        icon={<BsStars size={18} />}
+        text="AI Match"
+        onClick={() => onSelect("matches")}
+        active={activeTab === "matches"}
+      />
+      <SideBarIcon
+        icon={<BsChatSquareTextFill size={18} />}
+        text="AI Schedule"
+        onClick={() => onSelect("scheduler")}
+        active={activeTab === "scheduler"}
+      />
       <Divider />
 
       <SideBarIcon

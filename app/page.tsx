@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Faq from "@/components/faq";
 import { Hero } from "@/components/hero";
 import { Features } from "@/components/features";
+import { AIFeatures } from "@/components/ai-features";
 import { WhyItWorks } from "@/components/why-it-works";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import Navbar from "@/components/navbar/navbar";
@@ -23,6 +24,9 @@ export const metadata: Metadata = {
     "body doubling",
     "study with me",
     "work sessions",
+    "AI productivity",
+    "AI matchmaking",
+    "smart goals",
   ],
   alternates: {
     canonical: "/",
@@ -97,6 +101,7 @@ export default function Home() {
           <div className="flex-1 flex flex-col gap-20 max-w-5x">
             <Hero />
             <WhyItWorks />
+            <AIFeatures />
             <Features />
             <Faq />
           </div>

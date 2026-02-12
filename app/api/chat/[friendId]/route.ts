@@ -20,6 +20,7 @@ type MessageDoc = {
     start?: string;
     durationMin?: 25 | 50 | 75;
     message?: string | null;
+    goal?: string | null;
     status?: "pending" | "accepted" | "declined" | "cancelled";
     from_user_id?: string;
     to_user_id?: string;
@@ -127,10 +128,11 @@ export async function POST(
   }
 
   if (type === "session-request") {
-    const { start, durationMin, message } = body as {
+    const { start, durationMin, message, goal } = body as {
       start?: string;
       durationMin?: 25 | 50 | 75;
       message?: string;
+      goal?: string;
     };
     if (!start || !durationMin)
       return NextResponse.json(
@@ -148,6 +150,7 @@ export async function POST(
       start_time: s,
       duration_min: durationMin,
       message: message ?? null,
+      goal: goal ?? null,
       response_message: null,
       status: "pending",
       created_at: new Date(),
@@ -165,6 +168,7 @@ export async function POST(
         start: s.toISOString(),
         durationMin,
         message: message ?? null,
+        goal: goal ?? null,
         status: "pending",
         from_user_id: currentUserId,
         to_user_id: friendId,

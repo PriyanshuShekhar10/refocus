@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { embed } from "ai";
+import { google } from "@ai-sdk/google";
+import { openai } from "@ai-sdk/openai";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -82,14 +85,52 @@ export async function PATCH(req: NextRequest) {
   if (location !== undefined) updateFields.location = location;
   if (website !== undefined) updateFields.website = website;
 
-  // Update name if firstname or lastname is provided
-  if (firstname !== undefined || lastname !== undefined) {
-    const currentUser = await db
-      .collection("users")
-      .findOne({ _id: new ObjectId(userId) });
-    const newFirstname = firstname ?? currentUser?.firstname ?? "";
-    const newLastname = lastname ?? currentUser?.lastname ?? "";
-    updateFields.name = [newFirstname, newLastname].filter(Boolean).join(" ");
+  const relevantForEmbedding =
+    firstname !== undefined ||
+    lastname !== undefined ||
+    about !== undefined ||
+    interests !== undefined;
+
+  let currentUser = undefined;
+  if (relevantForEmbedding) {
+    currentUser = await db
+        .collection("users")
+        .findOne({ _id: new ObjectId(userId) });
+
+    if (firstname !== undefined || lastname !== undefined) {
+        const newFirstname = firstname ?? currentUser?.firstname ?? "";
+        const newLastname = lastname ?? currentUser?.lastname ?? "";
+        updateFields.name = [newFirstname, newLastname].filter(Boolean).join(" ");
+    }
+
+    const finalFirst = firstname ?? currentUser?.firstname ?? "";
+    const finalLast = lastname ?? currentUser?.lastname ?? "";
+    const finalAbout = about ?? currentUser?.about ?? "";
+    const finalInterests = interests ?? currentUser?.interests ?? [];
+
+    const textToEmbed = `Name: ${finalFirst} ${finalLast}. About: ${finalAbout}. Interests: ${finalInterests.join(", ")}.`;
+
+    try {
+        const hasGeminiKey = !!(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY);
+        const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
+
+        if (hasGeminiKey || hasOpenAIKey) {
+            if (process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+                process.env.GOOGLE_GENERATIVE_AI_API_KEY = process.env.GEMINI_API_KEY;
+            }
+
+            const embeddingModel = hasGeminiKey
+                ? google.textEmbeddingModel("text-embedding-004")
+                : openai.embedding("text-embedding-3-small");
+            const { embedding } = await embed({
+                model: embeddingModel,
+                value: textToEmbed,
+            });
+            updateFields.embedding = embedding;
+        }
+    } catch (e) {
+        console.warn("Embedding generation failed:", e);
+    }
   }
 
   await db.collection("users").updateOne(

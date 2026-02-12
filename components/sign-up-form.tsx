@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { validatePassword } from "@/lib/validatePassword";
 import { PasswordStrengthMeter } from "./PasswordStrengthMeter";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export function SignUpForm({
   className,
@@ -25,6 +26,7 @@ export function SignUpForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // only for main password
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +66,10 @@ export function SignUpForm({
         password,
       });
       if (login?.error) throw new Error(login.error);
-      router.push("/dashboard");
+
+      // Successfully registered and logged in.
+      // Now redirect to profile page so they can complete their bio/interests
+      router.push("/dashboard?new=true");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -121,13 +126,23 @@ export function SignUpForm({
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black dark:hover:text-white"
+                  >
+                   {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                  </button>
+                </div>
                 {password.length > 0 && <PasswordStrengthMeter validation={passwordValidation} />}
               </div>
               <div className="grid gap-2">

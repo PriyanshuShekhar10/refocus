@@ -7,6 +7,7 @@ type SessionRequestPayload = {
   start: string;
   durationMin: 25 | 50 | 75;
   message?: string | null;
+  goal?: string | null;
   status: "pending" | "accepted" | "declined" | "cancelled";
   from_user_id: string;
   to_user_id: string;
@@ -54,11 +55,33 @@ export default function FriendChat({
   const [srMinute, setSrMinute] = useState<number>(0);
   const [srDuration, setSrDuration] = useState<25 | 50 | 75>(25);
   const [srMessage, setSrMessage] = useState("");
+  const [srGoal, setSrGoal] = useState("");
+  const [isRefining, setIsRefining] = useState(false);
   const [busySlots, setBusySlots] = useState<{
     myBusySlots: Array<{ start: string; end: string }>;
     friendBusySlots: Array<{ start: string; end: string }>;
   }>({ myBusySlots: [], friendBusySlots: [] });
   const [loadingBusy, setLoadingBusy] = useState(false);
+
+  const refineGoal = async () => {
+    if (!srGoal.trim()) return;
+    setIsRefining(true);
+    try {
+      const res = await fetch("/api/ai/refine-goal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goal: srGoal }),
+      });
+      const data = await res.json();
+      if (data.refinedGoal) {
+        setSrGoal(data.refinedGoal);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsRefining(false);
+    }
+  };
 
   // Fetch busy slots when panel opens or date changes
   useEffect(() => {
@@ -284,6 +307,7 @@ export default function FriendChat({
           start: iso,
           durationMin: srDuration,
           message: srMessage || undefined,
+          goal: srGoal || undefined,
         }),
       });
       const data = await res.json();
@@ -294,6 +318,7 @@ export default function FriendChat({
       setSrMinute(0);
       setSrDuration(25);
       setSrMessage("");
+      setSrGoal("");
       await load();
     } catch (e) {
       setError((e as Error).message);
@@ -363,6 +388,11 @@ export default function FriendChat({
             {new Date(p?.start ?? "").toLocaleString()} · {p?.durationMin} min
             {p?.message ? (
               <span className="ml-2 italic">“{p.message}”</span>
+            ) : null}
+            {p?.goal ? (
+              <div className="mt-1 text-xs text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded">
+                <strong>Goal:</strong> {p.goal}
+              </div>
             ) : null}
           </div>
           {p?.status === "pending" ? (
@@ -702,6 +732,37 @@ export default function FriendChat({
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* Goal Selection */}
+            {srDate && srHour !== null && (
+              <div className={layout === "docked" ? "space-y-1" : "mt-2"}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    Session Goal
+                  </label>
+                  <button
+                    type="button"
+                    onClick={refineGoal}
+                    disabled={isRefining || !srGoal.trim()}
+                    className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  >
+                    {isRefining ? (
+                      <>
+                        <span className="animate-spin">✦</span> Refining...
+                      </>
+                    ) : (
+                      <>✦ AI Refine</>
+                    )}
+                  </button>
+                </div>
+                <textarea
+                  placeholder="What specifically do you want to accomplish?"
+                  className="w-full rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-xs placeholder:text-gray-400 min-h-[38px] resize-y"
+                  value={srGoal}
+                  onChange={(e) => setSrGoal(e.target.value)}
+                />
               </div>
             )}
 

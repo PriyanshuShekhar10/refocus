@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { signIn } from "next-auth/react";
+import { Link as RouterLink, EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,6 +13,7 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -28,8 +30,17 @@ export function LoginForm({
         email,
         password,
       });
-      if (res?.error) throw new Error(res.error);
-      router.push("/dashboard");
+      if (res?.error) {
+        if (res.error === "CredentialsSignin") {
+            setError("Invalid credentials. Please check your email and password.");
+        } else if (res.error.includes("No user found")) {
+             setError("No account found with this email. Please sign up.");
+        } else {
+            setError(res.error);
+        }
+      } else {
+         router.push("/dashboard");
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -91,17 +102,26 @@ export function LoginForm({
               Forgot?
             </Link>
           </div>
-          <input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onFocus={() => setFocusedField("password")}
-            onBlur={() => setFocusedField(null)}
-            className="w-full h-11 px-3 bg-transparent border-b border-gray-200 dark:border-gray-800 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-black dark:focus:border-white transition-colors duration-200"
-            placeholder="••••••••"
-          />
+          <div className="relative">
+             <input
+               id="password"
+               type={showPassword ? "text" : "password"}
+               required
+               value={password}
+               onChange={(e) => setPassword(e.target.value)}
+               onFocus={() => setFocusedField("password")}
+               onBlur={() => setFocusedField(null)}
+               className="w-full h-11 px-3 bg-transparent border-b border-gray-200 dark:border-gray-800 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-black dark:focus:border-white transition-colors duration-200 pr-10"
+               placeholder="••••••••"
+             />
+             <button
+               type="button"
+               onClick={() => setShowPassword(!showPassword)}
+               className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black dark:hover:text-white"
+             >
+               {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+             </button>
+          </div>
         </div>
 
         {/* Error */}

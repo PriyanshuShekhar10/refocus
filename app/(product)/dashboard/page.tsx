@@ -1,18 +1,28 @@
 // app/(product)/dashboard/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import SideBar from "../components/Sidebar/sidebar";
 import Profile from "../components/profile";
 import Settings from "../components/settings";
 import Friends from "../components/friends";
 import Dashboard from "../components/dashboard";
 import Community from "../components/Community/Community";
+import Matchmaking from "../components/Matchmaking";
+import SmartScheduler from "../components/SmartScheduler";
 
-type TabKey = "profile" | "dashboard" | "settings" | "friends" | "community";
+type TabKey = "profile" | "dashboard" | "settings" | "friends" | "community" | "matches" | "scheduler";
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("new") === "true") {
+      setActiveTab("profile");
+    }
+  }, [searchParams]);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -23,7 +33,17 @@ export default function DashboardPage() {
         {activeTab === "settings" && <div className="h-full overflow-y-auto p-6"><Settings /></div>}
         {activeTab === "friends" && <div className="h-full overflow-y-auto p-6"><Friends /></div>}
         {activeTab === "community" && <Community />}
+        {activeTab === "matches" && <div className="h-full overflow-y-auto p-6"><Matchmaking /></div>}
+        {activeTab === "scheduler" && <div className="h-full overflow-hidden p-6"><SmartScheduler /></div>}
       </main>
     </div>
   );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <DashboardContent />
+        </Suspense>
+    )
 }
