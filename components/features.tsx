@@ -36,9 +36,9 @@ export const Features = () => {
                 Stay motivated with achievements, streaks, and milestones that
                 keep you moving forward.
               </p>
-              <button className="px-4 xs:px-5 sm:px-6 py-2 xs:py-2.5 sm:py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium shadow-md hover:opacity-90 transition text-sm xs:text-base mt-2 xs:mt-3 sm:mt-4">
+              {/* <button className="px-4 xs:px-5 sm:px-6 py-2 xs:py-2.5 sm:py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium shadow-md hover:opacity-90 transition text-sm xs:text-base mt-2 xs:mt-3 sm:mt-4">
                 Placeholder
-              </button>
+              </button> */}
             </div>
 
             {/* Right Image */}
@@ -83,9 +83,9 @@ export const Features = () => {
                 Effortlessly manage past connections and schedule catch-ups
                 anytime.
               </p>
-              <button className="px-4 xs:px-5 sm:px-6 py-2 xs:py-2.5 sm:py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium shadow-md hover:opacity-90 transition text-sm xs:text-base mt-2 xs:mt-3 sm:mt-4">
+              {/* <button className="px-4 xs:px-5 sm:px-6 py-2 xs:py-2.5 sm:py-3 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium shadow-md hover:opacity-90 transition text-sm xs:text-base mt-2 xs:mt-3 sm:mt-4">
                 Placeholder
-              </button>
+              </button> */}
             </div>
           </motion.div>
 
