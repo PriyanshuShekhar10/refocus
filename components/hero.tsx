@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { VideoModal } from "./video-modal";
 import Image from "next/image";
 import { DarkDashboard, DarkModal, DarkScheduler, LightDashboard, LightModal, LightScheduler } from "@/assets/exports";
@@ -27,10 +26,10 @@ export function Hero() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, handleKeyDown]);
 
-  const sendEmail = () => {
-    const email = "hello@refocus.co.in";
-    window.location.href = `mailto:${email}`;
-  };
+  // const sendEmail = () => {
+  //   const email = "hello@refocus.co.in";
+  //   window.location.href = `mailto:${email}`;
+  // };
 
   return (
     <div className="flex flex-col gap-16 items-center">
