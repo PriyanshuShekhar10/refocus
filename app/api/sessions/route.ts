@@ -73,7 +73,6 @@ export async function GET(req: NextRequest) {
 
   type DbUser = {
     _id: ObjectId;
-    email?: string;
     name?: string | null;
     firstname?: string | null;
     lastname?: string | null;
@@ -83,7 +82,6 @@ export async function GET(req: NextRequest) {
     string,
     {
       id: string;
-      email?: string;
       firstname?: string | null;
       lastname?: string | null;
     }
@@ -93,14 +91,13 @@ export async function GET(req: NextRequest) {
     const users = (await db
       .collection<DbUser>("users")
       .find({ _id: { $in: ids.map((i) => new ObjectId(i)) } })
-      .project({ email: 1, name: 1, firstname: 1, lastname: 1 })
+      .project({ name: 1, firstname: 1, lastname: 1 })
       .toArray()) as unknown as DbUser[];
     usersById = Object.fromEntries(
       users.map((u) => [
         String(u._id),
         {
           id: String(u._id),
-          email: u.email,
           firstname:
             u.firstname ?? (u.name ? String(u.name).split(" ")[0] : null),
           lastname: u.lastname ?? null,
@@ -133,7 +130,6 @@ export async function GET(req: NextRequest) {
       participants: (s.session_participants ?? []).map((p) => ({
         user_id: p.user_id,
         joined_at: String(p.joined_at),
-        email: usersById[p.user_id]?.email,
         firstname: usersById[p.user_id]?.firstname ?? undefined,
         lastname: usersById[p.user_id]?.lastname ?? undefined,
         quiet: Boolean(p.quiet),
