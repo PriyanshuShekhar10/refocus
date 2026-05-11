@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
+import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/ratelimit";
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const rateLimitResult = await checkRateLimit(ip, "auth");
+  if (!rateLimitResult.success) {
+    return rateLimitedResponse(rateLimitResult);
+  }
+
   const body = await req.json().catch(() => ({}));
   const { email, password, name, firstName, lastName } = body as {
     email?: string;

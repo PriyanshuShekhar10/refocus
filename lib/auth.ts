@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise, { getDb } from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
+import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 
 export const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
@@ -14,8 +15,22 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null;
+
+        // Rate limit by IP AND Email to prevent credential stuffing or locking out accounts via proxy
+        const ip = getClientIp(req);
+        const email = credentials.email.toLowerCase();
+        
+        const [ipLimit, emailLimit] = await Promise.all([
+          checkRateLimit(ip, "auth"),
+          checkRateLimit(email, "auth")
+        ]);
+
+        if (!ipLimit.success || !emailLimit.success) {
+          throw new Error("Too many authentication attempts. Please try again later.");
+        }
+
         const db = await getDb();
         const user = await db
           .collection<{ _id: unknown; email: string; name?: string; hashedPassword?: string }>(

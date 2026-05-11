@@ -99,6 +99,29 @@ export interface RateLimitResult {
 }
 
 /**
+ * Extract client IP from a request object
+ * Supports standard Request, NextRequest, and plain objects with headers
+ */
+export function getClientIp(req: Request | any): string {
+  let ip: string | null = null;
+  
+  if (req?.headers) {
+    if (typeof req.headers.get === "function") {
+      ip = req.headers.get("x-forwarded-for");
+    } else if (typeof req.headers === "object") {
+      ip = req.headers["x-forwarded-for"];
+    }
+  }
+  
+  if (!ip) {
+    ip = "127.0.0.1";
+  }
+  
+  // x-forwarded-for can be a comma-separated list; grab the first one
+  return ip.split(",")[0].trim();
+}
+
+/**
  * Check rate limit for a given identifier
  *
  * @param identifier - Unique identifier (usually user ID or IP)
