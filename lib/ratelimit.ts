@@ -102,21 +102,31 @@ export interface RateLimitResult {
  * Extract client IP from a request object
  * Supports standard Request, NextRequest, and plain objects with headers
  */
-export function getClientIp(req: Request | any): string {
+export function getClientIp(
+  req:
+    | Request
+    | {
+        headers?:
+          | Record<string, string | string[] | undefined>
+          | { get?: (key: string) => string | null };
+      },
+): string {
   let ip: string | null = null;
-  
+
   if (req?.headers) {
-    if (typeof req.headers.get === "function") {
+    if ("get" in req.headers && typeof req.headers.get === "function") {
       ip = req.headers.get("x-forwarded-for");
     } else if (typeof req.headers === "object") {
-      ip = req.headers["x-forwarded-for"];
+      const record = req.headers as Record<string, string | string[] | undefined>;
+      const val = record["x-forwarded-for"];
+      ip = Array.isArray(val) ? (val[0] ?? null) : (val ?? null);
     }
   }
-  
+
   if (!ip) {
     ip = "127.0.0.1";
   }
-  
+
   // x-forwarded-for can be a comma-separated list; grab the first one
   return ip.split(",")[0].trim();
 }
