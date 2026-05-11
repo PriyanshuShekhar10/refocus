@@ -4,10 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { chatChannel, publish, userChannel } from "@/lib/sse";
-import {
-  checkRateLimit,
-  rateLimitedResponse,
-} from "@/lib/ratelimit";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { areFriends } from "@/lib/friendship";
 
 type MessageDoc = {
   _id: ObjectId;
@@ -41,6 +39,11 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { friendId } = await params;
+
+  if (!(await areFriends(currentUserId, friendId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const db = await getDb();
   const messages = (await db
     .collection<MessageDoc>("messages")
@@ -89,6 +92,11 @@ export async function POST(
   }
 
   const { friendId } = await params;
+
+  if (!(await areFriends(currentUserId, friendId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const db = await getDb();
 
   const body = await req.json().catch(() => ({}));

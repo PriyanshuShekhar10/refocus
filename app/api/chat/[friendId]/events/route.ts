@@ -2,10 +2,11 @@ import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { chatChannel, subscribe } from "@/lib/sse";
+import { areFriends } from "@/lib/friendship";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ friendId: string }> }
+  { params }: { params: Promise<{ friendId: string }> },
 ) {
   const session = await getServerSession(authOptions);
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
@@ -13,6 +14,11 @@ export async function GET(
     return new Response("Unauthorized", { status: 401 });
   }
   const { friendId } = await params;
+
+  if (!(await areFriends(currentUserId, friendId))) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
   const channel = chatChannel(currentUserId, friendId);
 
   let pingInterval: ReturnType<typeof setInterval> | null = null;
@@ -23,7 +29,9 @@ export async function GET(
       const encoder = new TextEncoder();
       const send = (data: unknown) => {
         try {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(data)}\n\n`),
+          );
         } catch {
           if (pingInterval) clearInterval(pingInterval);
           if (unsub) unsub();
@@ -32,7 +40,10 @@ export async function GET(
 
       send({ type: "hello" });
       unsub = subscribe(channel, (event) => send(event));
-      pingInterval = setInterval(() => send({ type: "ping", t: Date.now() }), 25000);
+      pingInterval = setInterval(
+        () => send({ type: "ping", t: Date.now() }),
+        25000,
+      );
     },
     cancel() {
       if (pingInterval) clearInterval(pingInterval);
@@ -49,5 +60,3 @@ export async function GET(
     },
   });
 }
-
-

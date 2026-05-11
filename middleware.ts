@@ -15,5 +15,6 @@ export const config = {
     "/api/sessions/:path*",
     "/api/users/:path*",
     "/api/global-chat/:path*",
+    "/api/chat/:path*",
   ],
 };

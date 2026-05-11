@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { userChannel, publish } from "@/lib/sse";
+import { areFriends } from "@/lib/friendship";
 
 // POST /api/chat/:friendId/read
 export async function POST(
@@ -14,6 +15,11 @@ export async function POST(
   if (!currentUserId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { friendId } = await params;
+
+  if (!(await areFriends(currentUserId, friendId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const db = await getDb();
   const now = new Date();
   await db
@@ -24,13 +30,11 @@ export async function POST(
     );
 
   // publish to current user channel with updated count for that friend
-  const unread = await db
-    .collection("messages")
-    .countDocuments({
-      from_user_id: friendId,
-      to_user_id: currentUserId,
-      read_at: null,
-    });
+  const unread = await db.collection("messages").countDocuments({
+    from_user_id: friendId,
+    to_user_id: currentUserId,
+    read_at: null,
+  });
 
   // Publish event (async for Redis support)
   await publish(userChannel(currentUserId), {
