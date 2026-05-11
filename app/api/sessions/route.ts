@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
   if (!from || !to) {
     return NextResponse.json(
       { error: "Missing from/to query params (ISO datetime)" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
   (sessions ?? []).forEach((s) => {
     if (s.owner_id) userIdSet.add(String(s.owner_id));
     (s.session_participants ?? []).forEach((p) =>
-      userIdSet.add(String(p.user_id))
+      userIdSet.add(String(p.user_id)),
     );
   });
 
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
             u.firstname ?? (u.name ? String(u.name).split(" ")[0] : null),
           lastname: u.lastname ?? null,
         },
-      ])
+      ]),
     );
   }
 
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
   if (!start || !durationMin || !sessionType) {
     return NextResponse.json(
       { error: "Missing start, durationMin, or sessionType" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   const s = new Date(start);
@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
   if (s.getTime() <= now.getTime()) {
     return NextResponse.json(
       { error: "Cannot book a session in the past or for current time" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   const e = new Date(s.getTime() + durationMin * 60_000);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
+import { areFriends } from "@/lib/friendship";
 
 // GET /api/sessions/busy?from=ISO&to=ISO&friendId=xxx
 // Returns busy time slots for current user and optionally a friend
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
-  const friendId = searchParams.get("friendId");
+  let friendId = searchParams.get("friendId");
 
   if (!from || !to) {
     return NextResponse.json(
@@ -27,6 +28,20 @@ export async function GET(req: NextRequest) {
   const db = await getDb();
   const fromDate = new Date(from);
   const toDate = new Date(to);
+
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    return NextResponse.json(
+      { error: "Invalid from/to query params" },
+      { status: 400 },
+    );
+  }
+
+  if (friendId && friendId !== userId) {
+    if (!(await areFriends(userId, friendId))) {
+      // Silently drop friendId to prevent calendar enumeration
+      friendId = null;
+    }
+  }
 
   // Get sessions where either the current user or the friend is a participant
   const userIds = [userId];
