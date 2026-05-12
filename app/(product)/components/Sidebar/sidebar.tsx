@@ -2,7 +2,7 @@
 "use client";
 
 import { FC, ReactNode, useEffect, useState } from "react";
-import { BsGearFill, BsStars, BsChatSquareTextFill } from "react-icons/bs";
+import { BsGearFill, BsChatSquareTextFill } from "react-icons/bs";
 import { MdDashboard } from "react-icons/md";
 import { FaUserFriends } from "react-icons/fa";
 import { HiSun, HiMoon } from "react-icons/hi";

@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, ImageIcon, MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare } from "lucide-react";
 import PostCard, { Post, Comment } from "./PostCard";
 import CommunityChat from "./CommunityChat";
 
