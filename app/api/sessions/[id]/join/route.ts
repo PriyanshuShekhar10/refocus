@@ -32,43 +32,38 @@ export async function POST(
     }>;
   };
   const col = db.collection<SessionDoc>("sessions");
-  const s = await col.findOne({ _id: new ObjectId(sessionId) });
-  if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Cannot join more than 2 participants
-  const count = s.session_participants?.length ?? 0;
-  if (count >= 2) {
-    return NextResponse.json(
-      { error: "Session already has 2 participants" },
-      { status: 409 }
-    );
-  }
-  // Do not duplicate
-  if (
-    s.session_participants?.some(
-      (p: { user_id: string }) => p.user_id === userId
-    )
-  ) {
-    return NextResponse.json({ ok: true });
-  }
-  // Add participant and set status
-  await col.updateOne(
-    { _id: new ObjectId(sessionId) },
+  // Atomic check-and-update: only join if < 2 participants and user not already in
+  const result = await col.findOneAndUpdate(
+    {
+      _id: new ObjectId(sessionId),
+      $and: [
+        { $or: [{ session_participants: { $exists: false } }, { "session_participants.1": { $exists: false } }] },
+        { "session_participants.user_id": { $ne: userId } },
+      ],
+    },
     {
       $push: {
         session_participants: {
-          $each: [
-            {
-              user_id: userId,
-              joined_at: new Date(),
-              quiet,
-            },
-          ],
+          user_id: userId,
+          joined_at: new Date(),
+          quiet,
         },
-      },
+      } as never,
       $set: { status: "booked", updated_at: new Date() },
-    }
+    },
+    { returnDocument: "after" }
   );
+
+  if (!result) {
+    // Distinguish: not found vs already joined vs full
+    const s = await col.findOne({ _id: new ObjectId(sessionId) });
+    if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (s.session_participants?.some((p: { user_id: string }) => p.user_id === userId)) {
+      return NextResponse.json({ ok: true });
+    }
+    return NextResponse.json({ error: "Session already has 2 participants" }, { status: 409 });
+  }
 
   await publish(sessionsChannel(), { type: "sessions_updated" });
   return NextResponse.json({ ok: true });

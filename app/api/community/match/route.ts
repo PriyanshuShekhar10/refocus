@@ -2,10 +2,8 @@ import {NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
-import { embed } from "ai";
-import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
 import { ObjectId } from "mongodb";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -14,6 +12,10 @@ export async function GET() {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // Rate limit AI / vector-search calls
+  const rl = await checkRateLimit(userId, "ai");
+  if (!rl.success) return rateLimitedResponse(rl);
 
   const db = await getDb();
   
@@ -25,43 +27,15 @@ export async function GET() {
 
   let userEmbedding = currentUser.embedding;
 
-  const hasGeminiKey = !!(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY);
-  const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
-
-  if (!userEmbedding && (hasGeminiKey || hasOpenAIKey)) {
-      console.log("Generating missing embedding for user...");
-      const finalFirst = currentUser.firstname ?? "";
-      const finalLast = currentUser.lastname ?? "";
-      const finalAbout = currentUser.about ?? "";
-      const finalInterests = currentUser.interests ?? [];
-      const textToEmbed = `Name: ${finalFirst} ${finalLast}. About: ${finalAbout}. Interests: ${finalInterests.join(", ")}.`;
-
-      // Set Gemini key explicitly if needed
-      if (process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-        process.env.GOOGLE_GENERATIVE_AI_API_KEY = process.env.GEMINI_API_KEY;
-      }
-
-      try {
-          const embeddingModel = hasGeminiKey
-            ? google.textEmbeddingModel("text-embedding-004")
-            : openai.embedding("text-embedding-3-small");
-          const { embedding } = await embed({
-            model: embeddingModel,
-            value: textToEmbed,
-          });
-          userEmbedding = embedding;
-          await db.collection("users").updateOne(
-              { _id: new ObjectId(userId) },
-              { $set: { embedding: userEmbedding } }
-          );
-      } catch (e) {
-          console.error("Failed to generate embedding on query", e);
-          return NextResponse.json({ matches: [], error: "Failed to generate embedding" });
-      }
-  }
-
+  // If no embedding yet, tell the user to complete their profile.
+  // Embeddings are generated automatically when the profile is saved
+  // (via PATCH /api/users/me), so we avoid the latency and external-API
+  // call of generating one synchronously during the match request.
   if (!userEmbedding) {
-      return NextResponse.json({ matches: [], warning: "No embedding available" });
+      return NextResponse.json({
+        matches: [],
+        warning: "Please complete your profile (name, about, interests) so we can find matches for you.",
+      });
   }
 
   try {

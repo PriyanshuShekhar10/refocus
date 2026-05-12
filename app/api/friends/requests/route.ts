@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 
 type FriendRequestDoc = {
   _id: ObjectId;
@@ -24,6 +25,10 @@ export async function POST(req: NextRequest) {
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   if (!currentUserId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Rate limit friend request creation
+  const rl = await checkRateLimit(currentUserId, "api");
+  if (!rl.success) return rateLimitedResponse(rl);
 
   const body = await req.json().catch(() => ({}));
   const { to_user_id } = body as { to_user_id?: string };

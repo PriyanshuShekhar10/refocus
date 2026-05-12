@@ -99,6 +99,21 @@ export async function POST(
 
   const db = await getDb();
 
+  // Verify the users are actually friends before allowing messages
+  const friendship = await db.collection("friend_requests").findOne({
+    status: "accepted",
+    $or: [
+      { from_user_id: currentUserId, to_user_id: friendId },
+      { from_user_id: friendId, to_user_id: currentUserId },
+    ],
+  });
+  if (!friendship) {
+    return NextResponse.json(
+      { error: "You can only message friends" },
+      { status: 403 }
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
   const { type } = body as { type?: "text" | "session-request" };
   if (!type) {
@@ -120,11 +135,22 @@ export async function POST(
     });
 
     // Publish events (async for Redis support)
+    // Include the full message in the payload so clients can append
+    // directly instead of re-fetching the entire conversation.
     const channel = chatChannel(currentUserId, friendId);
+    const newMsg = {
+      id: String(insert.insertedId),
+      from_user_id: currentUserId,
+      to_user_id: friendId,
+      type: "text" as const,
+      content,
+      payload: null,
+      created_at: new Date().toISOString(),
+    };
     await Promise.all([
       publish(channel, {
         type: "message:new",
-        payload: { id: String(insert.insertedId) },
+        payload: newMsg,
       }),
       publish(userChannel(friendId), {
         type: "unread:inc",
@@ -186,14 +212,32 @@ export async function POST(
     });
 
     // Publish events (async for Redis support)
+    // Include the full message so clients can append directly.
     const channel = chatChannel(currentUserId, friendId);
+    const srMsg = {
+      id: String(insert.insertedId),
+      from_user_id: currentUserId,
+      to_user_id: friendId,
+      type: "session-request" as const,
+      content: null,
+      payload: {
+        sessionRequestId: String(sr.insertedId),
+        start: s.toISOString(),
+        durationMin,
+        message: message ?? null,
+        goal: goal ?? null,
+        status: "pending" as const,
+        from_user_id: currentUserId,
+        to_user_id: friendId,
+        responseMessage: null,
+        sessionId: null,
+      },
+      created_at: new Date().toISOString(),
+    };
     await Promise.all([
       publish(channel, {
         type: "session-request:new",
-        payload: {
-          messageId: String(insert.insertedId),
-          sessionRequestId: String(sr.insertedId),
-        },
+        payload: srMsg,
       }),
       publish(userChannel(friendId), {
         type: "unread:inc",

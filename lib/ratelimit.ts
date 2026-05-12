@@ -48,7 +48,8 @@ export type RateLimitType =
   | "api" // General API calls
   | "chat" // Chat messages (more lenient)
   | "auth" // Authentication attempts (strict)
-  | "search"; // Search operations
+  | "search" // Search operations
+  | "ai"; // AI / LLM calls (strict — external API cost)
 
 interface RateLimitConfig {
   requests: number; // Number of requests allowed
@@ -60,6 +61,7 @@ const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
   chat: { requests: 30, window: "1 m" }, // 30 messages per minute
   auth: { requests: 5, window: "1 m" }, // 5 auth attempts per minute
   search: { requests: 20, window: "1 m" }, // 20 searches per minute
+  ai: { requests: 10, window: "1 m" }, // 10 AI calls per minute (external API cost)
 };
 
 // Cache for rate limiters

@@ -7,6 +7,7 @@ import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 
 const ProposedSessionSchema = z.object({
   sessions: z.array(
@@ -57,6 +58,10 @@ export async function POST(req: NextRequest) {
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Rate limit AI calls
+  const rl = await checkRateLimit(userId, "ai");
+  if (!rl.success) return rateLimitedResponse(rl);
 
   const body = await req.json().catch(() => ({}));
   const { message } = body as { message?: string };

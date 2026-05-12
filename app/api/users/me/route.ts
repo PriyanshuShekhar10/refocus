@@ -4,8 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { embed } from "ai";
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -19,6 +20,7 @@ export async function GET() {
     {
       projection: {
         email: 1,
+        username: 1,
         name: 1,
         firstname: 1,
         lastname: 1,
@@ -30,6 +32,7 @@ export async function GET() {
     }
   )) as null | {
     email?: string;
+    username?: string | null;
     name?: string | null;
     firstname?: string | null;
     lastname?: string | null;
@@ -43,6 +46,7 @@ export async function GET() {
     user: user
       ? {
           email: user.email,
+          username: user.username ?? null,
           name: user.name ?? null,
           firstname: user.firstname ?? null,
           lastname: user.lastname ?? null,
@@ -61,8 +65,13 @@ export async function PATCH(req: NextRequest) {
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // Rate limit profile updates
+  const rl = await checkRateLimit(userId, "api");
+  if (!rl.success) return rateLimitedResponse(rl);
+
   const body = await req.json().catch(() => ({}));
-  const { firstname, lastname, about, interests, location, website } = body as {
+  const { username, firstname, lastname, about, interests, location, website } = body as {
+    username?: string;
     firstname?: string;
     lastname?: string;
     about?: string;
@@ -73,11 +82,31 @@ export async function PATCH(req: NextRequest) {
 
   const db = await getDb();
 
+  // Validate and update username if provided
+  if (username !== undefined) {
+    const trimmed = username.trim().toLowerCase();
+    if (!/^[a-z0-9_-]{3,20}$/.test(trimmed)) {
+      return NextResponse.json(
+        { error: "Username must be 3-20 characters and contain only letters, numbers, hyphens, or underscores" },
+        { status: 400 }
+      );
+    }
+    // Check availability (excluding current user)
+    const existing = await db.collection("users").findOne(
+      { username: trimmed, _id: { $ne: new ObjectId(userId) } },
+      { projection: { _id: 1 } }
+    );
+    if (existing) {
+      return NextResponse.json({ error: "Username is already taken" }, { status: 409 });
+    }
+  }
+
   // Build update object with only provided fields
   const updateFields: Record<string, unknown> = {
     updatedAt: new Date(),
   };
 
+  if (username !== undefined) updateFields.username = username.trim().toLowerCase();
   if (firstname !== undefined) updateFields.firstname = firstname;
   if (lastname !== undefined) updateFields.lastname = lastname;
   if (about !== undefined) updateFields.about = about;
@@ -115,12 +144,8 @@ export async function PATCH(req: NextRequest) {
         const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
 
         if (hasGeminiKey || hasOpenAIKey) {
-            if (process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-                process.env.GOOGLE_GENERATIVE_AI_API_KEY = process.env.GEMINI_API_KEY;
-            }
-
             const embeddingModel = hasGeminiKey
-                ? google.textEmbeddingModel("text-embedding-004")
+                ? createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY! }).textEmbeddingModel("text-embedding-004")
                 : openai.embedding("text-embedding-3-small");
             const { embedding } = await embed({
                 model: embeddingModel,

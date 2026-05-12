@@ -16,5 +16,6 @@ export const config = {
     "/api/users/:path*",
     "/api/global-chat/:path*",
     "/api/chat/:path*",
+    "/api/events",
   ],
 };

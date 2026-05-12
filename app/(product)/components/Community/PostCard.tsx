@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ export type Post = {
   createdAt: string;
   authorId: string;
   authorName: string;
+  authorUsername?: string | null;
   authorInitials: string;
   likesCount: number;
   commentsCount: number;
@@ -24,6 +26,7 @@ export type Comment = {
   createdAt: string;
   authorId: string;
   authorName: string;
+  authorUsername?: string | null;
   authorInitials: string;
 };
 
@@ -120,15 +123,31 @@ export default function PostCard({
     <div className="border-b border-border py-4 last:border-b-0">
       {/* Post Header */}
       <div className="flex items-start gap-3">
-        <Avatar className="h-10 w-10">
-          <AvatarFallback className="text-sm bg-muted">
-            {post.authorInitials}
-          </AvatarFallback>
-        </Avatar>
+        {post.authorUsername ? (
+          <Link href={`/u/${post.authorUsername}`}>
+            <Avatar className="h-10 w-10 hover:ring-2 hover:ring-green-500 transition-shadow cursor-pointer">
+              <AvatarFallback className="text-sm bg-muted">
+                {post.authorInitials}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+        ) : (
+          <Avatar className="h-10 w-10">
+            <AvatarFallback className="text-sm bg-muted">
+              {post.authorInitials}
+            </AvatarFallback>
+          </Avatar>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-sm">{post.authorName}</span>
+              {post.authorUsername ? (
+                <Link href={`/u/${post.authorUsername}`} className="font-medium text-sm hover:text-green-600 dark:hover:text-green-400 hover:underline transition-colors">
+                  {post.authorName}
+                </Link>
+              ) : (
+                <span className="font-medium text-sm">{post.authorName}</span>
+              )}
               <span className="text-xs text-muted-foreground">
                 {formatTime(post.createdAt)}
               </span>
@@ -190,16 +209,32 @@ export default function PostCard({
                 <div className="space-y-3">
                   {comments.map((comment) => (
                     <div key={comment.id} className="flex gap-2">
-                      <Avatar className="h-7 w-7">
-                        <AvatarFallback className="text-xs bg-muted">
-                          {comment.authorInitials}
-                        </AvatarFallback>
-                      </Avatar>
+                      {comment.authorUsername ? (
+                        <Link href={`/u/${comment.authorUsername}`}>
+                          <Avatar className="h-7 w-7 hover:ring-2 hover:ring-green-500 transition-shadow cursor-pointer">
+                            <AvatarFallback className="text-xs bg-muted">
+                              {comment.authorInitials}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Link>
+                      ) : (
+                        <Avatar className="h-7 w-7">
+                          <AvatarFallback className="text-xs bg-muted">
+                            {comment.authorInitials}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium">
-                            {comment.authorName}
-                          </span>
+                          {comment.authorUsername ? (
+                            <Link href={`/u/${comment.authorUsername}`} className="text-xs font-medium hover:text-green-600 dark:hover:text-green-400 hover:underline transition-colors">
+                              {comment.authorName}
+                            </Link>
+                          ) : (
+                            <span className="text-xs font-medium">
+                              {comment.authorName}
+                            </span>
+                          )}
                           <span className="text-[10px] text-muted-foreground">
                             {formatTime(comment.createdAt)}
                           </span>

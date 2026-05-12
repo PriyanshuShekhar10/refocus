@@ -93,6 +93,7 @@ export async function GET(req: NextRequest) {
           "author.firstname": 1,
           "author.lastname": 1,
           "author.email": 1,
+          "author.username": 1,
           likesCount: { $ifNull: [{ $arrayElemAt: ["$likesCount.count", 0] }, 0] },
           commentsCount: { $ifNull: [{ $arrayElemAt: ["$commentsCount.count", 0] }, 0] },
           isLiked: { $gt: [{ $size: "$userLike" }, 0] },
@@ -116,6 +117,7 @@ export async function GET(req: NextRequest) {
         p.author?.name ||
         p.author?.email ||
         "User",
+      authorUsername: p.author?.username || null,
       authorInitials: `${(p.author?.firstname?.[0] || p.author?.name?.[0] || p.author?.email?.[0] || "U").toUpperCase()}${(p.author?.lastname?.[0] || "").toUpperCase()}`,
       likesCount: p.likesCount,
       commentsCount: p.commentsCount,
@@ -175,7 +177,7 @@ export async function POST(req: NextRequest) {
     .collection("users")
     .findOne(
       { _id: new ObjectId(userId) },
-      { projection: { name: 1, firstname: 1, lastname: 1, email: 1 } }
+      { projection: { name: 1, firstname: 1, lastname: 1, email: 1, username: 1 } }
     );
 
   return NextResponse.json({
@@ -189,6 +191,7 @@ export async function POST(req: NextRequest) {
         author?.name ||
         author?.email ||
         "User",
+      authorUsername: author?.username || null,
       authorInitials: `${(author?.firstname?.[0] || author?.name?.[0] || author?.email?.[0] || "U").toUpperCase()}${(author?.lastname?.[0] || "").toUpperCase()}`,
       likesCount: 0,
       commentsCount: 0,

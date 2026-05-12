@@ -49,6 +49,19 @@ export default async function SessionJoinPage({
   const isParticipant = participants.some((p) => p.user_id === currentUserId);
   if (isBooked && !(isOwner || isParticipant)) return notFound();
 
+  // Look up the session partner's profile
+  type PartnerInfo = { name?: string; firstname?: string; lastname?: string; username?: string };
+  const partnerId = participants.find((p) => p.user_id !== currentUserId)?.user_id;
+  const partner: PartnerInfo | null = partnerId
+    ? (await db.collection("users").findOne(
+        { _id: new ObjectId(partnerId) },
+        { projection: { name: 1, firstname: 1, lastname: 1, username: 1 } }
+      ) as PartnerInfo | null)
+    : null;
+  const partnerName = partner
+    ? [partner.firstname, partner.lastname].filter(Boolean).join(" ") || partner.name || "Partner"
+    : null;
+
   // Check if session is joinable (within 1 hour of start or in progress)
   const now = new Date();
   const startTime = new Date(s.start_time);
@@ -81,6 +94,29 @@ export default async function SessionJoinPage({
           })}
         </div>
       </div>
+
+      {/* Session Partner */}
+      {partnerName && (
+        <div className="mt-4 flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-600 text-sm font-medium text-white">
+            {partnerName.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+              {partnerName}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Session partner</p>
+          </div>
+          {partner?.username && (
+            <Link
+              href={`/u/${partner.username}`}
+              className="rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              View Profile
+            </Link>
+          )}
+        </div>
+      )}
 
       {hasEnded ? (
         <div className="mt-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-6 text-center">

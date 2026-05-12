@@ -139,6 +139,12 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
         keys: { email: 1 },
         options: { unique: true },
       },
+      {
+        // Unique username index for public profiles
+        name: "users_username_unique",
+        keys: { username: 1 },
+        options: { unique: true, sparse: true },
+      },
     ],
   },
   {

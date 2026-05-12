@@ -111,12 +111,12 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
         onClick={() => onSelect("community")}
         active={activeTab === "community"}
       />
-      <SideBarIcon
+      {/* <SideBarIcon
         icon={<BsStars size={18} />}
         text="AI Match"
         onClick={() => onSelect("matches")}
         active={activeTab === "matches"}
-      />
+      /> */}
       <SideBarIcon
         icon={<BsChatSquareTextFill size={18} />}
         text="AI Schedule"

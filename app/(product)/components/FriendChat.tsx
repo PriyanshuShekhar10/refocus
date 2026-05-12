@@ -227,7 +227,9 @@ export default function FriendChat({
 
   useEffect(() => {
     load();
-    // Setup SSE subscription for realtime updates
+    // Setup SSE subscription for realtime updates.
+    // Append incoming messages directly from the SSE payload instead of
+    // re-fetching the entire conversation on every event.
     let es: EventSource | null = null;
     try {
       es = new EventSource(`/api/chat/${friendId}/events`);
@@ -235,7 +237,40 @@ export default function FriendChat({
         try {
           const data = JSON.parse(ev.data || "{}");
           if (data?.type === "hello" || data?.type === "ping") return;
-          // For any event, refresh messages for simplicity
+
+          if (
+            (data?.type === "message:new" ||
+              data?.type === "session-request:new") &&
+            data?.payload
+          ) {
+            const incoming = data.payload as ChatMessage;
+            if (incoming.id) {
+              setMessages((prev) => {
+                // Already have this message (by real ID)
+                if (prev.some((m) => m.id === incoming.id)) return prev;
+                // Replace optimistic message from same sender with same content
+                const optIdx = prev.findIndex(
+                  (m) =>
+                    m.id.startsWith("temp-") &&
+                    m.from_user_id === incoming.from_user_id &&
+                    m.content === incoming.content,
+                );
+                if (optIdx !== -1) {
+                  const updated = [...prev];
+                  updated[optIdx] = incoming;
+                  return updated;
+                }
+                return [...prev, incoming];
+              });
+              // Mark as read (best-effort)
+              try {
+                fetch(`/api/chat/${friendId}/read`, { method: "POST" });
+              } catch {}
+              return;
+            }
+          }
+
+          // Fallback: re-fetch for unrecognised event types
           load();
         } catch {}
       };

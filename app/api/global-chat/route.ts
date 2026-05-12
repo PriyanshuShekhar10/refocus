@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 import { globalChatChannel } from "@/lib/sse";
 import { publish } from "@/lib/sse";
 import {
@@ -21,6 +22,7 @@ type GlobalMessageDoc = {
   _id: unknown;
   user_id: string;
   user_name?: string | null;
+  username?: string | null;
   content: string;
   created_at: Date;
   deleted?: boolean;
@@ -130,6 +132,7 @@ export async function GET(req: NextRequest) {
       id: String(m._id as string),
       user_id: m.user_id,
       user_name: m.user_name ?? null,
+      username: m.username ?? null,
       content: m.content,
       created_at: m.created_at.toISOString(),
       deleted: m.deleted ?? false,
@@ -166,9 +169,17 @@ export async function POST(req: NextRequest) {
   const createdAt = new Date();
   const trimmedContent = content.trim();
 
+  // Look up the sender's username for profile linking
+  const userDoc = await db.collection("users").findOne(
+    { _id: new ObjectId(currentUserId) },
+    { projection: { username: 1 } }
+  );
+  const username = userDoc?.username ?? null;
+
   const insert = await db.collection("global_messages").insertOne({
     user_id: currentUserId,
     user_name: currentUser?.name ?? null,
+    username,
     content: trimmedContent,
     created_at: createdAt,
   });
@@ -180,6 +191,7 @@ export async function POST(req: NextRequest) {
       id: String(insert.insertedId),
       user_id: currentUserId,
       user_name: currentUser?.name ?? null,
+      username,
       content: trimmedContent,
       created_at: createdAt.toISOString(),
       deleted: false,

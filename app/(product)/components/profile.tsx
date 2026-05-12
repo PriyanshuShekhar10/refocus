@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Check, X, Plus } from "lucide-react";
+import { Pencil, Check, X, Plus, Copy } from "lucide-react";
+import Link from "next/link";
 
 type UserInfo = {
   email?: string;
+  username?: string | null;
   firstname?: string | null;
   lastname?: string | null;
   name?: string | null;
@@ -20,6 +22,7 @@ type UserInfo = {
 };
 
 type EditableFields = {
+  username: string;
   firstname: string;
   lastname: string;
   about: string;
@@ -34,7 +37,9 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newInterest, setNewInterest] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [editFields, setEditFields] = useState<EditableFields>({
+    username: "",
     firstname: "",
     lastname: "",
     about: "",
@@ -51,6 +56,7 @@ export default function Profile() {
       setUser(data?.user || null);
       if (data?.user) {
         setEditFields({
+          username: data.user.username || "",
           firstname: data.user.firstname || "",
           lastname: data.user.lastname || "",
           about: data.user.about || "",
@@ -69,6 +75,7 @@ export default function Profile() {
   }, [loadUser]);
 
   const handleSave = async () => {
+    if (usernameStatus === "taken" || usernameStatus === "checking") return;
     setSaving(true);
     try {
       const res = await fetch("/api/users/me", {
@@ -77,6 +84,7 @@ export default function Profile() {
         body: JSON.stringify(editFields),
       });
       if (res.ok) {
+        setUsernameStatus("idle");
         await loadUser();
         setIsEditing(false);
       }
@@ -88,6 +96,7 @@ export default function Profile() {
   const handleCancel = () => {
     if (user) {
       setEditFields({
+        username: user.username || "",
         firstname: user.firstname || "",
         lastname: user.lastname || "",
         about: user.about || "",
@@ -96,8 +105,34 @@ export default function Profile() {
         website: user.website || "",
       });
     }
+    setUsernameStatus("idle");
     setIsEditing(false);
   };
+
+  // Debounced username availability check
+  useEffect(() => {
+    if (!isEditing) return;
+    const trimmed = editFields.username.trim().toLowerCase();
+    if (!trimmed || trimmed === (user?.username || "")) {
+      setUsernameStatus("idle");
+      return;
+    }
+    if (!/^[a-z0-9_-]{3,20}$/.test(trimmed)) {
+      setUsernameStatus("taken");
+      return;
+    }
+    setUsernameStatus("checking");
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/users/username?q=${encodeURIComponent(trimmed)}`);
+        const data = await res.json();
+        setUsernameStatus(data.available ? "available" : "taken");
+      } catch {
+        setUsernameStatus("idle");
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [editFields.username, isEditing, user?.username]);
 
   const addInterest = () => {
     const trimmed = newInterest.trim();
@@ -158,9 +193,28 @@ export default function Profile() {
               {initials}
             </AvatarFallback>
           </Avatar>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-xl font-semibold">{displayName}</h1>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
+            {user?.username && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <Link
+                  href={`/u/${user.username}`}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  @{user.username}
+                </Link>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/u/${user.username}`);
+                  }}
+                  className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  title="Copy profile link"
+                >
+                  <Copy className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
           </div>
         </div>
         {!isEditing ? (
@@ -207,6 +261,40 @@ export default function Profile() {
         </h2>
         {isEditing ? (
           <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="username" className="text-xs">
+                Username
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                <Input
+                  id="username"
+                  value={editFields.username}
+                  onChange={(e) =>
+                    setEditFields((prev) => ({
+                      ...prev,
+                      username: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""),
+                    }))
+                  }
+                  placeholder="username"
+                  className="h-9 pl-7"
+                  maxLength={20}
+                />
+              </div>
+              {usernameStatus === "checking" && (
+                <p className="text-xs text-muted-foreground">Checking availability...</p>
+              )}
+              {usernameStatus === "available" && (
+                <p className="text-xs text-green-600">Username is available</p>
+              )}
+              {usernameStatus === "taken" && (
+                <p className="text-xs text-red-500">
+                  {editFields.username.length < 3
+                    ? "Username must be at least 3 characters"
+                    : "Username is already taken"}
+                </p>
+              )}
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="firstname" className="text-xs">
                 First Name

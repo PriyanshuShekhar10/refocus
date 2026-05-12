@@ -44,10 +44,11 @@ export function ChatDock() {
     })();
     let es: EventSource | null = null;
     try {
-      es = new EventSource("/api/chat/events");
+      es = new EventSource("/api/events");
       es.onmessage = (ev) => {
         try {
           const d = JSON.parse(ev.data || "{}");
+          if (d?.channel !== "user") return;
           if (d?.type === "unread:update") {
             setUnreadCounts((prev) => ({
               ...prev,

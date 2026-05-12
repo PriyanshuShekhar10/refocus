@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Loader2, Send } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -8,6 +9,7 @@ type GlobalMessage = {
   id: string;
   user_id: string;
   user_name?: string | null;
+  username?: string | null;
   content: string;
   created_at: string;
   deleted?: boolean;
@@ -40,10 +42,11 @@ export default function CommunityChat() {
     let es: EventSource | null = null;
 
     try {
-      es = new EventSource("/api/global-chat/events");
+      es = new EventSource("/api/events");
       es.onmessage = (ev) => {
         try {
           const data = JSON.parse(ev.data || "{}");
+          if (data?.channel !== "global") return;
           if (data?.type === "hello" || data?.type === "ping") return;
 
           if (data?.type === "message:new" && data?.payload) {
@@ -143,9 +146,33 @@ export default function CommunityChat() {
     }
   };
 
+  const isValidDate = (d: Date) => !isNaN(d.getTime());
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
+    if (!isValidDate(date)) return "";
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatDateLabel = (dateString: string) => {
+    const date = new Date(dateString);
+    if (!isValidDate(date)) return "";
+    try {
+      return date.toLocaleDateString([], {
+        month: "long",
+        day: "numeric",
+        year: date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+      });
+    } catch {
+      return date.toDateString();
+    }
+  };
+
+  const sameDay = (a: string, b: string) => {
+    const da = new Date(a);
+    const db = new Date(b);
+    if (!isValidDate(da) || !isValidDate(db)) return true;
+    return da.toDateString() === db.toDateString();
   };
 
   const displayName = (m: GlobalMessage) => {
@@ -173,32 +200,56 @@ export default function CommunityChat() {
           </div>
         ) : (
           <>
-            {messages.map((m) => {
+            {messages.map((m, idx) => {
               const isOwn = m.user_id === currentUserId;
               const name = displayName(m);
               const initial = name.charAt(0).toUpperCase();
+              const showDate =
+                idx === 0 || !sameDay(messages[idx - 1].created_at, m.created_at);
 
               return (
+                <Fragment key={m.id}>
+                  {showDate && (
+                    <div className="flex items-center justify-center py-1.5">
+                      <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                        {formatDateLabel(m.created_at)}
+                      </span>
+                    </div>
+                  )}
                 <div
-                  key={m.id}
                   className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""}`}
                 >
-                  <div
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium ${
-                      isOwn
-                        ? "bg-green-600 text-white"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {initial}
-                  </div>
+                  {!isOwn && m.username ? (
+                    <Link
+                      href={`/u/${m.username}`}
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium bg-muted text-muted-foreground hover:ring-2 hover:ring-green-500 transition-shadow`}
+                    >
+                      {initial}
+                    </Link>
+                  ) : (
+                    <div
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium ${
+                        isOwn
+                          ? "bg-green-600 text-white"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {initial}
+                    </div>
+                  )}
                   <div
                     className={`max-w-[80%] ${isOwn ? "text-right" : "text-left"}`}
                   >
                     <div className="flex items-baseline gap-1.5 mb-0.5">
-                      <span className="text-[10px] font-medium text-muted-foreground">
-                        {isOwn ? "You" : name}
-                      </span>
+                      {!isOwn && m.username ? (
+                        <Link href={`/u/${m.username}`} className="text-[10px] font-medium text-muted-foreground hover:text-green-600 dark:hover:text-green-400 hover:underline">
+                          {name}
+                        </Link>
+                      ) : (
+                        <span className="text-[10px] font-medium text-muted-foreground">
+                          {isOwn ? "You" : name}
+                        </span>
+                      )}
                       <span className="text-[9px] text-muted-foreground/70">
                         {formatTime(m.created_at)}
                       </span>
@@ -216,6 +267,7 @@ export default function CommunityChat() {
                     </div>
                   </div>
                 </div>
+                </Fragment>
               );
             })}
             <div ref={bottomRef} />

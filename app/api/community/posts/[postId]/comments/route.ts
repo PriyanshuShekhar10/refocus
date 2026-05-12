@@ -51,6 +51,7 @@ export async function GET(
           "author.firstname": 1,
           "author.lastname": 1,
           "author.email": 1,
+          "author.username": 1,
         },
       },
     ])
@@ -67,6 +68,7 @@ export async function GET(
         c.author?.name ||
         c.author?.email ||
         "User",
+      authorUsername: c.author?.username || null,
       authorInitials: `${(c.author?.firstname?.[0] || c.author?.name?.[0] || c.author?.email?.[0] || "U").toUpperCase()}${(c.author?.lastname?.[0] || "").toUpperCase()}`,
     })),
   });
@@ -127,7 +129,7 @@ export async function POST(
     .collection("users")
     .findOne(
       { _id: new ObjectId(userId) },
-      { projection: { name: 1, firstname: 1, lastname: 1, email: 1 } }
+      { projection: { name: 1, firstname: 1, lastname: 1, email: 1, username: 1 } }
     );
 
   return NextResponse.json({
@@ -141,6 +143,7 @@ export async function POST(
         author?.name ||
         author?.email ||
         "User",
+      authorUsername: author?.username || null,
       authorInitials: `${(author?.firstname?.[0] || author?.name?.[0] || author?.email?.[0] || "U").toUpperCase()}${(author?.lastname?.[0] || "").toUpperCase()}`,
     },
   });

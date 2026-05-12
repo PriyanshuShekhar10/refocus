@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { publish, sessionsChannel } from "@/lib/sse";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 
 // GET /api/sessions?from=ISO&to=ISO
 type DbSession = {
@@ -42,25 +43,33 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Fetch sessions in range with participants
+  // Fetch sessions in range, pushing visibility filter into the DB query.
+  // Visibility rule: sessions with < 2 participants are visible to everyone;
+  // fully-booked sessions (>= 2 participants) are only visible to
+  // their owner or participants.
   const db = await getDb();
   const col = db.collection<DbSession>("sessions");
-  let sessions: DbSession[] = (await col
-    .find({ start_time: { $gte: new Date(from), $lt: new Date(to) } })
+  const sessions: DbSession[] = (await col
+    .find({
+      start_time: { $gte: new Date(from), $lt: new Date(to) },
+      $or: [
+        // Not fully booked (fewer than 2 participants)
+        {
+          $expr: {
+            $lt: [
+              { $size: { $ifNull: ["$session_participants", []] } },
+              2,
+            ],
+          },
+        },
+        // Current user is the session owner
+        { owner_id: userId },
+        // Current user is a participant
+        { "session_participants.user_id": userId },
+      ],
+    })
     .sort({ start_time: 1 })
     .toArray()) as unknown as DbSession[];
-
-  // Visibility rule: sessions with 2 participants (booked) should only be visible
-  // to their participants and the owner. Others see only available sessions.
-  sessions = (sessions ?? []).filter((s) => {
-    const participants = s.session_participants ?? [];
-    const count = participants.length ?? 0;
-    if (count < 2) return true; // available (or not yet fully booked)
-    // booked: allow only if current user is owner or participant
-    const isOwner = s.owner_id === userId;
-    const isParticipant = participants.some((p) => p.user_id === userId);
-    return isOwner || isParticipant;
-  });
 
   // Collect unique user IDs (owner + participants) to hydrate with user profile info
   const userIdSet = new Set<string>();
@@ -148,6 +157,10 @@ export async function POST(req: NextRequest) {
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Rate limit session creation
+  const rl = await checkRateLimit(userId, "api");
+  if (!rl.success) return rateLimitedResponse(rl);
 
   const body = await req.json().catch(() => ({}));
   const { start, durationMin, sessionType, quietOwner } = body as {

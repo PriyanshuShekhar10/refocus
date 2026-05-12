@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import FriendChat from "./FriendChat";
 import BookSessionModal from "./BookSessionModal";
 import { FiUser, FiMessageCircle, FiCalendar, FiInbox } from "react-icons/fi";
@@ -18,6 +19,7 @@ type Friend = {
   user_id: string;
   email?: string;
   name?: string | null;
+  username?: string | null;
   since?: string;
 };
 
@@ -265,31 +267,58 @@ export default function Friends() {
             friends.map((f) => {
               const label = f.email || f.user_id;
               const initial = (label[0] ?? "?").toUpperCase();
+              const profileHref = f.username ? `/u/${f.username}` : null;
               return (
                 <div
                   key={f.user_id}
                   className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm font-semibold">
-                      {initial}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {f.name || label}
-                      </p>
-                      {f.name && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                          {label}
+                  {profileHref ? (
+                    <Link
+                      href={profileHref}
+                      className="flex items-center gap-3 min-w-0 group"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm font-semibold group-hover:ring-2 group-hover:ring-indigo-400 transition-all">
+                        {initial}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          {f.name || label}
                         </p>
-                      )}
-                      {!!unreadCounts[f.user_id] && (
-                        <span className="inline-flex items-center mt-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-medium text-white">
-                          {unreadCounts[f.user_id]} unread
-                        </span>
-                      )}
+                        {f.name && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {label}
+                          </p>
+                        )}
+                        {!!unreadCounts[f.user_id] && (
+                          <span className="inline-flex items-center mt-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-medium text-white">
+                            {unreadCounts[f.user_id]} unread
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm font-semibold">
+                        {initial}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {f.name || label}
+                        </p>
+                        {f.name && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {label}
+                          </p>
+                        )}
+                        {!!unreadCounts[f.user_id] && (
+                          <span className="inline-flex items-center mt-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-medium text-white">
+                            {unreadCounts[f.user_id]} unread
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => {

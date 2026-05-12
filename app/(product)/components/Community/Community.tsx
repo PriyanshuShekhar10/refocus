@@ -184,12 +184,12 @@ export default function Community() {
                     className="min-h-[80px] resize-none border-0 p-0 focus-visible:ring-0 shadow-none"
                   />
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                    <div className="flex gap-2">
+                    {/* <div className="flex gap-2">
                       <Button variant="ghost" size="sm" disabled className="text-muted-foreground">
                         <ImageIcon className="h-4 w-4 mr-1" />
                         Photo
                       </Button>
-                    </div>
+                    </div> */}
                     <Button
                       size="sm"
                       onClick={handlePost}

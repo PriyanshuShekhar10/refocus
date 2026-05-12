@@ -5,7 +5,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:indexes": "npx ts-node --project tsconfig.json scripts/create-indexes.ts"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:indexes": "npx ts-node --project tsconfig.json scripts/create-indexes.ts",
+    "db:backfill-usernames": "npx ts-node --project tsconfig.json scripts/backfill-usernames.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.26",
@@ -43,13 +46,15 @@
     "@types/node": "^20",
     "@types/react": "19.2.9",
     "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   },
   "overrides": {
     "@types/react": "19.2.9",

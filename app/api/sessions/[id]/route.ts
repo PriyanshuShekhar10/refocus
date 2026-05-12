@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { publish, sessionsChannel } from "@/lib/sse";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 
 // Shared session document type for this file
 type SessionDoc = {
@@ -72,6 +73,11 @@ export async function DELETE(
   const userId = (session?.user as AuthUser | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Rate limit session mutations
+  const rl = await checkRateLimit(userId, "api");
+  if (!rl.success) return rateLimitedResponse(rl);
+
   const { id: sessionId } = await params;
   const db = await getDb();
   const col = db.collection<SessionDoc>("sessions");
@@ -116,6 +122,10 @@ export async function PATCH(
   const userId = (session?.user as AuthUser | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Rate limit session mutations
+  const rlPatch = await checkRateLimit(userId, "api");
+  if (!rlPatch.success) return rateLimitedResponse(rlPatch);
 
   const { id: sessionId } = await params;
   const db = await getDb();

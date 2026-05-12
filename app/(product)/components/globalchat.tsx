@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Loader2, Send, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -8,6 +9,7 @@ type GlobalMessage = {
   id: string;
   user_id: string;
   user_name?: string | null;
+  username?: string | null;
   content: string;
   created_at: string;
   deleted?: boolean;
@@ -33,6 +35,7 @@ export default function GlobalChat() {
   const [profileUser, setProfileUser] = useState<{
     user_id: string;
     user_name?: string | null;
+    username?: string | null;
   } | null>(null);
   const [profileFriendStatus, setProfileFriendStatus] = useState<
     "loading" | "friend" | "request_sent" | "none"
@@ -167,11 +170,14 @@ export default function GlobalChat() {
     let es: EventSource | null = null;
 
     try {
-      es = new EventSource("/api/global-chat/events");
+      es = new EventSource("/api/events");
 
       es.onmessage = (ev) => {
         try {
           const data = JSON.parse(ev.data || "{}");
+
+          // Only handle global chat events
+          if (data?.channel !== "global") return;
 
           // Ignore heartbeat events
           if (data?.type === "hello" || data?.type === "ping") return;
@@ -383,7 +389,7 @@ export default function GlobalChat() {
 
   const openProfile = (m: GlobalMessage) => {
     if (m.user_id === currentUserId) return;
-    setProfileUser({ user_id: m.user_id, user_name: m.user_name });
+    setProfileUser({ user_id: m.user_id, user_name: m.user_name, username: m.username });
     setProfileFriendStatus("loading");
     setProfileFriendReqStatus(null);
   };
@@ -537,6 +543,14 @@ export default function GlobalChat() {
               </p>
             </div>
             <div className="mt-6 flex flex-col gap-2">
+              {profileUser.username && (
+                <Link
+                  href={`/u/${profileUser.username}`}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-center text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  View Profile
+                </Link>
+              )}
               {profileFriendReqStatus && (
                 <p className={`text-sm text-center ${profileFriendReqStatus === "Request sent" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
                   {profileFriendReqStatus}
@@ -629,7 +643,12 @@ export default function GlobalChat() {
             {messages.map((m, idx) => {
               const showDate =
                 idx === 0 ||
-                new Date(messages[idx - 1].created_at).toDateString() !== new Date(m.created_at).toDateString();
+                (() => {
+                  const prev = new Date(messages[idx - 1].created_at);
+                  const curr = new Date(m.created_at);
+                  if (isNaN(prev.getTime()) || isNaN(curr.getTime())) return true;
+                  return prev.toDateString() !== curr.toDateString();
+                })();
 
               const isOwnMessage = m.user_id === currentUserId;
               const isDeleting = deletingIds.has(m.id);
@@ -641,14 +660,17 @@ export default function GlobalChat() {
                   {showDate && (
                     <div className="flex items-center justify-center py-2">
                       <span className="text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
-                        {new Date(m.created_at).toLocaleDateString([], {
-                          month: "long",
-                          day: "numeric",
-                          year:
-                            new Date(m.created_at).getFullYear() !== new Date().getFullYear()
-                              ? "numeric"
-                              : undefined,
-                        })}
+                        {(() => {
+                          const d = new Date(m.created_at);
+                          if (isNaN(d.getTime())) return "";
+                          try {
+                            return d.toLocaleDateString([], {
+                              month: "long",
+                              day: "numeric",
+                              year: d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+                            });
+                          } catch { return d.toDateString(); }
+                        })()}
                       </span>
                     </div>
                   )}
@@ -659,6 +681,14 @@ export default function GlobalChat() {
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-600 text-sm font-medium text-white order-2">
                         {initial}
                       </div>
+                    ) : m.username ? (
+                      <Link
+                        href={`/u/${m.username}`}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:ring-2 hover:ring-green-500 dark:hover:ring-green-500 transition-shadow cursor-pointer"
+                        title="View profile"
+                      >
+                        {initial}
+                      </Link>
                     ) : (
                       <button
                         type="button"
@@ -677,6 +707,14 @@ export default function GlobalChat() {
                           <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             You
                           </span>
+                        ) : m.username ? (
+                          <Link
+                            href={`/u/${m.username}`}
+                            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:underline cursor-pointer text-left"
+                            title="View profile"
+                          >
+                            {name}
+                          </Link>
                         ) : (
                           <button
                             type="button"

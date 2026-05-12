@@ -95,6 +95,45 @@ async function subscribeToRedisChannel(channel: string): Promise<void> {
 }
 
 /**
+ * Unsubscribe from a Redis channel when no local subscribers remain.
+ * Uses a short delay to avoid unsubscribe/resubscribe thrashing when
+ * the last subscriber disconnects and a new one connects moments later.
+ */
+const UNSUB_DELAY_MS = 5_000;
+const unsubTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+function scheduleRedisUnsubscribe(channel: string): void {
+  if (!isRedisConfigured()) return;
+  // Cancel any existing timer for this channel
+  const existing = unsubTimers.get(channel);
+  if (existing) clearTimeout(existing);
+
+  unsubTimers.set(
+    channel,
+    setTimeout(() => {
+      unsubTimers.delete(channel);
+      const state = getState();
+      // Only unsubscribe if still truly empty
+      const set = state.channels.get(channel);
+      if (set && set.size > 0) return;
+
+      if (state.redisSubscribedChannels.has(channel)) {
+        try {
+          const subscriber = getSubscriber();
+          subscriber.unsubscribe(channel).catch((err) => {
+            console.error(`[SSE] Failed to unsubscribe from Redis channel ${channel}:`, err);
+          });
+          state.redisSubscribedChannels.delete(channel);
+          console.log(`[SSE] Unsubscribed from Redis channel: ${channel}`);
+        } catch (err) {
+          console.error(`[SSE] Error unsubscribing from Redis channel ${channel}:`, err);
+        }
+      }
+    }, UNSUB_DELAY_MS),
+  );
+}
+
+/**
  * Subscribe to a channel for SSE events
  *
  * @param channel - The channel name to subscribe to
@@ -112,6 +151,13 @@ export function subscribe(channel: string, fn: Subscriber): () => void {
   const set = state.channels.get(channel)!;
   set.add(fn);
 
+  // Cancel any pending unsubscribe timer since we have a new subscriber
+  const pendingUnsub = unsubTimers.get(channel);
+  if (pendingUnsub) {
+    clearTimeout(pendingUnsub);
+    unsubTimers.delete(channel);
+  }
+
   // Setup Redis subscription if configured
   if (isRedisConfigured()) {
     // Fire and forget - subscription happens asynchronously
@@ -125,8 +171,8 @@ export function subscribe(channel: string, fn: Subscriber): () => void {
     set.delete(fn);
     if (set.size === 0) {
       state.channels.delete(channel);
-      // Note: We don't unsubscribe from Redis to avoid race conditions
-      // Redis subscriptions are lightweight and can persist
+      // Schedule Redis unsubscribe after a short delay to avoid thrashing
+      scheduleRedisUnsubscribe(channel);
     }
   };
 }
