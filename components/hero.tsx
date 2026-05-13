@@ -4,6 +4,8 @@ import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { VideoModal } from "./video-modal";
 import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { DarkDashboard, DarkModal, DarkScheduler, LightDashboard, LightModal, LightScheduler } from "@/assets/exports";
 
 type HeroProps = {
@@ -51,6 +53,16 @@ export function Hero({ marketingHome = false }: HeroProps) {
           <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed px-2 xs:px-4">
             Refocus allows you to regain focus, virtual coworking made easy.
           </p>
+
+          <div className="mt-6 xs:mt-8 sm:mt-10 flex justify-center px-2">
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full px-8 sm:px-10 h-11 sm:h-12 text-sm sm:text-base font-semibold bg-[#0f1226] text-white shadow-lg hover:bg-[#0f1226]/90 dark:bg-white dark:text-[#0f1226] dark:hover:bg-white/90"
+            >
+              <Link href="/auth/sign-up">Sign up now</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
