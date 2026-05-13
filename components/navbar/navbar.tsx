@@ -11,13 +11,15 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
-export const NavbarLogo = () => {
+export const NavbarLogo = ({ forceLight }: { forceLight?: boolean }) => {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const useDarkLogo = mounted && !forceLight && theme === "dark";
 
   return (
     <Link href="/" className="flex items-center">
@@ -26,7 +28,7 @@ export const NavbarLogo = () => {
         alt="logo"
         className={cn(
           `h-12 w-auto py-2 sm:h-16 sm:py-3 md:h-20`,
-          mounted && theme === "dark" && "invert brightness-0",
+          useDarkLogo && "invert brightness-0",
         )}
       />
     </Link>
@@ -126,7 +128,7 @@ function NavbarAuthButton({
   );
 }
 
-const Navbar = () => {
+const Navbar = ({ marketingHome = false }: { marketingHome?: boolean }) => {
   const [isFixed, setIsFixed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -194,7 +196,7 @@ const Navbar = () => {
         className={`${styles.navbar} ${isFixed ? styles.fixed : styles.rounded}`}
       >
         <div className={styles.logo}>
-          <NavbarLogo />
+          <NavbarLogo forceLight={marketingHome} />
         </div>
 
         {/* Desktop Navigation + Auth (grouped for tighter spacing) */}
@@ -207,7 +209,7 @@ const Navbar = () => {
             ))}
           </ul>
           <div className={styles.authButtons}>
-            <ThemeSwitcher />
+            {!marketingHome && <ThemeSwitcher />}
             <NavbarAuthButton />
           </div>
         </div>
@@ -244,9 +246,11 @@ const Navbar = () => {
           </ul>
 
           <div className={styles.mobileMenuFooter}>
-            <div className={styles.mobileThemeSwitcher}>
-              <ThemeSwitcher />
-            </div>
+            {!marketingHome && (
+              <div className={styles.mobileThemeSwitcher}>
+                <ThemeSwitcher />
+              </div>
+            )}
             <NavbarAuthButton isMobile onClose={closeMobileMenu} />
           </div>
         </div>

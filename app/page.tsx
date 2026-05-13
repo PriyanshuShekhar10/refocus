@@ -4,8 +4,8 @@ import { Hero } from "@/components/hero";
 import { Features } from "@/components/features";
 import { AIFeatures } from "@/components/ai-features";
 import { WhyItWorks } from "@/components/why-it-works";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import Navbar from "@/components/navbar/navbar";
+import { LandingLightLock } from "@/components/landing-light-lock";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -86,7 +86,7 @@ export default function Home() {
   };
 
   return (
-    <>
+    <LandingLightLock>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -95,11 +95,11 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
       />
-      <Navbar />
+      <Navbar marketingHome />
       <main className="min-h-screen flex flex-col items-center">
         <div className="flex-1 w-full flex flex-col gap-20 items-center">
           <div className="flex-1 flex flex-col gap-20 max-w-5x">
-            <Hero />
+            <Hero marketingHome />
             <WhyItWorks />
             <AIFeatures />
             <Features />
@@ -108,10 +108,9 @@ export default function Home() {
 
           <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
             <p>Powered by Refocus</p>
-            <ThemeSwitcher />
           </footer>
         </div>
       </main>
-    </>
+    </LandingLightLock>
   );
 }

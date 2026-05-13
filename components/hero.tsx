@@ -5,8 +5,14 @@ import { VideoModal } from "./video-modal";
 import Image from "next/image";
 import { DarkDashboard, DarkModal, DarkScheduler, LightDashboard, LightModal, LightScheduler } from "@/assets/exports";
 
-export function Hero() {
+type HeroProps = {
+  /** Homepage: always use light visuals; stored theme unchanged elsewhere */
+  marketingHome?: boolean;
+};
+
+export function Hero({ marketingHome = false }: HeroProps) {
   const { theme } = useTheme();
+  const visualTheme = marketingHome ? "light" : theme;
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -35,7 +41,7 @@ export function Hero() {
           <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold dark:text-white mb-6 xs:mb-8 sm:mb-10 md:mb-14 leading-tight sm:leading-normal px-1 xs:px-2">
             Let&apos;s make your{" "}
             <span className="inline-block min-w-[3ch] font-bold text-center text-[#E0FF88]">
-              {mounted && theme === "dark" ? "night" : "day"}
+              {mounted && visualTheme === "dark" ? "night" : "day"}
             </span>{" "}
             a little more productive
           </h1>
@@ -54,7 +60,7 @@ export function Hero() {
             <div className="absolute left-1/2 -translate-x-[135%] bottom-0 w-[340px] sm:w-[420px] md:w-[480px] translate-y-16 z-10">
               <Image
                 alt="AI Scheduler"
-                src={theme === "dark" ? DarkScheduler : LightScheduler}
+                src={visualTheme === "dark" ? DarkScheduler : LightScheduler}
                 className="w-full rounded-xl shadow-2xl scale-95 opacity-90"
               />
             </div>
@@ -62,7 +68,7 @@ export function Hero() {
             <div className="relative w-[380px] sm:w-[460px] md:w-[540px] z-20">
               <Image
                 alt="Dashboard"
-                src={theme === "dark" ? DarkDashboard : LightDashboard}
+                src={visualTheme === "dark" ? DarkDashboard : LightDashboard}
                 className="w-full rounded-2xl shadow-2xl"
               />
             </div>
@@ -70,7 +76,7 @@ export function Hero() {
             <div className="absolute left-1/2 translate-x-[35%] bottom-0 w-[340px] sm:w-[420px] md:w-[480px] translate-y-16 z-10">
               <Image
                 alt="Modal"
-                src={theme === "dark" ? DarkModal : LightModal}
+                src={visualTheme === "dark" ? DarkModal : LightModal}
                 className="w-full rounded-xl shadow-2xl scale-95 opacity-90"
               />
             </div>
