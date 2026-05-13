@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 import { VideoModal } from "./video-modal";
 import Image from "next/image";
 import { DarkDashboard, DarkModal, DarkScheduler, LightDashboard, LightModal, LightScheduler } from "@/assets/exports";
@@ -55,7 +56,14 @@ export function Hero({ marketingHome = false }: HeroProps) {
 
       {/* Product Images Section */}
       {mounted && (
-        <section className="relative w-screen bg-neutral-950 overflow-hidden px-3 xs:px-4 sm:px-6 lg:px-8 pb-16 sm:pb-24 md:pb-32 pt-10 sm:pt-14 md:pt-16">
+        <section
+          className={cn(
+            "relative w-screen overflow-hidden px-3 xs:px-4 sm:px-6 lg:px-8 pb-16 sm:pb-24 md:pb-32 pt-10 sm:pt-14 md:pt-16",
+            marketingHome
+              ? "bg-gradient-to-b from-slate-100 via-slate-50 to-white border-t border-slate-200/60"
+              : "bg-neutral-950",
+          )}
+        >
           <div className="relative w-full flex justify-center items-end h-[300px] sm:h-[380px] md:h-[460px]">
             <div className="absolute left-1/2 -translate-x-[135%] bottom-0 w-[340px] sm:w-[420px] md:w-[480px] translate-y-16 z-10">
               <Image
