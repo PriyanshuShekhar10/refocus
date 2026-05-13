@@ -6,6 +6,7 @@ import { VideoModal } from "./video-modal";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
 import { DarkDashboard, DarkModal, DarkScheduler, LightDashboard, LightModal, LightScheduler } from "@/assets/exports";
 
 type HeroProps = {
@@ -15,6 +16,7 @@ type HeroProps = {
 
 export function Hero({ marketingHome = false }: HeroProps) {
   const { theme } = useTheme();
+  const { status } = useSession();
   const visualTheme = marketingHome ? "light" : theme;
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -54,15 +56,17 @@ export function Hero({ marketingHome = false }: HeroProps) {
             Refocus allows you to regain focus, virtual coworking made easy.
           </p>
 
-          <div className="mt-6 xs:mt-8 sm:mt-10 flex justify-center px-2">
-            <Button
-              asChild
-              size="lg"
-              className="rounded-full px-8 sm:px-10 h-11 sm:h-12 text-sm sm:text-base font-semibold bg-[#0f1226] text-white shadow-lg hover:bg-[#0f1226]/90 dark:bg-white dark:text-[#0f1226] dark:hover:bg-white/90"
-            >
-              <Link href="/auth/sign-up">Sign up now</Link>
-            </Button>
-          </div>
+          {status === "unauthenticated" && (
+            <div className="mt-6 xs:mt-8 sm:mt-10 flex justify-center px-2">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full px-8 sm:px-10 h-11 sm:h-12 text-sm sm:text-base font-semibold bg-[#0f1226] text-white shadow-lg hover:bg-[#0f1226]/90 dark:bg-white dark:text-[#0f1226] dark:hover:bg-white/90"
+              >
+                <Link href="/auth/sign-up">Sign up now</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
