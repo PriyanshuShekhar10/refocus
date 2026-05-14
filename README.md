@@ -18,6 +18,8 @@
 MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>/<db>?retryWrites=true&w=majority
 NEXTAUTH_SECRET=your-long-random-secret
 NEXTAUTH_URL=http://localhost:3000
+DAILY_API_KEY=your-daily-api-key
+DAILY_DOMAIN=your-subdomain.daily.co
 ```
 
 2. Install deps and run dev server
@@ -69,6 +71,14 @@ npm run start
 - Respond: `POST /api/session-requests/[id]` with `{ action: 'accept'|'decline', message? }`
   - Accept creates a session with both users
 - Delete (requester only, pending): `DELETE /api/session-requests/[id]`
+
+## Video Calls (Daily.co)
+
+- Session calls use Daily prebuilt rooms and meeting tokens.
+- Required server env vars:
+  - `DAILY_API_KEY` (server-only secret; never expose in client code)
+  - `DAILY_DOMAIN` (for example `refocus.daily.co`)
+- Get a free Daily account and API key at [daily.co](https://www.daily.co/).
 
 ## Deploy
 

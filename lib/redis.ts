@@ -6,8 +6,6 @@ export const isRedisConfigured = (): boolean => {
   return Boolean(redisUrl);
 };
 
-const isUpstash = redisUrl?.includes("upstash.io");
-
 const baseOptions = {
   enableReadyCheck: true,
   retryStrategy: (times: number) => {
@@ -21,7 +19,6 @@ const baseOptions = {
     const targetErrors = ["READONLY", "ECONNRESET", "ETIMEDOUT"];
     return targetErrors.some((e) => err.message.includes(e));
   },
-  ...(isUpstash && { tls: { rejectUnauthorized: false } }),
 };
 
 type RedisState = {

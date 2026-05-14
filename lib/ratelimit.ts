@@ -1,45 +1,9 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
 /**
- * Rate Limiting Configuration
- *
- * This module provides rate limiting to protect API endpoints from abuse.
- * It uses Upstash Redis for distributed rate limiting across multiple
- * server instances.
- *
- * Environment Variables:
- * - UPSTASH_REDIS_REST_URL: Upstash Redis REST API URL
- * - UPSTASH_REDIS_REST_TOKEN: Upstash Redis REST API token
- *
- * Get these from: https://console.upstash.com/
+ * Native in-memory rate limiting.
+ * Scope: current Node.js process only.
  */
-
-// Check if Upstash is configured
-const isUpstashConfigured = (): boolean => {
-  return Boolean(
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN,
-  );
-};
-
-// Lazy initialization of Redis client
-let redis: Redis | null = null;
-
-const getRedis = (): Redis | null => {
-  if (!isUpstashConfigured()) {
-    return null;
-  }
-
-  if (!redis) {
-    redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-    });
-  }
-
-  return redis;
-};
 
 /**
  * Rate limiter configurations for different use cases
@@ -64,31 +28,24 @@ const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
   ai: { requests: 10, window: "1 m" }, // 10 AI calls per minute (external API cost)
 };
 
-// Cache for rate limiters
-const rateLimiters: Map<RateLimitType, Ratelimit> = new Map();
-
-/**
- * Get or create a rate limiter for the specified type
- */
-const getRateLimiter = (type: RateLimitType): Ratelimit | null => {
-  const redisClient = getRedis();
-  if (!redisClient) {
-    return null;
-  }
-
-  if (!rateLimiters.has(type)) {
-    const config = RATE_LIMIT_CONFIGS[type];
-    const limiter = new Ratelimit({
-      redis: redisClient,
-      limiter: Ratelimit.slidingWindow(config.requests, config.window),
-      analytics: true, // Enable analytics in Upstash dashboard
-      prefix: `ratelimit:${type}`,
-    });
-    rateLimiters.set(type, limiter);
-  }
-
-  return rateLimiters.get(type)!;
+type BucketState = Map<string, number[]>;
+const getBucketState = (): BucketState => {
+  const g = globalThis as unknown as { __RATE_LIMIT_BUCKETS__?: BucketState };
+  if (!g.__RATE_LIMIT_BUCKETS__) g.__RATE_LIMIT_BUCKETS__ = new Map<string, number[]>();
+  return g.__RATE_LIMIT_BUCKETS__;
 };
+
+function parseWindowMs(window: RateLimitConfig["window"]): number {
+  const [rawAmount, rawUnit] = window.split(" ") as [string, "s" | "m" | "h" | "d"];
+  const amount = Number(rawAmount);
+  const unitToMs: Record<"s" | "m" | "h" | "d", number> = {
+    s: 1000,
+    m: 60_000,
+    h: 3_600_000,
+    d: 86_400_000,
+  };
+  return amount * unitToMs[rawUnit];
+}
 
 /**
  * Rate limit result type
@@ -150,25 +107,36 @@ export async function checkRateLimit(
   identifier: string,
   type: RateLimitType = "api",
 ): Promise<RateLimitResult> {
-  const limiter = getRateLimiter(type);
+  try {
+    const now = Date.now();
+    const config = RATE_LIMIT_CONFIGS[type];
+    const windowMs = parseWindowMs(config.window);
+    const key = `${type}:${identifier}`;
 
-  // If rate limiting is not configured, allow all requests
-  if (!limiter) {
+    const buckets = getBucketState();
+    const existing = buckets.get(key) ?? [];
+    const kept = existing.filter((ts) => now - ts < windowMs);
+
+    if (kept.length >= config.requests) {
+      const reset = kept[0] + windowMs;
+      buckets.set(key, kept);
+      return {
+        success: false,
+        limit: config.requests,
+        remaining: 0,
+        reset,
+      };
+    }
+
+    kept.push(now);
+    buckets.set(key, kept);
+
+    const oldest = kept[0] ?? now;
     return {
       success: true,
-      limit: Infinity,
-      remaining: Infinity,
-      reset: Date.now(),
-    };
-  }
-
-  try {
-    const result = await limiter.limit(identifier);
-    return {
-      success: result.success,
-      limit: result.limit,
-      remaining: result.remaining,
-      reset: result.reset,
+      limit: config.requests,
+      remaining: Math.max(config.requests - kept.length, 0),
+      reset: oldest + windowMs,
     };
   } catch (error) {
     console.error("[RateLimit] Error checking rate limit:", error);
