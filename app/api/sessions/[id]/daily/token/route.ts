@@ -4,10 +4,16 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { createOrGetDailyRoom, createDailyMeetingToken } from "@/lib/daily";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
-import { isOwnerOrParticipant, toObjectId } from "@/lib/sessionAccess";
+import {
+  CALL_JOIN_GRACE_MINUTES,
+  isOwnerOrParticipant,
+  isWithinCallWindow,
+  toObjectId,
+} from "@/lib/sessionAccess";
 
 type SessionDoc = {
   owner_id: string;
+  start_time: Date | string;
   end_time: Date | string;
   session_participants?: Array<{ user_id: string }>;
 };
@@ -18,7 +24,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  const userId = (session?.user as { id?: string } | undefined)?.id;
+  const user = session?.user as { id?: string; name?: string } | undefined;
+  const userId = user?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -37,11 +44,23 @@ export async function POST(
   if (!isOwnerOrParticipant(s, userId)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  if (!isWithinCallWindow(s.start_time, s.end_time)) {
+    return NextResponse.json(
+      {
+        error: `Call access is only available from ${CALL_JOIN_GRACE_MINUTES} minutes before start until ${CALL_JOIN_GRACE_MINUTES} minutes after end`,
+      },
+      { status: 403 },
+    );
+  }
 
   try {
     const sessionEndExp = Math.floor(new Date(s.end_time).getTime() / 1000) + 30 * 60;
     const { roomName, domain } = await createOrGetDailyRoom(sessionId, sessionEndExp);
-    const token = await createDailyMeetingToken(roomName, userId);
+    const tokenExp = Math.floor(new Date(s.end_time).getTime() / 1000) + CALL_JOIN_GRACE_MINUTES * 60;
+    const token = await createDailyMeetingToken(roomName, userId, {
+      userName: user?.name,
+      exp: tokenExp,
+    });
     return NextResponse.json({ token, roomName, domain });
   } catch (e) {
     console.error("[DailyToken] Failed to create token", e);

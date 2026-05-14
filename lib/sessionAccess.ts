@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { CALL_JOIN_GRACE_MINUTES, isWithinCallWindow } from "@/lib/sessionWindow";
 
 export function toObjectId(id: unknown): ObjectId | null {
   return typeof id === "string" && ObjectId.isValid(id) ? new ObjectId(id) : null;
@@ -13,3 +14,5 @@ export function isOwnerOrParticipant(
     (participant) => String(participant.user_id) === String(userId),
   );
 }
+
+export { CALL_JOIN_GRACE_MINUTES, isWithinCallWindow };

@@ -55,6 +55,7 @@ describe("Daily session endpoints", () => {
     mocks.sessionsCol.findOne.mockResolvedValue({
       _id: new ObjectId(SESSION_ID),
       owner_id: OWNER_ID,
+      start_time: new Date(Date.now() - 60 * 1000),
       end_time: new Date(Date.now() + 60 * 60 * 1000),
       session_participants: [{ user_id: PARTICIPANT_ID }],
     });

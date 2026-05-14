@@ -4,10 +4,16 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { createOrGetDailyRoom } from "@/lib/daily";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
-import { isOwnerOrParticipant, toObjectId } from "@/lib/sessionAccess";
+import {
+  CALL_JOIN_GRACE_MINUTES,
+  isOwnerOrParticipant,
+  isWithinCallWindow,
+  toObjectId,
+} from "@/lib/sessionAccess";
 
 type SessionDoc = {
   owner_id: string;
+  start_time: Date | string;
   end_time: Date | string;
   session_participants?: Array<{ user_id: string }>;
 };
@@ -36,6 +42,14 @@ export async function POST(
   if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (!isOwnerOrParticipant(s, userId)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  if (!isWithinCallWindow(s.start_time, s.end_time)) {
+    return NextResponse.json(
+      {
+        error: `Call access is only available from ${CALL_JOIN_GRACE_MINUTES} minutes before start until ${CALL_JOIN_GRACE_MINUTES} minutes after end`,
+      },
+      { status: 403 },
+    );
   }
 
   try {

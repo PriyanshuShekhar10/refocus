@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import ClientCall from "./ClientCall";
 import SessionCountdown from "./SessionCountdown";
+import { CALL_JOIN_GRACE_MINUTES, isWithinCallWindow } from "@/lib/sessionAccess";
 
 export default async function SessionJoinPage({
   params,
@@ -62,13 +63,16 @@ export default async function SessionJoinPage({
     ? [partner.firstname, partner.lastname].filter(Boolean).join(" ") || partner.name || "Partner"
     : null;
 
-  // Check if session is joinable (within 1 hour of start or in progress)
+  // Join window: from 5 minutes before start until 5 minutes after end.
   const now = new Date();
   const startTime = new Date(s.start_time);
   const endTime = new Date(s.end_time);
-  const oneHourBefore = new Date(startTime.getTime() - 60 * 60 * 1000);
-  const canJoinNow = now >= oneHourBefore && now <= endTime;
-  const hasEnded = now > endTime;
+  const canJoinNow = isWithinCallWindow(startTime, endTime, now, CALL_JOIN_GRACE_MINUTES);
+  const hasEnded = now > new Date(endTime.getTime() + CALL_JOIN_GRACE_MINUTES * 60 * 1000);
+
+  if (canJoinNow) {
+    return <ClientCall sessionId={id} fullScreen />;
+  }
 
   return (
     <div className="mx-auto max-w-2xl p-6">
@@ -81,8 +85,8 @@ export default async function SessionJoinPage({
           Back to dashboard
         </Link>
       </div>
-      <div className="mt-4 space-y-2">
-        <div className="text-sm text-gray-700 dark:text-gray-300">ID: {id}</div>
+      <div className="mt-4 space-y-2 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800/60">
+        <div className="truncate text-sm text-gray-700 dark:text-gray-300">ID: {id}</div>
         {s.name && <div className="text-sm text-gray-700 dark:text-gray-300">Name: {s.name}</div>}
         <div className="text-sm text-gray-700 dark:text-gray-300">
           Type: {s.session_type} • {s.duration_min} min
@@ -136,8 +140,6 @@ export default async function SessionJoinPage({
             This session has already ended.
           </p>
         </div>
-      ) : canJoinNow ? (
-        <ClientCall sessionId={id} />
       ) : (
         <SessionCountdown
           startTime={s.start_time.toISOString()}
