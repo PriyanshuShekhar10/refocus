@@ -1,10 +1,10 @@
 const DAILY_API_BASE = "https://api.daily.co/v1";
 
 export async function createOrGetDailyRoom(sessionId: string) {
-  const apiKey = process.env.DAILY_API_KEY;
+  const apiKey = process.env.DAILY_CO_API || process.env.DAILY_API_KEY;
   const domain = process.env.DAILY_DOMAIN; // your-subdomain.daily.co
   if (!apiKey || !domain) {
-    throw new Error("Missing DAILY_API_KEY or DAILY_DOMAIN env vars");
+    throw new Error("Missing DAILY_CO_API or DAILY_DOMAIN env vars");
   }
 
   // Room name must be URL-safe and unique per session
@@ -46,10 +46,10 @@ export async function createOrGetDailyRoom(sessionId: string) {
 
 export async function createDailyMeetingToken(
   roomName: string,
-  userId: string
+  userId: string,
 ) {
-  const apiKey = process.env.DAILY_API_KEY;
-  if (!apiKey) throw new Error("Missing DAILY_API_KEY env var");
+  const apiKey = process.env.DAILY_CO_API || process.env.DAILY_API_KEY;
+  if (!apiKey) throw new Error("Missing DAILY_CO_API env var");
   const res = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
     method: "POST",
     headers: {

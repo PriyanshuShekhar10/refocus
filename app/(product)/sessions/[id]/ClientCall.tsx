@@ -4,12 +4,9 @@ import { useState, useEffect } from "react";
 export default function ClientCall({ sessionId }: { sessionId: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // DAILY: preserved but unused for now (free alternative in use)
-  // const [domain, setDomain] = React.useState<string | null>(null);
-  // const [roomName, setRoomName] = React.useState<string | null>(null);
-  // const [token, setToken] = React.useState<string | null>(null);
-  // JITSI (free alternative)
-  const [jitsiUrl, setJitsiUrl] = useState<string | null>(null);
+  const [domain, setDomain] = useState<string | null>(null);
+  const [roomName, setRoomName] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,22 +22,26 @@ export default function ClientCall({ sessionId }: { sessionId: string }) {
           const data = await resJoin.json().catch(() => ({}));
           throw new Error(data.error || "Failed to join session");
         }
+
         // Fetch session details to know if user selected quiet
         const resInfo = await fetch(`/api/sessions/${sessionId}`);
         const info = await resInfo.json().catch(() => ({}));
         const youQuiet: boolean = Boolean(info?.youQuiet);
-        // FREE ALTERNATIVE: Jitsi Meet on public meet.jit.si (no API key required)
-        // We derive a deterministic room name per session. sessionId is hex-safe for URLs.
-        const rn = `session-${sessionId}`;
-        // You can pass more config via hash params (e.g., disable prejoin, etc.)
-        // See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe
-        const baseHash = `#config.prejoinConfig.enabled=true`;
-        const muteHash = youQuiet
-          ? `&config.startWithAudioMuted=true&config.startWithVideoMuted=true`
-          : ``;
-        const url = `https://meet.jit.si/${rn}${baseHash}${muteHash}`;
+
+        // Fetch Daily token and room info
+        const resDaily = await fetch(`/api/sessions/${sessionId}/daily/token`, {
+          method: "POST",
+        });
+        if (!resDaily.ok) {
+          const data = await resDaily.json().catch(() => ({}));
+          throw new Error(data.error || "Failed to create Daily room/token");
+        }
+        const dailyData = await resDaily.json();
+
         if (cancelled) return;
-        setJitsiUrl(url);
+        setDomain(dailyData.domain);
+        setRoomName(dailyData.roomName);
+        setToken(dailyData.token);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
       } finally {
@@ -56,32 +57,18 @@ export default function ClientCall({ sessionId }: { sessionId: string }) {
   if (loading)
     return <div className="mt-6 text-sm text-gray-500">Loading call…</div>;
   if (error) return <div className="mt-6 text-sm text-red-600">{error}</div>;
-  if (!jitsiUrl) return null;
+  if (!domain || !roomName || !token) return null;
 
-  // Jitsi embed via iframe (FREE). Daily code preserved below as comments for later use.
+  const dailyUrl = `https://${domain}/${roomName}?t=${encodeURIComponent(token)}`;
+
   return (
     <div className="mt-6">
       <iframe
-        src={jitsiUrl}
+        src={dailyUrl}
         allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-read; clipboard-write"
-        title="Jitsi Meeting"
+        title="Daily Meeting"
         className="h-[70vh] w-full rounded-md border"
       />
-
-      {/**
-       * DAILY (commented):
-       *
-       * if (!domain || !roomName || !token) return null;
-       * const dailyUrl = `https://${domain}/${roomName}?t=${encodeURIComponent(token)}`;
-       * return (
-       *   <iframe
-       *     src={dailyUrl}
-       *     allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-read; clipboard-write"
-       *     title="Daily Meeting"
-       *     className="h-[70vh] w-full rounded-md border"
-       *   />
-       * );
-       */}
     </div>
   );
 }
