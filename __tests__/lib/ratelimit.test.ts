@@ -3,38 +3,34 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // We need to test the ratelimit module in isolation, so we unmock it
 vi.unmock("@/lib/ratelimit");
 
-// Mock the Upstash dependencies
-vi.mock("@upstash/ratelimit", () => {
-  const mockLimit = vi.fn();
-  return {
-    Ratelimit: vi.fn().mockImplementation(() => ({
-      limit: mockLimit,
-    })),
-    __mockLimit: mockLimit,
-  };
-});
-
-vi.mock("@upstash/redis", () => ({
-  Redis: vi.fn().mockImplementation(() => ({})),
-}));
-
 describe("ratelimit module", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
   });
 
-  describe("checkRateLimit without Upstash configured", () => {
-    it("allows all requests when Upstash is not configured", async () => {
-      delete process.env.UPSTASH_REDIS_REST_URL;
-      delete process.env.UPSTASH_REDIS_REST_TOKEN;
-
+  describe("checkRateLimit", () => {
+    it("enforces in-memory limits by identifier + type", async () => {
       const { checkRateLimit } = await import("@/lib/ratelimit");
-      const result = await checkRateLimit("user1", "api");
+      const id = `user-${Date.now()}-${Math.random()}`;
 
-      expect(result.success).toBe(true);
-      expect(result.limit).toBe(Infinity);
-      expect(result.remaining).toBe(Infinity);
+      // Auth limit is 5 per minute
+      const firstFive = await Promise.all(
+        Array.from({ length: 5 }, () => checkRateLimit(id, "auth")),
+      );
+      expect(firstFive.every((r) => r.success)).toBe(true);
+      expect(firstFive[4].remaining).toBe(0);
+
+      const blocked = await checkRateLimit(id, "auth");
+      expect(blocked.success).toBe(false);
+      expect(blocked.limit).toBe(5);
+      expect(blocked.remaining).toBe(0);
+      expect(blocked.reset).toBeGreaterThan(Date.now());
+
+      // Different type should have an independent bucket
+      const apiResult = await checkRateLimit(id, "api");
+      expect(apiResult.success).toBe(true);
+      expect(apiResult.limit).toBe(100);
     });
   });
 
