@@ -27,6 +27,9 @@ type MessageDoc = {
     sessionId?: string | null;
   };
   created_at: Date;
+  edited_at?: Date;
+  deleted?: boolean;
+  deleted_at?: Date;
 };
 
 // GET /api/chat/:friendId
@@ -68,6 +71,9 @@ export async function GET(
       content: m.content ?? null,
       payload: m.payload ?? null,
       created_at: m.created_at.toISOString(),
+      edited_at: m.edited_at?.toISOString() ?? null,
+      deleted: Boolean(m.deleted),
+      deleted_at: m.deleted_at?.toISOString() ?? null,
     })),
   });
 }
@@ -133,6 +139,7 @@ export async function POST(
       content,
       created_at: new Date(),
       read_at: null,
+      deleted: false,
     });
 
     // Publish events (async for Redis support)

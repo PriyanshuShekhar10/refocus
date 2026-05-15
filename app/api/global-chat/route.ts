@@ -28,6 +28,7 @@ type GlobalMessageDoc = {
   created_at: Date;
   deleted?: boolean;
   deleted_at?: Date;
+  edited_at?: Date;
 };
 
 /**
@@ -138,6 +139,7 @@ export async function GET(req: NextRequest) {
       created_at: m.created_at.toISOString(),
       deleted: m.deleted ?? false,
       deleted_at: m.deleted_at?.toISOString() ?? null,
+      edited_at: m.edited_at?.toISOString() ?? null,
     })),
     nextCursor,
     hasMore,

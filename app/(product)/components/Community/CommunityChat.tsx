@@ -15,6 +15,7 @@ type GlobalMessage = {
   content: string;
   created_at: string;
   deleted?: boolean;
+  edited_at?: string | null;
 };
 
 export default function CommunityChat() {
@@ -76,6 +77,22 @@ export default function CommunityChat() {
           prev.map((m) =>
             m.id === data.payload?.id
               ? { ...m, deleted: true, content: "[Deleted]" }
+              : m,
+          ),
+        );
+        return;
+      }
+
+      if (data.type === "message:updated" && data.payload?.id) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === data.payload?.id
+              ? {
+                  ...m,
+                  content: (data.payload?.content as string) ?? m.content,
+                  edited_at:
+                    (data.payload?.edited_at as string) ?? new Date().toISOString(),
+                }
               : m,
           ),
         );
@@ -260,6 +277,11 @@ export default function CommunityChat() {
                     >
                       {m.content}
                     </div>
+                    {m.edited_at && !m.deleted ? (
+                      <div className="mt-0.5 text-[9px] text-muted-foreground/70">
+                        (edited)
+                      </div>
+                    ) : null}
                   </div>
                 </div>
                 </Fragment>

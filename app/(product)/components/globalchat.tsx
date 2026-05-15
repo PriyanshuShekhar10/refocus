@@ -16,6 +16,7 @@ type GlobalMessage = {
   created_at: string;
   deleted?: boolean;
   deleted_at?: string;
+  edited_at?: string | null;
 };
 
 type PaginationState = {
@@ -33,6 +34,8 @@ export default function GlobalChat() {
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [profileUser, setProfileUser] = useState<{
     user_id: string;
@@ -217,6 +220,21 @@ export default function GlobalChat() {
         return;
       }
 
+      if (data.type === "message:updated" && data.payload?.id) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === data.payload?.id
+              ? {
+                  ...m,
+                  content: (data.payload?.content as string) ?? m.content,
+                  edited_at: (data.payload?.edited_at as string) ?? new Date().toISOString(),
+                }
+              : m,
+          ),
+        );
+        return;
+      }
+
       load();
     };
     channel.subscribe("event", onEvent);
@@ -335,6 +353,39 @@ export default function GlobalChat() {
         newSet.delete(messageId);
         return newSet;
       });
+    }
+  };
+
+  const beginEditMessage = (message: GlobalMessage) => {
+    setEditingId(message.id);
+    setEditingValue(message.content);
+  };
+
+  const saveEditedMessage = async (messageId: string) => {
+    const content = editingValue.trim();
+    if (!content) {
+      setError("Message cannot be empty");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/global-chat/${messageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to edit");
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, content, edited_at: new Date().toISOString() }
+            : m,
+        ),
+      );
+      setEditingId(null);
+      setEditingValue("");
+    } catch (e) {
+      setError((e as Error).message);
     }
   };
 
@@ -713,20 +764,61 @@ export default function GlobalChat() {
                           <p className="text-xs italic text-gray-500 dark:text-gray-400">
                             This message was deleted
                           </p>
+                        ) : editingId === m.id ? (
+                          <div className="space-y-2">
+                            <textarea
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-full min-h-[60px] rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900"
+                            />
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => saveEditedMessage(m.id)}
+                                className="rounded bg-green-600 px-2 py-1 text-[10px] text-white"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingId(null);
+                                  setEditingValue("");
+                                }}
+                                className="rounded border border-gray-300 px-2 py-1 text-[10px] text-gray-700"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
                         ) : (
-                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                            {m.content}
-                          </p>
+                          <>
+                            <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                              {m.content}
+                            </p>
+                            {m.edited_at ? (
+                              <p className="mt-1 text-[10px] opacity-80">(edited)</p>
+                            ) : null}
+                          </>
                         )}
-                        {!m.deleted && isOwnMessage && (
-                          <button
-                            onClick={() => setDeleteConfirmId(m.id)}
-                            disabled={isDeleting}
-                            className="absolute -left-1 -top-1 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-1 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
-                            title="Delete message"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
+                        {!m.deleted && isOwnMessage && editingId !== m.id && (
+                          <div className="absolute -left-1 -top-1 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                            <button
+                              onClick={() => beginEditMessage(m)}
+                              className="rounded-full border border-gray-200 bg-white p-1 text-blue-500 shadow-sm hover:bg-blue-50"
+                              title="Edit message"
+                            >
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5h2m-7 14h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.5M7 7H6a2 2 0 00-2 2v8a2 2 0 002 2h2m0-12l5-5 5 5m-10 0v12" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirmId(m.id)}
+                              disabled={isDeleting}
+                              className="rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-1 text-red-500 shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                              title="Delete message"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>

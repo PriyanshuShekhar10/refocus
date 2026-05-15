@@ -1,44 +1,7 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
-/**
- * Rate Limiting Configuration
- *
- * This module provides rate limiting to protect API endpoints from abuse.
- * It uses Upstash Redis for distributed rate limiting across multiple
- * server instances.
- *
- * Environment Variables:
- * - UPSTASH_REDIS_REST_URL: Upstash Redis REST API URL
- * - UPSTASH_REDIS_REST_TOKEN: Upstash Redis REST API token
- *
- * Get these from: https://console.upstash.com/
- */
-
-// Check if Upstash is configured
-const isUpstashConfigured = (): boolean => {
-  return Boolean(
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN,
-  );
-};
-
-// Lazy initialization of Redis client
-let redis: Redis | null = null;
-
-const getRedis = (): Redis | null => {
-  if (!isUpstashConfigured()) {
-    return null;
-  }
-
-  if (!redis) {
-    redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-    });
-  }
-
-  return redis;
+type BucketState = {
+  timestamps: number[];
 };
 
 /**
@@ -64,30 +27,32 @@ const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
   ai: { requests: 10, window: "1 m" }, // 10 AI calls per minute (external API cost)
 };
 
-// Cache for rate limiters
-const rateLimiters: Map<RateLimitType, Ratelimit> = new Map();
+const WINDOW_UNIT_MS = {
+  s: 1000,
+  m: 60_000,
+  h: 3_600_000,
+  d: 86_400_000,
+} as const;
 
-/**
- * Get or create a rate limiter for the specified type
- */
-const getRateLimiter = (type: RateLimitType): Ratelimit | null => {
-  const redisClient = getRedis();
-  if (!redisClient) {
-    return null;
+const parseWindowMs = (window: `${number} ${"s" | "m" | "h" | "d"}`): number => {
+  const [amountText, unit] = window.split(" ") as [
+    `${number}`,
+    keyof typeof WINDOW_UNIT_MS,
+  ];
+  const amount = Number(amountText);
+  return amount * WINDOW_UNIT_MS[unit];
+};
+
+const getBuckets = (): Map<string, BucketState> => {
+  const g = globalThis as unknown as { __RATE_LIMIT_BUCKETS__?: Map<string, BucketState> };
+  if (!g.__RATE_LIMIT_BUCKETS__) {
+    g.__RATE_LIMIT_BUCKETS__ = new Map<string, BucketState>();
   }
+  return g.__RATE_LIMIT_BUCKETS__;
+};
 
-  if (!rateLimiters.has(type)) {
-    const config = RATE_LIMIT_CONFIGS[type];
-    const limiter = new Ratelimit({
-      redis: redisClient,
-      limiter: Ratelimit.slidingWindow(config.requests, config.window),
-      analytics: true, // Enable analytics in Upstash dashboard
-      prefix: `ratelimit:${type}`,
-    });
-    rateLimiters.set(type, limiter);
-  }
-
-  return rateLimiters.get(type)!;
+const getBucketKey = (type: RateLimitType, identifier: string): string => {
+  return `${type}:${identifier}`;
 };
 
 /**
@@ -150,25 +115,39 @@ export async function checkRateLimit(
   identifier: string,
   type: RateLimitType = "api",
 ): Promise<RateLimitResult> {
-  const limiter = getRateLimiter(type);
-
-  // If rate limiting is not configured, allow all requests
-  if (!limiter) {
-    return {
-      success: true,
-      limit: Infinity,
-      remaining: Infinity,
-      reset: Date.now(),
-    };
-  }
+  const config = RATE_LIMIT_CONFIGS[type];
+  const windowMs = parseWindowMs(config.window);
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  const key = getBucketKey(type, identifier);
+  const buckets = getBuckets();
+  const bucket = buckets.get(key) ?? { timestamps: [] };
 
   try {
-    const result = await limiter.limit(identifier);
+    bucket.timestamps = bucket.timestamps.filter((ts) => ts > windowStart);
+    const currentCount = bucket.timestamps.length;
+    const success = currentCount < config.requests;
+
+    if (success) {
+      bucket.timestamps.push(now);
+    }
+
+    if (bucket.timestamps.length === 0) {
+      buckets.delete(key);
+    } else {
+      buckets.set(key, bucket);
+    }
+
+    const used = success ? currentCount + 1 : currentCount;
+    const remaining = Math.max(config.requests - used, 0);
+    const oldest = bucket.timestamps[0] ?? now;
+    const reset = oldest + windowMs;
+
     return {
-      success: result.success,
-      limit: result.limit,
-      remaining: result.remaining,
-      reset: result.reset,
+      success,
+      limit: config.requests,
+      remaining,
+      reset,
     };
   } catch (error) {
     console.error("[RateLimit] Error checking rate limit:", error);

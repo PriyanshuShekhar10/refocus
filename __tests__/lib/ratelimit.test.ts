@@ -1,40 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// We need to test the ratelimit module in isolation, so we unmock it
-vi.unmock("@/lib/ratelimit");
-
-// Mock the Upstash dependencies
-vi.mock("@upstash/ratelimit", () => {
-  const mockLimit = vi.fn();
-  return {
-    Ratelimit: vi.fn().mockImplementation(() => ({
-      limit: mockLimit,
-    })),
-    __mockLimit: mockLimit,
-  };
-});
-
-vi.mock("@upstash/redis", () => ({
-  Redis: vi.fn().mockImplementation(() => ({})),
-}));
-
 describe("ratelimit module", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
   });
 
-  describe("checkRateLimit without Upstash configured", () => {
-    it("allows all requests when Upstash is not configured", async () => {
-      delete process.env.UPSTASH_REDIS_REST_URL;
-      delete process.env.UPSTASH_REDIS_REST_TOKEN;
-
+  describe("checkRateLimit with in-memory sliding window", () => {
+    it("tracks usage and blocks after limit", async () => {
       const { checkRateLimit } = await import("@/lib/ratelimit");
-      const result = await checkRateLimit("user1", "api");
+      const identifier = `user-${Date.now()}`;
+      const type = "auth";
 
-      expect(result.success).toBe(true);
-      expect(result.limit).toBe(Infinity);
-      expect(result.remaining).toBe(Infinity);
+      const first = await checkRateLimit(identifier, type);
+      const second = await checkRateLimit(identifier, type);
+      const third = await checkRateLimit(identifier, type);
+      const fourth = await checkRateLimit(identifier, type);
+      const fifth = await checkRateLimit(identifier, type);
+      const blocked = await checkRateLimit(identifier, type);
+
+      expect(first.success).toBe(true);
+      expect(second.success).toBe(true);
+      expect(third.success).toBe(true);
+      expect(fourth.success).toBe(true);
+      expect(fifth.success).toBe(true);
+      expect(blocked.success).toBe(false);
+      expect(blocked.limit).toBe(5);
+      expect(blocked.remaining).toBe(0);
+      expect(blocked.reset).toBeGreaterThan(Date.now());
     });
   });
 
