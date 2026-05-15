@@ -17,7 +17,7 @@
  * - Session creation options
  * - Type definitions
  */
-export const DURATION_OPTIONS = [25, 50, 75 ] as const;
+export const DURATION_OPTIONS = [25, 50, 75] as const;
 
 /**
  * Type derived from DURATION_OPTIONS for type safety.
@@ -28,7 +28,7 @@ export type DurationMin = (typeof DURATION_OPTIONS)[number];
 /**
  * Default duration for new sessions
  */
-export const DEFAULT_DURATION: DurationMin = 25;
+export const DEFAULT_DURATION: DurationMin = 50;
 
 /**
  * Default filter state (all durations selected)

@@ -354,8 +354,16 @@ export default function ClientCall({
   const iframeUrl = (() => {
     try {
       const u = new URL(dailyUrl);
-      if (muted) u.searchParams.set("startAudioOff", "true");
-      if (videoOff) u.searchParams.set("startVideoOff", "true");
+      if (muted) {
+        u.searchParams.set("startAudioOff", "true");
+      } else {
+        u.searchParams.delete("startAudioOff");
+      }
+      if (videoOff) {
+        u.searchParams.set("startVideoOff", "true");
+      } else {
+        u.searchParams.delete("startVideoOff");
+      }
       return u.toString();
     } catch {
       return dailyUrl;
@@ -389,7 +397,7 @@ export default function ClientCall({
       <iframe
         ref={iframeRef}
         src={iframeUrl}
-        allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-read; clipboard-write"
+        allow="camera *; microphone *; fullscreen *; display-capture *; autoplay *; clipboard-read *; clipboard-write *"
         title="Refocus session"
         className="flex-1 w-full border-0"
       />

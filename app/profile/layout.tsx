@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Shell, designStyles, MinimalNav } from "@/components/design";
+import { Logo } from "@/assets/exports";
 
 export default function ProfileLayout({
   children,
@@ -25,8 +27,11 @@ export default function ProfileLayout({
       <footer className={designStyles.footer} style={{ marginTop: 24 }}>
         <div className={`${designStyles.wrap} ${designStyles.footInner}`}>
           <Link href="/" className={designStyles.brand}>
-            <span className={designStyles.brandMark} aria-hidden="true" />
-            <span>Refocus</span>
+            <Image
+              src={Logo}
+              alt="Refocus"
+              className="h-7 w-auto dark:invert dark:brightness-0"
+            />
           </Link>
           <div className={designStyles.footMeta}>made for deep work</div>
         </div>

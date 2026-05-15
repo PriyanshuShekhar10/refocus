@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import styles from "./Homepage.module.css";
+import { Logo } from "@/assets/exports";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -22,8 +24,12 @@ export function Nav() {
     <header className={`${styles.nav} ${scrolled ? styles.navScrolled : ""}`}>
       <div className={`${styles.wrap} ${styles.navInner}`}>
         <Link href="/" className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true" />
-          <span>Refocus</span>
+          <Image
+            src={Logo}
+            alt="Refocus"
+            className="h-7 w-auto"
+            priority
+          />
         </Link>
 
         <nav aria-label="Primary">
@@ -39,6 +45,9 @@ export function Nav() {
             </li>
             <li>
               <a href="#faq">FAQ</a>
+            </li>
+            <li>
+              <Link href="/career">Career</Link>
             </li>
           </ul>
         </nav>

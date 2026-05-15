@@ -14,6 +14,7 @@ import {
   TIME_CONFIG,
   DEFAULT_DURATION,
   DEFAULT_DURATION_FILTER,
+  isValidDuration,
   type DurationMin,
 } from "@/constants/calendar";
 import { useCalendarSessions } from "@/hooks/useCalendarSessions";
@@ -151,6 +152,27 @@ export default function MobileCalendar() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [ui, dispatch] = useReducer(uiReducer, undefined, createInitialState);
   const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/preferences");
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        const preferred = data?.preferences?.defaultSessionLength;
+        if (!cancelled && typeof preferred === "number" && isValidDuration(preferred)) {
+          dispatch({ type: "SET_CREATE_DURATION", duration: preferred });
+        }
+      } catch {
+        // Keep local fallback defaults.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Need to import useState
   const days = useMemo(() => [ui.startDate], [ui.startDate]);

@@ -14,6 +14,7 @@ import {
   TIME_CONFIG,
   DEFAULT_DURATION,
   DEFAULT_DURATION_FILTER,
+  isValidDuration,
   type DurationMin,
 } from "@/constants/calendar";
 import { useCalendarSessions } from "@/hooks/useCalendarSessions";
@@ -215,6 +216,28 @@ export default function Calendar({
       dispatch({ type: "SET_START_DATE", date: startDateProp });
     }
   }, [startDateProp]);
+
+  // Sync create-duration default from saved user preferences.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/preferences");
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        const preferred = data?.preferences?.defaultSessionLength;
+        if (!cancelled && typeof preferred === "number" && isValidDuration(preferred)) {
+          dispatch({ type: "SET_CREATE_DURATION", duration: preferred });
+        }
+      } catch {
+        // Keep fallback defaults when preferences cannot be loaded.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const days = useMemo(
     () => new Array(ui.visibleDays).fill(0).map((_, i) => addDays(ui.startDate, i)),

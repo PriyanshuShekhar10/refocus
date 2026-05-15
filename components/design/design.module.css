@@ -35,6 +35,23 @@
   text-rendering: optimizeLegibility;
   min-height: 100vh;
 }
+
+:global(.dark) .shell {
+  --bg: #09090b;
+  --ink: #f4f4f5;
+  --ink-soft: #c4c4cf;
+  --ink-mute: #8f8f9a;
+  --line: #27272a;
+  --line-soft: #18181b;
+  --card: #111113;
+  --accent: #8fa9c2;
+  --accent-ink: #09090b;
+  --accent-soft: #1f2a38;
+  --danger: #f87171;
+  --danger-soft: #2a1417;
+  --success: #4ade80;
+  --success-soft: #112019;
+}
 .shell *::selection {
   background: var(--accent);
   color: var(--accent-ink);

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import Image from "next/image";
 import { Shell, designStyles } from "@/components/design";
+import { Logo } from "@/assets/exports";
 
 type AuthShellProps = {
   children: ReactNode;
@@ -32,8 +34,12 @@ export function AuthShell({ children, headerLink }: AuthShellProps) {
           }}
         >
           <Link href="/" className={designStyles.brand}>
-            <span className={designStyles.brandMark} aria-hidden="true" />
-            <span>Refocus</span>
+            <Image
+              src={Logo}
+              alt="Refocus"
+              className="h-7 w-auto dark:invert dark:brightness-0"
+              priority
+            />
           </Link>
           {headerLink && (
             <Link

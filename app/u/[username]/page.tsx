@@ -1,9 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/mongodb";
 import { MapPin, Globe, Calendar } from "lucide-react";
 import type { Metadata } from "next";
 import { Shell, MinimalNav, designStyles } from "@/components/design";
+import { Logo } from "@/assets/exports";
 
 type Props = { params: Promise<{ username: string }> };
 
@@ -26,14 +28,22 @@ async function getUser(username: string) {
         location: 1,
         website: 1,
         createdAt: 1,
+        "preferences.publicProfile": 1,
       },
     }
   );
 }
 
+async function getPublicUser(username: string) {
+  const user = await getUser(username);
+  if (!user) return null;
+  if (user.preferences?.publicProfile === false) return null;
+  return user;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
-  const user = await getUser(username);
+  const user = await getPublicUser(username);
   if (!user) return { title: "User not found — Refocus" };
   const name = user.name || user.username || username;
   return {
@@ -44,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicProfilePage({ params }: Props) {
   const { username } = await params;
-  const user = await getUser(username);
+  const user = await getPublicUser(username);
   if (!user) notFound();
 
   const firstname = user.firstname ?? "";
@@ -202,8 +212,11 @@ export default async function PublicProfilePage({ params }: Props) {
       <footer className={designStyles.footer}>
         <div className={`${designStyles.wrap} ${designStyles.footInner}`}>
           <Link href="/" className={designStyles.brand}>
-            <span className={designStyles.brandMark} aria-hidden="true" />
-            <span>Refocus</span>
+            <Image
+              src={Logo}
+              alt="Refocus"
+              className="h-7 w-auto dark:invert dark:brightness-0"
+            />
           </Link>
           <div className={designStyles.footMeta}>made for deep work</div>
         </div>

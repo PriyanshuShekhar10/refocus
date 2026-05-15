@@ -63,7 +63,14 @@ const securityHeaders = [
   {
     key: "Permissions-Policy",
     // Camera, mic, and screen-share are needed for the Daily.co prebuilt embed.
-    value: `camera=(self ${dailyWildcard}), microphone=(self ${dailyWildcard}), display-capture=(self ${dailyWildcard}), geolocation=(), payment=(), interest-cohort=()`,
+    value: [
+      `camera=(self${dailyOrigin ? ` "${dailyOrigin}"` : ""})`,
+      `microphone=(self${dailyOrigin ? ` "${dailyOrigin}"` : ""})`,
+      `display-capture=(self${dailyOrigin ? ` "${dailyOrigin}"` : ""})`,
+      "geolocation=()",
+      "payment=()",
+      "interest-cohort=()",
+    ].join(", "),
   },
   ...(isProd
     ? [

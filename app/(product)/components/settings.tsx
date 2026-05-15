@@ -135,12 +135,12 @@ function NotificationsSection() {
     <SectionCard
       icon={<Bell size={16} />}
       title="Notifications"
-      subtitle="What lands in your inbox."
+      subtitle="Saved delivery preferences (email sending controls are not active yet)."
     >
       <RowGroup>
         <Row
           label="Session reminders"
-          hint="A short note 10 minutes before a booked session."
+          hint="Saved preference for future reminder emails."
         >
           <Toggle
             checked={prefs.emailSessionReminders}
@@ -150,7 +150,7 @@ function NotificationsSection() {
         </Row>
         <Row
           label="Friend & session requests"
-          hint="When someone sends a request directly to you."
+          hint="Saved preference for future request emails."
         >
           <Toggle
             checked={prefs.emailFriendRequests}
@@ -160,7 +160,7 @@ function NotificationsSection() {
         </Row>
         <Row
           label="Weekly digest"
-          hint="A quiet roundup of your focused hours every Monday."
+          hint="Saved preference for future weekly summary emails."
         >
           <Toggle
             checked={prefs.emailWeeklyDigest}

@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Shell, MinimalNav, designStyles } from "@/components/design";
+import { Logo } from "@/assets/exports";
 
 const FEATURES = [
   {
@@ -163,8 +165,11 @@ export default function FeaturesPage() {
         <footer className={designStyles.footer}>
           <div className={`${designStyles.wrap} ${designStyles.footInner}`}>
             <Link href="/" className={designStyles.brand}>
-              <span className={designStyles.brandMark} aria-hidden="true" />
-              <span>Refocus</span>
+              <Image
+                src={Logo}
+                alt="Refocus"
+                className="h-7 w-auto dark:invert dark:brightness-0"
+              />
             </Link>
             <div style={{ display: "flex", gap: 28 }}>
               <Link href="/">Home</Link>

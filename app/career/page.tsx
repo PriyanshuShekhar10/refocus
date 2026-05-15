@@ -1,49 +1,84 @@
 import Link from "next/link";
-import { Users, Heart, Zap, Globe } from "lucide-react";
+import Image from "next/image";
 import { Shell, MinimalNav, designStyles } from "@/components/design";
+import { Logo } from "@/assets/exports";
+import { LandingLightLock } from "@/components/landing-light-lock";
 
-const values = [
+const openRoles = [
   {
-    icon: Users,
-    title: "People first",
-    description:
-      "We build for meaningful connection. Our team works closely, supports each other, and grows together.",
+    title: "Frontend Engineer (Fresher)",
+    level: "0-1 years",
+    mode: "Remote · Full-time",
+    summary:
+      "Build polished, accessible product interfaces with React and Next.js. Ideal for early-career developers who care about UX and clean code.",
+    skills:
+      "JavaScript/TypeScript basics, React fundamentals, CSS/Tailwind comfort, willingness to ship and learn quickly.",
   },
   {
-    icon: Heart,
-    title: "Purpose driven",
-    description:
-      "Every feature we ship helps someone focus and finish what they sit down to do. Your work matters.",
+    title: "Full-Stack Engineer (Junior)",
+    level: "0-2 years",
+    mode: "Remote · Full-time",
+    summary:
+      "Work across API and product features, from session flows to reliability improvements. Great fit for strong freshers with project experience.",
+    skills:
+      "Node.js/Next.js basics, REST APIs, database fundamentals, debugging mindset, ownership of features end-to-end.",
   },
   {
-    icon: Zap,
-    title: "Move fast",
-    description:
-      "We ship early, learn fast, and iterate. You'll have real impact from day one.",
+    title: "Community & Support Associate (Fresher)",
+    level: "0-1 years",
+    mode: "Remote · Full-time",
+    summary:
+      "Support users, guide onboarding, and improve community quality. Best for clear communicators who enjoy helping people stay productive.",
+    skills:
+      "Written communication, empathy, issue triage, light product tooling familiarity, strong follow-through.",
   },
   {
-    icon: Globe,
-    title: "Remote-friendly",
-    description:
-      "Work from anywhere. We're distributed, async-first, and built around long focus blocks.",
+    title: "Product Operations Intern",
+    level: "Final year / Recent graduate",
+    mode: "Remote · Internship",
+    summary:
+      "Help run experiments, document workflows, and support launch operations. Strong path into product, ops, or growth roles.",
+    skills:
+      "Structured thinking, spreadsheet comfort, attention to detail, ability to summarize insights clearly.",
   },
 ];
 
 export default function CareerPage() {
   return (
-    <Shell>
-      <MinimalNav
-        ctas={[
-          { label: "Home", href: "/", variant: "quiet" },
-          { label: "Start focusing", href: "/auth/sign-up", variant: "primary" },
-        ]}
-      />
+    <LandingLightLock>
+      <Shell>
+        <MinimalNav
+          ctas={[
+            { label: "Home", href: "/", variant: "quiet" },
+            { label: "Start focusing", href: "/auth/sign-up", variant: "primary" },
+          ]}
+        />
 
-      <main>
+      <main
+        style={{
+          background:
+            "linear-gradient(180deg, color-mix(in oklab, var(--accent-soft) 35%, var(--bg)) 0%, var(--bg) 24%)",
+        }}
+      >
         {/* Hero */}
-        <section style={{ padding: "80px 0 56px" }}>
+        <section
+          style={{
+            padding: "88px 0 64px",
+            borderBottom: "1px solid var(--line-soft)",
+          }}
+        >
           <div className={designStyles.wrap}>
-            <span className={designStyles.eyebrow}>We&apos;re hiring</span>
+            <span
+              className={designStyles.eyebrow}
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                background: "color-mix(in oklab, var(--accent-soft) 70%, transparent)",
+                border: "1px solid color-mix(in oklab, var(--accent) 24%, var(--line))",
+              }}
+            >
+              We&apos;re hiring
+            </span>
             <h1
               className={designStyles.pageTitle}
               style={{ fontSize: "clamp(40px, 6vw, 72px)", maxWidth: "14ch" }}
@@ -63,107 +98,119 @@ export default function CareerPage() {
           </div>
         </section>
 
-        {/* Values */}
+        {/* Open roles */}
         <section
           style={{
             padding: "80px 0",
             borderTop: "1px solid var(--line)",
+            background:
+              "linear-gradient(180deg, color-mix(in oklab, var(--accent-soft) 22%, transparent) 0%, transparent 60%)",
           }}
         >
           <div className={designStyles.wrap}>
-            <div style={{ marginBottom: 48 }}>
-              <span className={designStyles.eyebrow}>01 — Why Refocus</span>
-              <h2
-                className={designStyles.pageTitle}
-                style={{ fontSize: "clamp(28px, 4vw, 44px)" }}
-              >
-                What you can expect.
-              </h2>
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: 14,
-              }}
-            >
-              {values.map((v) => (
-                <article
-                  key={v.title}
-                  className={designStyles.card}
-                  style={{ minHeight: 180 }}
-                >
-                  <div
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 40,
-                      height: 40,
-                      borderRadius: 10,
-                      background: "var(--accent-soft)",
-                      color: "color-mix(in oklab, var(--accent) 70%, var(--ink))",
-                      marginBottom: 16,
-                    }}
-                  >
-                    <v.icon size={18} />
-                  </div>
-                  <h3
-                    className={designStyles.sectionTitle}
-                    style={{ fontSize: 18, marginBottom: 6 }}
-                  >
-                    {v.title}
-                  </h3>
-                  <p
-                    style={{
-                      color: "var(--ink-soft)",
-                      fontSize: 14,
-                      lineHeight: 1.55,
-                      margin: 0,
-                    }}
-                  >
-                    {v.description}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Open roles */}
-        <section
-          style={{ padding: "80px 0", borderTop: "1px solid var(--line)" }}
-        >
-          <div className={designStyles.wrap}>
-            <span className={designStyles.eyebrow}>02 — Open roles</span>
+            <span className={designStyles.eyebrow}>01 — Open roles</span>
             <h2
               className={designStyles.pageTitle}
               style={{ fontSize: "clamp(28px, 4vw, 44px)" }}
             >
-              Quiet, for now.
+              Roles we are actively hiring for.
             </h2>
             <p
               className={designStyles.pageSub}
               style={{ fontSize: 16, marginTop: 16 }}
             >
-              We&apos;re preparing to grow. Check back soon, or drop us a note
-              and we&apos;ll reach out when we open applications.
+              Fresher-friendly openings across engineering and operations.
+              Instead of an application form, email your resume and a short
+              introduction to <strong>hello@refocus.co.in</strong>.
             </p>
-            <div style={{ marginTop: 28 }}>
-              <span
-                className={designStyles.tag}
-                style={{ padding: "8px 14px" }}
-              >
-                <span
+
+            <div
+              style={{
+                marginTop: 28,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 14,
+              }}
+            >
+              {openRoles.map((role) => (
+                <article
+                  key={role.title}
+                  className={designStyles.card}
                   style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    background: "var(--accent)",
+                    borderColor: "color-mix(in oklab, var(--accent) 20%, var(--line))",
+                    background:
+                      "linear-gradient(180deg, color-mix(in oklab, var(--accent-soft) 35%, var(--card)) 0%, var(--card) 100%)",
                   }}
-                />
-                Roles opening soon
-              </span>
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 10,
+                    }}
+                  >
+                    <h3
+                      className={designStyles.sectionTitle}
+                      style={{ fontSize: 18 }}
+                    >
+                      {role.title}
+                    </h3>
+                    <span className={designStyles.tag}>{role.level}</span>
+                  </div>
+                  <p
+                    style={{
+                      marginTop: 8,
+                      fontSize: 13,
+                      color: "var(--ink-mute)",
+                      fontFamily: "var(--font-mono)",
+                    }}
+                  >
+                    {role.mode}
+                  </p>
+                  <p
+                    style={{
+                      marginTop: 12,
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      color: "var(--ink-soft)",
+                    }}
+                  >
+                    {role.summary}
+                  </p>
+                  <p
+                    style={{
+                      marginTop: 10,
+                      fontSize: 13,
+                      lineHeight: 1.55,
+                      color: "var(--ink-mute)",
+                    }}
+                  >
+                    <strong style={{ color: "var(--ink-soft)" }}>Looking for:</strong>{" "}
+                    {role.skills}
+                  </p>
+                </article>
+              ))}
+            </div>
+
+            <div
+              className={designStyles.card}
+              style={{
+                marginTop: 16,
+                padding: 18,
+                borderColor: "color-mix(in oklab, var(--accent) 30%, var(--line))",
+                background:
+                  "linear-gradient(180deg, color-mix(in oklab, var(--accent-soft) 45%, var(--card)) 0%, var(--card) 100%)",
+              }}
+            >
+              <p style={{ margin: 0, fontSize: 14, color: "var(--ink-soft)" }}>
+                To apply, mail{" "}
+                <a className={designStyles.link} href="mailto:hello@refocus.co.in">
+                  hello@refocus.co.in
+                </a>{" "}
+                with your resume, portfolio/GitHub (if any), and the role title
+                in the subject line.
+              </p>
             </div>
           </div>
         </section>
@@ -174,6 +221,8 @@ export default function CareerPage() {
             padding: "100px 0",
             borderTop: "1px solid var(--line)",
             textAlign: "center",
+            background:
+              "linear-gradient(180deg, color-mix(in oklab, var(--accent-soft) 26%, transparent) 0%, transparent 58%)",
           }}
         >
           <div className={designStyles.wrap}>
@@ -197,10 +246,10 @@ export default function CareerPage() {
             </p>
             <div style={{ marginTop: 32 }}>
               <a
-                href="mailto:careers@refocus.app"
+                href="mailto:hello@refocus.co.in"
                 className={`${designStyles.btn} ${designStyles.btnPrimary} ${designStyles.btnLg}`}
               >
-                careers@refocus.app
+                hello@refocus.co.in
               </a>
             </div>
           </div>
@@ -210,8 +259,11 @@ export default function CareerPage() {
         <footer className={designStyles.footer}>
           <div className={`${designStyles.wrap} ${designStyles.footInner}`}>
             <Link href="/" className={designStyles.brand}>
-              <span className={designStyles.brandMark} aria-hidden="true" />
-              <span>Refocus</span>
+              <Image
+                src={Logo}
+                alt="Refocus"
+                className="h-7 w-auto dark:invert dark:brightness-0"
+              />
             </Link>
             <div style={{ display: "flex", gap: 28 }}>
               <Link href="/">Home</Link>
@@ -221,7 +273,8 @@ export default function CareerPage() {
             <div className={designStyles.footMeta}>made for deep work</div>
           </div>
         </footer>
-      </main>
-    </Shell>
+        </main>
+      </Shell>
+    </LandingLightLock>
   );
 }

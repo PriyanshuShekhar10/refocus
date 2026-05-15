@@ -27,11 +27,15 @@ export async function GET(
         location: 1,
         website: 1,
         createdAt: 1,
+        "preferences.publicProfile": 1,
       },
     }
   );
 
   if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+  if (user.preferences?.publicProfile === false) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./design.module.css";
+import { Logo } from "@/assets/exports";
 
 type NavCta = {
   label: string;
@@ -41,8 +43,12 @@ export function MinimalNav({
     >
       <div className={`${styles.wrap} ${styles.navInner}`}>
         <Link href="/" className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true" />
-          <span>Refocus</span>
+          <Image
+            src={Logo}
+            alt="Refocus"
+            className="h-7 w-auto dark:invert dark:brightness-0"
+            priority
+          />
         </Link>
 
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
