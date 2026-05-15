@@ -6,6 +6,7 @@ import { ObjectId } from "mongodb";
 import { chatChannel, publish, userChannel } from "@/lib/sse";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { areFriends } from "@/lib/friendship";
+import { publishAbly } from "@/lib/ably-server";
 
 type MessageDoc = {
   _id: ObjectId;
@@ -152,7 +153,15 @@ export async function POST(
         type: "message:new",
         payload: newMsg,
       }),
+      publishAbly(channel, {
+        type: "message:new",
+        payload: newMsg,
+      }),
       publish(userChannel(friendId), {
+        type: "unread:inc",
+        payload: { friendId: currentUserId, delta: 1 },
+      }),
+      publishAbly(userChannel(friendId), {
         type: "unread:inc",
         payload: { friendId: currentUserId, delta: 1 },
       }),
@@ -239,7 +248,15 @@ export async function POST(
         type: "session-request:new",
         payload: srMsg,
       }),
+      publishAbly(channel, {
+        type: "session-request:new",
+        payload: srMsg,
+      }),
       publish(userChannel(friendId), {
+        type: "unread:inc",
+        payload: { friendId: currentUserId, delta: 1 },
+      }),
+      publishAbly(userChannel(friendId), {
         type: "unread:inc",
         payload: { friendId: currentUserId, delta: 1 },
       }),

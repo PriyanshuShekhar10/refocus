@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { chatChannel, publish, sessionsChannel } from "@/lib/sse";
+import { publishAbly } from "@/lib/ably-server";
 
 // POST /api/session-requests/:id { action: 'accept'|'decline', message?: string }
 // On accept: create a session and add both users as participants
@@ -89,10 +90,11 @@ export async function POST(
     );
     // Publish to chat channel for both users (async for Redis support)
     const channel = chatChannel(reqDoc.from_user_id, reqDoc.to_user_id);
-    await publish(channel, {
+    const event = {
       type: "session-request:update",
       payload: { id: String(reqDoc._id), status: nextStatus },
-    });
+    };
+    await Promise.all([publish(channel, event), publishAbly(channel, event)]);
   } catch {}
 
   return NextResponse.json({ ok: true, sessionId: createdSessionId });
@@ -135,10 +137,11 @@ export async function DELETE(
       );
     // Publish event (async for Redis support)
     const channel = chatChannel(reqDoc.from_user_id, reqDoc.to_user_id);
-    await publish(channel, {
+    const event = {
       type: "session-request:update",
       payload: { id: String(reqDoc._id), status: "cancelled" },
-    });
+    };
+    await Promise.all([publish(channel, event), publishAbly(channel, event)]);
   } catch {}
 
   return NextResponse.json({ ok: true });

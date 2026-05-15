@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiMinus, FiMaximize2, FiX } from "react-icons/fi";
+import { getAblyClient } from "@/lib/ably-client";
+import { chatChannel } from "@/lib/realtimeChannels";
 
 type SessionRequestPayload = {
   sessionRequestId: string;
@@ -227,61 +229,57 @@ export default function FriendChat({
 
   useEffect(() => {
     load();
-    // Setup SSE subscription for realtime updates.
-    // Append incoming messages directly from the SSE payload instead of
-    // re-fetching the entire conversation on every event.
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource(`/api/chat/${friendId}/events`);
-      es.onmessage = (ev) => {
-        try {
-          const data = JSON.parse(ev.data || "{}");
-          if (data?.type === "hello" || data?.type === "ping") return;
+    let isUnmounted = false;
+    const channelName = currentUserId
+      ? chatChannel(currentUserId, friendId)
+      : null;
+    if (!channelName) return;
 
-          if (
-            (data?.type === "message:new" ||
-              data?.type === "session-request:new") &&
-            data?.payload
-          ) {
-            const incoming = data.payload as ChatMessage;
-            if (incoming.id) {
-              setMessages((prev) => {
-                // Already have this message (by real ID)
-                if (prev.some((m) => m.id === incoming.id)) return prev;
-                // Replace optimistic message from same sender with same content
-                const optIdx = prev.findIndex(
-                  (m) =>
-                    m.id.startsWith("temp-") &&
-                    m.from_user_id === incoming.from_user_id &&
-                    m.content === incoming.content,
-                );
-                if (optIdx !== -1) {
-                  const updated = [...prev];
-                  updated[optIdx] = incoming;
-                  return updated;
-                }
-                return [...prev, incoming];
-              });
-              // Mark as read (best-effort)
-              try {
-                fetch(`/api/chat/${friendId}/read`, { method: "POST" });
-              } catch {}
-              return;
+    const client = getAblyClient();
+    const channel = client.channels.get(channelName);
+    const onEvent = (message: { data?: unknown }) => {
+      if (isUnmounted) return;
+      const data = message.data as { type?: string; payload?: unknown } | undefined;
+      if (!data?.type) return;
+
+      if (
+        (data.type === "message:new" || data.type === "session-request:new") &&
+        data.payload
+      ) {
+        const incoming = data.payload as ChatMessage;
+        if (incoming.id) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === incoming.id)) return prev;
+            const optIdx = prev.findIndex(
+              (m) =>
+                m.id.startsWith("temp-") &&
+                m.from_user_id === incoming.from_user_id &&
+                m.content === incoming.content,
+            );
+            if (optIdx !== -1) {
+              const updated = [...prev];
+              updated[optIdx] = incoming;
+              return updated;
             }
-          }
+            return [...prev, incoming];
+          });
+          try {
+            fetch(`/api/chat/${friendId}/read`, { method: "POST" });
+          } catch {}
+          return;
+        }
+      }
 
-          // Fallback: re-fetch for unrecognised event types
-          load();
-        } catch {}
-      };
-      es.onerror = () => {
-        // Allow browser to auto-reconnect; no-op
-      };
-    } catch {}
-    return () => {
-      if (es) es.close();
+      // session-request:update and any unknown event => refresh list
+      load();
     };
-  }, [friendId, load]);
+
+    channel.subscribe("event", onEvent);
+    return () => {
+      isUnmounted = true;
+      channel.unsubscribe("event", onEvent);
+    };
+  }, [currentUserId, friendId, load]);
 
   const sendText = async () => {
     const value = text.trim();

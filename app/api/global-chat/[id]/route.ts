@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { globalChatChannel, publish } from "@/lib/sse";
+import { publishAbly } from "@/lib/ably-server";
 
 export async function DELETE(
   _req: NextRequest,
@@ -67,10 +68,14 @@ export async function DELETE(
     }
 
     // Publish update event (async for Redis support)
-    await publish(globalChatChannel(), {
+    const event = {
       type: "message:deleted",
       payload: { id: messageId },
-    });
+    };
+    await Promise.all([
+      publish(globalChatChannel(), event),
+      publishAbly(globalChatChannel(), event),
+    ]);
 
     return NextResponse.json({ success: true, id: messageId });
   } catch (error) {

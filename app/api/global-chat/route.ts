@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { globalChatChannel } from "@/lib/sse";
 import { publish } from "@/lib/sse";
+import { publishAbly } from "@/lib/ably-server";
 import {
   checkRateLimit,
   rateLimitedResponse,
@@ -185,7 +186,7 @@ export async function POST(req: NextRequest) {
   });
 
   // Publish full message data for optimized client updates
-  await publish(globalChatChannel(), {
+  const event = {
     type: "message:new",
     payload: {
       id: String(insert.insertedId),
@@ -197,7 +198,11 @@ export async function POST(req: NextRequest) {
       deleted: false,
       deleted_at: null,
     },
-  });
+  };
+  await Promise.all([
+    publish(globalChatChannel(), event),
+    publishAbly(globalChatChannel(), event),
+  ]);
 
   // Return response with rate limit headers
   const response = NextResponse.json({ id: String(insert.insertedId) });

@@ -4,6 +4,8 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, Send, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { getAblyClient } from "@/lib/ably-client";
+import { globalChatChannel } from "@/lib/realtimeChannels";
 
 type GlobalMessage = {
   id: string;
@@ -167,90 +169,59 @@ export default function GlobalChat() {
 
   useEffect(() => {
     load();
-    let es: EventSource | null = null;
+    const client = getAblyClient();
+    const channel = client.channels.get(globalChatChannel());
+    const onEvent = (message: { data?: unknown }) => {
+      const data = message.data as
+        | { type?: string; payload?: { id?: string } & Partial<GlobalMessage> }
+        | undefined;
+      if (!data?.type) return;
 
-    try {
-      es = new EventSource("/api/events");
-
-      es.onmessage = (ev) => {
-        try {
-          const data = JSON.parse(ev.data || "{}");
-
-          // Only handle global chat events
-          if (data?.channel !== "global") return;
-
-          // Ignore heartbeat events
-          if (data?.type === "hello" || data?.type === "ping") return;
-
-          // Handle new message - append directly instead of re-fetching
-          if (data?.type === "message:new" && data?.payload) {
-            const newMessage = data.payload as GlobalMessage;
-
-            // Validate the payload has required fields
-            if (newMessage.id && newMessage.content !== undefined) {
-              setMessages((prev) => {
-                // Check if this message already exists (by real ID)
-                if (prev.some((m) => m.id === newMessage.id)) {
-                  return prev;
-                }
-
-                // Check for optimistic message (temp ID) with same content from same user
-                // This handles the case where SSE arrives after the POST response
-                const optimisticIndex = prev.findIndex(
-                  (m) =>
-                    m.id.startsWith("temp-") &&
-                    m.user_id === newMessage.user_id &&
-                    m.content === newMessage.content,
-                );
-
-                if (optimisticIndex !== -1) {
-                  // Replace the optimistic message with the real one
-                  const updated = [...prev];
-                  updated[optimisticIndex] = newMessage;
-                  return updated;
-                }
-
-                // No duplicate or optimistic message found, append normally
-                return [...prev, newMessage];
-              });
-              return;
+      if (data.type === "message:new" && data.payload) {
+        const newMessage = data.payload as GlobalMessage;
+        if (newMessage.id && newMessage.content !== undefined) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMessage.id)) {
+              return prev;
             }
-          }
-
-          // Handle message deletion - update locally
-          if (data?.type === "message:deleted" && data?.payload?.id) {
-            const deletedId = data.payload.id as string;
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === deletedId
-                  ? {
-                      ...m,
-                      deleted: true,
-                      content: "[This message was deleted]",
-                    }
-                  : m,
-              ),
+            const optimisticIndex = prev.findIndex(
+              (m) =>
+                m.id.startsWith("temp-") &&
+                m.user_id === newMessage.user_id &&
+                m.content === newMessage.content,
             );
-            return;
-          }
-
-          // Fallback: reload for any unhandled event types
-          load();
-        } catch {
-          // Parse error, ignore
+            if (optimisticIndex !== -1) {
+              const updated = [...prev];
+              updated[optimisticIndex] = newMessage;
+              return updated;
+            }
+            return [...prev, newMessage];
+          });
+          return;
         }
-      };
+      }
 
-      es.onerror = () => {
-        // Connection error - will auto-reconnect
-        console.warn("[GlobalChat] SSE connection error, will retry...");
-      };
-    } catch {
-      // EventSource not supported or other error
-    }
+      if (data.type === "message:deleted" && data.payload?.id) {
+        const deletedId = data.payload.id;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === deletedId
+              ? {
+                  ...m,
+                  deleted: true,
+                  content: "[This message was deleted]",
+                }
+              : m,
+          ),
+        );
+        return;
+      }
 
+      load();
+    };
+    channel.subscribe("event", onEvent);
     return () => {
-      if (es) es.close();
+      channel.unsubscribe("event", onEvent);
     };
   }, [load]);
 

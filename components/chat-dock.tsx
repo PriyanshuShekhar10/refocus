@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import FriendChat from "@/app/(product)/components/FriendChat";
 import { FiX } from "react-icons/fi";
+import { useSession } from "next-auth/react";
+import { getAblyClient } from "@/lib/ably-client";
+import { userChannel } from "@/lib/realtimeChannels";
 
 type Friend = {
   user_id: string;
@@ -19,6 +22,8 @@ type OpenChat = {
 };
 
 export function ChatDock() {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   const [panelOpen, setPanelOpen] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -42,34 +47,39 @@ export function ChatDock() {
         if (res.ok) setUnreadCounts(data.counts || {});
       } catch {}
     })();
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource("/api/events");
-      es.onmessage = (ev) => {
-        try {
-          const d = JSON.parse(ev.data || "{}");
-          if (d?.channel !== "user") return;
-          if (d?.type === "unread:update") {
-            setUnreadCounts((prev) => ({
+    if (!currentUserId) return;
+    const client = getAblyClient();
+    const channel = client.channels.get(userChannel(currentUserId));
+    const onEvent = (message: { data?: unknown }) => {
+      try {
+        const d = message.data as
+          | {
+              type?: string;
+              payload?: { friendId?: string; count?: number; delta?: number };
+            }
+          | undefined;
+        if (!d?.type || !d.payload?.friendId) return;
+        if (d.type === "unread:update") {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [d.payload!.friendId!]: d.payload!.count ?? 0,
+          }));
+        } else if (d.type === "unread:inc") {
+          setUnreadCounts((prev) => {
+            const curr = prev[d.payload!.friendId!] || 0;
+            return {
               ...prev,
-              [d.payload.friendId]: d.payload.count,
-            }));
-          } else if (d?.type === "unread:inc") {
-            setUnreadCounts((prev) => {
-              const curr = prev[d.payload.friendId] || 0;
-              return {
-                ...prev,
-                [d.payload.friendId]: curr + (d.payload.delta || 1),
-              };
-            });
-          }
-        } catch {}
-      };
-    } catch {}
-    return () => {
-      if (es) es.close();
+              [d.payload!.friendId!]: curr + (d.payload!.delta || 1),
+            };
+          });
+        }
+      } catch {}
     };
-  }, []);
+    channel.subscribe("event", onEvent);
+    return () => {
+      channel.unsubscribe("event", onEvent);
+    };
+  }, [currentUserId]);
 
   const totalUnread = useMemo(
     () => Object.values(unreadCounts).reduce((a, b) => a + (b || 0), 0),
