@@ -1,32 +1,37 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import Link from "next/link";
+import { MailCheck } from "lucide-react";
+import { AuthShell } from "@/components/auth-shell";
+import { designStyles } from "@/components/design";
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">
-                Thank you for signing up!
-              </CardTitle>
-              <CardDescription>Check your email to confirm</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                You&apos;ve successfully signed up. Please check your email to
-                confirm your account before signing in.
-              </p>
-            </CardContent>
-          </Card>
+    <AuthShell headerLink={{ label: "Back to login", href: "/auth/login" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className={designStyles.avatar} aria-hidden="true">
+          <MailCheck size={28} />
         </div>
+        <div>
+          <h1
+            className={designStyles.pageTitle}
+            style={{ fontSize: "clamp(24px, 4vw, 32px)" }}
+          >
+            Welcome to Refocus.
+          </h1>
+          <p
+            className={designStyles.pageSub}
+            style={{ marginTop: 10, fontSize: 14 }}
+          >
+            You&apos;ve successfully signed up. Check your email to confirm your
+            account before signing in.
+          </p>
+        </div>
+        <Link
+          href="/auth/login"
+          className={`${designStyles.btn} ${designStyles.btnPrimary} ${designStyles.btnLg}`}
+        >
+          Go to login
+        </Link>
       </div>
-    </div>
+    </AuthShell>
   );
 }

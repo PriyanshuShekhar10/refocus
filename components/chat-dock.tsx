@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import FriendChat from "@/app/(product)/components/FriendChat";
 import { FiX } from "react-icons/fi";
 import { useSession } from "next-auth/react";
@@ -26,18 +26,45 @@ export function ChatDock() {
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   const [panelOpen, setPanelOpen] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [friendsLoading, setFriendsLoading] = useState(false);
+  const [friendsLoaded, setFriendsLoaded] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [openChats, setOpenChats] = useState<OpenChat[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/friends");
-        const data = await res.json();
-        if (res.ok) setFriends((data.friends || []) as Friend[]);
-      } catch {}
-    })();
+  const loadFriends = useCallback(async () => {
+    setFriendsLoading(true);
+    try {
+      const res = await fetch("/api/friends", { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setFriends((data.friends || []) as Friend[]);
+        setFriendsLoaded(true);
+      }
+    } catch {
+      // Keep existing list on transient failures.
+    } finally {
+      setFriendsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadFriends();
+  }, [loadFriends]);
+
+  useEffect(() => {
+    if (!panelOpen) return;
+    loadFriends();
+  }, [panelOpen, loadFriends]);
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (panelOpen) {
+        loadFriends();
+      }
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [panelOpen, loadFriends]);
 
   useEffect(() => {
     (async () => {
@@ -167,7 +194,9 @@ export function ChatDock() {
             </button>
           </div>
           <div className="max-h-[372px] overflow-y-auto">
-            {friends.length === 0 ? (
+            {!friendsLoaded || friendsLoading ? (
+              <div className="p-3 text-sm text-gray-500">Loading friends…</div>
+            ) : friends.length === 0 ? (
               <div className="p-3 text-sm text-gray-500">No friends found</div>
             ) : (
               friends.map((f) => (

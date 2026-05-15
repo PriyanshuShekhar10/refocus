@@ -14,6 +14,7 @@ import {
   TIME_CONFIG,
   DEFAULT_DURATION,
   DEFAULT_DURATION_FILTER,
+  isValidDuration,
   type DurationMin,
 } from "@/constants/calendar";
 import { useCalendarSessions } from "@/hooks/useCalendarSessions";
@@ -26,6 +27,7 @@ import { CalendarSidebar } from "./Calendar/CalendarSidebar";
 import { CalendarHeader } from "./Calendar/CalendarHeader";
 import { CalendarEventCard } from "./Calendar/CalendarEventCard";
 import { CalendarRightSidebar } from "./Calendar/CalendarRightSidebar";
+import { isCallJoinable } from "@/lib/sessionWindow";
 
 // ============================================
 // Types
@@ -35,7 +37,6 @@ interface CalendarProps {
   startHour?: number;
   endHour?: number;
   stepMinutes?: 15 | 30;
-  visibleDays?: number;
   startDate?: Date;
   events?: CalendarEvent[];
   locale?: string;
@@ -194,14 +195,12 @@ export default function Calendar({
   startHour = 0,
   endHour = 24,
   stepMinutes = 15,
-  visibleDays: _visibleDaysProp = 3, // kept for API compatibility but state is managed internally
   startDate: startDateProp,
   events: eventsProp,
   locale = TIME_CONFIG.locale,
   onEventsChange,
   className = "",
 }: CalendarProps) {
-  void _visibleDaysProp; // silence unused warning
   const { hourBlockHeight, minorLinePositions } = CALENDAR_LAYOUT;
 
   // UI state machine
@@ -217,6 +216,28 @@ export default function Calendar({
       dispatch({ type: "SET_START_DATE", date: startDateProp });
     }
   }, [startDateProp]);
+
+  // Sync create-duration default from saved user preferences.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/preferences");
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        const preferred = data?.preferences?.defaultSessionLength;
+        if (!cancelled && typeof preferred === "number" && isValidDuration(preferred)) {
+          dispatch({ type: "SET_CREATE_DURATION", duration: preferred });
+        }
+      } catch {
+        // Keep fallback defaults when preferences cannot be loaded.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const days = useMemo(
     () => new Array(ui.visibleDays).fill(0).map((_, i) => addDays(ui.startDate, i)),
@@ -640,15 +661,13 @@ export default function Calendar({
         }).length}
         onGoToday={goToday}
         joinableSession={(() => {
-          const now = new Date();
           const joinable = events
             .filter((ev) => {
               const isBooked = (ev.participants?.length ?? 0) >= 2;
               if (!isBooked) return false;
               const start = new Date(ev.start);
               const end = ev.end ? new Date(ev.end) : new Date(start.getTime() + 60 * 60 * 1000);
-              const oneHourBefore = new Date(start.getTime() - 60 * 60 * 1000);
-              return now >= oneHourBefore && now <= end;
+              return isCallJoinable(start, end);
             })
             .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())[0];
           return joinable || null;

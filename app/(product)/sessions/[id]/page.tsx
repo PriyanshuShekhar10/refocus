@@ -14,6 +14,7 @@ export default async function SessionJoinPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (!ObjectId.isValid(id)) return notFound();
   const session = await getServerSession(authOptions);
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   if (!currentUserId) return notFound();
@@ -53,7 +54,7 @@ export default async function SessionJoinPage({
   // Look up the session partner's profile
   type PartnerInfo = { name?: string; firstname?: string; lastname?: string; username?: string };
   const partnerId = participants.find((p) => p.user_id !== currentUserId)?.user_id;
-  const partner: PartnerInfo | null = partnerId
+  const partner: PartnerInfo | null = partnerId && ObjectId.isValid(partnerId)
     ? (await db.collection("users").findOne(
         { _id: new ObjectId(partnerId) },
         { projection: { name: 1, firstname: 1, lastname: 1, username: 1 } }
@@ -62,6 +63,7 @@ export default async function SessionJoinPage({
   const partnerName = partner
     ? [partner.firstname, partner.lastname].filter(Boolean).join(" ") || partner.name || "Partner"
     : null;
+  const partnerInitial = partnerName ? partnerName.charAt(0).toUpperCase() : null;
 
   // Join window: from 5 minutes before start until 5 minutes after end.
   const now = new Date();
@@ -71,7 +73,20 @@ export default async function SessionJoinPage({
   const hasEnded = now > new Date(endTime.getTime() + CALL_JOIN_GRACE_MINUTES * 60 * 1000);
 
   if (canJoinNow) {
-    return <ClientCall sessionId={id} fullScreen />;
+    return (
+      <ClientCall
+        sessionId={id}
+        prejoin={{
+          partnerName,
+          partnerInitial,
+          durationMin: s.duration_min,
+          sessionType: s.session_type,
+          sessionName: s.name ?? null,
+          startIso: startTime.toISOString(),
+          endIso: endTime.toISOString(),
+        }}
+      />
+    );
   }
 
   return (
@@ -86,7 +101,6 @@ export default async function SessionJoinPage({
         </Link>
       </div>
       <div className="mt-4 space-y-2 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800/60">
-        <div className="truncate text-sm text-gray-700 dark:text-gray-300">ID: {id}</div>
         {s.name && <div className="text-sm text-gray-700 dark:text-gray-300">Name: {s.name}</div>}
         <div className="text-sm text-gray-700 dark:text-gray-300">
           Type: {s.session_type} • {s.duration_min} min
@@ -103,7 +117,7 @@ export default async function SessionJoinPage({
       {partnerName && (
         <div className="mt-4 flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-600 text-sm font-medium text-white">
-            {partnerName.charAt(0).toUpperCase()}
+            {partnerInitial}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">

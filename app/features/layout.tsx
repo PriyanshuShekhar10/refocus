@@ -3,5 +3,5 @@ export default function FeaturesLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div className="mt-40 mx-32">{children}</div>;
+  return <>{children}</>;
 }

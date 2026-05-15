@@ -1,11 +1,11 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { signIn } from "next-auth/react";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
+import { DButton, Field, DInput, DPasswordInput, designStyles } from "@/components/design";
 
 export function LoginForm({
   className,
@@ -13,10 +13,8 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -32,14 +30,14 @@ export function LoginForm({
       });
       if (res?.error) {
         if (res.error === "CredentialsSignin") {
-            setError("Invalid credentials. Please check your email and password.");
+          setError("Invalid credentials. Please check your email and password.");
         } else if (res.error.includes("No user found")) {
-             setError("No account found with this email. Please sign up.");
+          setError("No account found with this email. Please sign up.");
         } else {
-            setError(res.error);
+          setError(res.error);
         }
       } else {
-         router.push("/dashboard");
+        router.push("/dashboard");
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -49,135 +47,100 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col", className)} {...props}>
-      <h1 className="text-2xl font-semibold text-black dark:text-white mb-8 tracking-tight">
-        Sign in
-      </h1>
+    <div
+      className={className}
+      style={{ display: "flex", flexDirection: "column", gap: 24 }}
+      {...props}
+    >
+      <div>
+        <span className={designStyles.eyebrow}>Welcome back</span>
+        <h1
+          className={designStyles.pageTitle}
+          style={{ fontSize: "clamp(28px, 4vw, 36px)", marginTop: 12 }}
+        >
+          Sign in to Refocus.
+        </h1>
+        <p
+          className={designStyles.pageSub}
+          style={{ marginTop: 10, fontSize: 14 }}
+        >
+          Pick up where you left off — a quiet room is one click away.
+        </p>
+      </div>
 
-      <form onSubmit={handleLogin} className="space-y-4">
-        {/* Email */}
-        <div className="space-y-1.5">
-          <label
-            htmlFor="email"
-            className={cn(
-              "block text-xs font-medium transition-colors duration-200",
-              focusedField === "email"
-                ? "text-black dark:text-white"
-                : "text-gray-500 dark:text-gray-400"
-            )}
-          >
-            Email
-          </label>
-          <input
+      <form
+        onSubmit={handleLogin}
+        style={{ display: "flex", flexDirection: "column", gap: 16 }}
+      >
+        <Field label="Email" htmlFor="email">
+          <DInput
             id="email"
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onFocus={() => setFocusedField("email")}
-            onBlur={() => setFocusedField(null)}
-            className="w-full h-11 px-3 bg-transparent border-b border-gray-200 dark:border-gray-800 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-black dark:focus:border-white transition-colors duration-200"
             placeholder="you@example.com"
           />
-        </div>
+        </Field>
 
-        {/* Password */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="password"
-              className={cn(
-                "block text-xs font-medium transition-colors duration-200",
-                focusedField === "password"
-                  ? "text-black dark:text-white"
-                  : "text-gray-500 dark:text-gray-400"
-              )}
-            >
-              Password
-            </label>
+        <Field
+          label="Password"
+          htmlFor="password"
+          trailing={
             <Link
               href="/auth/forgot-password"
-              className="text-xs text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors duration-200"
+              className={designStyles.linkMute}
+              style={{ fontSize: 12 }}
             >
               Forgot?
             </Link>
-          </div>
-          <div className="relative">
-             <input
-               id="password"
-               type={showPassword ? "text" : "password"}
-               required
-               value={password}
-               onChange={(e) => setPassword(e.target.value)}
-               onFocus={() => setFocusedField("password")}
-               onBlur={() => setFocusedField(null)}
-               className="w-full h-11 px-3 bg-transparent border-b border-gray-200 dark:border-gray-800 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-black dark:focus:border-white transition-colors duration-200 pr-10"
-               placeholder="••••••••"
-             />
-             <button
-               type="button"
-               onClick={() => setShowPassword(!showPassword)}
-               className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black dark:hover:text-white"
-             >
-               {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
-             </button>
-          </div>
-        </div>
+          }
+        >
+          <DPasswordInput
+            id="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+          />
+        </Field>
 
-        {/* Error */}
         {error && (
-          <p className="text-sm text-red-500 dark:text-red-400 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className={`${designStyles.alert} ${designStyles.alertError}`}>
             {error}
-          </p>
+          </div>
         )}
 
-        {/* Submit */}
-        <button
+        <DButton
           type="submit"
+          variant="primary"
+          size="lg"
+          full
           disabled={isLoading}
-          className={cn(
-            "w-full h-11 mt-6 flex items-center justify-center text-sm font-medium rounded-lg transition-all duration-200",
-            "bg-black dark:bg-white text-white dark:text-black",
-            "hover:opacity-80 active:scale-[0.98]",
-            "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
-          )}
         >
           {isLoading ? (
-            <span className="flex items-center gap-2">
-              <svg
-                className="animate-spin h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-              Signing in...
-            </span>
+            <>Signing in…</>
           ) : (
-            "Continue"
+            <>
+              Continue
+              <ArrowRight size={16} className={designStyles.arrow} />
+            </>
           )}
-        </button>
+        </DButton>
       </form>
 
-      {/* Footer */}
-      <p className="mt-8 text-center text-sm text-gray-400 dark:text-gray-500">
+      <p
+        style={{
+          textAlign: "center",
+          fontSize: 13,
+          color: "var(--ink-mute)",
+          marginTop: 8,
+        }}
+      >
         Don&apos;t have an account?{" "}
-        <Link
-          href="/auth/sign-up"
-          className="text-black dark:text-white hover:opacity-70 transition-opacity duration-200"
-        >
+        <Link href="/auth/sign-up" className={designStyles.link}>
           Sign up
         </Link>
       </p>

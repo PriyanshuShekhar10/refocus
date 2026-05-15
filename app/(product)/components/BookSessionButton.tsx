@@ -1,11 +1,16 @@
 "use client";
 import { useState, useMemo, useEffect, useCallback } from "react";
+import {
+  DEFAULT_DURATION,
+  isValidDuration,
+  type DurationMin,
+} from "@/constants/calendar";
 
 export type CreatedSession = {
   id: string;
   start: string;
   end: string;
-  durationMin: 25 | 50 | 75;
+  durationMin: DurationMin;
   sessionType: "focus" | "deep-work" | "learning";
   status: "available" | "booked" | "in-progress" | "completed";
 };
@@ -13,7 +18,7 @@ export type CreatedSession = {
 type Props = {
   label?: string;
   className?: string;
-  defaultDuration?: 25 | 50 | 75;
+  defaultDuration?: DurationMin;
   defaultSessionType?: "focus" | "deep-work" | "learning";
   onCreated?: (session: CreatedSession) => void;
 };
@@ -21,7 +26,7 @@ type Props = {
 export default function BookSessionButton({
   label = "Book a session",
   className = "",
-  defaultDuration = 25,
+  defaultDuration,
   defaultSessionType = "focus",
   onCreated,
 }: Props) {
@@ -33,7 +38,9 @@ export default function BookSessionButton({
   const [srDate, setSrDate] = useState<Date | null>(null);
   const [srHour, setSrHour] = useState<number | null>(null);
   const [srMinute, setSrMinute] = useState<number>(0);
-  const [duration, setDuration] = useState<25 | 50 | 75>(defaultDuration);
+  const [duration, setDuration] = useState<DurationMin>(
+    defaultDuration ?? DEFAULT_DURATION
+  );
   const [sessionType, setSessionType] = useState<
     "focus" | "deep-work" | "learning"
   >(defaultSessionType);
@@ -43,6 +50,28 @@ export default function BookSessionButton({
     Array<{ start: string; end: string }>
   >([]);
   const [loadingBusy, setLoadingBusy] = useState(false);
+
+  // Pull saved duration only when caller did not pass an explicit override.
+  useEffect(() => {
+    if (defaultDuration !== undefined) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/preferences");
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        const preferred = data?.preferences?.defaultSessionLength;
+        if (!cancelled && typeof preferred === "number" && isValidDuration(preferred)) {
+          setDuration(preferred);
+        }
+      } catch {
+        // Keep fallback default when preferences cannot be loaded.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [defaultDuration]);
 
   // Fetch my busy slots when modal opens
   useEffect(() => {

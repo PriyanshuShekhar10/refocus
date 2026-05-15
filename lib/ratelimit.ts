@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
+import { getPublisher, isRedisConfigured } from "./redis";
 
 /**
- * Native in-memory rate limiting.
- * Scope: current Node.js process only.
+ * Rate limiting backed by Redis (production) with an in-memory fallback
+ * (dev / no REDIS_URL). The Redis implementation uses a sliding-window
+ * sorted set, so limits are shared across every serverless instance.
  */
 
-/**
- * Rate limiter configurations for different use cases
- */
 export type RateLimitType =
   | "api" // General API calls
   | "chat" // Chat messages (more lenient)
@@ -21,11 +20,11 @@ interface RateLimitConfig {
 }
 
 const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
-  api: { requests: 100, window: "1 m" }, // 100 requests per minute
-  chat: { requests: 30, window: "1 m" }, // 30 messages per minute
-  auth: { requests: 5, window: "1 m" }, // 5 auth attempts per minute
-  search: { requests: 20, window: "1 m" }, // 20 searches per minute
-  ai: { requests: 10, window: "1 m" }, // 10 AI calls per minute (external API cost)
+  api: { requests: 100, window: "1 m" },
+  chat: { requests: 30, window: "1 m" },
+  auth: { requests: 5, window: "1 m" },
+  search: { requests: 20, window: "1 m" },
+  ai: { requests: 10, window: "1 m" },
 };
 
 type BucketState = Map<string, number[]>;
@@ -47,9 +46,6 @@ function parseWindowMs(window: RateLimitConfig["window"]): number {
   return amount * unitToMs[rawUnit];
 }
 
-/**
- * Rate limit result type
- */
 export interface RateLimitResult {
   success: boolean;
   limit: number;
@@ -58,8 +54,8 @@ export interface RateLimitResult {
 }
 
 /**
- * Extract client IP from a request object
- * Supports standard Request, NextRequest, and plain objects with headers
+ * Extract client IP from a request object.
+ * Supports standard Request, NextRequest, and plain objects with headers.
  */
 export function getClientIp(
   req:
@@ -86,61 +82,138 @@ export function getClientIp(
     ip = "127.0.0.1";
   }
 
-  // x-forwarded-for can be a comma-separated list; grab the first one
   return ip.split(",")[0].trim();
 }
 
+// ---------------------------------------------------------------------------
+// In-memory backend (used in dev / when REDIS_URL is missing)
+// ---------------------------------------------------------------------------
+
+function checkInMemory(
+  identifier: string,
+  type: RateLimitType,
+): RateLimitResult {
+  const now = Date.now();
+  const config = RATE_LIMIT_CONFIGS[type];
+  const windowMs = parseWindowMs(config.window);
+  const key = `${type}:${identifier}`;
+
+  const buckets = getBucketState();
+  const existing = buckets.get(key) ?? [];
+  const kept = existing.filter((ts) => now - ts < windowMs);
+
+  if (kept.length >= config.requests) {
+    const reset = kept[0] + windowMs;
+    buckets.set(key, kept);
+    return {
+      success: false,
+      limit: config.requests,
+      remaining: 0,
+      reset,
+    };
+  }
+
+  kept.push(now);
+  buckets.set(key, kept);
+
+  const oldest = kept[0] ?? now;
+  return {
+    success: true,
+    limit: config.requests,
+    remaining: Math.max(config.requests - kept.length, 0),
+    reset: oldest + windowMs,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Redis backend (sliding-window sorted set)
+// ---------------------------------------------------------------------------
+
+async function checkRedis(
+  identifier: string,
+  type: RateLimitType,
+): Promise<RateLimitResult | null> {
+  const config = RATE_LIMIT_CONFIGS[type];
+  const windowMs = parseWindowMs(config.window);
+  const now = Date.now();
+  const key = `rl:${type}:${identifier}`;
+
+  let client;
+  try {
+    client = getPublisher();
+  } catch {
+    return null; // Redis not configured / connection failed
+  }
+
+  if (client.status !== "ready") return null;
+
+  try {
+    // 1) Drop entries older than the window.
+    // 2) Read current count.
+    // 3) Read the oldest remaining entry (for the reset timestamp).
+    const minScore = now - windowMs;
+    const pipeline = client.pipeline();
+    pipeline.zremrangebyscore(key, 0, minScore);
+    pipeline.zcard(key);
+    pipeline.zrange(key, 0, 0, "WITHSCORES");
+    const results = await pipeline.exec();
+
+    if (!results) return null;
+
+    const count = Number(results[1]?.[1] ?? 0);
+    const oldestEntry = results[2]?.[1] as string[] | undefined;
+    const oldestScore = oldestEntry && oldestEntry.length >= 2
+      ? Number(oldestEntry[1])
+      : now;
+
+    if (count >= config.requests) {
+      // Deny without consuming a slot.
+      return {
+        success: false,
+        limit: config.requests,
+        remaining: 0,
+        reset: oldestScore + windowMs,
+      };
+    }
+
+    // Consume a slot. Use a unique member so concurrent requests don't collide.
+    const member = `${now}-${Math.random().toString(36).slice(2, 10)}`;
+    const consume = client.pipeline();
+    consume.zadd(key, now, member);
+    consume.pexpire(key, windowMs);
+    await consume.exec();
+
+    return {
+      success: true,
+      limit: config.requests,
+      remaining: Math.max(config.requests - count - 1, 0),
+      reset: (count === 0 ? now : oldestScore) + windowMs,
+    };
+  } catch (err) {
+    console.error("[RateLimit] Redis error, falling back to memory:", err);
+    return null;
+  }
+}
+
 /**
- * Check rate limit for a given identifier
+ * Check rate limit for a given identifier.
  *
- * @param identifier - Unique identifier (usually user ID or IP)
- * @param type - Type of rate limit to apply
- * @returns Rate limit result with success status and metadata
- *
- * @example
- * const result = await checkRateLimit(userId, "chat");
- * if (!result.success) {
- *   return NextResponse.json({ error: "Too many requests" }, { status: 429 });
- * }
+ * Uses Redis when available (so limits work across serverless instances);
+ * falls back to a per-process map otherwise. Both branches return the same
+ * shape, and fail open if anything unexpected happens.
  */
 export async function checkRateLimit(
   identifier: string,
   type: RateLimitType = "api",
 ): Promise<RateLimitResult> {
   try {
-    const now = Date.now();
-    const config = RATE_LIMIT_CONFIGS[type];
-    const windowMs = parseWindowMs(config.window);
-    const key = `${type}:${identifier}`;
-
-    const buckets = getBucketState();
-    const existing = buckets.get(key) ?? [];
-    const kept = existing.filter((ts) => now - ts < windowMs);
-
-    if (kept.length >= config.requests) {
-      const reset = kept[0] + windowMs;
-      buckets.set(key, kept);
-      return {
-        success: false,
-        limit: config.requests,
-        remaining: 0,
-        reset,
-      };
+    if (isRedisConfigured()) {
+      const redisResult = await checkRedis(identifier, type);
+      if (redisResult) return redisResult;
     }
-
-    kept.push(now);
-    buckets.set(key, kept);
-
-    const oldest = kept[0] ?? now;
-    return {
-      success: true,
-      limit: config.requests,
-      remaining: Math.max(config.requests - kept.length, 0),
-      reset: oldest + windowMs,
-    };
+    return checkInMemory(identifier, type);
   } catch (error) {
     console.error("[RateLimit] Error checking rate limit:", error);
-    // On error, allow the request (fail open)
     return {
       success: true,
       limit: Infinity,
@@ -151,10 +224,7 @@ export async function checkRateLimit(
 }
 
 /**
- * Create a rate-limited response with appropriate headers
- *
- * @param result - Rate limit result
- * @returns NextResponse with 429 status and rate limit headers
+ * Create a rate-limited response with appropriate headers.
  */
 export function rateLimitedResponse(result: RateLimitResult): NextResponse {
   return NextResponse.json(
@@ -176,11 +246,7 @@ export function rateLimitedResponse(result: RateLimitResult): NextResponse {
 }
 
 /**
- * Add rate limit headers to a successful response
- *
- * @param response - The response to add headers to
- * @param result - Rate limit result
- * @returns Response with rate limit headers
+ * Add rate limit headers to a successful response.
  */
 export function addRateLimitHeaders(
   response: NextResponse,
@@ -193,19 +259,7 @@ export function addRateLimitHeaders(
 }
 
 /**
- * Higher-order function to wrap an API handler with rate limiting
- *
- * @param handler - The API handler function
- * @param type - Type of rate limit to apply
- * @param getIdentifier - Function to extract identifier from request
- * @returns Wrapped handler with rate limiting
- *
- * @example
- * export const POST = withRateLimit(
- *   async (req) => { ... },
- *   "chat",
- *   async (req) => await getUserIdFromSession()
- * );
+ * Higher-order function to wrap an API handler with rate limiting.
  */
 export function withRateLimit<T extends unknown[]>(
   handler: (...args: T) => Promise<NextResponse>,
@@ -214,8 +268,6 @@ export function withRateLimit<T extends unknown[]>(
 ): (...args: T) => Promise<NextResponse> {
   return async (...args: T): Promise<NextResponse> => {
     const identifier = await getIdentifier(...args);
-
-    // If no identifier, allow the request (e.g., unauthenticated)
     if (!identifier) {
       return handler(...args);
     }

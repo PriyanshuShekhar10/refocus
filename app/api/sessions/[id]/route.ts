@@ -32,6 +32,9 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id: sessionId } = await params;
+  if (!ObjectId.isValid(sessionId)) {
+    return NextResponse.json({ error: "Invalid session id" }, { status: 400 });
+  }
   const db = await getDb();
   const col = db.collection<SessionDoc>("sessions");
   const s = await col.findOne({ _id: new ObjectId(sessionId) });
@@ -79,6 +82,9 @@ export async function DELETE(
   if (!rl.success) return rateLimitedResponse(rl);
 
   const { id: sessionId } = await params;
+  if (!ObjectId.isValid(sessionId)) {
+    return NextResponse.json({ error: "Invalid session id" }, { status: 400 });
+  }
   const db = await getDb();
   const col = db.collection<SessionDoc>("sessions");
   const s = await col.findOne({ _id: new ObjectId(sessionId) });
@@ -92,7 +98,8 @@ export async function DELETE(
   );
 
   if (participants.length >= 2 && otherParticipant) {
-    // Transfer ownership to the other person so they can be matched again
+    // Transfer ownership to the other person so they can be matched again.
+    // The slot stays in their calendar but is now "available" for someone new.
     const newOwnerId = String(otherParticipant.user_id);
     const newParticipants = participants.filter(
       (p) => String(p.user_id) === newOwnerId,
@@ -103,6 +110,7 @@ export async function DELETE(
         $set: {
           owner_id: newOwnerId,
           session_participants: newParticipants,
+          status: "available",
           updated_at: new Date(),
         },
       },
@@ -110,6 +118,8 @@ export async function DELETE(
   } else {
     await col.deleteOne({ _id: new ObjectId(sessionId) });
   }
+  // Publish in both branches so calendars update everywhere.
+  await publish(sessionsChannel(), { type: "sessions_updated" });
   return NextResponse.json({ ok: true });
 }
 
@@ -128,6 +138,9 @@ export async function PATCH(
   if (!rlPatch.success) return rateLimitedResponse(rlPatch);
 
   const { id: sessionId } = await params;
+  if (!ObjectId.isValid(sessionId)) {
+    return NextResponse.json({ error: "Invalid session id" }, { status: 400 });
+  }
   const db = await getDb();
   const col = db.collection<SessionDoc>("sessions");
   const s = await col.findOne({ _id: new ObjectId(sessionId) });
@@ -143,7 +156,10 @@ export async function PATCH(
   const updates: Partial<SessionDoc> & { updated_at: Date } = {
     updated_at: new Date(),
   };
-  if (typeof name !== "undefined") updates.name = name;
+  if (typeof name !== "undefined") {
+    // Reasonable bound to prevent storing pathologically large strings.
+    updates.name = name === null ? null : String(name).slice(0, 120);
+  }
   if (typeof color !== "undefined") updates.color = color;
 
   await col.updateOne({ _id: new ObjectId(sessionId) }, { $set: updates });

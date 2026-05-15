@@ -5,6 +5,8 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { publish, sessionsChannel } from "@/lib/sse";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { DURATION_OPTIONS, SESSION_TYPES, type DurationMin, type SessionType } from "@/constants/calendar";
+import { hasSessionOverlap } from "@/lib/sessionOverlap";
 
 // GET /api/sessions?from=ISO&to=ISO
 type DbSession = {
@@ -42,6 +44,14 @@ export async function GET(req: NextRequest) {
       { status: 400 },
     );
   }
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    return NextResponse.json(
+      { error: "Invalid from/to query params" },
+      { status: 400 },
+    );
+  }
 
   // Fetch sessions in range, pushing visibility filter into the DB query.
   // Visibility rule: sessions with < 2 participants are visible to everyone;
@@ -51,7 +61,7 @@ export async function GET(req: NextRequest) {
   const col = db.collection<DbSession>("sessions");
   const sessions: DbSession[] = (await col
     .find({
-      start_time: { $gte: new Date(from), $lt: new Date(to) },
+      start_time: { $gte: fromDate, $lt: toDate },
       $or: [
         // Not fully booked (fewer than 2 participants)
         {
@@ -96,23 +106,25 @@ export async function GET(req: NextRequest) {
     }
   > = {};
   if (userIdSet.size > 0) {
-    const ids = Array.from(userIdSet);
-    const users = (await db
-      .collection<DbUser>("users")
-      .find({ _id: { $in: ids.map((i) => new ObjectId(i)) } })
-      .project({ name: 1, firstname: 1, lastname: 1 })
-      .toArray()) as unknown as DbUser[];
-    usersById = Object.fromEntries(
-      users.map((u) => [
-        String(u._id),
-        {
-          id: String(u._id),
-          firstname:
-            u.firstname ?? (u.name ? String(u.name).split(" ")[0] : null),
-          lastname: u.lastname ?? null,
-        },
-      ]),
-    );
+    const ids = Array.from(userIdSet).filter((id) => ObjectId.isValid(id));
+    if (ids.length > 0) {
+      const users = (await db
+        .collection<DbUser>("users")
+        .find({ _id: { $in: ids.map((i) => new ObjectId(i)) } })
+        .project({ name: 1, firstname: 1, lastname: 1 })
+        .toArray()) as unknown as DbUser[];
+      usersById = Object.fromEntries(
+        users.map((u) => [
+          String(u._id),
+          {
+            id: String(u._id),
+            firstname:
+              u.firstname ?? (u.name ? String(u.name).split(" ")[0] : null),
+            lastname: u.lastname ?? null,
+          },
+        ]),
+      );
+    }
   }
 
   const now = new Date();
@@ -151,6 +163,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ currentUserId: userId, sessions: mapped });
 }
 
+// Maximum days in the future a session can be booked
+const MAX_BOOKING_HORIZON_DAYS = 90;
+
 // POST /api/sessions
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -165,13 +180,25 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const { start, durationMin, sessionType, quietOwner } = body as {
     start?: string;
-    durationMin?: 25 | 50 | 75;
-    sessionType?: "focus" | "deep-work" | "learning";
+    durationMin?: number;
+    sessionType?: string;
     quietOwner?: boolean;
   };
-  if (!start || !durationMin || !sessionType) {
+  if (!start || typeof durationMin !== "number" || !sessionType) {
     return NextResponse.json(
       { error: "Missing start, durationMin, or sessionType" },
+      { status: 400 },
+    );
+  }
+  if (!DURATION_OPTIONS.includes(durationMin as DurationMin)) {
+    return NextResponse.json(
+      { error: `Invalid durationMin (allowed: ${DURATION_OPTIONS.join(", ")})` },
+      { status: 400 },
+    );
+  }
+  if (!SESSION_TYPES.includes(sessionType as SessionType)) {
+    return NextResponse.json(
+      { error: `Invalid sessionType (allowed: ${SESSION_TYPES.join(", ")})` },
       { status: 400 },
     );
   }
@@ -180,7 +207,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid start time" }, { status: 400 });
   }
 
-  // --- 🚫 Block past or current sessions ---
+  // Block past or current sessions
   const now = new Date();
   if (s.getTime() <= now.getTime()) {
     return NextResponse.json(
@@ -188,16 +215,33 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+
+  // Block sessions too far in the future (defense against abuse + accidental drift)
+  const maxFuture = new Date(now.getTime() + MAX_BOOKING_HORIZON_DAYS * 24 * 60 * 60 * 1000);
+  if (s.getTime() > maxFuture.getTime()) {
+    return NextResponse.json(
+      { error: `Cannot book a session more than ${MAX_BOOKING_HORIZON_DAYS} days in advance` },
+      { status: 400 },
+    );
+  }
+
   const e = new Date(s.getTime() + durationMin * 60_000);
 
-  // Create session
+  // Server-side overlap check so a malicious or buggy client can't double-book.
   const db = await getDb();
+  if (await hasSessionOverlap(db, userId, s, e)) {
+    return NextResponse.json(
+      { error: "You already have a session during this time" },
+      { status: 409 },
+    );
+  }
+
   const insert = await db.collection("sessions").insertOne({
     owner_id: userId,
     start_time: s,
     end_time: e,
-    duration_min: durationMin,
-    session_type: sessionType,
+    duration_min: durationMin as DurationMin,
+    session_type: sessionType as SessionType,
     status: "available",
     session_participants: [
       { user_id: userId, joined_at: new Date(), quiet: Boolean(quietOwner) },

@@ -13,6 +13,7 @@ vi.mock("@/lib/ratelimit", () => ({
   rateLimitedResponse: vi.fn().mockReturnValue(
     new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 })
   ),
+  getClientIp: vi.fn().mockReturnValue("127.0.0.1"),
 }));
 
 const usersCol = mockCollection();

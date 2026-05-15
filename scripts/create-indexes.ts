@@ -128,6 +128,12 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
         name: "sessions_upcoming",
         keys: { start_time: 1, status: 1 },
       },
+      {
+        // Supports GET /api/sessions/busy and the booking-overlap check.
+        // Query shape: { "session_participants.user_id": $in, end_time: $gt, start_time: $lt }
+        name: "sessions_busy_lookup",
+        keys: { "session_participants.user_id": 1, end_time: 1, start_time: 1 },
+      },
     ],
   },
   {

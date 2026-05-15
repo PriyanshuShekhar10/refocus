@@ -123,11 +123,11 @@ describe("POST /api/chat/:friendId", () => {
     });
     await POST(req, makeParams(FRIEND_ID));
 
+    // areFriends() queries friend_requests with both directions in $or.
     const query = friendRequestsCol.findOne.mock.calls[0][0];
-    expect(query.status).toBe("accepted");
     expect(query.$or).toEqual([
-      { from_user_id: CURRENT_USER, to_user_id: FRIEND_ID },
-      { from_user_id: FRIEND_ID, to_user_id: CURRENT_USER },
+      { from_user_id: CURRENT_USER, to_user_id: FRIEND_ID, status: "accepted" },
+      { from_user_id: FRIEND_ID, to_user_id: CURRENT_USER, status: "accepted" },
     ]);
   });
 
