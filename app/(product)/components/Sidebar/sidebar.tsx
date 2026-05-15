@@ -2,7 +2,7 @@
 "use client";
 
 import { FC, ReactNode, useEffect, useState } from "react";
-import { BsGearFill, BsChatSquareTextFill } from "react-icons/bs";
+import { BsGearFill } from "react-icons/bs";
 import { MdDashboard } from "react-icons/md";
 import { FaUserFriends } from "react-icons/fa";
 import { HiSun, HiMoon } from "react-icons/hi";
@@ -117,12 +117,6 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
         onClick={() => onSelect("matches")}
         active={activeTab === "matches"}
       /> */}
-      <SideBarIcon
-        icon={<BsChatSquareTextFill size={18} />}
-        text="AI Schedule"
-        onClick={() => onSelect("scheduler")}
-        active={activeTab === "scheduler"}
-      />
       <Divider />
 
       <SideBarIcon
