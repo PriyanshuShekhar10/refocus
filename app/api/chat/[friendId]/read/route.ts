@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { userChannel, publish } from "@/lib/sse";
 import { areFriends } from "@/lib/friendship";
+import { publishAbly } from "@/lib/ably-server";
 
 // POST /api/chat/:friendId/read
 export async function POST(
@@ -37,10 +38,14 @@ export async function POST(
   });
 
   // Publish event (async for Redis support)
-  await publish(userChannel(currentUserId), {
-    type: "unread:update",
+  const event = {
+    type: "unread:update" as const,
     payload: { friendId, count: unread },
-  });
+  };
+  await Promise.all([
+    publish(userChannel(currentUserId), event),
+    publishAbly(userChannel(currentUserId), event),
+  ]);
 
   return NextResponse.json({ ok: true });
 }

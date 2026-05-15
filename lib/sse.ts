@@ -209,9 +209,15 @@ export async function publish(
   event: EventPayload,
 ): Promise<void> {
   if (isRedisConfigured()) {
-    // Redis mode: Publish to Redis for cross-instance delivery
+    // Redis mode: publish cross-instance only when the connection is ready.
+    // If Redis is unavailable, fail fast and notify local subscribers so chat
+    // updates are not blocked by reconnect timeouts.
     try {
       const publisher = getPublisher();
+      if (publisher.status !== "ready") {
+        notifyLocalSubscribers(channel, event);
+        return;
+      }
       await publisher.publish(channel, JSON.stringify(event));
     } catch (err) {
       console.error("[SSE] Failed to publish to Redis:", err);

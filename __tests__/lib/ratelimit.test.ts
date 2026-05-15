@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // We need to test the ratelimit module in isolation, so we unmock it
 vi.unmock("@/lib/ratelimit");
-
 describe("ratelimit module", () => {
   beforeEach(() => {
     vi.clearAllMocks();

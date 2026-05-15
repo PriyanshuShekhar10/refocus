@@ -6,6 +6,7 @@ import { ObjectId } from "mongodb";
 import { chatChannel, publish, userChannel } from "@/lib/sse";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { areFriends } from "@/lib/friendship";
+import { publishAbly } from "@/lib/ably-server";
 
 type MessageDoc = {
   _id: ObjectId;
@@ -26,6 +27,9 @@ type MessageDoc = {
     sessionId?: string | null;
   };
   created_at: Date;
+  edited_at?: Date;
+  deleted?: boolean;
+  deleted_at?: Date;
 };
 
 // GET /api/chat/:friendId
@@ -67,6 +71,9 @@ export async function GET(
       content: m.content ?? null,
       payload: m.payload ?? null,
       created_at: m.created_at.toISOString(),
+      edited_at: m.edited_at?.toISOString() ?? null,
+      deleted: Boolean(m.deleted),
+      deleted_at: m.deleted_at?.toISOString() ?? null,
     })),
   });
 }
@@ -132,6 +139,7 @@ export async function POST(
       content,
       created_at: new Date(),
       read_at: null,
+      deleted: false,
     });
 
     // Publish events (async for Redis support)
@@ -152,7 +160,15 @@ export async function POST(
         type: "message:new",
         payload: newMsg,
       }),
+      publishAbly(channel, {
+        type: "message:new",
+        payload: newMsg,
+      }),
       publish(userChannel(friendId), {
+        type: "unread:inc",
+        payload: { friendId: currentUserId, delta: 1 },
+      }),
+      publishAbly(userChannel(friendId), {
         type: "unread:inc",
         payload: { friendId: currentUserId, delta: 1 },
       }),
@@ -239,7 +255,15 @@ export async function POST(
         type: "session-request:new",
         payload: srMsg,
       }),
+      publishAbly(channel, {
+        type: "session-request:new",
+        payload: srMsg,
+      }),
       publish(userChannel(friendId), {
+        type: "unread:inc",
+        payload: { friendId: currentUserId, delta: 1 },
+      }),
+      publishAbly(userChannel(friendId), {
         type: "unread:inc",
         payload: { friendId: currentUserId, delta: 1 },
       }),

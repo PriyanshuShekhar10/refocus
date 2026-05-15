@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiMinus, FiMaximize2, FiX } from "react-icons/fi";
+import { getAblyClient } from "@/lib/ably-client";
+import { chatChannel } from "@/lib/realtimeChannels";
 
 type SessionRequestPayload = {
   sessionRequestId: string;
@@ -23,6 +25,9 @@ type ChatMessage = {
   content?: string | null;
   payload?: SessionRequestPayload | null;
   created_at: string;
+  edited_at?: string | null;
+  deleted?: boolean;
+  deleted_at?: string | null;
 };
 
 export type FriendChatProps = {
@@ -62,6 +67,11 @@ export default function FriendChat({
     friendBusySlots: Array<{ start: string; end: string }>;
   }>({ myBusySlots: [], friendBusySlots: [] });
   const [loadingBusy, setLoadingBusy] = useState(false);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
+  const [pendingMessageOps, setPendingMessageOps] = useState<Set<string>>(
+    new Set(),
+  );
 
   const refineGoal = async () => {
     if (!srGoal.trim()) return;
@@ -195,6 +205,20 @@ export default function FriendChat({
     Record<string, string>
   >({});
   const listRef = useRef<HTMLDivElement | null>(null);
+  const shouldAutoScrollRef = useRef(true);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
+    const list = listRef.current;
+    if (!list) return;
+    list.scrollTo({ top: list.scrollHeight, behavior });
+  }, []);
+
+  const handleListScroll = useCallback(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const distanceFromBottom = list.scrollHeight - (list.scrollTop + list.clientHeight);
+    shouldAutoScrollRef.current = distanceFromBottom < 80;
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -211,9 +235,8 @@ export default function FriendChat({
         return [...fromServer, ...optimisticOnly.filter((m) => !serverIds.has(m.id))];
       });
       setCurrentUserId(data.currentUserId || null);
-      requestAnimationFrame(() => {
-        listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
-      });
+      shouldAutoScrollRef.current = true;
+      requestAnimationFrame(() => scrollToBottom());
       // mark read best-effort
       try {
         await fetch(`/api/chat/${friendId}/read`, { method: "POST" });
@@ -227,61 +250,109 @@ export default function FriendChat({
 
   useEffect(() => {
     load();
-    // Setup SSE subscription for realtime updates.
-    // Append incoming messages directly from the SSE payload instead of
-    // re-fetching the entire conversation on every event.
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource(`/api/chat/${friendId}/events`);
-      es.onmessage = (ev) => {
-        try {
-          const data = JSON.parse(ev.data || "{}");
-          if (data?.type === "hello" || data?.type === "ping") return;
+    let isUnmounted = false;
+    const channelName = currentUserId
+      ? chatChannel(currentUserId, friendId)
+      : null;
+    if (!channelName) return;
 
-          if (
-            (data?.type === "message:new" ||
-              data?.type === "session-request:new") &&
-            data?.payload
-          ) {
-            const incoming = data.payload as ChatMessage;
-            if (incoming.id) {
-              setMessages((prev) => {
-                // Already have this message (by real ID)
-                if (prev.some((m) => m.id === incoming.id)) return prev;
-                // Replace optimistic message from same sender with same content
-                const optIdx = prev.findIndex(
-                  (m) =>
-                    m.id.startsWith("temp-") &&
-                    m.from_user_id === incoming.from_user_id &&
-                    m.content === incoming.content,
-                );
-                if (optIdx !== -1) {
-                  const updated = [...prev];
-                  updated[optIdx] = incoming;
-                  return updated;
-                }
-                return [...prev, incoming];
-              });
-              // Mark as read (best-effort)
-              try {
-                fetch(`/api/chat/${friendId}/read`, { method: "POST" });
-              } catch {}
-              return;
+    const client = getAblyClient();
+    const channel = client.channels.get(channelName);
+    const onEvent = (message: { data?: unknown }) => {
+      if (isUnmounted) return;
+      const data = message.data as { type?: string; payload?: unknown } | undefined;
+      if (!data?.type) return;
+
+      if (
+        (data.type === "message:new" || data.type === "session-request:new") &&
+        data.payload
+      ) {
+        const incoming = data.payload as ChatMessage;
+        if (incoming.id) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === incoming.id)) return prev;
+            const optIdx = prev.findIndex(
+              (m) =>
+                m.id.startsWith("temp-") &&
+                m.from_user_id === incoming.from_user_id &&
+                m.content === incoming.content,
+            );
+            if (optIdx !== -1) {
+              const updated = [...prev];
+              updated[optIdx] = incoming;
+              return updated;
             }
-          }
+            return [...prev, incoming];
+          });
+          try {
+            fetch(`/api/chat/${friendId}/read`, { method: "POST" });
+          } catch {}
+          return;
+        }
+      }
 
-          // Fallback: re-fetch for unrecognised event types
-          load();
-        } catch {}
-      };
-      es.onerror = () => {
-        // Allow browser to auto-reconnect; no-op
-      };
-    } catch {}
-    return () => {
-      if (es) es.close();
+      if (data.type === "message:updated" && data.payload) {
+        const payload = data.payload as {
+          id?: string;
+          content?: string;
+          edited_at?: string | null;
+        };
+        if (payload.id && typeof payload.content === "string") {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === payload.id
+                ? {
+                    ...m,
+                    content: payload.content,
+                    edited_at: payload.edited_at ?? new Date().toISOString(),
+                    deleted: false,
+                  }
+                : m,
+            ),
+          );
+          return;
+        }
+      }
+
+      if (data.type === "message:deleted" && data.payload) {
+        const payload = data.payload as {
+          id?: string;
+          content?: string;
+          deleted_at?: string | null;
+        };
+        if (payload.id) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === payload.id
+                ? {
+                    ...m,
+                    content: payload.content ?? "[This message was deleted]",
+                    deleted: true,
+                    deleted_at: payload.deleted_at ?? new Date().toISOString(),
+                    edited_at: null,
+                  }
+                : m,
+            ),
+          );
+          return;
+        }
+      }
+
+      // session-request:update and any unknown event => refresh list
+      load();
     };
-  }, [friendId, load]);
+
+    channel.subscribe("event", onEvent);
+    return () => {
+      isUnmounted = true;
+      channel.unsubscribe("event", onEvent);
+    };
+  }, [currentUserId, friendId, load]);
+
+  useEffect(() => {
+    if (!shouldAutoScrollRef.current) return;
+    requestAnimationFrame(() => scrollToBottom());
+  }, [messages, scrollToBottom]);
 
   const sendText = async () => {
     const value = text.trim();
@@ -312,7 +383,8 @@ export default function FriendChat({
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, id: data.id } : m))
       );
-      listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
+      shouldAutoScrollRef.current = true;
+      requestAnimationFrame(() => scrollToBottom("smooth"));
     } catch (e) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setText(value);
@@ -393,11 +465,129 @@ export default function FriendChat({
     }
   };
 
+  const beginEditMessage = (message: ChatMessage) => {
+    if (message.type !== "text") return;
+    setEditingMessageId(message.id);
+    setEditingText(message.content ?? "");
+  };
+
+  const saveEditedMessage = async (messageId: string) => {
+    const content = editingText.trim();
+    if (!content) {
+      setError("Message cannot be empty");
+      return;
+    }
+    setPendingMessageOps((prev) => new Set(prev).add(messageId));
+    try {
+      const res = await fetch(`/api/chat/${friendId}/${messageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to edit message");
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, content, edited_at: new Date().toISOString(), deleted: false }
+            : m,
+        ),
+      );
+      setEditingMessageId(null);
+      setEditingText("");
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setPendingMessageOps((prev) => {
+        const next = new Set(prev);
+        next.delete(messageId);
+        return next;
+      });
+    }
+  };
+
+  const deleteTextMessage = async (messageId: string) => {
+    setPendingMessageOps((prev) => new Set(prev).add(messageId));
+    try {
+      const res = await fetch(`/api/chat/${friendId}/${messageId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to delete message");
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? {
+                ...m,
+                content: "[This message was deleted]",
+                deleted: true,
+                deleted_at: new Date().toISOString(),
+                edited_at: null,
+              }
+            : m,
+        ),
+      );
+      if (editingMessageId === messageId) {
+        setEditingMessageId(null);
+        setEditingText("");
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setPendingMessageOps((prev) => {
+        const next = new Set(prev);
+        next.delete(messageId);
+        return next;
+      });
+    }
+  };
+
   const renderMessage = (m: ChatMessage) => {
     if (m.type === "text") {
+      const isEditing = editingMessageId === m.id;
       return (
-        <div className="whitespace-pre-wrap break-words text-sm leading-5">
-          {m.content}
+        <div className="space-y-1">
+          {isEditing ? (
+            <div className="space-y-1">
+              <textarea
+                value={editingText}
+                onChange={(e) => setEditingText(e.target.value)}
+                className="w-full min-h-[56px] rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm text-gray-900 dark:text-gray-100"
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => saveEditedMessage(m.id)}
+                  disabled={pendingMessageOps.has(m.id)}
+                  className="rounded bg-indigo-600 px-2 py-1 text-[11px] text-white disabled:opacity-60"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingMessageId(null);
+                    setEditingText("");
+                  }}
+                  disabled={pendingMessageOps.has(m.id)}
+                  className="rounded border border-gray-300 px-2 py-1 text-[11px] text-gray-700 dark:border-gray-600 dark:text-gray-200"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div
+                className={`whitespace-pre-wrap break-words text-sm leading-5 ${
+                  m.deleted ? "italic opacity-80" : ""
+                }`}
+              >
+                {m.content}
+              </div>
+              {m.edited_at && !m.deleted ? (
+                <div className="text-[10px] text-gray-500">(edited)</div>
+              ) : null}
+            </>
+          )}
         </div>
       );
     }
@@ -529,6 +719,7 @@ export default function FriendChat({
       <div
         ref={listRef}
         className={`flex flex-1 flex-col overflow-y-auto p-3 ${layout === "docked" ? "min-h-0" : ""}`}
+        onScroll={handleListScroll}
       >
         {loading && messages.length === 0 ? (
           <div className="text-xs text-gray-500">Loading…</div>
@@ -551,6 +742,24 @@ export default function FriendChat({
                     }`}
                   >
                     {renderMessage(m)}
+                    {isOwn && m.type === "text" && !m.deleted ? (
+                      <div className="mt-1 flex items-center gap-2 text-[10px]">
+                        <button
+                          onClick={() => beginEditMessage(m)}
+                          disabled={pendingMessageOps.has(m.id)}
+                          className="text-indigo-600 hover:underline disabled:opacity-60"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteTextMessage(m.id)}
+                          disabled={pendingMessageOps.has(m.id)}
+                          className="text-red-600 hover:underline disabled:opacity-60"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ) : null}
                     <div className="mt-1 text-[10px] text-gray-500">
                       {new Date(m.created_at).toLocaleString()}
                     </div>

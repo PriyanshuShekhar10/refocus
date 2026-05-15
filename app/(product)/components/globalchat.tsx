@@ -4,6 +4,8 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, Send, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { getAblyClient } from "@/lib/ably-client";
+import { globalChatChannel } from "@/lib/realtimeChannels";
 
 type GlobalMessage = {
   id: string;
@@ -14,6 +16,7 @@ type GlobalMessage = {
   created_at: string;
   deleted?: boolean;
   deleted_at?: string;
+  edited_at?: string | null;
 };
 
 type PaginationState = {
@@ -31,6 +34,8 @@ export default function GlobalChat() {
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [profileUser, setProfileUser] = useState<{
     user_id: string;
@@ -167,90 +172,74 @@ export default function GlobalChat() {
 
   useEffect(() => {
     load();
-    let es: EventSource | null = null;
+    const client = getAblyClient();
+    const channel = client.channels.get(globalChatChannel());
+    const onEvent = (message: { data?: unknown }) => {
+      const data = message.data as
+        | { type?: string; payload?: { id?: string } & Partial<GlobalMessage> }
+        | undefined;
+      if (!data?.type) return;
 
-    try {
-      es = new EventSource("/api/events");
-
-      es.onmessage = (ev) => {
-        try {
-          const data = JSON.parse(ev.data || "{}");
-
-          // Only handle global chat events
-          if (data?.channel !== "global") return;
-
-          // Ignore heartbeat events
-          if (data?.type === "hello" || data?.type === "ping") return;
-
-          // Handle new message - append directly instead of re-fetching
-          if (data?.type === "message:new" && data?.payload) {
-            const newMessage = data.payload as GlobalMessage;
-
-            // Validate the payload has required fields
-            if (newMessage.id && newMessage.content !== undefined) {
-              setMessages((prev) => {
-                // Check if this message already exists (by real ID)
-                if (prev.some((m) => m.id === newMessage.id)) {
-                  return prev;
-                }
-
-                // Check for optimistic message (temp ID) with same content from same user
-                // This handles the case where SSE arrives after the POST response
-                const optimisticIndex = prev.findIndex(
-                  (m) =>
-                    m.id.startsWith("temp-") &&
-                    m.user_id === newMessage.user_id &&
-                    m.content === newMessage.content,
-                );
-
-                if (optimisticIndex !== -1) {
-                  // Replace the optimistic message with the real one
-                  const updated = [...prev];
-                  updated[optimisticIndex] = newMessage;
-                  return updated;
-                }
-
-                // No duplicate or optimistic message found, append normally
-                return [...prev, newMessage];
-              });
-              return;
+      if (data.type === "message:new" && data.payload) {
+        const newMessage = data.payload as GlobalMessage;
+        if (newMessage.id && newMessage.content !== undefined) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMessage.id)) {
+              return prev;
             }
-          }
-
-          // Handle message deletion - update locally
-          if (data?.type === "message:deleted" && data?.payload?.id) {
-            const deletedId = data.payload.id as string;
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === deletedId
-                  ? {
-                      ...m,
-                      deleted: true,
-                      content: "[This message was deleted]",
-                    }
-                  : m,
-              ),
+            const optimisticIndex = prev.findIndex(
+              (m) =>
+                m.id.startsWith("temp-") &&
+                m.user_id === newMessage.user_id &&
+                m.content === newMessage.content,
             );
-            return;
-          }
-
-          // Fallback: reload for any unhandled event types
-          load();
-        } catch {
-          // Parse error, ignore
+            if (optimisticIndex !== -1) {
+              const updated = [...prev];
+              updated[optimisticIndex] = newMessage;
+              return updated;
+            }
+            return [...prev, newMessage];
+          });
+          return;
         }
-      };
+      }
 
-      es.onerror = () => {
-        // Connection error - will auto-reconnect
-        console.warn("[GlobalChat] SSE connection error, will retry...");
-      };
-    } catch {
-      // EventSource not supported or other error
-    }
+      if (data.type === "message:deleted" && data.payload?.id) {
+        const deletedId = data.payload.id;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === deletedId
+              ? {
+                  ...m,
+                  deleted: true,
+                  content: "[This message was deleted]",
+                }
+              : m,
+          ),
+        );
+        return;
+      }
 
+      if (data.type === "message:updated" && data.payload?.id) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === data.payload?.id
+              ? {
+                  ...m,
+                  content: (data.payload?.content as string) ?? m.content,
+                  edited_at: (data.payload?.edited_at as string) ?? new Date().toISOString(),
+                }
+              : m,
+          ),
+        );
+        return;
+      }
+
+      load();
+    };
+    channel.subscribe("event", onEvent);
     return () => {
-      if (es) es.close();
+      channel.unsubscribe("event", onEvent);
     };
   }, [load]);
 
@@ -364,6 +353,39 @@ export default function GlobalChat() {
         newSet.delete(messageId);
         return newSet;
       });
+    }
+  };
+
+  const beginEditMessage = (message: GlobalMessage) => {
+    setEditingId(message.id);
+    setEditingValue(message.content);
+  };
+
+  const saveEditedMessage = async (messageId: string) => {
+    const content = editingValue.trim();
+    if (!content) {
+      setError("Message cannot be empty");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/global-chat/${messageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to edit");
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, content, edited_at: new Date().toISOString() }
+            : m,
+        ),
+      );
+      setEditingId(null);
+      setEditingValue("");
+    } catch (e) {
+      setError((e as Error).message);
     }
   };
 
@@ -742,20 +764,61 @@ export default function GlobalChat() {
                           <p className="text-xs italic text-gray-500 dark:text-gray-400">
                             This message was deleted
                           </p>
+                        ) : editingId === m.id ? (
+                          <div className="space-y-2">
+                            <textarea
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-full min-h-[60px] rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900"
+                            />
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => saveEditedMessage(m.id)}
+                                className="rounded bg-green-600 px-2 py-1 text-[10px] text-white"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingId(null);
+                                  setEditingValue("");
+                                }}
+                                className="rounded border border-gray-300 px-2 py-1 text-[10px] text-gray-700"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
                         ) : (
-                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                            {m.content}
-                          </p>
+                          <>
+                            <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                              {m.content}
+                            </p>
+                            {m.edited_at ? (
+                              <p className="mt-1 text-[10px] opacity-80">(edited)</p>
+                            ) : null}
+                          </>
                         )}
-                        {!m.deleted && isOwnMessage && (
-                          <button
-                            onClick={() => setDeleteConfirmId(m.id)}
-                            disabled={isDeleting}
-                            className="absolute -left-1 -top-1 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-1 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
-                            title="Delete message"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
+                        {!m.deleted && isOwnMessage && editingId !== m.id && (
+                          <div className="absolute -left-1 -top-1 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                            <button
+                              onClick={() => beginEditMessage(m)}
+                              className="rounded-full border border-gray-200 bg-white p-1 text-blue-500 shadow-sm hover:bg-blue-50"
+                              title="Edit message"
+                            >
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5h2m-7 14h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.5M7 7H6a2 2 0 00-2 2v8a2 2 0 002 2h2m0-12l5-5 5 5m-10 0v12" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirmId(m.id)}
+                              disabled={isDeleting}
+                              className="rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-1 text-red-500 shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                              title="Delete message"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>

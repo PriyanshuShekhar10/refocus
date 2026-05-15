@@ -4,6 +4,8 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, Send } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { getAblyClient } from "@/lib/ably-client";
+import { globalChatChannel } from "@/lib/realtimeChannels";
 
 type GlobalMessage = {
   id: string;
@@ -13,6 +15,7 @@ type GlobalMessage = {
   content: string;
   created_at: string;
   deleted?: boolean;
+  edited_at?: string | null;
 };
 
 export default function CommunityChat() {
@@ -39,56 +42,65 @@ export default function CommunityChat() {
 
   useEffect(() => {
     load();
-    let es: EventSource | null = null;
+    const client = getAblyClient();
+    const channel = client.channels.get(globalChatChannel());
+    const onEvent = (message: { data?: unknown }) => {
+      const data = message.data as
+        | { type?: string; payload?: { id?: string } & Partial<GlobalMessage> }
+        | undefined;
+      if (!data?.type) return;
 
-    try {
-      es = new EventSource("/api/events");
-      es.onmessage = (ev) => {
-        try {
-          const data = JSON.parse(ev.data || "{}");
-          if (data?.channel !== "global") return;
-          if (data?.type === "hello" || data?.type === "ping") return;
-
-          if (data?.type === "message:new" && data?.payload) {
-            const newMessage = data.payload as GlobalMessage;
-            if (newMessage.id && newMessage.content !== undefined) {
-              setMessages((prev) => {
-                if (prev.some((m) => m.id === newMessage.id)) return prev;
-                const optimisticIndex = prev.findIndex(
-                  (m) =>
-                    m.id.startsWith("temp-") &&
-                    m.user_id === newMessage.user_id &&
-                    m.content === newMessage.content
-                );
-                if (optimisticIndex !== -1) {
-                  const updated = [...prev];
-                  updated[optimisticIndex] = newMessage;
-                  return updated;
-                }
-                return [...prev, newMessage];
-              });
-            }
-          }
-
-          if (data?.type === "message:deleted" && data?.payload?.id) {
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === data.payload.id
-                  ? { ...m, deleted: true, content: "[Deleted]" }
-                  : m
-              )
+      if (data.type === "message:new" && data.payload) {
+        const newMessage = data.payload as GlobalMessage;
+        if (newMessage.id && newMessage.content !== undefined) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMessage.id)) return prev;
+            const optimisticIndex = prev.findIndex(
+              (m) =>
+                m.id.startsWith("temp-") &&
+                m.user_id === newMessage.user_id &&
+                m.content === newMessage.content,
             );
-          }
-        } catch {
-          // ignore parse errors
+            if (optimisticIndex !== -1) {
+              const updated = [...prev];
+              updated[optimisticIndex] = newMessage;
+              return updated;
+            }
+            return [...prev, newMessage];
+          });
         }
-      };
-    } catch {
-      // EventSource not supported
-    }
+        return;
+      }
 
+      if (data.type === "message:deleted" && data.payload?.id) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === data.payload?.id
+              ? { ...m, deleted: true, content: "[Deleted]" }
+              : m,
+          ),
+        );
+        return;
+      }
+
+      if (data.type === "message:updated" && data.payload?.id) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === data.payload?.id
+              ? {
+                  ...m,
+                  content: (data.payload?.content as string) ?? m.content,
+                  edited_at:
+                    (data.payload?.edited_at as string) ?? new Date().toISOString(),
+                }
+              : m,
+          ),
+        );
+      }
+    };
+    channel.subscribe("event", onEvent);
     return () => {
-      if (es) es.close();
+      channel.unsubscribe("event", onEvent);
     };
   }, [load]);
 
@@ -265,6 +277,11 @@ export default function CommunityChat() {
                     >
                       {m.content}
                     </div>
+                    {m.edited_at && !m.deleted ? (
+                      <div className="mt-0.5 text-[9px] text-muted-foreground/70">
+                        (edited)
+                      </div>
+                    ) : null}
                   </div>
                 </div>
                 </Fragment>
