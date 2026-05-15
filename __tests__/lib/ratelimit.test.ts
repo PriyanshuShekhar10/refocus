@@ -1,33 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// We need to test the ratelimit module in isolation, so we unmock it
+vi.unmock("@/lib/ratelimit");
 describe("ratelimit module", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
   });
 
-  describe("checkRateLimit with in-memory sliding window", () => {
-    it("tracks usage and blocks after limit", async () => {
+  describe("checkRateLimit", () => {
+    it("enforces in-memory limits by identifier + type", async () => {
       const { checkRateLimit } = await import("@/lib/ratelimit");
-      const identifier = `user-${Date.now()}`;
-      const type = "auth";
+      const id = `user-${Date.now()}-${Math.random()}`;
 
-      const first = await checkRateLimit(identifier, type);
-      const second = await checkRateLimit(identifier, type);
-      const third = await checkRateLimit(identifier, type);
-      const fourth = await checkRateLimit(identifier, type);
-      const fifth = await checkRateLimit(identifier, type);
-      const blocked = await checkRateLimit(identifier, type);
+      // Auth limit is 5 per minute
+      const firstFive = await Promise.all(
+        Array.from({ length: 5 }, () => checkRateLimit(id, "auth")),
+      );
+      expect(firstFive.every((r) => r.success)).toBe(true);
+      expect(firstFive[4].remaining).toBe(0);
 
-      expect(first.success).toBe(true);
-      expect(second.success).toBe(true);
-      expect(third.success).toBe(true);
-      expect(fourth.success).toBe(true);
-      expect(fifth.success).toBe(true);
+      const blocked = await checkRateLimit(id, "auth");
       expect(blocked.success).toBe(false);
       expect(blocked.limit).toBe(5);
       expect(blocked.remaining).toBe(0);
       expect(blocked.reset).toBeGreaterThan(Date.now());
+
+      // Different type should have an independent bucket
+      const apiResult = await checkRateLimit(id, "api");
+      expect(apiResult.success).toBe(true);
+      expect(apiResult.limit).toBe(100);
     });
   });
 

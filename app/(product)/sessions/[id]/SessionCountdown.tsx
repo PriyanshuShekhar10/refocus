@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { CALL_JOIN_GRACE_MINUTES } from "@/lib/sessionWindow";
 
 interface SessionCountdownProps {
   startTime: string;
@@ -20,8 +21,8 @@ export default function SessionCountdown({ startTime, sessionId: _sessionId }: S
     const calculateTimeLeft = () => {
       const now = new Date();
       const start = new Date(startTime);
-      const oneHourBefore = new Date(start.getTime() - 60 * 60 * 1000);
-      const diff = oneHourBefore.getTime() - now.getTime();
+      const joinOpenAt = new Date(start.getTime() - CALL_JOIN_GRACE_MINUTES * 60 * 1000);
+      const diff = joinOpenAt.getTime() - now.getTime();
 
       if (diff <= 0) {
         // Time to join! Refresh the page to show the video call
@@ -74,7 +75,7 @@ export default function SessionCountdown({ startTime, sessionId: _sessionId }: S
         Session Not Yet Available
       </h3>
       <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-        You can join this session 1 hour before it starts.
+        You can join this session {CALL_JOIN_GRACE_MINUTES} minutes before it starts.
       </p>
 
       {timeLeft && (

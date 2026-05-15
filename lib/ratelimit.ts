@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
-type BucketState = {
-  timestamps: number[];
-};
+/**
+ * Native in-memory rate limiting.
+ * Scope: current Node.js process only.
+ */
 
 /**
  * Rate limiter configurations for different use cases
@@ -27,33 +28,24 @@ const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
   ai: { requests: 10, window: "1 m" }, // 10 AI calls per minute (external API cost)
 };
 
-const WINDOW_UNIT_MS = {
-  s: 1000,
-  m: 60_000,
-  h: 3_600_000,
-  d: 86_400_000,
-} as const;
-
-const parseWindowMs = (window: `${number} ${"s" | "m" | "h" | "d"}`): number => {
-  const [amountText, unit] = window.split(" ") as [
-    `${number}`,
-    keyof typeof WINDOW_UNIT_MS,
-  ];
-  const amount = Number(amountText);
-  return amount * WINDOW_UNIT_MS[unit];
-};
-
-const getBuckets = (): Map<string, BucketState> => {
-  const g = globalThis as unknown as { __RATE_LIMIT_BUCKETS__?: Map<string, BucketState> };
-  if (!g.__RATE_LIMIT_BUCKETS__) {
-    g.__RATE_LIMIT_BUCKETS__ = new Map<string, BucketState>();
-  }
+type BucketState = Map<string, number[]>;
+const getBucketState = (): BucketState => {
+  const g = globalThis as unknown as { __RATE_LIMIT_BUCKETS__?: BucketState };
+  if (!g.__RATE_LIMIT_BUCKETS__) g.__RATE_LIMIT_BUCKETS__ = new Map<string, number[]>();
   return g.__RATE_LIMIT_BUCKETS__;
 };
 
-const getBucketKey = (type: RateLimitType, identifier: string): string => {
-  return `${type}:${identifier}`;
-};
+function parseWindowMs(window: RateLimitConfig["window"]): number {
+  const [rawAmount, rawUnit] = window.split(" ") as [string, "s" | "m" | "h" | "d"];
+  const amount = Number(rawAmount);
+  const unitToMs: Record<"s" | "m" | "h" | "d", number> = {
+    s: 1000,
+    m: 60_000,
+    h: 3_600_000,
+    d: 86_400_000,
+  };
+  return amount * unitToMs[rawUnit];
+}
 
 /**
  * Rate limit result type
@@ -115,39 +107,36 @@ export async function checkRateLimit(
   identifier: string,
   type: RateLimitType = "api",
 ): Promise<RateLimitResult> {
-  const config = RATE_LIMIT_CONFIGS[type];
-  const windowMs = parseWindowMs(config.window);
-  const now = Date.now();
-  const windowStart = now - windowMs;
-  const key = getBucketKey(type, identifier);
-  const buckets = getBuckets();
-  const bucket = buckets.get(key) ?? { timestamps: [] };
-
   try {
-    bucket.timestamps = bucket.timestamps.filter((ts) => ts > windowStart);
-    const currentCount = bucket.timestamps.length;
-    const success = currentCount < config.requests;
+    const now = Date.now();
+    const config = RATE_LIMIT_CONFIGS[type];
+    const windowMs = parseWindowMs(config.window);
+    const key = `${type}:${identifier}`;
 
-    if (success) {
-      bucket.timestamps.push(now);
+    const buckets = getBucketState();
+    const existing = buckets.get(key) ?? [];
+    const kept = existing.filter((ts) => now - ts < windowMs);
+
+    if (kept.length >= config.requests) {
+      const reset = kept[0] + windowMs;
+      buckets.set(key, kept);
+      return {
+        success: false,
+        limit: config.requests,
+        remaining: 0,
+        reset,
+      };
     }
 
-    if (bucket.timestamps.length === 0) {
-      buckets.delete(key);
-    } else {
-      buckets.set(key, bucket);
-    }
+    kept.push(now);
+    buckets.set(key, kept);
 
-    const used = success ? currentCount + 1 : currentCount;
-    const remaining = Math.max(config.requests - used, 0);
-    const oldest = bucket.timestamps[0] ?? now;
-    const reset = oldest + windowMs;
-
+    const oldest = kept[0] ?? now;
     return {
-      success,
+      success: true,
       limit: config.requests,
-      remaining,
-      reset,
+      remaining: Math.max(config.requests - kept.length, 0),
+      reset: oldest + windowMs,
     };
   } catch (error) {
     console.error("[RateLimit] Error checking rate limit:", error);
