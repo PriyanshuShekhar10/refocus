@@ -5,7 +5,15 @@ import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Heart, MessageCircle, Trash2, Send, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  Trash2,
+  Send,
+  ChevronDown,
+  ChevronUp,
+  Pin,
+} from "lucide-react";
 
 export type Post = {
   id: string;
@@ -18,6 +26,7 @@ export type Post = {
   likesCount: number;
   commentsCount: number;
   isLiked: boolean;
+  isPinned?: boolean;
 };
 
 export type Comment = {
@@ -53,8 +62,16 @@ export default function PostCard({
   const [localLikesCount, setLocalLikesCount] = useState(post.likesCount);
   const [localIsLiked, setLocalIsLiked] = useState(post.isLiked);
   const [localCommentsCount, setLocalCommentsCount] = useState(post.commentsCount);
+  const [isPinnedExpanded, setIsPinnedExpanded] = useState(false);
 
   const isOwn = post.authorId === currentUserId;
+  const isPinned = post.isPinned === true;
+  const pinnedPreview = post.content.split("\n\n").slice(0, 2).join("\n\n");
+  const pinnedHasMore = pinnedPreview.length < post.content.length;
+  const displayContent =
+    isPinned && !isPinnedExpanded && pinnedHasMore
+      ? `${pinnedPreview}\n\n...`
+      : post.content;
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -91,6 +108,7 @@ export default function PostCard({
   };
 
   const handleLike = () => {
+    if (isPinned) return;
     // Optimistic update
     setLocalIsLiked(!localIsLiked);
     setLocalLikesCount(localIsLiked ? localLikesCount - 1 : localLikesCount + 1);
@@ -98,6 +116,7 @@ export default function PostCard({
   };
 
   const handleComment = async () => {
+    if (isPinned) return;
     if (!commentText.trim() || submittingComment) return;
     setSubmittingComment(true);
     try {
@@ -120,7 +139,11 @@ export default function PostCard({
   };
 
   return (
-    <div className="border-b border-border py-4 last:border-b-0">
+    <div
+      className={`border-b border-border py-4 last:border-b-0 ${
+        isPinned ? "bg-green-50/40 dark:bg-green-900/10 rounded-md px-3" : ""
+      }`}
+    >
       {/* Post Header */}
       <div className="flex items-start gap-3">
         {post.authorUsername ? (
@@ -151,6 +174,12 @@ export default function PostCard({
               <span className="text-xs text-muted-foreground">
                 {formatTime(post.createdAt)}
               </span>
+              {isPinned && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:border-green-800 dark:bg-green-900/40 dark:text-green-300">
+                  <Pin className="h-3 w-3" />
+                  Pinned
+                </span>
+              )}
             </div>
             {isOwn && (
               <Button
@@ -166,11 +195,21 @@ export default function PostCard({
 
           {/* Post Content */}
           <p className="mt-2 text-sm whitespace-pre-wrap break-words">
-            {post.content}
+            {displayContent}
           </p>
+          {isPinned && pinnedHasMore && (
+            <button
+              type="button"
+              onClick={() => setIsPinnedExpanded((prev) => !prev)}
+              className="mt-2 text-xs font-medium text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200"
+            >
+              {isPinnedExpanded ? "Show less" : "Read full welcome and rules"}
+            </button>
+          )}
 
           {/* Actions */}
-          <div className="flex items-center gap-4 mt-3">
+          {!isPinned && (
+            <div className="flex items-center gap-4 mt-3">
             <button
               onClick={handleLike}
               className={`flex items-center gap-1.5 text-sm transition-colors ${
@@ -196,10 +235,11 @@ export default function PostCard({
                 <ChevronDown className="h-3 w-3" />
               )}
             </button>
-          </div>
+            </div>
+          )}
 
           {/* Comments Section */}
-          {showComments && (
+          {!isPinned && showComments && (
             <div className="mt-4 space-y-3">
               {loadingComments ? (
                 <p className="text-xs text-muted-foreground">Loading comments...</p>

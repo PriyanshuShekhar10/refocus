@@ -9,6 +9,35 @@ import { Loader2, MessageSquare } from "lucide-react";
 import PostCard, { Post, Comment } from "./PostCard";
 import CommunityChat from "./CommunityChat";
 
+const PINNED_ADMIN_POST: Post = {
+  id: "admin-pinned-welcome",
+  content: `Hey everyone, welcome to Refocus Community.
+
+This space is for supportive accountability and steady progress. Please keep it kind and useful for everyone:
+
+- Be respectful. No harassment, bullying, hate speech, or personal attacks.
+- Keep posts constructive and on-topic (focus, study, work, goals, habits).
+- No spam, promotions, or repeated self-advertising.
+- Protect privacy. Don't share private info (yours or someone else's).
+- Encourage others. Celebrate wins and help when someone is stuck.
+
+How to use this platform:
+- Use Dashboard to plan and join sessions.
+- Use Friends to build accountability circles.
+- Use Community to share progress, ask for advice, and motivate each other.
+
+We're glad you're here. Let's build a friendly, focused community together.`,
+  createdAt: "2026-05-16T00:00:00.000Z",
+  authorId: "admin",
+  authorName: "Admin",
+  authorUsername: null,
+  authorInitials: "AD",
+  likesCount: 0,
+  commentsCount: 0,
+  isLiked: false,
+  isPinned: true,
+};
+
 export default function Community() {
   const { data: session } = useSession();
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
@@ -215,28 +244,40 @@ export default function Community() {
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : posts.length === 0 ? (
-              <div className="text-center py-12">
-                <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground">No posts yet</p>
-                <p className="text-sm text-muted-foreground/70">
-                  Be the first to share something!
-                </p>
-              </div>
             ) : (
-              <div className="border border-border rounded-lg divide-y divide-border">
-                {posts.map((post) => (
-                  <div key={post.id} className="px-4">
+              <>
+                <div className="border border-border rounded-lg divide-y divide-border">
+                  <div className="px-4">
                     <PostCard
-                      post={post}
+                      post={PINNED_ADMIN_POST}
                       currentUserId={currentUserId || ""}
                       onLike={handleLike}
                       onDelete={handleDelete}
                       onComment={handleComment}
                     />
                   </div>
-                ))}
-              </div>
+                  {posts.map((post) => (
+                    <div key={post.id} className="px-4">
+                      <PostCard
+                        post={post}
+                        currentUserId={currentUserId || ""}
+                        onLike={handleLike}
+                        onDelete={handleDelete}
+                        onComment={handleComment}
+                      />
+                    </div>
+                  ))}
+                </div>
+                {posts.length === 0 && (
+                  <div className="text-center py-12">
+                    <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-muted-foreground">No community posts yet</p>
+                    <p className="text-sm text-muted-foreground/70">
+                      Be the first member to share an update.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Load More Trigger */}
