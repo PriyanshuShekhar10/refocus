@@ -6,12 +6,12 @@ import { ChatDock } from "@/components/chat-dock";
 // import Navbar from "@/components/navbar/navbar";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+import { getSiteUrl } from "@/lib/site";
+
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
+  metadataBase: new URL(siteUrl),
   title: "Refocus",
   description: "Finding you a buddy who matters.",
 };

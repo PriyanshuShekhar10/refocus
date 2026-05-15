@@ -1,41 +1,22 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/site";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+const siteUrl = getSiteUrl();
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   return [
     {
-      url: `${defaultUrl}/`,
+      url: `${siteUrl}/`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 1,
     },
     {
-      url: `${defaultUrl}/features`,
+      url: `${siteUrl}/career`,
       lastModified: now,
-      changeFrequency: "monthly",
+      changeFrequency: "weekly",
       priority: 0.7,
-    },
-    {
-      url: `${defaultUrl}/auth/login`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${defaultUrl}/auth/sign-up`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${defaultUrl}/notes`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.5,
     },
   ];
 }

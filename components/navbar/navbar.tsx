@@ -25,7 +25,7 @@ export const NavbarLogo = ({ forceLight }: { forceLight?: boolean }) => {
     <Link href="/" className="flex items-center">
       <Image
         src={Logo}
-        alt="logo"
+        alt="Refocus"
         className={cn(
           `h-12 w-auto py-2 sm:h-16 sm:py-3 md:h-20`,
           useDarkLogo && "invert brightness-0",
@@ -169,16 +169,20 @@ const Navbar = ({ marketingHome = false }: { marketingHome?: boolean }) => {
 
   const navItems = [
     {
-      name: "Features",
-      link: "#features",
+      name: "Sessions",
+      link: "/#sessions",
+    },
+    {
+      name: "How it works",
+      link: "/#how",
+    },
+    {
+      name: "Community",
+      link: "/#community",
     },
     {
       name: "FAQ",
-      link: "#faq",
-    },
-    {
-      name: "About Us",
-      link: "/about",
+      link: "/#faq",
     },
     {
       name: "Careers",
