@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Homepage } from "@/components/homepage";
 import { LandingLightLock } from "@/components/landing-light-lock";
+import { getSiteUrl } from "@/lib/site";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   title: "Refocus — Focus, together. Quietly.",
@@ -29,7 +28,7 @@ export const metadata: Metadata = {
     title: "Refocus — Focus, together. Quietly.",
     description:
       "A virtual co-working room for deep work. 25, 50, or 75 minute sessions. Focus mode mutes both mics so you're present, not performing.",
-    url: defaultUrl,
+    url: siteUrl,
     siteName: "Refocus",
     images: [
       {
@@ -66,7 +65,7 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Refocus",
-    url: defaultUrl,
+    url: siteUrl,
     description:
       "Virtual co-working room for deep work with synced timers, focus mode, friends, and global chat.",
   };
@@ -75,8 +74,8 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Refocus",
-    url: defaultUrl,
-    logo: `${defaultUrl}/icon1.png`,
+    url: siteUrl,
+    logo: `${siteUrl}/icon1.png`,
   };
 
   return (

@@ -5,7 +5,7 @@ import { ArrowIcon } from "./ArrowIcon";
 
 export function FinalCTA() {
   return (
-    <section className={styles.finalCta} id="faq">
+    <section className={styles.finalCta}>
       <div className={styles.wrap}>
         <Reveal as="h2">
           Sit down. Start the timer.

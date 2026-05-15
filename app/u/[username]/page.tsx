@@ -6,8 +6,10 @@ import { MapPin, Globe, Calendar } from "lucide-react";
 import type { Metadata } from "next";
 import { Shell, MinimalNav, designStyles } from "@/components/design";
 import { Logo } from "@/assets/exports";
+import { getSiteUrl } from "@/lib/site";
 
 type Props = { params: Promise<{ username: string }> };
+const siteUrl = getSiteUrl();
 
 async function getUser(username: string) {
   const db = await getDb();
@@ -44,11 +46,42 @@ async function getPublicUser(username: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
   const user = await getPublicUser(username);
-  if (!user) return { title: "User not found — Refocus" };
+  if (!user) {
+    return {
+      title: "User not found — Refocus",
+      robots: { index: false, follow: false },
+    };
+  }
   const name = user.name || user.username || username;
+  const canonicalPath = `/u/${user.username}`;
+  const description = user.about || `${name}'s profile on Refocus`;
   return {
     title: `${name} (@${user.username}) — Refocus`,
-    description: user.about || `${name}'s profile on Refocus`,
+    description,
+    alternates: {
+      canonical: canonicalPath,
+    },
+    openGraph: {
+      title: `${name} (@${user.username}) — Refocus`,
+      description,
+      url: `${siteUrl}${canonicalPath}`,
+      siteName: "Refocus",
+      images: [
+        {
+          url: "/opengraph-image.png",
+          width: 1200,
+          height: 630,
+          alt: `${name} profile on Refocus`,
+        },
+      ],
+      type: "profile",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${name} (@${user.username}) — Refocus`,
+      description,
+      images: ["/twitter-image.png"],
+    },
   };
 }
 
@@ -72,6 +105,26 @@ export default async function PublicProfilePage({ params }: Props) {
         year: "numeric",
       })
     : null;
+  const profilePath = `/u/${user.username}`;
+  const profileUrl = `${siteUrl}${profilePath}`;
+  const profileDescription = user.about || `${displayName}'s profile on Refocus`;
+  const profileJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    url: profileUrl,
+    name: `${displayName} (@${user.username})`,
+    description: profileDescription,
+    mainEntity: {
+      "@type": "Person",
+      name: displayName,
+      alternateName: `@${user.username}`,
+      description: user.about ?? undefined,
+      url: profileUrl,
+      sameAs: user.website
+        ? [user.website.startsWith("http") ? user.website : `https://${user.website}`]
+        : undefined,
+    },
+  };
 
   return (
     <Shell>
@@ -83,6 +136,10 @@ export default async function PublicProfilePage({ params }: Props) {
       />
 
       <main style={{ padding: "56px 0 80px", minHeight: "calc(100vh - 64px)" }}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }}
+        />
         <div className={designStyles.wrap} style={{ maxWidth: 720 }}>
           <header
             style={{ display: "flex", alignItems: "flex-start", gap: 20 }}

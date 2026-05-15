@@ -11,11 +11,9 @@ export function Footer() {
           <Image src={Logo} alt="Refocus" className="h-7 w-auto" />
         </Link>
         <div className={styles.footLinks}>
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/terms">Terms</Link>
-          <Link href="/contact">Contact</Link>
           <Link href="/career">Career</Link>
-          <Link href="/changelog">Changelog</Link>
+          <Link href="/auth/login">Log in</Link>
+          <Link href="/auth/sign-up">Sign up</Link>
         </div>
         <div className={styles.footMeta}>v0.4.2 · made for deep work</div>
       </div>

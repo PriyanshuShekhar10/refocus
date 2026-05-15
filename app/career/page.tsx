@@ -1,8 +1,46 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Shell, MinimalNav, designStyles } from "@/components/design";
+import type { Metadata } from "next";
+import { Shell, designStyles } from "@/components/design";
 import { Logo } from "@/assets/exports";
 import { LandingLightLock } from "@/components/landing-light-lock";
+import Navbar from "@/components/navbar/navbar";
+import { getSiteUrl } from "@/lib/site";
+
+const siteUrl = getSiteUrl();
+const careerPath = "/career";
+
+export const metadata: Metadata = {
+  title: "Careers — Refocus",
+  description:
+    "Join Refocus to build focused work tools that help people show up and ship. Explore fresher-friendly roles and internships.",
+  alternates: {
+    canonical: careerPath,
+  },
+  openGraph: {
+    title: "Careers — Refocus",
+    description:
+      "Explore fresher-friendly engineering and operations roles at Refocus.",
+    url: `${siteUrl}${careerPath}`,
+    siteName: "Refocus",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Careers at Refocus",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Careers — Refocus",
+    description:
+      "Explore fresher-friendly engineering and operations roles at Refocus.",
+    images: ["/twitter-image.png"],
+  },
+};
 
 const openRoles = [
   {
@@ -44,15 +82,39 @@ const openRoles = [
 ];
 
 export default function CareerPage() {
+  const careerJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Careers — Refocus",
+    description:
+      "Explore fresher-friendly engineering and operations roles at Refocus.",
+    url: `${siteUrl}${careerPath}`,
+  };
+
+  const jobPostingJsonLd = openRoles.map((role) => ({
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: role.title,
+    description: `${role.summary} Looking for: ${role.skills}`,
+    hiringOrganization: {
+      "@type": "Organization",
+      name: "Refocus",
+      sameAs: siteUrl,
+    },
+    employmentType: role.mode.includes("Internship") ? "INTERN" : "FULL_TIME",
+    jobLocationType: "TELECOMMUTE",
+    applicantLocationRequirements: {
+      "@type": "Country",
+      name: "India",
+    },
+    directApply: false,
+    url: `${siteUrl}${careerPath}`,
+  }));
+
   return (
     <LandingLightLock>
       <Shell>
-        <MinimalNav
-          ctas={[
-            { label: "Home", href: "/", variant: "quiet" },
-            { label: "Start focusing", href: "/auth/sign-up", variant: "primary" },
-          ]}
-        />
+        <Navbar marketingHome />
 
       <main
         style={{
@@ -60,11 +122,20 @@ export default function CareerPage() {
             "linear-gradient(180deg, color-mix(in oklab, var(--accent-soft) 35%, var(--bg)) 0%, var(--bg) 24%)",
         }}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(careerJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingJsonLd) }}
+        />
         {/* Hero */}
         <section
           style={{
-            padding: "88px 0 64px",
+            padding: "132px 0 64px",
             borderBottom: "1px solid var(--line-soft)",
+            background: "var(--hero-gradient)",
           }}
         >
           <div className={designStyles.wrap}>

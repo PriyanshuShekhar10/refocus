@@ -58,7 +58,7 @@ export function Hero() {
           <span>Free to start. No card required.</span>
         </Reveal>
 
-        <Reveal className={styles.preview} delayMs={100}>
+        <div className={styles.preview}>
           <div className={styles.previewBar}>
             <i />
             <i />
@@ -70,9 +70,11 @@ export function Hero() {
             className={styles.previewImg}
             priority
             placeholder="blur"
+            sizes="(max-width: 640px) calc(100vw - 40px), (max-width: 1200px) calc(100vw - 56px), 1144px"
+            quality={75}
           />
           <div className={styles.previewOverlay} />
-        </Reveal>
+        </div>
       </div>
     </section>
   );
