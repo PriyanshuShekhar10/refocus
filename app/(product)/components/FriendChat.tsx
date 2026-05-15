@@ -205,6 +205,20 @@ export default function FriendChat({
     Record<string, string>
   >({});
   const listRef = useRef<HTMLDivElement | null>(null);
+  const shouldAutoScrollRef = useRef(true);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
+    const list = listRef.current;
+    if (!list) return;
+    list.scrollTo({ top: list.scrollHeight, behavior });
+  }, []);
+
+  const handleListScroll = useCallback(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const distanceFromBottom = list.scrollHeight - (list.scrollTop + list.clientHeight);
+    shouldAutoScrollRef.current = distanceFromBottom < 80;
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -221,9 +235,8 @@ export default function FriendChat({
         return [...fromServer, ...optimisticOnly.filter((m) => !serverIds.has(m.id))];
       });
       setCurrentUserId(data.currentUserId || null);
-      requestAnimationFrame(() => {
-        listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
-      });
+      shouldAutoScrollRef.current = true;
+      requestAnimationFrame(() => scrollToBottom());
       // mark read best-effort
       try {
         await fetch(`/api/chat/${friendId}/read`, { method: "POST" });
@@ -336,6 +349,11 @@ export default function FriendChat({
     };
   }, [currentUserId, friendId, load]);
 
+  useEffect(() => {
+    if (!shouldAutoScrollRef.current) return;
+    requestAnimationFrame(() => scrollToBottom());
+  }, [messages, scrollToBottom]);
+
   const sendText = async () => {
     const value = text.trim();
     if (!value || !currentUserId) return;
@@ -365,7 +383,8 @@ export default function FriendChat({
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, id: data.id } : m))
       );
-      listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
+      shouldAutoScrollRef.current = true;
+      requestAnimationFrame(() => scrollToBottom("smooth"));
     } catch (e) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setText(value);
@@ -700,6 +719,7 @@ export default function FriendChat({
       <div
         ref={listRef}
         className={`flex flex-1 flex-col overflow-y-auto p-3 ${layout === "docked" ? "min-h-0" : ""}`}
+        onScroll={handleListScroll}
       >
         {loading && messages.length === 0 ? (
           <div className="text-xs text-gray-500">Loading…</div>
