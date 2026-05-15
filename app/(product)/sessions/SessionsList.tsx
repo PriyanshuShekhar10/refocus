@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { isCallJoinable } from "@/lib/sessionWindow";
 
 interface Participant {
   userId: string;
@@ -38,11 +39,7 @@ interface SessionsListProps {
 }
 
 function isJoinable(startTime: string, endTime: string): boolean {
-  const now = new Date();
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  const oneHourBefore = new Date(start.getTime() - 60 * 60 * 1000);
-  return now >= oneHourBefore && now <= end;
+  return isCallJoinable(startTime, endTime);
 }
 
 function getTimeUntil(startTime: string): string {

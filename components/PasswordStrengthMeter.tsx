@@ -1,77 +1,62 @@
-import { PasswordValidationResult } from "@/lib/validatePassword";
+import { Check, X } from "lucide-react";
+import type { PasswordValidationResult } from "@/lib/validatePassword";
+import { designStyles } from "@/components/design";
 
 interface Props {
   validation: PasswordValidationResult;
 }
 
-const colors = {
-  weak: "bg-red-500",
-  medium: "bg-yellow-500",
-  strong: "bg-green-500",
+const STRENGTH_LABELS = {
+  weak: "Weak",
+  medium: "Medium",
+  strong: "Strong",
 };
 
 export function PasswordStrengthMeter({ validation }: Props) {
   const { strength, requirements } = validation;
 
-  return (
-    <div className="mt-2 space-y-2">
-      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className={`h-2 ${colors[strength]} transition-all duration-300`}
-          style={{
-            width:
-              strength === "weak"
-                ? "33%"
-                : strength === "medium"
-                ? "66%"
-                : "100%",
-          }}
-        />
-      </div>
-      <p
-        className={`text-sm font-medium ${
-          strength === "weak"
-            ? "text-red-500"
-            : strength === "medium"
-            ? "text-yellow-600"
-            : "text-green-600"
-        }`}
-      >
-        {strength.charAt(0).toUpperCase() + strength.slice(1)} password
-      </p>
+  const filled = strength === "weak" ? 1 : strength === "medium" ? 2 : 3;
+  const strengthBar =
+    strength === "weak"
+      ? designStyles.strengthBarWeak
+      : strength === "medium"
+      ? designStyles.strengthBarMedium
+      : designStyles.strengthBarStrong;
 
-      <ul className="text-xs space-y-1">
-        <Requirement
-          label="At least 8 characters"
-          valid={requirements.length}
-        />
-        <Requirement
-          label="One uppercase letter"
-          valid={requirements.uppercase}
-        />
-        <Requirement
-          label="One lowercase letter"
-          valid={requirements.lowercase}
-        />
+  return (
+    <div>
+      <div className={designStyles.strengthRow}>
+        {[1, 2, 3].map((i) => (
+          <span
+            key={i}
+            className={`${designStyles.strengthBar} ${
+              i <= filled ? strengthBar : ""
+            }`}
+          />
+        ))}
+      </div>
+      <div className={designStyles.strengthLabel}>
+        {STRENGTH_LABELS[strength]} password
+      </div>
+      <div className={designStyles.strengthReqs}>
+        <Requirement label="8+ characters" valid={requirements.length} />
+        <Requirement label="One uppercase" valid={requirements.uppercase} />
+        <Requirement label="One lowercase" valid={requirements.lowercase} />
         <Requirement label="One number" valid={requirements.number} />
-        <Requirement
-          label="One special character"
-          valid={requirements.specialChar}
-        />
-      </ul>
+        <Requirement label="One symbol" valid={requirements.specialChar} />
+      </div>
     </div>
   );
 }
 
 function Requirement({ label, valid }: { label: string; valid: boolean }) {
   return (
-    <li className="flex items-center gap-2">
-      {valid ? (
-        <span className="text-green-500">✅</span>
-      ) : (
-        <span className="text-red-500">❌</span>
-      )}
+    <span
+      className={valid ? designStyles.strengthReqMet : ""}
+      style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+    >
+      {valid ? <Check size={12} /> : <X size={12} />}
       {label}
-    </li>
+    </span>
   );
 }

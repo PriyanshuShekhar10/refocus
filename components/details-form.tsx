@@ -1,19 +1,10 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
+import { DButton, Field, DInput, designStyles } from "@/components/design";
 
 export function DetailsForm({
   className,
@@ -29,12 +20,6 @@ export function DetailsForm({
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-
-    // if (password !== repeatPassword) {
-    //   setError("Passwords do not match");
-    //   setIsLoading(false);
-    //   return;
-    // }
 
     try {
       const res = await fetch("/api/users/me", {
@@ -53,52 +38,93 @@ export function DetailsForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignUp}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="firstname">First Name</Label>
-                <Input
-                  id="firstname"
-                  type="text"
-                  placeholder="John"
-                  required
-                  value={firstname}
-                  onChange={(e) => setFirstname(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="lastname">Last Name</Label>
-                </div>
-                <Input
-                  id="lastname"
-                  type="text"
-                  required
-                  value={lastname}
-                  onChange={(e) => setLastname(e.target.value)}
-                />
-              </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
-              </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
-                Login
-              </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+    <div
+      className={className}
+      style={{ display: "flex", flexDirection: "column", gap: 24 }}
+      {...props}
+    >
+      <div>
+        <span className={designStyles.eyebrow}>One more thing</span>
+        <h1
+          className={designStyles.pageTitle}
+          style={{ fontSize: "clamp(28px, 4vw, 36px)", marginTop: 12 }}
+        >
+          What should
+          <br />
+          we call you?
+        </h1>
+        <p
+          className={designStyles.pageSub}
+          style={{ marginTop: 10, fontSize: 14 }}
+        >
+          Just so partners can see who they&apos;re sitting with.
+        </p>
+      </div>
+
+      <form
+        onSubmit={handleSignUp}
+        style={{ display: "flex", flexDirection: "column", gap: 16 }}
+      >
+        <Field label="First name" htmlFor="firstname">
+          <DInput
+            id="firstname"
+            type="text"
+            required
+            autoComplete="given-name"
+            value={firstname}
+            onChange={(e) => setFirstname(e.target.value)}
+            placeholder="Ada"
+          />
+        </Field>
+
+        <Field label="Last name" htmlFor="lastname">
+          <DInput
+            id="lastname"
+            type="text"
+            required
+            autoComplete="family-name"
+            value={lastname}
+            onChange={(e) => setLastname(e.target.value)}
+            placeholder="Lovelace"
+          />
+        </Field>
+
+        {error && (
+          <div className={`${designStyles.alert} ${designStyles.alertError}`}>
+            {error}
+          </div>
+        )}
+
+        <DButton
+          type="submit"
+          variant="primary"
+          size="lg"
+          full
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>Saving…</>
+          ) : (
+            <>
+              Continue
+              <ArrowRight size={16} className={designStyles.arrow} />
+            </>
+          )}
+        </DButton>
+      </form>
+
+      <p
+        style={{
+          textAlign: "center",
+          fontSize: 13,
+          color: "var(--ink-mute)",
+        }}
+      >
+        Already have an account?{" "}
+        <Link href="/auth/login" className={designStyles.link}>
+          Log in
+        </Link>
+      </p>
     </div>
   );
 }

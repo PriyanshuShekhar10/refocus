@@ -38,6 +38,8 @@ export function mockCollection(overrides: Record<string, unknown> = {}) {
     findOne: vi.fn().mockResolvedValue(null),
     insertOne: vi.fn().mockResolvedValue({ insertedId: new ObjectId() }),
     updateOne: vi.fn().mockResolvedValue({ modifiedCount: 1 }),
+    updateMany: vi.fn().mockResolvedValue({ modifiedCount: 0 }),
+    deleteOne: vi.fn().mockResolvedValue({ deletedCount: 1 }),
     findOneAndUpdate: vi.fn().mockResolvedValue(null),
     createIndex: vi.fn().mockResolvedValue("email_1"),
     find: vi.fn().mockReturnValue({
@@ -46,6 +48,10 @@ export function mockCollection(overrides: Record<string, unknown> = {}) {
           toArray: vi.fn().mockResolvedValue([]),
         }),
       }),
+      project: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([]),
+      }),
+      toArray: vi.fn().mockResolvedValue([]),
     }),
     ...overrides,
   };

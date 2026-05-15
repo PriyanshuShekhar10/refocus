@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -59,6 +60,49 @@ export async function GET() {
   });
 }
 
+/**
+ * Generates and persists the user's embedding. Runs out-of-band so the PATCH
+ * response doesn't have to wait for the AI provider. Safe to fail silently —
+ * the next profile edit will retry, and `match` returns an empty list when
+ * the embedding is missing.
+ */
+async function regenerateEmbedding(
+  userId: string,
+  inputs: {
+    firstname: string;
+    lastname: string;
+    about: string;
+    interests: string[];
+  },
+) {
+  const hasGeminiKey = !!(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY);
+  const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
+  if (!hasGeminiKey && !hasOpenAIKey) return;
+
+  const textToEmbed = `Name: ${inputs.firstname} ${inputs.lastname}. About: ${inputs.about}. Interests: ${inputs.interests.join(", ")}.`;
+  try {
+    const embeddingModel = hasGeminiKey
+      ? createGoogleGenerativeAI({
+          apiKey:
+            process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY!,
+        }).textEmbeddingModel("text-embedding-004")
+      : openai.embedding("text-embedding-3-small");
+
+    const { embedding } = await embed({
+      model: embeddingModel,
+      value: textToEmbed,
+    });
+
+    const db = await getDb();
+    await db.collection("users").updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { embedding, embedding_updated_at: new Date() } },
+    );
+  } catch (e) {
+    console.warn("[users/me] Embedding generation failed:", e);
+  }
+}
+
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
@@ -91,10 +135,11 @@ export async function PATCH(req: NextRequest) {
         { status: 400 }
       );
     }
-    // Check availability (excluding current user)
+    // Check availability (excluding current user). Collation makes the
+    // uniqueness check case-insensitive so `Kanishk` collides with `kanishk`.
     const existing = await db.collection("users").findOne(
       { username: trimmed, _id: { $ne: new ObjectId(userId) } },
-      { projection: { _id: 1 } }
+      { projection: { _id: 1 }, collation: { locale: "en", strength: 2 } }
     );
     if (existing) {
       return NextResponse.json({ error: "Username is already taken" }, { status: 409 });
@@ -114,48 +159,39 @@ export async function PATCH(req: NextRequest) {
   if (location !== undefined) updateFields.location = location;
   if (website !== undefined) updateFields.website = website;
 
+  // If any embedding-relevant field changed, look up the merged shape now so
+  // the background job has a consistent snapshot even if a concurrent edit
+  // lands. We also use this to compute the derived `name` field.
   const relevantForEmbedding =
     firstname !== undefined ||
     lastname !== undefined ||
     about !== undefined ||
     interests !== undefined;
 
-  let currentUser = undefined;
+  let embeddingInputs: {
+    firstname: string;
+    lastname: string;
+    about: string;
+    interests: string[];
+  } | null = null;
+
   if (relevantForEmbedding) {
-    currentUser = await db
-        .collection("users")
-        .findOne({ _id: new ObjectId(userId) });
+    const currentUser = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(userId) });
 
     if (firstname !== undefined || lastname !== undefined) {
-        const newFirstname = firstname ?? currentUser?.firstname ?? "";
-        const newLastname = lastname ?? currentUser?.lastname ?? "";
-        updateFields.name = [newFirstname, newLastname].filter(Boolean).join(" ");
+      const newFirstname = firstname ?? currentUser?.firstname ?? "";
+      const newLastname = lastname ?? currentUser?.lastname ?? "";
+      updateFields.name = [newFirstname, newLastname].filter(Boolean).join(" ");
     }
 
-    const finalFirst = firstname ?? currentUser?.firstname ?? "";
-    const finalLast = lastname ?? currentUser?.lastname ?? "";
-    const finalAbout = about ?? currentUser?.about ?? "";
-    const finalInterests = interests ?? currentUser?.interests ?? [];
-
-    const textToEmbed = `Name: ${finalFirst} ${finalLast}. About: ${finalAbout}. Interests: ${finalInterests.join(", ")}.`;
-
-    try {
-        const hasGeminiKey = !!(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY);
-        const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
-
-        if (hasGeminiKey || hasOpenAIKey) {
-            const embeddingModel = hasGeminiKey
-                ? createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY! }).textEmbeddingModel("text-embedding-004")
-                : openai.embedding("text-embedding-3-small");
-            const { embedding } = await embed({
-                model: embeddingModel,
-                value: textToEmbed,
-            });
-            updateFields.embedding = embedding;
-        }
-    } catch (e) {
-        console.warn("Embedding generation failed:", e);
-    }
+    embeddingInputs = {
+      firstname: firstname ?? currentUser?.firstname ?? "",
+      lastname: lastname ?? currentUser?.lastname ?? "",
+      about: about ?? currentUser?.about ?? "",
+      interests: interests ?? currentUser?.interests ?? [],
+    };
   }
 
   await db.collection("users").updateOne(
@@ -163,6 +199,14 @@ export async function PATCH(req: NextRequest) {
     { $set: updateFields },
     { upsert: true }
   );
+
+  // Kick off embedding generation after the response is sent so the user
+  // doesn't wait on the AI provider. Vercel's `after` keeps the function
+  // alive long enough for this to complete.
+  if (embeddingInputs) {
+    const inputs = embeddingInputs;
+    after(() => regenerateEmbedding(userId, inputs));
+  }
 
   return NextResponse.json({ ok: true });
 }

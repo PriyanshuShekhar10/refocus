@@ -33,8 +33,8 @@ export async function GET() {
         }
       };
 
-      send({ type: "hello" });
-      unsub = subscribe(channel, (ev) => send(ev));
+      send({ type: "hello", channel: "sessions" });
+      unsub = subscribe(channel, (ev) => send({ ...ev, channel: "sessions" }));
       pingInterval = setInterval(
         () => send({ type: "ping", t: Date.now() }),
         25000,

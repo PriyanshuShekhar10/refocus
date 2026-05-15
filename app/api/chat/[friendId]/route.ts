@@ -7,6 +7,8 @@ import { chatChannel, publish, userChannel } from "@/lib/sse";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { areFriends } from "@/lib/friendship";
 import { publishAbly } from "@/lib/ably-server";
+import { DURATION_OPTIONS } from "@/constants/calendar";
+import { hasSessionOverlap } from "@/lib/sessionOverlap";
 
 type MessageDoc = {
   _id: ObjectId;
@@ -101,25 +103,13 @@ export async function POST(
   const { friendId } = await params;
 
   if (!(await areFriends(currentUserId, friendId))) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json(
+      { error: "You can only message friends" },
+      { status: 403 },
+    );
   }
 
   const db = await getDb();
-
-  // Verify the users are actually friends before allowing messages
-  const friendship = await db.collection("friend_requests").findOne({
-    status: "accepted",
-    $or: [
-      { from_user_id: currentUserId, to_user_id: friendId },
-      { from_user_id: friendId, to_user_id: currentUserId },
-    ],
-  });
-  if (!friendship) {
-    return NextResponse.json(
-      { error: "You can only message friends" },
-      { status: 403 }
-    );
-  }
 
   const body = await req.json().catch(() => ({}));
   const { type } = body as { type?: "text" | "session-request" };
@@ -180,18 +170,44 @@ export async function POST(
   if (type === "session-request") {
     const { start, durationMin, message, goal } = body as {
       start?: string;
-      durationMin?: 25 | 50 | 75;
+      durationMin?: number;
       message?: string;
       goal?: string;
     };
-    if (!start || !durationMin)
+    if (!start || typeof durationMin !== "number")
       return NextResponse.json(
         { error: "Missing start or durationMin" },
         { status: 400 },
       );
+    if (!DURATION_OPTIONS.includes(durationMin as 25 | 50 | 75)) {
+      return NextResponse.json(
+        { error: `Invalid durationMin (allowed: ${DURATION_OPTIONS.join(", ")})` },
+        { status: 400 },
+      );
+    }
     const s = new Date(start);
     if (isNaN(s.getTime()))
       return NextResponse.json({ error: "Invalid start" }, { status: 400 });
+    const now = new Date();
+    if (s.getTime() <= now.getTime()) {
+      return NextResponse.json(
+        { error: "Cannot request a session in the past" },
+        { status: 400 },
+      );
+    }
+    const end = new Date(s.getTime() + durationMin * 60_000);
+    if (await hasSessionOverlap(db, currentUserId, s, end)) {
+      return NextResponse.json(
+        { error: "You already have a session during this time" },
+        { status: 409 },
+      );
+    }
+    if (await hasSessionOverlap(db, friendId, s, end)) {
+      return NextResponse.json(
+        { error: "Your friend already has a session during this time" },
+        { status: 409 },
+      );
+    }
 
     // Create session request
     const sr = await db.collection("session_requests").insertOne({

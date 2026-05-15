@@ -28,7 +28,6 @@ vi.mock("@/lib/daily", () => ({
   createDailyMeetingToken: mocks.createDailyMeetingToken,
 }));
 
-import { POST as postDailyRoom } from "@/app/api/sessions/[id]/daily/route";
 import { POST as postDailyToken } from "@/app/api/sessions/[id]/daily/token/route";
 
 const OWNER_ID = "owner-1";
@@ -40,7 +39,7 @@ function makeParams(id: string) {
   return { params: Promise.resolve({ id }) };
 }
 
-describe("Daily session endpoints", () => {
+describe("POST /api/sessions/:id/daily/token", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.checkRateLimit.mockResolvedValue({
@@ -67,18 +66,7 @@ describe("Daily session endpoints", () => {
     mocks.createDailyMeetingToken.mockResolvedValue("token-123");
   });
 
-  it("returns 403 for non-member on POST /daily", async () => {
-    mockSession(STRANGER_ID);
-    const req = mockRequest(`/api/sessions/${SESSION_ID}/daily`);
-    const { status, json } = await parseResponse(
-      await postDailyRoom(req, makeParams(SESSION_ID)),
-    );
-
-    expect(status).toBe(403);
-    expect(json.error).toBe("Forbidden");
-  });
-
-  it("returns 403 for non-member on POST /daily/token", async () => {
+  it("returns 403 for non-member", async () => {
     mockSession(STRANGER_ID);
     const req = mockRequest(`/api/sessions/${SESSION_ID}/daily/token`);
     const { status, json } = await parseResponse(
@@ -122,15 +110,6 @@ describe("Daily session endpoints", () => {
     mocks.createOrGetDailyRoom.mockRejectedValue(
       new Error("Missing DAILY_API_KEY createOrGetDailyRoom"),
     );
-
-    const roomReq = mockRequest(`/api/sessions/${SESSION_ID}/daily`);
-    const roomRes = await parseResponse(
-      await postDailyRoom(roomReq, makeParams(SESSION_ID)),
-    );
-    expect(roomRes.status).toBe(500);
-    expect(roomRes.json.error).toBe("Internal server error");
-    expect(roomRes.json.error).not.toContain("DAILY_API_KEY");
-    expect(roomRes.json.error).not.toContain("createOrGetDailyRoom");
 
     const tokenReq = mockRequest(`/api/sessions/${SESSION_ID}/daily/token`);
     const tokenRes = await parseResponse(

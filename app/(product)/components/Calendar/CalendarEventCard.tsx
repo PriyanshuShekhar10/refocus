@@ -6,14 +6,13 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/types/calendar";
 import { getResolvedSessionColor } from "@/constants/calendar";
 import { getLocalSessionColor } from "@/lib/sessionColors";
+import { isCallJoinable } from "@/lib/sessionWindow";
 
-/** Check if session starts within the next hour or has already started (but not ended) */
+/** Check if the session is joinable right now — matches API-enforced window. */
 function isJoinable(startTime: Date | string, endTime?: Date | string): boolean {
-  const now = new Date();
   const start = new Date(startTime);
-  const end = endTime ? new Date(endTime) : new Date(start.getTime() + 60 * 60 * 1000); // default 1hr if no end
-  const oneHourBefore = new Date(start.getTime() - 60 * 60 * 1000);
-  return now >= oneHourBefore && now <= end;
+  const end = endTime ? new Date(endTime) : new Date(start.getTime() + 60 * 60 * 1000);
+  return isCallJoinable(start, end);
 }
 
 interface CalendarEventCardProps {

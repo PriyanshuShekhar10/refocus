@@ -149,11 +149,11 @@ export function useCalendarSessions({
   useEffect(() => {
     if (days.length === 0) return;
 
-    const es = new EventSource("/api/events", { withCredentials: true });
+    const es = new EventSource("/api/sessions/events", { withCredentials: true });
     const onMessage = (e: MessageEvent<string>) => {
       try {
-        const data = JSON.parse(e.data) as { type?: string; channel?: string };
-        if (data.channel === "sessions" && data.type === "sessions_updated") {
+        const data = JSON.parse(e.data) as { type?: string };
+        if (data.type === "sessions_updated") {
           setRefreshTrigger((t) => t + 1);
         }
       } catch {

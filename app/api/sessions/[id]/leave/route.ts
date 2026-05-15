@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { publish, sessionsChannel } from "@/lib/sse";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 
 type SessionDoc = {
   _id: ObjectId;
@@ -26,7 +27,15 @@ export async function POST(
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // Rate limit (prevent thrashing)
+  const rl = await checkRateLimit(userId, "api");
+  if (!rl.success) return rateLimitedResponse(rl);
+
   const { id: sessionId } = await params;
+  if (!ObjectId.isValid(sessionId)) {
+    return NextResponse.json({ error: "Invalid session id" }, { status: 400 });
+  }
+
   const db = await getDb();
   const col = db.collection<SessionDoc>("sessions");
   const s = await col.findOne({ _id: new ObjectId(sessionId) });
@@ -58,6 +67,7 @@ export async function POST(
     {
       $set: {
         session_participants: newParticipants,
+        status: "available",
         updated_at: new Date(),
       },
     },

@@ -17,6 +17,10 @@ export async function createOrGetDailyRoom(sessionId: string, exp?: number) {
     enable_prejoin_ui: false,
     enable_screenshare: true,
     enable_chat: true,
+    // Lock the room down: anyone with the token can join, no one is room owner.
+    // Token's `user_id` ties the participant to our internal user.
+    enable_knocking: false,
+    eject_at_room_exp: true,
     exp: exp ?? Math.floor(Date.now() / 1000) + 60 * 60 * 24,
   };
   // Try get

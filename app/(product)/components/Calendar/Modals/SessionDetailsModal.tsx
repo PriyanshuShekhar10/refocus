@@ -10,6 +10,7 @@ import {
   TIME_CONFIG,
 } from "@/constants/calendar";
 import { getLocalSessionColor, setLocalSessionColor } from "@/lib/sessionColors";
+import { isCallJoinable } from "@/lib/sessionWindow";
 
 export function SessionDetailsModal({
   event,
@@ -44,26 +45,22 @@ export function SessionDetailsModal({
   const [saving, setSaving] = useState<boolean>(false);
   const [friendReqStatus, setFriendReqStatus] = useState<string | null>(null);
   const [isFriend, setIsFriend] = useState<boolean>(false);
-  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const selectedColorIndex = getSessionColorPresetIndex(color);
 
-  const joinUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/sessions/${event.id}`
-      : `/sessions/${event.id}`;
-
-  const copyJoinLink = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(joinUrl);
-      setCopyFeedback("Copied!");
-      setTimeout(() => setCopyFeedback(null), 2000);
-    } catch {
-      setCopyFeedback("Copy failed");
-      setTimeout(() => setCopyFeedback(null), 2000);
-    }
-  }, [joinUrl]);
+  // Visibility for the "Join" button — mirrors the API window so a click
+  // never lands on a 403. Recomputed every 15s while the modal is open.
+  const isBooked = (event.participants?.length ?? 0) >= 2;
+  const [canJoin, setCanJoin] = useState(() =>
+    isCallJoinable(event.start, event.end),
+  );
+  useEffect(() => {
+    const tick = () => setCanJoin(isCallJoinable(event.start, event.end));
+    tick();
+    const id = setInterval(tick, 15_000);
+    return () => clearInterval(id);
+  }, [event.start, event.end]);
 
   useEffect(() => {
     let cancelled = false;
@@ -271,29 +268,39 @@ export function SessionDetailsModal({
             </section>
           )}
 
-          {/* Join link + copy */}
-          <section className="pt-1 border-t border-gray-100 dark:border-gray-800">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-              Join link
-            </p>
-            <div className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 overflow-hidden">
-              <a
-                href={`/sessions/${event.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 min-w-0 px-3 py-2.5 text-sm text-indigo-600 dark:text-indigo-400 hover:underline truncate"
-              >
-                {joinUrl.replace(/^https?:\/\//, "")}
-              </a>
-              <button
-                type="button"
-                onClick={copyJoinLink}
-                className="shrink-0 px-3 py-2.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
-              >
-                {copyFeedback ?? "Copy"}
-              </button>
-            </div>
-          </section>
+          {/* Join */}
+          {isBooked && (
+            <section className="pt-1 border-t border-gray-100 dark:border-gray-800">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                Live call
+              </p>
+              {canJoin ? (
+                <a
+                  href={`/sessions/${event.id}`}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                  </svg>
+                  Join session
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gray-100 dark:bg-gray-800 px-4 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                  title="Join opens 5 minutes before the session starts"
+                >
+                  Join opens 5 min before start
+                </button>
+              )}
+            </section>
+          )}
         </div>
 
         {/* Footer actions */}
