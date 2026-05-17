@@ -70,12 +70,12 @@ export function CalendarSidebar({
       {/* Top: Book session + Quick book */}
       <div className="flex gap-2">
         <div className="flex-1">
-          <BookSessionButton label="Book session" className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600" />
+          <BookSessionButton label="Book session" className="w-full rounded-lg bg-[#5D1C6A] px-4 py-3 text-sm font-semibold text-white hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]" />
         </div>
         {/* <button
           type="button"
           onClick={() => document.querySelector<HTMLButtonElement>("[data-book-session-trigger]")?.click()}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#5D1C6A] text-white hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]"
           title="Quick book"
           aria-label="Quick book"
         >
@@ -126,7 +126,7 @@ export function CalendarSidebar({
                       onClick={() => onCreateDurationChange(d)}
                       className={`flex-1 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
                         createDuration === d
-                          ? "bg-indigo-600 text-white shadow dark:bg-indigo-500"
+                          ? "bg-[#5D1C6A] text-white shadow dark:bg-[#7A2D88]"
                           : "text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
                       }`}
                     >
@@ -193,7 +193,7 @@ export function CalendarSidebar({
                     key={ev.id}
                     className="flex items-stretch gap-2 rounded-lg border border-gray-200 bg-gray-50/80 p-2 dark:border-gray-700 dark:bg-gray-800/50"
                   >
-                    <div className="w-1 shrink-0 rounded-full bg-indigo-500 dark:bg-indigo-400" />
+                    <div className="w-1 shrink-0 rounded-full bg-[#CA5995] dark:bg-[#CA5995]" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-1">
                         <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
@@ -211,15 +211,15 @@ export function CalendarSidebar({
                             href={`/sessions/${ev.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="rounded bg-indigo-600 px-2 py-1 text-[10px] font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+                            className="rounded bg-[#5D1C6A] px-2 py-1 text-[10px] font-medium text-white hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]"
                           >
                             Join
                           </a>
-                        ) : onJoinSession ? (
+                        ) : !isOwner && onJoinSession ? (
                           <button
                             type="button"
                             onClick={() => onJoinSession(ev)}
-                            className="rounded bg-indigo-600 px-2 py-1 text-[10px] font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+                            className="rounded bg-[#5D1C6A] px-2 py-1 text-[10px] font-medium text-white hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]"
                           >
                             Book
                           </button>
@@ -231,8 +231,10 @@ export function CalendarSidebar({
                             className="rounded p-1 text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
                             aria-label="More options"
                           >
-                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                              <circle cx="5" cy="10" r="1.6" />
+                              <circle cx="10" cy="10" r="1.6" />
+                              <circle cx="15" cy="10" r="1.6" />
                             </svg>
                           </button>
                         )}
@@ -254,7 +256,7 @@ export function CalendarSidebar({
                         )}
                       </div>
                     </div>
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF1D3] text-xs font-semibold text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
                       {initials}
                     </div>
                   </li>

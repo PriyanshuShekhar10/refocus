@@ -24,6 +24,13 @@ button,
 
 @layer base {
   :root {
+    --palette-cream: #fff1d3;
+    --palette-peach: #ffb090;
+    --palette-rose: #c85f97;
+    /* --palette-rose: #ca5995; */
+    --palette-plum: #9f1bb9;
+    /* --palette-plum: #5d1c6a; */
+
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -50,11 +57,21 @@ button,
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
     /* --hero-gradient: linear-gradient(135deg, #997880 5%, #b09193 100%); */
-    --hero-gradient: linear-gradient(135deg, #dcdcfc 40%, #f06c41 100%);
-    --button-gradient: linear-gradient(135deg, #799bffcf 20%, #ec8867b3 90%);
+    --hero-gradient: linear-gradient(
+      135deg,
+      var(--palette-cream) 0%,
+      var(--palette-peach) 55%,
+      var(--palette-rose) 100%
+    );
+    --button-gradient: linear-gradient(
+      135deg,
+      var(--palette-rose) 10%,
+      var(--palette-plum) 95%
+    );
     /* --hero-gradient: linear-gradient(135deg, #a5a3f7 10%, #ff8650 100%); */
   }
   .dark {
+    --palette-plum: #7a2d88;
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
@@ -185,16 +202,17 @@ html {
   background-color: hsl(var(--background));
   background-image: radial-gradient(
     circle at center,
-    hsl(var(--muted-foreground) / 0.15) 1px,
+    hsl(var(--muted-foreground) / 0.14) 1px,
     transparent 1px
   );
-  background-size: 20px 20px;
+  background-size: 24px 24px;
 }
 
 .dark .bg-dotted-grid {
+  background-color: hsl(var(--background));
   background-image: radial-gradient(
     circle at center,
-    hsl(var(--muted-foreground) / 0.2) 1px,
+    hsl(var(--muted-foreground) / 0.12) 1px,
     transparent 1px
   );
 }

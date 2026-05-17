@@ -148,7 +148,7 @@ export default function PostCard({
   return (
     <div
       className={`border-b border-border py-4 last:border-b-0 ${
-        isPinned ? "bg-green-50/40 dark:bg-green-900/10 rounded-md px-3" : ""
+        isPinned ? "bg-[#FFF1D3]/80 dark:bg-[#5D1C6A]/30 rounded-md px-3" : ""
       }`}
     >
       {/* Post Header */}
@@ -163,7 +163,7 @@ export default function PostCard({
               })
             }
           >
-            <Avatar className="h-10 w-10 hover:ring-2 hover:ring-green-500 transition-shadow cursor-pointer">
+            <Avatar className="h-10 w-10 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer">
               <AvatarFallback className="text-sm bg-muted">
                 {post.authorInitials}
               </AvatarFallback>
@@ -171,7 +171,7 @@ export default function PostCard({
           </button>
         ) : post.authorUsername ? (
           <Link href={`/u/${post.authorUsername}`}>
-            <Avatar className="h-10 w-10 hover:ring-2 hover:ring-green-500 transition-shadow cursor-pointer">
+            <Avatar className="h-10 w-10 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer">
               <AvatarFallback className="text-sm bg-muted">
                 {post.authorInitials}
               </AvatarFallback>
@@ -196,12 +196,12 @@ export default function PostCard({
                       name: post.authorName,
                     })
                   }
-                  className="font-medium text-sm hover:text-green-600 dark:hover:text-green-400 hover:underline transition-colors"
+                  className="font-medium text-sm hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors"
                 >
                   {post.authorName}
                 </button>
               ) : post.authorUsername ? (
-                <Link href={`/u/${post.authorUsername}`} className="font-medium text-sm hover:text-green-600 dark:hover:text-green-400 hover:underline transition-colors">
+                <Link href={`/u/${post.authorUsername}`} className="font-medium text-sm hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors">
                   {post.authorName}
                 </Link>
               ) : (
@@ -211,7 +211,7 @@ export default function PostCard({
                 {formatTime(post.createdAt)}
               </span>
               {isPinned && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:border-green-800 dark:bg-green-900/40 dark:text-green-300">
+                <span className="inline-flex items-center gap-1 rounded-full border border-[#FFB090] bg-[#FFF1D3] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D1C6A] dark:border-[#CA5995]/70 dark:bg-[#5D1C6A]/40 dark:text-[#FFB090]">
                   <Pin className="h-3 w-3" />
                   Pinned
                 </span>
@@ -237,7 +237,7 @@ export default function PostCard({
             <button
               type="button"
               onClick={() => setIsPinnedExpanded((prev) => !prev)}
-              className="mt-2 text-xs font-medium text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200"
+              className="mt-2 text-xs font-medium text-[#5D1C6A] hover:text-[#CA5995] dark:text-[#FFB090] dark:hover:text-[#CA5995]"
             >
               {isPinnedExpanded ? "Show less" : "Read full welcome and rules"}
             </button>
@@ -295,7 +295,7 @@ export default function PostCard({
                             })
                           }
                         >
-                          <Avatar className="h-7 w-7 hover:ring-2 hover:ring-green-500 transition-shadow cursor-pointer">
+                          <Avatar className="h-7 w-7 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer">
                             <AvatarFallback className="text-xs bg-muted">
                               {comment.authorInitials}
                             </AvatarFallback>
@@ -303,7 +303,7 @@ export default function PostCard({
                         </button>
                       ) : comment.authorUsername ? (
                         <Link href={`/u/${comment.authorUsername}`}>
-                          <Avatar className="h-7 w-7 hover:ring-2 hover:ring-green-500 transition-shadow cursor-pointer">
+                          <Avatar className="h-7 w-7 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer">
                             <AvatarFallback className="text-xs bg-muted">
                               {comment.authorInitials}
                             </AvatarFallback>
@@ -327,12 +327,12 @@ export default function PostCard({
                                   name: comment.authorName,
                                 })
                               }
-                              className="text-xs font-medium hover:text-green-600 dark:hover:text-green-400 hover:underline transition-colors"
+                              className="text-xs font-medium hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors"
                             >
                               {comment.authorName}
                             </button>
                           ) : comment.authorUsername ? (
-                            <Link href={`/u/${comment.authorUsername}`} className="text-xs font-medium hover:text-green-600 dark:hover:text-green-400 hover:underline transition-colors">
+                            <Link href={`/u/${comment.authorUsername}`} className="text-xs font-medium hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors">
                               {comment.authorName}
                             </Link>
                           ) : (

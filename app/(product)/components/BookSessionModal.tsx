@@ -228,7 +228,7 @@ export default function BookSessionModal({
                   }}
                   className={`shrink-0 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     srDate?.toDateString() === opt.date.toDateString()
-                      ? "bg-indigo-600 text-white"
+                      ? "bg-[#5D1C6A] text-white"
                       : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                   }`}
                 >
@@ -287,7 +287,7 @@ export default function BookSessionModal({
                               ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
                               : "bg-orange-100 dark:bg-orange-900/30 text-orange-400 cursor-not-allowed border border-orange-200 dark:border-orange-800"
                             : srHour === slot.hour
-                              ? "bg-indigo-600 text-white"
+                              ? "bg-[#5D1C6A] text-white"
                               : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                       }`}
                     >
@@ -314,7 +314,7 @@ export default function BookSessionModal({
                                 ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed"
                                 : "bg-orange-100 dark:bg-orange-900/30 text-orange-400 cursor-not-allowed"
                               : srMinute === m
-                                ? "bg-indigo-600 text-white"
+                                ? "bg-[#5D1C6A] text-white"
                                 : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                           }`}
                         >
@@ -349,7 +349,7 @@ export default function BookSessionModal({
                             ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
                             : "bg-orange-100 dark:bg-orange-900/30 text-orange-400 cursor-not-allowed border border-orange-200 dark:border-orange-800"
                           : srDuration === d
-                            ? "bg-green-600 text-white"
+                            ? "bg-[#5D1C6A] text-white"
                             : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                       }`}
                     >
@@ -371,7 +371,7 @@ export default function BookSessionModal({
                   type="button"
                   onClick={refineGoal}
                   disabled={isRefining || !srGoal.trim()}
-                  className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  className="text-[10px] font-medium text-[#5D1C6A] dark:text-[#FFB090] hover:text-[#CA5995] dark:hover:text-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                 >
                   {isRefining ? (
                     <>
@@ -418,7 +418,7 @@ export default function BookSessionModal({
                     onChange={(e) => setSrMessage(e.target.value)}
                   />
                   <div className="text-xs text-gray-600 dark:text-gray-300">
-                    <span className="text-green-600 dark:text-green-400">✓ Both available</span>
+                    <span className="text-[#5D1C6A] dark:text-[#CA5995]">✓ Both available</span>
                     {" · "}
                     {(() => {
                       const d = new Date(srDate);
@@ -456,7 +456,7 @@ export default function BookSessionModal({
             type="button"
             onClick={sendRequest}
             disabled={!canSend || sending}
-            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {sending ? "Sending…" : "Send session request"}
           </button>

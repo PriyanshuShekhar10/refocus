@@ -204,7 +204,7 @@ function DashboardContent() {
                   key={step.title}
                   className={`h-1.5 rounded-full transition-all ${
                     TOUR_STEPS[tourStepIndex].title === step.title
-                      ? "w-8 bg-green-600"
+                      ? "w-8 bg-[#CA5995]"
                       : "w-3 bg-gray-300 dark:bg-gray-600"
                   }`}
                 />
@@ -223,7 +223,7 @@ function DashboardContent() {
               <button
                 type="button"
                 onClick={goNext}
-                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500"
+                className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#CA5995]"
               >
                 {tourStepIndex === TOUR_STEPS.length - 1 ? "Finish" : "Next"}
               </button>

@@ -219,7 +219,7 @@ export default function BookSessionButton({
     <>
       <button
         data-book-session-trigger
-        className={`w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 ${className}`}
+        className={`w-full rounded-md bg-[#5D1C6A] px-3 py-2 text-sm font-medium text-white hover:bg-[#CA5995] ${className}`}
         onClick={() => setOpen(true)}
       >
         {label}
@@ -262,7 +262,7 @@ export default function BookSessionButton({
                       }}
                       className={`shrink-0 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                         srDate?.toDateString() === opt.date.toDateString()
-                          ? "bg-indigo-600 text-white"
+                          ? "bg-[#5D1C6A] text-white"
                           : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                       }`}
                     >
@@ -322,7 +322,7 @@ export default function BookSessionButton({
                               : conflict
                                 ? "bg-red-100 dark:bg-red-900/30 text-red-400 dark:text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
                                 : srHour === slot.hour
-                                  ? "bg-indigo-600 text-white"
+                                  ? "bg-[#5D1C6A] text-white"
                                   : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                           }`}
                         >
@@ -356,7 +356,7 @@ export default function BookSessionButton({
                                 minuteConflict
                                   ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed"
                                   : srMinute === m
-                                    ? "bg-indigo-600 text-white"
+                                    ? "bg-[#5D1C6A] text-white"
                                     : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                               }`}
                             >
@@ -401,7 +401,7 @@ export default function BookSessionButton({
                             durationConflict
                               ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
                               : duration === d
-                                ? "bg-green-600 text-white"
+                                ? "bg-[#5D1C6A] text-white"
                                 : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                           }`}
                         >
@@ -427,7 +427,7 @@ export default function BookSessionButton({
                         onClick={() => setSessionType(t)}
                         className={`rounded-md border px-3 py-1.5 text-xs font-medium capitalize ${
                           sessionType === t
-                            ? "border-green-600 bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300"
+                            ? "border-[#CA5995] bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090]"
                             : "border-gray-300 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                         }`}
                         disabled={busy}
@@ -462,7 +462,7 @@ export default function BookSessionButton({
                     </div>
                   ) : (
                     <div className="text-xs text-gray-600 dark:text-gray-300">
-                      <span className="text-green-600 dark:text-green-400">
+                      <span className="text-[#5D1C6A] dark:text-[#CA5995]">
                         ✓ Available
                       </span>
                       {" · "}
@@ -486,7 +486,7 @@ export default function BookSessionButton({
                     </div>
                   )}
                   {success && (
-                    <div className="rounded-md bg-green-100 dark:bg-green-900/40 px-3 py-2 text-sm text-green-700 dark:text-green-300">
+                    <div className="rounded-md bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 px-3 py-2 text-sm text-[#5D1C6A] dark:text-[#FFB090]">
                       {success}
                     </div>
                   )}
@@ -506,7 +506,7 @@ export default function BookSessionButton({
               </button>
               <button
                 type="button"
-                className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-md bg-[#5D1C6A] dark:bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] dark:hover:bg-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleCreate}
                 disabled={
                   busy ||

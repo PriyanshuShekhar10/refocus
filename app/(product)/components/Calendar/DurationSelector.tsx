@@ -48,12 +48,12 @@ type DurationSelectorProps = SingleSelectProps | MultiSelectProps;
 const VARIANT_STYLES = {
   primary: {
     selected:
-      "border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
+      "border-[#CA5995] bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/30 dark:text-[#FFB090]",
     unselected: "border-gray-200 dark:border-gray-700",
   },
   success: {
     selected:
-      "border-green-600 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300",
+      "border-[#CA5995] bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/20 dark:text-[#FFB090]",
     unselected: "border-gray-200 dark:border-gray-700",
   },
 } as const;

@@ -10,16 +10,16 @@ import { isCallJoinable } from "@/lib/sessionWindow";
 
 const COMPACT_PASTEL_COLORS_LIGHT = [
   { bg: "#FCE7F3", border: "#F9A8D4" }, // pink
-  { bg: "#DBEAFE", border: "#93C5FD" }, // blue
+  { bg: "#EDE9FE", border: "#C4B5FD" }, // lavender
   { bg: "#DCFCE7", border: "#86EFAC" }, // green
   { bg: "#FEF3C7", border: "#FCD34D" }, // amber
-  { bg: "#EDE9FE", border: "#C4B5FD" }, // violet
+  { bg: "#F3E8FF", border: "#D8B4FE" }, // violet
   { bg: "#CCFBF1", border: "#5EEAD4" }, // teal
 ];
 
 const COMPACT_PASTEL_COLORS_DARK = [
   { bg: "#4C1D95AA", border: "#A78BFA" }, // violet
-  { bg: "#1E3A8AAA", border: "#60A5FA" }, // blue
+  { bg: "#581C87AA", border: "#C4B5FD" }, // lavender
   { bg: "#14532DAA", border: "#4ADE80" }, // green
   { bg: "#78350FAA", border: "#FBBF24" }, // amber
   { bg: "#831843AA", border: "#F472B6" }, // pink
@@ -216,7 +216,7 @@ export function CalendarEventCard({
           {compactPartner?.avatar_url ? (
             <AvatarImage src={compactPartner.avatar_url} alt={compactPartner.name} />
           ) : null}
-          <AvatarFallback className="text-[8px] font-medium bg-indigo-100 text-indigo-600">
+          <AvatarFallback className="text-[8px] font-medium bg-[#FFF1D3] text-[#5D1C6A]">
             {compactPartnerInitials}
           </AvatarFallback>
         </Avatar>
@@ -226,7 +226,7 @@ export function CalendarEventCard({
 
         {compactPartner && (
           <div
-            className={`pointer-events-auto absolute left-[calc(100%+10px)] top-1/2 z-[130] w-60 -translate-y-1/2 rounded-xl border border-indigo-200/60 dark:border-indigo-700/60 bg-white/95 dark:bg-gray-900/95 p-3 shadow-2xl backdrop-blur-sm transition-all duration-150 ${
+            className={`pointer-events-auto absolute left-[calc(100%+10px)] top-1/2 z-[130] w-60 -translate-y-1/2 rounded-xl border border-[#FFB090]/80 dark:border-[#CA5995]/60 bg-white/95 dark:bg-gray-900/95 p-3 shadow-2xl backdrop-blur-sm transition-all duration-150 ${
               showCompactPartnerCard
                 ? "opacity-100 translate-x-0 visible"
                 : "opacity-0 -translate-x-1 invisible"
@@ -237,14 +237,14 @@ export function CalendarEventCard({
             onClick={(evt) => evt.stopPropagation()}
           >
             <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8 border border-indigo-100 dark:border-indigo-800">
+              <Avatar className="h-8 w-8 border border-[#FFB090]/70 dark:border-[#CA5995]/70">
                 {compactPartner.avatar_url ? (
                   <AvatarImage
                     src={compactPartner.avatar_url}
                     alt={compactPartner.name}
                   />
                 ) : null}
-                <AvatarFallback className="text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300">
+                <AvatarFallback className="text-[10px] font-semibold bg-[#FFF1D3] dark:bg-slate-800 text-[#5D1C6A] dark:text-[#FFB090]">
                   {compactPartnerInitials}
                 </AvatarFallback>
               </Avatar>
@@ -264,7 +264,7 @@ export function CalendarEventCard({
             {compactPartner.username ? (
               <button
                 type="button"
-                className="pointer-events-auto mt-2 inline-flex w-full justify-center rounded-lg bg-indigo-600 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-indigo-700"
+                className="pointer-events-auto mt-2 inline-flex w-full justify-center rounded-lg bg-[#5D1C6A] px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-[#CA5995]"
                 onMouseDown={(evt) => evt.stopPropagation()}
                 onClick={(evt) => {
                   evt.stopPropagation();
@@ -317,10 +317,10 @@ export function CalendarEventCard({
             ? "border-transparent"
             : isBooked
               ? "border-gray-200/80 dark:border-gray-500/50 bg-gray-200 dark:bg-gray-600"
-              : "border-indigo-200/80 dark:border-indigo-800/80 bg-indigo-100 dark:bg-indigo-900/80 hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer"
+              : "border-[#FFB090]/90 dark:border-[#CA5995]/45 bg-[#FFF1D3] dark:bg-slate-800/90 hover:border-[#CA5995] dark:hover:border-[#CA5995]/80 cursor-pointer"
         } ${
           isJoinableNow
-            ? "border-emerald-500 ring-2 ring-emerald-400/80 shadow-md"
+            ? "border-[#CA5995] ring-2 ring-[#CA5995]/45 shadow-md"
             : ""
         } ${!hasCustomColor ? "" : "border-black/10 dark:border-white/10"}`}
         title={
@@ -359,7 +359,7 @@ export function CalendarEventCard({
           </button>
         ) : !isBooked ? (
           <button
-            className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+            className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#5D1C6A] text-white hover:bg-[#CA5995] transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onBook(e);
@@ -425,8 +425,8 @@ export function CalendarEventCard({
             <span
               className={`text-xs font-medium ${
                 isBooked
-                  ? "text-gray-800 dark:text-indigo-200"
-                  : "text-indigo-700 dark:text-indigo-300"
+                  ? "text-gray-800 dark:text-[#FFB090]"
+                  : "text-[#5D1C6A] dark:text-[#CA5995]"
               }`}
             >
               {event.name || (isBooked ? "Session" : "Partner needed")}
@@ -459,7 +459,7 @@ export function CalendarEventCard({
                           alt={displayName}
                         />
                       ) : null}
-                      <AvatarFallback className="text-[8px] font-medium bg-indigo-100 text-indigo-600">
+                      <AvatarFallback className="text-[8px] font-medium bg-[#FFF1D3] text-[#5D1C6A]">
                         {initials}
                       </AvatarFallback>
                     </Avatar>

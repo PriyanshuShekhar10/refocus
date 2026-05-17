@@ -551,8 +551,8 @@ export default function Calendar({
                     className="pointer-events-none absolute inset-x-0 z-30"
                     style={{ top: hoverState.yPx }}
                   >
-                    <div className="h-px w-full bg-indigo-400/70" />
-                    <div className="absolute left-2 -top-3 rounded bg-indigo-600 px-2 py-0.5 text-[10px] font-medium text-white shadow">
+                    <div className="h-px w-full bg-[#CA5995]/70" />
+                    <div className="absolute left-2 -top-3 rounded bg-[#5D1C6A] dark:bg-[#7A2D88] px-2 py-0.5 text-[10px] font-medium text-white shadow">
                       {hoverState.label} IST
                     </div>
                   </div>
@@ -565,7 +565,7 @@ export default function Calendar({
                       style={{ top: hoverState.previewTop }}
                     >
                       <div
-                        className="rounded-lg border border-indigo-400/70 bg-indigo-500/10"
+                        className="rounded-lg border border-[#CA5995]/70 dark:border-[#CA5995]/45 bg-[#FFB090]/20 dark:bg-[#CA5995]/10"
                         style={{ height: minuteToPx(ui.createDuration) }}
                       />
                     </div>

@@ -106,11 +106,11 @@ export default function Matchmaking() {
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {matches.map((user) => (
-          <Card key={user._id} className="flex flex-col overflow-hidden border-indigo-100 dark:border-indigo-900 transition-all hover:shadow-md">
+          <Card key={user._id} className="flex flex-col overflow-hidden border-[#FFB090]/70 dark:border-[#5D1C6A]/70 transition-all hover:shadow-md">
             <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
-              <Avatar className="h-12 w-12 border-2 border-indigo-100 dark:border-indigo-900">
+              <Avatar className="h-12 w-12 border-2 border-[#FFB090]/70 dark:border-[#5D1C6A]/70">
                 <AvatarImage src={user.image || undefined} />
-                <AvatarFallback className="bg-indigo-50 text-indigo-700 font-bold">
+                <AvatarFallback className="bg-[#FFF1D3] text-[#5D1C6A] font-bold">
                   {getInitials(user.name || user.firstname)}
                 </AvatarFallback>
               </Avatar>
@@ -118,8 +118,8 @@ export default function Matchmaking() {
                 <CardTitle className="text-base">
                   {user.name || `${user.firstname} ${user.lastname}`}
                 </CardTitle>
-                <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
-                   <Zap size={12} className="fill-green-600" />
+                <div className="flex items-center gap-1 text-xs text-[#CA5995] font-medium">
+                   <Zap size={12} className="fill-[#CA5995]" />
                    {Math.round(user.score * 100)}% Match
                 </div>
               </div>
@@ -144,12 +144,12 @@ export default function Matchmaking() {
             </CardContent>
             <CardFooter className="pt-2">
               {sentRequests.has(user._id) ? (
-                 <Button className="w-full bg-green-50 text-green-700 hover:bg-green-100 border border-green-200" variant="outline" disabled>
+                 <Button className="w-full bg-[#FFF1D3] text-[#5D1C6A] hover:bg-[#FFB090]/45 border border-[#FFB090]" variant="outline" disabled>
                     Request Sent
                  </Button>
               ) : (
                 <Button 
-                    className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white" 
+                    className="w-full gap-2 bg-[#5D1C6A] hover:bg-[#CA5995] text-white"
                     onClick={() => sendFriendRequest(user._id)}
                 >
                     <UserPlus size={16} />

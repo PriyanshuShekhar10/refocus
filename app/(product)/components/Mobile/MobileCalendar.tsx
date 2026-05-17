@@ -389,7 +389,7 @@ export default function MobileCalendar() {
               className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
                 isToday
                   ? "bg-gray-100 dark:bg-gray-800 text-gray-500"
-                  : "bg-green-100 dark:bg-green-900/30 text-green-600"
+                  : "bg-[#FFF1D3] dark:bg-[#5D1C6A]/35 text-[#5D1C6A]"
               }`}
             >
               Today
@@ -405,7 +405,7 @@ export default function MobileCalendar() {
       <div className="shrink-0 px-4 py-2 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-3">
           <span className="text-xs text-gray-500 uppercase tracking-wide">IST</span>
-          <span className={`text-sm font-medium ${isToday ? "text-green-600" : ""}`}>
+          <span className={`text-sm font-medium ${isToday ? "text-[#5D1C6A]" : ""}`}>
             {dateInfo.day}
           </span>
         </div>
@@ -476,10 +476,10 @@ export default function MobileCalendar() {
                 key={ev.id}
                 className={`absolute left-14 right-2 rounded-lg p-2 cursor-pointer transition-all ${
                   isBooked
-                    ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
+                    ? "bg-[#FFF1D3] dark:bg-[#5D1C6A]/35 border border-[#FFB090] dark:border-[#CA5995]/70"
                     : isOwner
-                    ? "bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-700"
-                    : "bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                    ? "bg-[#FFB090]/35 dark:bg-[#5D1C6A]/45 border border-[#CA5995]/70 dark:border-[#CA5995]/70"
+                    : "bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-[#FFF1D3] dark:hover:bg-[#5D1C6A]/25"
                 }`}
                 style={{ top, height }}
                 onClick={(e) => {
@@ -494,7 +494,7 @@ export default function MobileCalendar() {
                 {isBooked && other ? (
                   <div className="flex items-center gap-2 h-full">
                     <Avatar className="h-8 w-8 shrink-0">
-                      <AvatarFallback className="text-xs bg-green-200 dark:bg-green-800">
+                      <AvatarFallback className="text-xs bg-[#FFB090] dark:bg-[#5D1C6A]">
                         {otherInitial}
                       </AvatarFallback>
                     </Avatar>
@@ -505,7 +505,7 @@ export default function MobileCalendar() {
                   </div>
                 ) : isOwner && !isBooked ? (
                   <div className="flex items-center gap-2 h-full">
-                    <div className="h-8 w-8 rounded-full bg-indigo-200 dark:bg-indigo-800 flex items-center justify-center shrink-0">
+                    <div className="h-8 w-8 rounded-full bg-[#FFB090]/60 dark:bg-[#5D1C6A] flex items-center justify-center shrink-0">
                       <span className="text-xs">⏳</span>
                     </div>
                     <div className="flex-1 min-w-0">
@@ -549,7 +549,7 @@ export default function MobileCalendar() {
                     key={d}
                     onClick={() => dispatch({ type: "SET_CREATE_DURATION", duration: d })}
                     className={`w-2 h-2 rounded-full ${
-                      ui.createDuration === d ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"
+                      ui.createDuration === d ? "bg-[#CA5995]" : "bg-gray-300 dark:bg-gray-600"
                     }`}
                   />
                 ))}
@@ -589,7 +589,7 @@ export default function MobileCalendar() {
                     onClick={() => dispatch({ type: "SET_CREATE_DURATION", duration: d })}
                     className={`py-3 rounded-lg text-center transition-all ${
                       ui.createDuration === d
-                        ? "bg-green-600 text-white font-semibold"
+                        ? "bg-[#5D1C6A] text-white font-semibold"
                         : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
                     }`}
                   >

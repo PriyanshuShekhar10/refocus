@@ -254,7 +254,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
         <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden flex flex-col min-h-0">
         <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <FiUser className="w-4 h-4 text-indigo-500" />
+            <FiUser className="w-4 h-4 text-[#CA5995]" />
             Your friends
             {friends.length > 0 && (
               <span className="text-xs font-normal text-gray-500 dark:text-gray-400">
@@ -296,11 +296,11 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
                       }
                       className="flex items-center gap-3 min-w-0 group text-left"
                     >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm font-semibold group-hover:ring-2 group-hover:ring-indigo-400 transition-all">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF1D3] dark:bg-[#5D1C6A]/70 text-[#5D1C6A] dark:text-[#FFB090] text-sm font-semibold group-hover:ring-2 group-hover:ring-[#CA5995] transition-all">
                         {initial}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-[#5D1C6A] dark:group-hover:text-[#CA5995] transition-colors">
                           {displayName}
                         </p>
                         {f.name && (
@@ -320,11 +320,11 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
                       href={profileHref}
                       className="flex items-center gap-3 min-w-0 group"
                     >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm font-semibold group-hover:ring-2 group-hover:ring-indigo-400 transition-all">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF1D3] dark:bg-[#5D1C6A]/70 text-[#5D1C6A] dark:text-[#FFB090] text-sm font-semibold group-hover:ring-2 group-hover:ring-[#CA5995] transition-all">
                         {initial}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-[#5D1C6A] dark:group-hover:text-[#CA5995] transition-colors">
                           {displayName}
                         </p>
                         {f.name && (
@@ -341,7 +341,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
                     </Link>
                   ) : (
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-sm font-semibold">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF1D3] dark:bg-[#5D1C6A]/70 text-[#5D1C6A] dark:text-[#FFB090] text-sm font-semibold">
                         {initial}
                       </div>
                       <div className="min-w-0">
@@ -367,7 +367,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
                         setOpenChatFriendId(f.user_id);
                         setOpenChatFriendLabel(label);
                       }}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#5D1C6A] px-3 py-2 text-xs font-medium text-white hover:bg-[#CA5995] dark:bg-[#5D1C6A] dark:hover:bg-[#CA5995] transition-colors"
                     >
                       <FiMessageCircle className="w-3.5 h-3.5" />
                       Chat
@@ -401,7 +401,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
               <FiInbox className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               Requests
               {requestBadgeCount > 0 && (
-                <span className="rounded-full bg-indigo-500 px-2 py-0.5 text-[10px] font-medium text-white">
+                <span className="rounded-full bg-[#CA5995] px-2 py-0.5 text-[10px] font-medium text-white">
                   {requestBadgeCount}
                 </span>
               )}
@@ -443,7 +443,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
                           <div className="flex gap-2">
                             <button
                               onClick={() => act(r.id, "accept")}
-                              className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                              className="rounded-md bg-[#5D1C6A] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#CA5995]"
                             >
                               Accept
                             </button>
@@ -528,7 +528,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
                                 onClick={() =>
                                   respondSessionRequest(r.id, "accept")
                                 }
-                                className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                                className="rounded-md bg-[#5D1C6A] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#CA5995]"
                               >
                                 Accept
                               </button>

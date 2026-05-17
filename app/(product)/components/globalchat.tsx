@@ -474,7 +474,7 @@ export default function GlobalChat() {
       {/* Header */}
       <div className="shrink-0 border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/50 px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-600 text-white">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-white">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
@@ -554,7 +554,7 @@ export default function GlobalChat() {
               </button>
             </div>
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-green-600 text-2xl font-semibold text-white mb-3">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-2xl font-semibold text-white mb-3">
                 {profileDisplayName.charAt(0).toUpperCase() || "?"}
               </div>
               <p className="text-base font-medium text-gray-900 dark:text-gray-100">
@@ -574,7 +574,7 @@ export default function GlobalChat() {
                 </Link>
               )}
               {profileFriendReqStatus && (
-                <p className={`text-sm text-center ${profileFriendReqStatus === "Request sent" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                <p className={`text-sm text-center ${profileFriendReqStatus === "Request sent" ? "text-[#5D1C6A] dark:text-[#CA5995]" : "text-red-600 dark:text-red-400"}`}>
                   {profileFriendReqStatus}
                 </p>
               )}
@@ -598,7 +598,7 @@ export default function GlobalChat() {
                   type="button"
                   onClick={sendFriendRequestFromProfile}
                   disabled={!!profileFriendReqStatus}
-                  className="w-full rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 disabled:opacity-50 transition-colors"
+                  className="w-full rounded-lg bg-[#5D1C6A] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#CA5995] dark:bg-[#5D1C6A] dark:hover:bg-[#CA5995] disabled:opacity-50 transition-colors"
                 >
                   Send friend request
                 </button>
@@ -623,7 +623,7 @@ export default function GlobalChat() {
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-green-500 mx-auto mb-3" />
+              <Loader2 className="w-8 h-8 animate-spin text-[#CA5995] mx-auto mb-3" />
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Loading messages...
               </p>
@@ -700,13 +700,13 @@ export default function GlobalChat() {
                     className={`group flex gap-2 ${isOwnMessage ? "flex-row-reverse" : ""}`}
                   >
                     {isOwnMessage ? (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-600 text-sm font-medium text-white order-2">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-sm font-medium text-white order-2">
                         {initial}
                       </div>
                     ) : m.username ? (
                       <Link
                         href={`/u/${m.username}`}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:ring-2 hover:ring-green-500 dark:hover:ring-green-500 transition-shadow cursor-pointer"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:ring-2 hover:ring-[#CA5995] dark:hover:ring-[#CA5995] transition-shadow cursor-pointer"
                         title="View profile"
                       >
                         {initial}
@@ -715,7 +715,7 @@ export default function GlobalChat() {
                       <button
                         type="button"
                         onClick={() => openProfile(m)}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:ring-2 hover:ring-green-500 dark:hover:ring-green-500 transition-shadow cursor-pointer"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:ring-2 hover:ring-[#CA5995] dark:hover:ring-[#CA5995] transition-shadow cursor-pointer"
                         title="View profile"
                       >
                         {initial}
@@ -732,7 +732,7 @@ export default function GlobalChat() {
                         ) : m.username ? (
                           <Link
                             href={`/u/${m.username}`}
-                            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:underline cursor-pointer text-left"
+                            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline cursor-pointer text-left"
                             title="View profile"
                           >
                             {name}
@@ -741,7 +741,7 @@ export default function GlobalChat() {
                           <button
                             type="button"
                             onClick={() => openProfile(m)}
-                            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:underline cursor-pointer text-left"
+                            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline cursor-pointer text-left"
                             title="View profile"
                           >
                             {name}
@@ -756,7 +756,7 @@ export default function GlobalChat() {
                           m.deleted
                             ? "bg-gray-100 dark:bg-gray-800"
                             : isOwnMessage
-                              ? "bg-green-600 text-white dark:bg-green-500"
+                              ? "bg-[#5D1C6A] text-white dark:bg-[#5D1C6A]"
                               : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                         } ${!m.deleted && isOwnMessage ? "rounded-br-md" : "rounded-bl-md"}`}
                       >
@@ -774,7 +774,7 @@ export default function GlobalChat() {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => saveEditedMessage(m.id)}
-                                className="rounded bg-green-600 px-2 py-1 text-[10px] text-white"
+                                className="rounded bg-[#5D1C6A] px-2 py-1 text-[10px] text-white"
                               >
                                 Save
                               </button>
@@ -803,7 +803,7 @@ export default function GlobalChat() {
                           <div className="absolute -left-1 -top-1 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                             <button
                               onClick={() => beginEditMessage(m)}
-                              className="rounded-full border border-gray-200 bg-white p-1 text-blue-500 shadow-sm hover:bg-blue-50"
+                              className="rounded-full border border-gray-200 bg-white p-1 text-[#5D1C6A] shadow-sm hover:bg-[#FFF1D3]"
                               title="Edit message"
                             >
                               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -841,13 +841,13 @@ export default function GlobalChat() {
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             disabled={isSending}
-            className="flex-1 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="flex-1 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#CA5995] dark:focus:ring-[#CA5995] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           />
           <button
             type="button"
             onClick={send}
             disabled={!text.trim() || isSending}
-            className="shrink-0 rounded-xl bg-green-600 px-4 py-3 text-white shadow-sm hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="shrink-0 rounded-xl bg-[#5D1C6A] px-4 py-3 text-white shadow-sm hover:bg-[#CA5995] disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             <Send className="h-4 w-4" />
             <span className="text-sm font-medium hidden sm:inline">

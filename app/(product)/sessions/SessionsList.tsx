@@ -121,7 +121,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
         </p>
         <Link
           href="/dashboard"
-          className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+          className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#5D1C6A] hover:bg-[#CA5995] rounded-lg transition-colors"
         >
           Go to Calendar
         </Link>
@@ -190,7 +190,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                           </h3>
                           <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                             isBooked
-                              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                              ? "bg-[#FFF1D3] dark:bg-[#5D1C6A]/30 text-[#5D1C6A] dark:text-[#CA5995]"
                               : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
                           }`}>
                             {isBooked ? "Booked" : "Waiting for partner"}
@@ -205,7 +205,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                         {isBooked && partner && (
                           <div className="mt-2 flex items-center gap-2">
                             <Avatar className="h-6 w-6">
-                              <AvatarFallback className="text-xs bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300">
+                              <AvatarFallback className="text-xs bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A] dark:text-[#FFB090]">
                                 {getInitials(partnerName!)}
                               </AvatarFallback>
                             </Avatar>
@@ -231,7 +231,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                       {joinable && isBooked ? (
                         <Link
                           href={`/sessions/${session.id}`}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-[#5D1C6A] hover:bg-[#CA5995] rounded-lg transition-colors"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />

@@ -6,7 +6,7 @@ import { Reveal } from "./Reveal";
 import { ArrowIcon } from "./ArrowIcon";
 import { LiveCount } from "./LiveCount";
 
-const AVATAR_COLORS = ["#cdd3c4", "#e7d6c8", "#c8d2dc", "#d4cdc0"];
+const AVATAR_COLORS = ["#FFF1D3", "#FFB090", "#CA5995", "#5D1C6A"];
 
 export function Hero() {
   return (

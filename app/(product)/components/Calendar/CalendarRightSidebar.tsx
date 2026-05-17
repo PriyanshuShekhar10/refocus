@@ -34,14 +34,14 @@ function JoinCountdown({ startTime }: { startTime: string | Date }) {
 
   if (timeLeft.minutes === 0 && timeLeft.seconds === 0) {
     return (
-      <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+      <p className="text-xs font-medium text-[#5D1C6A] dark:text-[#CA5995]">
         Session is live now!
       </p>
     );
   }
 
   return (
-    <p className="text-xs text-emerald-800 dark:text-emerald-200">
+    <p className="text-xs text-[#5D1C6A] dark:text-[#FFB090]">
       Session starts in{" "}
       <span className="font-semibold">
         {timeLeft.minutes}m {timeLeft.seconds}s
@@ -237,7 +237,7 @@ export function CalendarRightSidebar({
             ) : user?.image ? (
               <AvatarImage src={user.image} alt={displayName} />
             ) : null}
-            <AvatarFallback className="text-sm font-semibold bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300">
+            <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
               {profilePreview
                 ? previewInitials
                 : initials}
@@ -298,15 +298,15 @@ export function CalendarRightSidebar({
 
       {/* Main card (selected profile OR current user quick card) */}
       {profilePreview ? (
-        <div className="rounded-lg border border-indigo-200 dark:border-indigo-700 bg-indigo-50/70 dark:bg-indigo-900/20 p-3 flex-1 min-h-0 overflow-y-auto">
+        <div className="rounded-lg border border-[#FFB090] dark:border-slate-700 bg-[#FFF1D3]/90 dark:bg-slate-900/75 p-3 flex-1 min-h-0 overflow-y-auto">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#5D1C6A] dark:text-[#FFB090]">
               Profile preview
             </p>
             <div className="flex items-center gap-1">
               <Link
                 href={`/u/${profilePreview.username}`}
-                className="rounded p-1 text-indigo-600 hover:bg-indigo-100 dark:text-indigo-300 dark:hover:bg-indigo-900/40"
+                className="rounded p-1 text-[#5D1C6A] hover:bg-[#FFB090]/50 dark:text-[#FFB090] dark:hover:bg-[#CA5995]/30"
                 title="Open full profile"
                 aria-label="Open full profile"
               >
@@ -318,7 +318,7 @@ export function CalendarRightSidebar({
                 <button
                   type="button"
                   onClick={onClearProfilePreview}
-                  className="rounded p-1 text-indigo-600 hover:bg-indigo-100 dark:text-indigo-300 dark:hover:bg-indigo-900/40"
+                  className="rounded p-1 text-[#5D1C6A] hover:bg-[#FFB090]/50 dark:text-[#FFB090] dark:hover:bg-[#CA5995]/30"
                   title="Close preview"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -330,11 +330,11 @@ export function CalendarRightSidebar({
           </div>
 
           <div className="mt-2 flex items-center gap-2">
-            <Avatar className="h-12 w-12 border border-indigo-200 dark:border-indigo-700">
+            <Avatar className="h-12 w-12 border border-[#FFB090] dark:border-[#CA5995]/70">
               {previewAvatarUrl ? (
                 <AvatarImage src={previewAvatarUrl} alt={previewName} />
               ) : null}
-              <AvatarFallback className="text-sm font-semibold bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300">
+              <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
                 {previewInitials}
               </AvatarFallback>
             </Avatar>
@@ -373,7 +373,7 @@ export function CalendarRightSidebar({
                       href={websiteHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-block text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200 underline"
+                      className="inline-block text-[#5D1C6A] hover:text-[#CA5995] dark:text-[#FFB090] dark:hover:text-[#CA5995] underline"
                     >
                       {detailedProfile?.website}
                     </a>
@@ -386,7 +386,7 @@ export function CalendarRightSidebar({
                   {detailedProfile.interests.map((interest) => (
                     <span
                       key={interest}
-                      className="rounded-full border border-indigo-200 dark:border-indigo-700 px-2 py-0.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300"
+                      className="rounded-full border border-[#FFB090] dark:border-slate-700 px-2 py-0.5 text-[10px] font-medium text-[#5D1C6A] dark:text-[#FFB090]"
                     >
                       {interest}
                     </span>
@@ -404,7 +404,7 @@ export function CalendarRightSidebar({
             {user?.image ? (
               <AvatarImage src={user.image} alt={displayName} />
             ) : null}
-            <AvatarFallback className="text-sm font-semibold bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300">
+            <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -419,7 +419,7 @@ export function CalendarRightSidebar({
           
           <Link
             href="/sessions"
-            className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium text-xs hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+            className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFB090]/35 dark:bg-slate-800 text-[#5D1C6A] dark:text-[#FFB090] font-medium text-xs hover:bg-[#FFB090]/55 dark:hover:bg-slate-700 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -483,7 +483,7 @@ export function CalendarRightSidebar({
                 </>
               )}
             </span>
-            <div className={`w-7 h-3.5 rounded-full transition-colors ${mounted && theme === "dark" ? "bg-indigo-600" : "bg-gray-300"} relative`}>
+            <div className={`w-7 h-3.5 rounded-full transition-colors ${mounted && theme === "dark" ? "bg-[#CA5995]" : "bg-gray-300"} relative`}>
               <div className={`absolute top-0.5 h-2.5 w-2.5 rounded-full bg-white transition-transform ${mounted && theme === "dark" ? "translate-x-3.5" : "translate-x-0.5"}`} />
             </div>
           </button>
@@ -497,10 +497,10 @@ export function CalendarRightSidebar({
       {/* Interchangeable Bottom Section */}
       {joinableSession ? (
         /* Joinable Session Section */
-        <div className="shrink-0 rounded-lg border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 p-2.5 space-y-2">
+        <div className="shrink-0 rounded-lg border-2 border-[#CA5995]/80 dark:border-[#CA5995]/45 bg-[#FFF1D3]/90 dark:bg-slate-900/75 p-2.5 space-y-2">
           <div className="flex items-center gap-1.5">
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <h3 className="text-xs font-semibold text-emerald-900 dark:text-emerald-100">
+            <div className="h-1.5 w-1.5 rounded-full bg-[#CA5995] animate-pulse" />
+            <h3 className="text-xs font-semibold text-[#5D1C6A] dark:text-[#FFB090]">
               Session Starting Soon
             </h3>
           </div>
@@ -510,7 +510,7 @@ export function CalendarRightSidebar({
           <div className="flex flex-col gap-1.5">
             <Link
               href={`/sessions/${joinableSession.id}`}
-              className="w-full px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs text-center transition-colors flex items-center justify-center gap-1.5"
+              className="w-full px-3 py-2 rounded-lg bg-[#5D1C6A] dark:bg-[#7A2D88] hover:bg-[#CA5995] text-white font-semibold text-xs text-center transition-colors flex items-center justify-center gap-1.5"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -528,7 +528,7 @@ export function CalendarRightSidebar({
                 navigator.clipboard.writeText(`${window.location.origin}/sessions/${joinableSession.id}`);
                 // Could add a toast here
               }}
-              className="w-full px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 font-medium text-xs hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors flex items-center justify-center gap-1.5"
+              className="w-full px-3 py-1.5 rounded-lg border border-[#FFB090] dark:border-slate-700 bg-white dark:bg-gray-800 text-[#5D1C6A] dark:text-[#FFB090] font-medium text-xs hover:bg-[#FFF1D3] dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1.5"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
