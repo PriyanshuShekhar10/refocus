@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/types/calendar";
 import { getResolvedSessionColor } from "@/constants/calendar";
@@ -57,6 +58,10 @@ export function CalendarEventCard({
 
   // Track if session is joinable (within 1 hour of start or in progress)
   const [canJoin, setCanJoin] = useState(() => isJoinable(event.start, event.end));
+  const [showCompactPartnerCard, setShowCompactPartnerCard] = useState(false);
+  const hidePartnerCardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   useEffect(() => {
     // Re-check joinability every 30 seconds
@@ -66,6 +71,14 @@ export function CalendarEventCard({
     return () => clearInterval(interval);
   }, [event.start, event.end]);
 
+  useEffect(() => {
+    return () => {
+      if (hidePartnerCardTimeoutRef.current) {
+        clearTimeout(hidePartnerCardTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const timeLabel = s.toLocaleTimeString("en-IN", {
     hour: "2-digit",
     minute: "2-digit",
@@ -73,34 +86,146 @@ export function CalendarEventCard({
     timeZone: "Asia/Kolkata",
   });
 
+  const compactPartner = (() => {
+    const ownerName = [event.owner?.firstname, event.owner?.lastname]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    if (event.owner && ownerName) {
+      return {
+        name: ownerName,
+        username: event.owner.username ?? null,
+        about: event.owner.about ?? null,
+        avatar_url: event.owner.avatar_url ?? null,
+      };
+    }
+
+    const firstParticipant = event.participants?.[0];
+    if (!firstParticipant) return null;
+    const participantName = [firstParticipant.firstname, firstParticipant.lastname]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    return {
+      name: participantName || "Partner",
+      username: firstParticipant.username ?? null,
+      about: firstParticipant.about ?? null,
+      avatar_url: firstParticipant.avatar_url ?? null,
+    };
+  })();
+
+  const compactPartnerInitials = compactPartner?.name
+    ? compactPartner.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .substring(0, 2)
+        .toUpperCase()
+    : "P";
+
+  const openCompactPartnerCard = () => {
+    if (hidePartnerCardTimeoutRef.current) {
+      clearTimeout(hidePartnerCardTimeoutRef.current);
+      hidePartnerCardTimeoutRef.current = null;
+    }
+    setShowCompactPartnerCard(true);
+  };
+
+  const hideCompactPartnerCard = () => {
+    if (hidePartnerCardTimeoutRef.current) {
+      clearTimeout(hidePartnerCardTimeoutRef.current);
+    }
+    hidePartnerCardTimeoutRef.current = setTimeout(() => {
+      setShowCompactPartnerCard(false);
+    }, 120);
+  };
+
   if (isCompact) {
     return (
       <div
-        className="group absolute left-2 z-20 w-10 rounded-md border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/80 dark:bg-gray-800/50 hover:border-indigo-400 hover:bg-indigo-50/80 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20 cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-colors"
+        className={`absolute left-2 w-10 rounded-md border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/80 dark:bg-gray-800/50 hover:border-indigo-400 hover:bg-indigo-50/80 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20 cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-colors overflow-visible ${
+          showCompactPartnerCard ? "z-[120]" : "z-20"
+        }`}
         style={{ top, height }}
         title={`${timeLabel} • ${event.durationMin} min • Click to book`}
+        onMouseEnter={openCompactPartnerCard}
+        onMouseLeave={hideCompactPartnerCard}
         onClick={(evt) => {
           evt.stopPropagation();
           onBook(evt);
         }}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 shrink-0 transition-colors"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-          />
-        </svg>
+        <Avatar className="h-4 w-4 border border-white dark:border-gray-700 shrink-0">
+          {compactPartner?.avatar_url ? (
+            <AvatarImage src={compactPartner.avatar_url} alt={compactPartner.name} />
+          ) : null}
+          <AvatarFallback className="text-[8px] font-medium bg-indigo-100 text-indigo-600">
+            {compactPartnerInitials}
+          </AvatarFallback>
+        </Avatar>
         <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 tabular-nums">
           {timeLabel}
         </span>
+
+        {compactPartner && (
+          <div
+            className={`pointer-events-auto absolute left-[calc(100%+10px)] top-1/2 z-[130] w-60 -translate-y-1/2 rounded-xl border border-indigo-200/60 dark:border-indigo-700/60 bg-white/95 dark:bg-gray-900/95 p-3 shadow-2xl backdrop-blur-sm transition-all duration-150 ${
+              showCompactPartnerCard
+                ? "opacity-100 translate-x-0 visible"
+                : "opacity-0 -translate-x-1 invisible"
+            }`}
+            onMouseEnter={openCompactPartnerCard}
+            onMouseLeave={hideCompactPartnerCard}
+            onMouseDown={(evt) => evt.stopPropagation()}
+            onClick={(evt) => evt.stopPropagation()}
+          >
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 border border-indigo-100 dark:border-indigo-800">
+                {compactPartner.avatar_url ? (
+                  <AvatarImage
+                    src={compactPartner.avatar_url}
+                    alt={compactPartner.name}
+                  />
+                ) : null}
+                <AvatarFallback className="text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300">
+                  {compactPartnerInitials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-gray-900 dark:text-gray-100">
+                  {compactPartner.name}
+                </p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                  Potential focus partner
+                </p>
+              </div>
+            </div>
+            <p className="mt-2 line-clamp-3 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">
+              {compactPartner.about?.trim() ||
+                "Focused member. Open profile to learn more."}
+            </p>
+            {compactPartner.username ? (
+              <Link
+                href={`/u/${compactPartner.username}`}
+                className="pointer-events-auto mt-2 inline-flex w-full justify-center rounded-lg bg-indigo-600 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-indigo-700"
+                onMouseDown={(evt) => evt.stopPropagation()}
+                onClick={(evt) => evt.stopPropagation()}
+              >
+                View profile
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="mt-2 inline-flex w-full cursor-not-allowed justify-center rounded-lg bg-gray-300 dark:bg-gray-700 px-2.5 py-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300"
+                onMouseDown={(evt) => evt.stopPropagation()}
+                onClick={(evt) => evt.stopPropagation()}
+              >
+                Profile unavailable
+              </button>
+            )}
+          </div>
+        )}
       </div>
     );
   }

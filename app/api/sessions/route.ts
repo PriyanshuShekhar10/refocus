@@ -95,14 +95,22 @@ export async function GET(req: NextRequest) {
     name?: string | null;
     firstname?: string | null;
     lastname?: string | null;
+    email?: string | null;
+    username?: string | null;
+    about?: string | null;
+    image?: string | null;
   };
 
   let usersById: Record<
     string,
     {
       id: string;
+      email?: string | null;
       firstname?: string | null;
       lastname?: string | null;
+      username?: string | null;
+      about?: string | null;
+      avatar_url?: string | null;
     }
   > = {};
   if (userIdSet.size > 0) {
@@ -111,16 +119,28 @@ export async function GET(req: NextRequest) {
       const users = (await db
         .collection<DbUser>("users")
         .find({ _id: { $in: ids.map((i) => new ObjectId(i)) } })
-        .project({ name: 1, firstname: 1, lastname: 1 })
+        .project({
+          name: 1,
+          firstname: 1,
+          lastname: 1,
+          email: 1,
+          username: 1,
+          about: 1,
+          image: 1,
+        })
         .toArray()) as unknown as DbUser[];
       usersById = Object.fromEntries(
         users.map((u) => [
           String(u._id),
           {
             id: String(u._id),
+            email: u.email ?? null,
             firstname:
               u.firstname ?? (u.name ? String(u.name).split(" ")[0] : null),
             lastname: u.lastname ?? null,
+            username: u.username ?? null,
+            about: u.about ?? null,
+            avatar_url: u.image ?? null,
           },
         ]),
       );
@@ -151,8 +171,12 @@ export async function GET(req: NextRequest) {
       participants: (s.session_participants ?? []).map((p) => ({
         user_id: p.user_id,
         joined_at: String(p.joined_at),
+        email: usersById[p.user_id]?.email ?? undefined,
         firstname: usersById[p.user_id]?.firstname ?? undefined,
         lastname: usersById[p.user_id]?.lastname ?? undefined,
+        username: usersById[p.user_id]?.username ?? undefined,
+        about: usersById[p.user_id]?.about ?? undefined,
+        avatar_url: usersById[p.user_id]?.avatar_url ?? undefined,
         quiet: Boolean(p.quiet),
       })),
       owner: usersById[s.owner_id] ?? null,

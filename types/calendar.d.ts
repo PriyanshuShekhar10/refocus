@@ -23,6 +23,9 @@ export type CalendarEvent = {
     email?: string;
     firstname?: string;
     lastname?: string;
+    username?: string;
+    about?: string;
+    avatar_url?: string;
   } | null;
   participants?: {
     user_id: string;
@@ -31,6 +34,8 @@ export type CalendarEvent = {
     firstname?: string;
     confirmVariant?: "danger" | "success";
     lastname?: string;
+    username?: string;
+    about?: string;
     quiet?: boolean;
     avatar_url?: string;
   }[];
@@ -52,6 +57,9 @@ export type FetchedSession = {
     email?: string;
     firstname?: string;
     lastname?: string;
+    username?: string;
+    about?: string;
+    avatar_url?: string;
   } | null;
   participants?: Array<{
     user_id: string;
@@ -59,6 +67,8 @@ export type FetchedSession = {
     email?: string;
     firstname?: string;
     lastname?: string;
+    username?: string;
+    about?: string;
     avatar_url?: string;
   }>;
 };
