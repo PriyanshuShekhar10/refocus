@@ -10,6 +10,28 @@ import { getSiteUrl } from "@/lib/site";
 
 type Props = { params: Promise<{ username: string }> };
 const siteUrl = getSiteUrl();
+const ABOUT_ME_PROMPTS = [
+  "My most important project today",
+  "My goal for my next session is",
+  "Where I am working",
+  "Music I'm listening to",
+  "My headline or tagline",
+  "Book I'm currently reading",
+  "Book I want to read next",
+  "Book that's had the biggest impact on my life",
+  "Influencers with biggest impact on my life",
+  "Favorite podcast",
+  "My most productive time of day is",
+  "My least productive time of day is",
+  "The task or type of work I dislike most",
+  "Productivity app I couldn't live without",
+  "Favorite method of procrastination",
+  "My best sessions have this in common",
+  "I love it when my Refocus partner does this",
+  "My biggest pet peeve is when my Refocus partner does this",
+  "Top 1-2 tasks I use Refocus for most often",
+  "If I could add or change one thing about Refocus, it would be",
+] as const;
 
 async function getUser(username: string) {
   const db = await getDb();
@@ -26,6 +48,7 @@ async function getUser(username: string) {
         firstname: 1,
         lastname: 1,
         about: 1,
+        aboutMe: 1,
         interests: 1,
         location: 1,
         website: 1,
@@ -105,6 +128,14 @@ export default async function PublicProfilePage({ params }: Props) {
         year: "numeric",
       })
     : null;
+  const aboutMeEntries = ABOUT_ME_PROMPTS.map((prompt) => {
+    const value =
+      typeof (user.aboutMe as Record<string, unknown> | undefined)?.[prompt] ===
+      "string"
+        ? ((user.aboutMe as Record<string, string>)[prompt] || "").trim()
+        : "";
+    return { prompt, value };
+  }).filter((entry) => entry.value.length > 0);
   const profilePath = `/u/${user.username}`;
   const profileUrl = `${siteUrl}${profilePath}`;
   const profileDescription = user.about || `${displayName}'s profile on Refocus`;
@@ -259,6 +290,71 @@ export default async function PublicProfilePage({ params }: Props) {
                   >
                     {interest}
                   </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {aboutMeEntries.length > 0 && (
+            <section
+              className={designStyles.card}
+              style={{ marginTop: 14 }}
+            >
+              <h2 className={designStyles.cardTitle} style={{ marginBottom: 6 }}>
+                About me prompts
+              </h2>
+              <p
+                style={{
+                  margin: "0 0 14px",
+                  fontSize: 13,
+                  lineHeight: 1.5,
+                  color: "var(--ink-mute)",
+                }}
+              >
+                Extra context about how this person works, focuses, and partners.
+              </p>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                  gap: 10,
+                }}
+              >
+                {aboutMeEntries.map((entry) => (
+                  <div
+                    key={entry.prompt}
+                    style={{
+                      border: "1px solid var(--line-soft)",
+                      borderRadius: 12,
+                      padding: "12px 13px",
+                      background: "color-mix(in oklab, var(--card) 86%, var(--accent-soft))",
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: 11,
+                        lineHeight: 1.45,
+                        color: "var(--ink-mute)",
+                        fontWeight: 600,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.03,
+                      }}
+                    >
+                      {entry.prompt}
+                    </p>
+                    <p
+                      style={{
+                        margin: "8px 0 0",
+                        fontSize: 14,
+                        lineHeight: 1.55,
+                        color: "var(--ink)",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {entry.value}
+                    </p>
+                  </div>
                 ))}
               </div>
             </section>

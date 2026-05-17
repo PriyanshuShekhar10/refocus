@@ -26,6 +26,7 @@ export async function GET() {
         firstname: 1,
         lastname: 1,
         about: 1,
+        aboutMe: 1,
         interests: 1,
         location: 1,
         website: 1,
@@ -38,6 +39,7 @@ export async function GET() {
     firstname?: string | null;
     lastname?: string | null;
     about?: string | null;
+    aboutMe?: Record<string, string> | null;
     interests?: string[] | null;
     location?: string | null;
     website?: string | null;
@@ -52,6 +54,7 @@ export async function GET() {
           firstname: user.firstname ?? null,
           lastname: user.lastname ?? null,
           about: user.about ?? null,
+          aboutMe: user.aboutMe ?? {},
           interests: user.interests ?? [],
           location: user.location ?? null,
           website: user.website ?? null,
@@ -114,11 +117,12 @@ export async function PATCH(req: NextRequest) {
   if (!rl.success) return rateLimitedResponse(rl);
 
   const body = await req.json().catch(() => ({}));
-  const { username, firstname, lastname, about, interests, location, website } = body as {
+  const { username, firstname, lastname, about, aboutMe, interests, location, website } = body as {
     username?: string;
     firstname?: string;
     lastname?: string;
     about?: string;
+    aboutMe?: Record<string, unknown>;
     interests?: string[];
     location?: string;
     website?: string;
@@ -155,6 +159,14 @@ export async function PATCH(req: NextRequest) {
   if (firstname !== undefined) updateFields.firstname = firstname;
   if (lastname !== undefined) updateFields.lastname = lastname;
   if (about !== undefined) updateFields.about = about;
+  if (aboutMe !== undefined && typeof aboutMe === "object" && aboutMe !== null) {
+    const cleaned: Record<string, string> = {};
+    for (const [key, value] of Object.entries(aboutMe)) {
+      if (typeof value !== "string") continue;
+      cleaned[key] = value.trim().slice(0, 500);
+    }
+    updateFields.aboutMe = cleaned;
+  }
   if (interests !== undefined) updateFields.interests = interests;
   if (location !== undefined) updateFields.location = location;
   if (website !== undefined) updateFields.website = website;

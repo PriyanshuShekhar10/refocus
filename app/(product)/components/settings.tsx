@@ -50,7 +50,7 @@ const DEFAULT_PREFS: Prefs = {
 export default function Settings() {
   return (
     <Shell>
-      <div style={{ padding: "8px 4px", maxWidth: 720 }}>
+      <div style={{ padding: "8px 4px", maxWidth: 720, margin: "0 auto" }}>
         <header style={{ marginBottom: 32 }}>
           <span className={designStyles.eyebrow}>Account</span>
           <h1

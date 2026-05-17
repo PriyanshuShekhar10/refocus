@@ -11,6 +11,41 @@ import {
   designStyles,
 } from "@/components/design";
 
+const ABOUT_ME_PROMPTS = [
+  "My most important project today",
+  "My goal for my next session is",
+  "Where I am working",
+  "Music I'm listening to",
+  "My headline or tagline",
+  "Book I'm currently reading",
+  "Book I want to read next",
+  "Book that's had the biggest impact on my life",
+  "Influencers with biggest impact on my life",
+  "Favorite podcast",
+  "My most productive time of day is",
+  "My least productive time of day is",
+  "The task or type of work I dislike most",
+  "Productivity app I couldn't live without",
+  "Favorite method of procrastination",
+  "My best sessions have this in common",
+  "I love it when my Refocus partner does this",
+  "My biggest pet peeve is when my Refocus partner does this",
+  "Top 1-2 tasks I use Refocus for most often",
+  "If I could add or change one thing about Refocus, it would be",
+] as const;
+
+type AboutMeKey = (typeof ABOUT_ME_PROMPTS)[number];
+
+function emptyAboutMe(): Record<AboutMeKey, string> {
+  return ABOUT_ME_PROMPTS.reduce(
+    (acc, prompt) => {
+      acc[prompt] = "";
+      return acc;
+    },
+    {} as Record<AboutMeKey, string>,
+  );
+}
+
 type UserInfo = {
   email?: string;
   username?: string | null;
@@ -21,6 +56,7 @@ type UserInfo = {
   interests?: string[];
   location?: string | null;
   website?: string | null;
+  aboutMe?: Partial<Record<AboutMeKey, string>> | null;
 };
 
 type EditableFields = {
@@ -31,6 +67,7 @@ type EditableFields = {
   interests: string[];
   location: string;
   website: string;
+  aboutMe: Record<AboutMeKey, string>;
 };
 
 type Props = {
@@ -57,6 +94,7 @@ export function ProfileView({ embedded = false }: Props) {
     interests: [],
     location: "",
     website: "",
+    aboutMe: emptyAboutMe(),
   });
 
   const loadUser = useCallback(async () => {
@@ -74,6 +112,10 @@ export function ProfileView({ embedded = false }: Props) {
           interests: data.user.interests || [],
           location: data.user.location || "",
           website: data.user.website || "",
+          aboutMe: {
+            ...emptyAboutMe(),
+            ...(data.user.aboutMe || {}),
+          },
         });
       }
     } finally {
@@ -114,6 +156,10 @@ export function ProfileView({ embedded = false }: Props) {
         interests: user.interests || [],
         location: user.location || "",
         website: user.website || "",
+        aboutMe: {
+          ...emptyAboutMe(),
+          ...(user.aboutMe || {}),
+        },
       });
     }
     setUsernameStatus("idle");
@@ -558,6 +604,84 @@ export function ProfileView({ embedded = false }: Props) {
                 }}
               >
                 No interests added yet.
+              </p>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* About me prompts */}
+      <section className={designStyles.card}>
+        <div className={designStyles.cardHead}>
+          <div>
+            <h2 className={designStyles.cardTitle}>About me prompts</h2>
+            <p className={designStyles.cardSub}>
+              Optional details to help partners understand your style and context.
+            </p>
+          </div>
+        </div>
+
+        {isEditing ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {ABOUT_ME_PROMPTS.map((prompt, idx) => (
+              <Field key={prompt} label={prompt} htmlFor={`aboutme-${idx}`}>
+                <DTextarea
+                  id={`aboutme-${idx}`}
+                  value={editFields.aboutMe[prompt]}
+                  onChange={(e) =>
+                    setEditFields((prev) => ({
+                      ...prev,
+                      aboutMe: {
+                        ...prev.aboutMe,
+                        [prompt]: e.target.value,
+                      },
+                    }))
+                  }
+                  rows={2}
+                  placeholder="Optional"
+                />
+              </Field>
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {ABOUT_ME_PROMPTS.filter((prompt) => (user?.aboutMe?.[prompt] || "").trim().length > 0)
+              .map((prompt) => (
+                <div key={prompt}>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: "var(--ink-mute)",
+                      margin: 0,
+                      letterSpacing: 0.005,
+                    }}
+                  >
+                    {prompt}
+                  </p>
+                  <p
+                    style={{
+                      margin: "6px 0 0",
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      color: "var(--ink)",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {user?.aboutMe?.[prompt]}
+                  </p>
+                </div>
+              ))}
+            {!ABOUT_ME_PROMPTS.some(
+              (prompt) => (user?.aboutMe?.[prompt] || "").trim().length > 0,
+            ) && (
+              <p
+                style={{
+                  fontSize: 14,
+                  color: "var(--ink-mute)",
+                  margin: 0,
+                }}
+              >
+                No prompt answers added yet.
               </p>
             )}
           </div>
