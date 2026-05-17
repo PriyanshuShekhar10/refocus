@@ -1,0 +1,10 @@
+Method,Name,Error,Occurrences
+GET,users.me,HTTPError('401 Client Error: Unauthorized for url: users.me'),257
+GET,friends.requests.incoming,HTTPError('401 Client Error: Unauthorized for url: friends.requests.incoming'),320
+GET,chat.unread_counts,HTTPError('401 Client Error: Unauthorized for url: chat.unread_counts'),192
+GET,chat.unread_counts,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,community.posts.list,CatchResponseError('posts list failed (0)'),1
+GET,community.posts.list,CatchResponseError('posts list failed (401)'),656
+GET,users.me,"ConnectionResetError(54, 'Connection reset by peer')",2
+POST,community.posts.create,CatchResponseError('create post failed (401)'),7
+POST,auth.login,CatchResponseError('login failed (401)'),47

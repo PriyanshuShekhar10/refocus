@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalendarEvent, FetchedSession } from "@/types/calendar";
 import { toISO, addDays, addMinutes } from "@/lib/utils";
 import { type DurationMin } from "@/constants/calendar";
@@ -93,6 +93,7 @@ export function useCalendarSessions({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const events = eventsProp ?? internalEvents;
 
@@ -149,12 +150,21 @@ export function useCalendarSessions({
   useEffect(() => {
     if (days.length === 0) return;
 
+    const scheduleRefresh = () => {
+      if (refreshDebounceRef.current) {
+        clearTimeout(refreshDebounceRef.current);
+      }
+      refreshDebounceRef.current = setTimeout(() => {
+        setRefreshTrigger((t) => t + 1);
+      }, 200);
+    };
+
     const es = new EventSource("/api/sessions/events", { withCredentials: true });
     const onMessage = (e: MessageEvent<string>) => {
       try {
         const data = JSON.parse(e.data) as { type?: string };
         if (data.type === "sessions_updated") {
-          setRefreshTrigger((t) => t + 1);
+          scheduleRefresh();
         }
       } catch {
         // ignore non-JSON or parse errors
@@ -163,11 +173,26 @@ export function useCalendarSessions({
 
     es.onmessage = onMessage;
     es.onerror = () => {
-      es.close();
+      // Don't close here; EventSource handles reconnect automatically.
     };
+
+    // Fallback polling so updates still land if SSE delivery degrades.
+    const pollInterval = setInterval(() => {
+      scheduleRefresh();
+    }, 30000);
+
+    // Refresh when user returns focus to the tab.
+    const onFocus = () => scheduleRefresh();
+    window.addEventListener("focus", onFocus);
 
     return () => {
       es.close();
+      clearInterval(pollInterval);
+      window.removeEventListener("focus", onFocus);
+      if (refreshDebounceRef.current) {
+        clearTimeout(refreshDebounceRef.current);
+        refreshDebounceRef.current = null;
+      }
     };
   }, [days.length]);
 

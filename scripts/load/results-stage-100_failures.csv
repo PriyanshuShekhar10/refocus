@@ -1,0 +1,6 @@
+Method,Name,Error,Occurrences
+GET,chat.unread_counts,"ConnectionResetError(54, 'Connection reset by peer')",3
+GET,friends.requests.incoming,"ConnectionResetError(54, 'Connection reset by peer')",5
+GET,community.posts.list,CatchResponseError('posts list failed (0)'),11
+GET,community.posts.comments.list,"ConnectionResetError(54, 'Connection reset by peer')",2
+GET,users.me,"ConnectionResetError(54, 'Connection reset by peer')",3

@@ -9,6 +9,24 @@ import { getResolvedSessionColor } from "@/constants/calendar";
 import { getLocalSessionColor } from "@/lib/sessionColors";
 import { isCallJoinable } from "@/lib/sessionWindow";
 
+const COMPACT_PASTEL_COLORS_LIGHT = [
+  { bg: "#FCE7F3", border: "#F9A8D4" }, // pink
+  { bg: "#DBEAFE", border: "#93C5FD" }, // blue
+  { bg: "#DCFCE7", border: "#86EFAC" }, // green
+  { bg: "#FEF3C7", border: "#FCD34D" }, // amber
+  { bg: "#EDE9FE", border: "#C4B5FD" }, // violet
+  { bg: "#CCFBF1", border: "#5EEAD4" }, // teal
+];
+
+const COMPACT_PASTEL_COLORS_DARK = [
+  { bg: "#4C1D95AA", border: "#A78BFA" }, // violet
+  { bg: "#1E3A8AAA", border: "#60A5FA" }, // blue
+  { bg: "#14532DAA", border: "#4ADE80" }, // green
+  { bg: "#78350FAA", border: "#FBBF24" }, // amber
+  { bg: "#831843AA", border: "#F472B6" }, // pink
+  { bg: "#134E4AAA", border: "#2DD4BF" }, // teal
+];
+
 /** Check if the session is joinable right now — matches API-enforced window. */
 function isJoinable(startTime: Date | string, endTime?: Date | string): boolean {
   const start = new Date(startTime);
@@ -26,6 +44,10 @@ interface CalendarEventCardProps {
   height: number;
   /** When true, show as small box (available slot not created by me); when false, full-width card */
   isCompact: boolean;
+  /** Horizontal stack index for overlapping compact slots */
+  compactStackIndex?: number;
+  /** Total overlapping compact slots in this stack group */
+  compactStackTotal?: number;
   onBook: (e: React.MouseEvent) => void;
   onDetails: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
@@ -42,6 +64,8 @@ export function CalendarEventCard({
   top,
   height,
   isCompact,
+  compactStackIndex = 0,
+  compactStackTotal = 1,
   onBook,
   onDetails,
   onDelete,
@@ -123,6 +147,14 @@ export function CalendarEventCard({
         .toUpperCase()
     : "P";
 
+  const compactPalette = isDark
+    ? COMPACT_PASTEL_COLORS_DARK
+    : COMPACT_PASTEL_COLORS_LIGHT;
+  const compactColorIndex = Math.abs(
+    Array.from(event.id).reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+  ) % compactPalette.length;
+  const compactColor = compactPalette[compactColorIndex];
+
   const openCompactPartnerCard = () => {
     if (hidePartnerCardTimeoutRef.current) {
       clearTimeout(hidePartnerCardTimeoutRef.current);
@@ -141,12 +173,30 @@ export function CalendarEventCard({
   };
 
   if (isCompact) {
+    const stackTotal = Math.max(1, Math.min(compactStackTotal, 3));
+    const stackIndex = Math.max(0, Math.min(compactStackIndex, stackTotal - 1));
+    const laneWidthPx =
+      stackTotal === 1 ? 44 : stackTotal === 2 ? 72 : 90;
+    const gapPx = 4;
+    const compactWidthPx = Math.max(
+      24,
+      Math.floor((laneWidthPx - gapPx * (stackTotal - 1)) / stackTotal)
+    );
+    const compactLeftPx = 2 + stackIndex * (compactWidthPx + gapPx);
+
     return (
       <div
-        className={`absolute left-2 w-10 rounded-md border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/80 dark:bg-gray-800/50 hover:border-indigo-400 hover:bg-indigo-50/80 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20 cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-colors overflow-visible ${
+        className={`absolute rounded-md border cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-all duration-150 hover:brightness-95 overflow-visible shadow-sm ${
           showCompactPartnerCard ? "z-[120]" : "z-20"
         }`}
-        style={{ top, height }}
+        style={{
+          top,
+          height,
+          left: compactLeftPx,
+          width: compactWidthPx,
+          backgroundColor: compactColor.bg,
+          borderColor: compactColor.border,
+        }}
         title={`${timeLabel} • ${event.durationMin} min • Click to book`}
         onMouseEnter={openCompactPartnerCard}
         onMouseLeave={hideCompactPartnerCard}

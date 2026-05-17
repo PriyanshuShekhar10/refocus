@@ -563,7 +563,74 @@ export default function Calendar({
 
                 {/* Events */}
                 <div className="absolute inset-0">
-                  {(eventsByDay[ymd(d)] ?? []).map((ev) => {
+                  {(() => {
+                    const dayEvents = eventsByDay[ymd(d)] ?? [];
+                    const mySessionsOnDay = dayEvents.filter(
+                      (e) =>
+                        (e.owner_id && currentUserId && e.owner_id === currentUserId) ||
+                        (e.participants ?? []).some((p) => p.user_id === currentUserId),
+                    );
+
+                    const eligibleCompactEvents = dayEvents.filter((ev) => {
+                      const isBooked =
+                        ev.status === "booked" ||
+                        (ev.participants?.length ?? 0) >= 2;
+                      const isOwner =
+                        ev.owner_id &&
+                        currentUserId &&
+                        ev.owner_id === currentUserId;
+                      const isCompact = !(isBooked || isOwner);
+                      if (!isCompact) return false;
+
+                      const overlapsMine = mySessionsOnDay.some(
+                        (e) =>
+                          e.id !== ev.id &&
+                          ev.startMs < e.endMs &&
+                          ev.endMs > e.startMs,
+                      );
+                      return !overlapsMine;
+                    });
+
+                    const compactStackMeta = new Map<
+                      string,
+                      { index: number; columns: number }
+                    >();
+                    const activeCompact: Array<{
+                      id: string;
+                      endMs: number;
+                      index: number;
+                    }> = [];
+
+                    for (const compactEv of eligibleCompactEvents) {
+                      for (let i = activeCompact.length - 1; i >= 0; i -= 1) {
+                        if (activeCompact[i].endMs <= compactEv.startMs) {
+                          activeCompact.splice(i, 1);
+                        }
+                      }
+
+                      const usedIndexes = new Set(activeCompact.map((item) => item.index));
+                      let nextIndex = 0;
+                      while (usedIndexes.has(nextIndex)) nextIndex += 1;
+
+                      activeCompact.push({
+                        id: compactEv.id,
+                        endMs: compactEv.endMs,
+                        index: nextIndex,
+                      });
+
+                      const columns =
+                        Math.max(...activeCompact.map((item) => item.index)) + 1;
+
+                      for (const item of activeCompact) {
+                        const existing = compactStackMeta.get(item.id);
+                        compactStackMeta.set(item.id, {
+                          index: item.index,
+                          columns: Math.max(existing?.columns ?? 1, columns),
+                        });
+                      }
+                    }
+
+                    return dayEvents.map((ev) => {
                     // Use precomputed startMinutes (no Date allocation)
                     const top = minuteToPx(ev.startMinutes - startHour * 60);
                     const height = minuteToPx(ev.durationMin);
@@ -603,11 +670,6 @@ export default function Calendar({
                     const isCompact = !isMySession;
 
                     // Don't show other people's available slots if they overlap my session (I'm ineligible)
-                    const mySessionsOnDay = (eventsByDay[ymd(d)] ?? []).filter(
-                      (e) =>
-                        (e.owner_id && currentUserId && e.owner_id === currentUserId) ||
-                        (e.participants ?? []).some((p) => p.user_id === currentUserId),
-                    );
                     const ineligibleBecauseOverlapsMine =
                       isCompact &&
                       mySessionsOnDay.some(
@@ -617,6 +679,8 @@ export default function Calendar({
                           ev.endMs > e.startMs,
                       );
                     if (ineligibleBecauseOverlapsMine) return null;
+
+                    const compactMeta = compactStackMeta.get(ev.id);
 
                     return (
                       <CalendarEventCard
@@ -629,6 +693,8 @@ export default function Calendar({
                         top={top}
                         height={height}
                         isCompact={isCompact}
+                        compactStackIndex={compactMeta?.index ?? 0}
+                        compactStackTotal={compactMeta?.columns ?? 1}
                         onBook={() => handleBookSlot(ev)}
                         onDetails={() =>
                           dispatch({ type: "OPEN_DETAILS_MODAL", event: ev })
@@ -644,7 +710,8 @@ export default function Calendar({
                         }
                       />
                     );
-                  })}
+                  });
+                  })()}
                 </div>
               </div>
             ))}

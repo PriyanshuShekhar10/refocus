@@ -1,0 +1,7 @@
+Method,Name,Error,Occurrences
+GET,chat.unread_counts,"ConnectionResetError(54, 'Connection reset by peer')",1
+GET,users.me,"TimeoutError(60, 'Operation timed out')",270
+GET,chat.unread_counts,"TimeoutError(60, 'Operation timed out')",31
+GET,friends.requests.incoming,"TimeoutError(60, 'Operation timed out')",45
+GET,community.posts.list,CatchResponseError('posts list failed (0)'),300
+GET,users.me,"ConnectionResetError(54, 'Connection reset by peer')",3
