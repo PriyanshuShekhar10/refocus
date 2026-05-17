@@ -62,8 +62,8 @@ export default function DesktopOnlyWrapper({
           </div>
           <div className="text-2xl text-gray-400 dark:text-gray-500">→</div>
           <div className="relative">
-            <Monitor className="w-12 h-12 text-green-500 dark:text-green-400" />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+            <Monitor className="w-12 h-12 text-[#CA5995] dark:text-[#CA5995]" />
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#CA5995] rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">✓</span>
             </div>
           </div>
@@ -85,8 +85,8 @@ export default function DesktopOnlyWrapper({
             The dashboard is best experienced on a desktop browser. Please
             switch to a larger screen for optimal use.
           </p>
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <p className="text-sm text-blue-800 dark:text-blue-300">
+          <div className="bg-[#FFF1D3] dark:bg-[#5D1C6A]/25 border border-[#FFB090] dark:border-[#CA5995]/70 rounded-lg p-4">
+            <p className="text-sm text-[#5D1C6A] dark:text-[#FFB090]">
               💡 <span className="font-medium">Tip:</span> For the best
               experience, use a device with a screen width of at least{" "}
               <span className="font-semibold">{minWidth}px</span>.
@@ -101,19 +101,19 @@ export default function DesktopOnlyWrapper({
           </p>
           <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <li className="flex items-start gap-2">
-              <span className="text-green-500 mt-0.5">✓</span>
+              <span className="text-[#CA5995] mt-0.5">✓</span>
               <span>Full calendar and session management</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-green-500 mt-0.5">✓</span>
+              <span className="text-[#CA5995] mt-0.5">✓</span>
               <span>Real-time video sessions</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-green-500 mt-0.5">✓</span>
+              <span className="text-[#CA5995] mt-0.5">✓</span>
               <span>Advanced productivity features</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-green-500 mt-0.5">✓</span>
+              <span className="text-[#CA5995] mt-0.5">✓</span>
               <span>Complete dashboard analytics</span>
             </li>
           </ul>

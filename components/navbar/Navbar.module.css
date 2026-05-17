@@ -67,7 +67,7 @@
 
 .icon {
   font-size: 24px;
-  color: #34d399;
+  color: #ca5995;
   margin-right: 8px;
 }
 
@@ -134,7 +134,7 @@
 }
 
 .tryBtn {
-  background: #007bff;
+  background: #6d2a7b;
   border: none;
   padding: 10px 25px;
   border-radius: 25px;
@@ -146,7 +146,7 @@
 }
 
 .tryBtn:hover {
-  background: #0056b3;
+  background: #b35a94;
 }
 
 .signInBtn {
@@ -173,7 +173,7 @@
 }
 
 .signUpBtn {
-  background: #000000;
+  background: #6d2a7b;
   border: none;
   padding: 12px 28px;
   border-radius: 12px;
@@ -190,7 +190,7 @@
 }
 
 .signUpBtn:hover {
-  background: #333333;
+  background: #b35a94;
   transform: translateY(-2px);
 }
 
@@ -221,13 +221,13 @@
 
 /* Profile and logout button styles */
 .profileBtn {
-  background: rgba(34, 197, 94, 0.1);
-  border: 2px solid rgba(34, 197, 94, 0.3);
+  background: rgba(202, 89, 149, 0.12);
+  border: 2px solid rgba(202, 89, 149, 0.35);
   padding: 10px 20px;
   border-radius: 12px;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #22c55e;
+  color: #5d1c6a;
   cursor: pointer;
   transition: all 0.3s ease;
   text-decoration: none;
@@ -235,10 +235,10 @@
 }
 
 .profileBtn:hover {
-  background: rgba(34, 197, 94, 0.2);
-  border-color: #22c55e;
+  background: rgba(202, 89, 149, 0.22);
+  border-color: #ca5995;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+  box-shadow: 0 4px 12px rgba(202, 89, 149, 0.2);
 }
 
 .logoutBtn {

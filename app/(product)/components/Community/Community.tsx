@@ -234,7 +234,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                       size="sm"
                       onClick={handlePost}
                       disabled={!newPostContent.trim() || posting}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-[#5D1C6A] hover:bg-[#CA5995]"
                     >
                       {posting ? (
                         <>
@@ -316,7 +316,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
       {/* Mobile Chat Toggle */}
       <button
         onClick={() => setShowChat(!showChat)}
-        className="lg:hidden fixed bottom-4 right-4 h-12 w-12 rounded-full bg-green-600 text-white shadow-lg flex items-center justify-center hover:bg-green-700 transition-colors"
+        className="lg:hidden fixed bottom-4 right-4 h-12 w-12 rounded-full bg-[#5D1C6A] text-white shadow-lg flex items-center justify-center hover:bg-[#CA5995] transition-colors"
       >
         <MessageSquare className="h-5 w-5" />
       </button>

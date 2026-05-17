@@ -33,7 +33,7 @@ export function ConfirmModal({
 
   const confirmClasses =
     confirmVariant === "success"
-      ? "rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-50"
+      ? "rounded-md bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] disabled:opacity-50"
       : "rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50";
   return (
     <ModalWrapper onClose={onCancel}>

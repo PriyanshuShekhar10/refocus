@@ -31,7 +31,7 @@ export function BookingModal({
         </h2>
         <p className="mt-2 text-gray-700 dark:text-gray-300">
           You are booking a{" "}
-          <strong className="text-indigo-700 dark:text-indigo-300">
+          <strong className="text-[#5D1C6A] dark:text-[#FFB090]">
             {event.durationMin}-minute {event.sessionType}
           </strong>{" "}
           session for:
@@ -73,7 +73,7 @@ export function BookingModal({
           </button>
           <button
             onClick={handleConfirm}
-            className="rounded-md bg-indigo-600 dark:bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-800"
+            className="rounded-md bg-[#5D1C6A] dark:bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] dark:hover:bg-[#CA5995]"
           >
             Confirm
           </button>

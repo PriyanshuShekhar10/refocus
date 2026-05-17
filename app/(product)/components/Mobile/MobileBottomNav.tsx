@@ -26,14 +26,14 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileBottomNavProps
             onClick={() => onTabChange(tab.id)}
             className={`flex flex-col items-center justify-center gap-0.5 transition-colors ${
               activeTab === tab.id
-                ? "text-indigo-600 dark:text-indigo-400"
+                ? "text-[#5D1C6A] dark:text-[#CA5995]"
                 : "text-gray-500 dark:text-gray-400"
             }`}
           >
             <div
               className={`p-1.5 rounded-xl transition-colors ${
                 activeTab === tab.id
-                  ? "bg-indigo-100 dark:bg-indigo-900/30"
+                  ? "bg-[#FFF1D3] dark:bg-[#5D1C6A]/40"
                   : ""
               }`}
             >

@@ -195,7 +195,7 @@ export function SessionDetailsModal({
               </label>
               <input
                 type="text"
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#CA5995] dark:focus:ring-[#CA5995] focus:border-transparent"
                 placeholder="e.g. Morning focus"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -217,7 +217,7 @@ export function SessionDetailsModal({
                 onClick={() => handleColorChange("")}
                 className={`h-10 w-10 rounded-lg border-2 transition-all shrink-0 flex items-center justify-center text-sm font-medium ${
                   !color
-                    ? "border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/30 dark:ring-indigo-400/30 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                    ? "border-[#CA5995] dark:border-[#CA5995] ring-2 ring-[#CA5995]/30 dark:ring-[#CA5995]/30 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
                     : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                 }`}
                 title="Default"
@@ -234,7 +234,7 @@ export function SessionDetailsModal({
                     onClick={() => handleColorChange(preset.light)}
                     className={`h-10 w-10 rounded-lg border-2 transition-all shrink-0 ${
                       isSelected
-                        ? "border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/30 dark:ring-indigo-400/30"
+                        ? "border-[#CA5995] dark:border-[#CA5995] ring-2 ring-[#CA5995]/30 dark:ring-[#CA5995]/30"
                         : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
                     }`}
                     style={{ backgroundColor: displayColor }}
@@ -277,7 +277,7 @@ export function SessionDetailsModal({
               {canJoin ? (
                 <a
                   href={`/sessions/${event.id}`}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#5D1C6A] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#CA5995] transition-colors"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -305,7 +305,7 @@ export function SessionDetailsModal({
 
         {/* Footer actions */}
         <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm text-green-600 dark:text-green-400 min-h-[1.25rem]">
+          <div className="text-sm text-[#5D1C6A] dark:text-[#CA5995] min-h-[1.25rem]">
             {friendReqStatus}
           </div>
           <div className="flex flex-wrap gap-2 justify-end">
@@ -313,7 +313,7 @@ export function SessionDetailsModal({
               <button
                 type="button"
                 onClick={sendFriendRequest}
-                className="rounded-lg border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/40 px-3 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors"
+                className="rounded-lg border border-[#FFB090] dark:border-[#CA5995]/70 bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 px-3 py-2 text-sm font-medium text-[#5D1C6A] dark:text-[#FFB090] hover:bg-[#FFB090]/35 dark:hover:bg-[#5D1C6A]/60 transition-colors"
               >
                 Add friend
               </button>
@@ -332,7 +332,7 @@ export function SessionDetailsModal({
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-lg bg-indigo-600 dark:bg-indigo-500 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 transition-colors"
+                className="rounded-lg bg-[#5D1C6A] dark:bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] dark:hover:bg-[#CA5995] disabled:opacity-50 transition-colors"
               >
                 {saving ? "Saving…" : "Save"}
               </button>

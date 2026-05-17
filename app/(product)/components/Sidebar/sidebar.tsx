@@ -171,8 +171,8 @@ const SideBarIcon: FC<SideBarIconProps> = ({
   const base =
     "group relative flex items-center justify-center h-12 w-12 mt-3 mb-3 mx-auto rounded-3xl transition-all duration-200 ease-linear cursor-pointer shadow-sm";
   const activeClasses = active
-    ? "bg-green-600 text-white rounded-xl"
-    : "bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-gray-600 dark:text-green-400 hover:bg-green-600 hover:text-white hover:rounded-xl";
+    ? "bg-[#5D1C6A] dark:bg-[#7A2D88] text-white rounded-xl"
+    : "bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-gray-600 dark:text-[#FFB090] hover:bg-[#CA5995] hover:text-white hover:rounded-xl";
 
   const content = (
     <>
@@ -251,11 +251,11 @@ const ThemeToggle: FC = () => {
       className="group relative flex items-center justify-center
                  h-12 w-12 mt-2 mx-auto
                  bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700
-                 text-gray-600 dark:text-green-300
-                 hover:bg-green-600 hover:text-white
+                 text-gray-600 dark:text-[#FFB090]
+                 hover:bg-[#CA5995] hover:text-white
                  rounded-3xl hover:rounded-xl
                  transition-all duration-200 ease-linear
-                 cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-300"
+                 cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FFB090]"
       aria-label={`Switch to ${next} mode`}
       title={`Switch to ${next} mode`}
     >
@@ -270,7 +270,7 @@ const ThemeToggle: FC = () => {
                    group-hover:translate-x-0 group-hover:opacity-100
                    transition-all duration-150 ease-out"
       >
-        {current === "dark" ? "Light mode" : "Dark mode"}
+        {current === "dark" ? "Dark mode" : "Light mode"}
       </span>
     </button>
   );

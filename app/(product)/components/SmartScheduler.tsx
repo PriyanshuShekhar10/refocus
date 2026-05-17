@@ -62,7 +62,7 @@ function formatTime(iso: string) {
 }
 
 const typeColors: Record<string, string> = {
-  focus: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  focus: "bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090]",
   "deep-work":
     "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
   learning:
@@ -233,7 +233,7 @@ export default function SmartScheduler() {
       {/* Header */}
       <div className="flex-shrink-0 mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 text-[#5D1C6A] dark:text-[#FFB090] flex items-center justify-center">
             <BsStars size={20} />
           </div>
           <div>
@@ -252,7 +252,7 @@ export default function SmartScheduler() {
         {/* Empty state */}
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 flex items-center justify-center mb-5">
+            <div className="w-16 h-16 rounded-2xl bg-[#FFF1D3] dark:bg-[#5D1C6A]/30 text-[#5D1C6A] dark:text-[#FFB090] flex items-center justify-center mb-5">
               <BsStars size={28} />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -269,7 +269,7 @@ export default function SmartScheduler() {
                 <button
                   key={i}
                   onClick={() => send(s)}
-                  className="px-3 py-1.5 text-xs rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  className="px-3 py-1.5 text-xs rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:border-[#CA5995] dark:hover:border-[#CA5995] hover:text-[#5D1C6A] dark:hover:text-[#CA5995] transition-colors"
                 >
                   {s}
                 </button>
@@ -283,7 +283,7 @@ export default function SmartScheduler() {
           <div key={mi}>
             {msg.role === "user" && (
               <div className="flex justify-end">
-                <div className="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-br-sm bg-indigo-600 text-white text-sm">
+                <div className="max-w-[80%] px-4 py-2.5 rounded-2xl rounded-br-sm bg-[#5D1C6A] text-white text-sm">
                   {msg.text}
                 </div>
               </div>
@@ -294,7 +294,7 @@ export default function SmartScheduler() {
                 <div className="max-w-[90%] space-y-3">
                   {/* Reasoning text */}
                   <div className="flex items-start gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 text-[#5D1C6A] dark:text-[#FFB090] flex items-center justify-center flex-shrink-0 mt-0.5">
                       <BsStars size={14} />
                     </div>
                     <p className="text-sm text-gray-700 dark:text-gray-300 pt-1">
@@ -304,8 +304,8 @@ export default function SmartScheduler() {
 
                   {/* Friend tag */}
                   {msg.friend && (
-                    <div className="ml-9 flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400">
-                      <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-[10px] font-bold">
+                    <div className="ml-9 flex items-center gap-1.5 text-xs text-[#5D1C6A] dark:text-[#CA5995]">
+                      <span className="w-5 h-5 rounded-full bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 flex items-center justify-center text-[10px] font-bold">
                         {msg.friend.name.charAt(0).toUpperCase()}
                       </span>
                       Booking with {msg.friend.name}
@@ -322,7 +322,7 @@ export default function SmartScheduler() {
                           onClick={() => toggleProposal(mi, pi)}
                           className={`w-full text-left p-3 rounded-xl border transition-all duration-150 ${
                             p.selected
-                              ? "border-indigo-300 dark:border-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/20 ring-1 ring-indigo-200 dark:ring-indigo-800"
+                              ? "border-[#CA5995] dark:border-[#CA5995] bg-[#FFF1D3]/70 dark:bg-[#5D1C6A]/20 ring-1 ring-[#FFB090] dark:ring-[#5D1C6A]"
                               : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 opacity-60"
                           }`}
                         >
@@ -330,7 +330,7 @@ export default function SmartScheduler() {
                             <div className="flex-1 min-w-0">
                               {/* Goal */}
                               <div className="flex items-center gap-2 mb-1.5">
-                                <FiTarget className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0" />
+                                <FiTarget className="w-3.5 h-3.5 text-[#5D1C6A] dark:text-[#CA5995] flex-shrink-0" />
                                 <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
                                   {p.goal}
                                 </span>
@@ -358,7 +358,7 @@ export default function SmartScheduler() {
                             <div
                               className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
                                 p.selected
-                                  ? "border-indigo-500 bg-indigo-500 text-white"
+                                  ? "border-[#CA5995] bg-[#5D1C6A] text-white"
                                   : "border-gray-300 dark:border-gray-600"
                               }`}
                             >
@@ -383,7 +383,7 @@ export default function SmartScheduler() {
                             msg.proposals.filter((p) => p.selected)
                               .length === 0
                           }
-                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#5D1C6A] hover:bg-[#CA5995] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
                         >
                           {confirming ? (
                             <FiLoader className="w-3.5 h-3.5 animate-spin" />
@@ -413,7 +413,7 @@ export default function SmartScheduler() {
         {loading && (
           <div className="flex justify-start">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 text-[#5D1C6A] dark:text-[#FFB090] flex items-center justify-center flex-shrink-0">
                 <BsStars size={14} />
               </div>
               <div className="flex gap-1 px-3 py-2">
@@ -444,12 +444,12 @@ export default function SmartScheduler() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="e.g. Book 3 study sessions this week in the evenings…"
             disabled={loading}
-            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700 disabled:opacity-50 transition-shadow"
+            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#CA5995] dark:focus:ring-[#CA5995] disabled:opacity-50 transition-shadow"
           />
           <button
             type="submit"
             disabled={!input.trim() || loading}
-            className="w-11 h-11 flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-xl bg-[#5D1C6A] hover:bg-[#CA5995] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
           >
             <FiSend className="w-4 h-4" />
           </button>

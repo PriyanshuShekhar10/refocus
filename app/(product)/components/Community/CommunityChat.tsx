@@ -234,7 +234,7 @@ export default function CommunityChat() {
                   {!isOwn && m.username ? (
                     <Link
                       href={`/u/${m.username}`}
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium bg-muted text-muted-foreground hover:ring-2 hover:ring-green-500 transition-shadow`}
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium bg-muted text-muted-foreground hover:ring-2 hover:ring-[#CA5995] transition-shadow`}
                     >
                       {initial}
                     </Link>
@@ -242,7 +242,7 @@ export default function CommunityChat() {
                     <div
                       className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium ${
                         isOwn
-                          ? "bg-green-600 text-white"
+                          ? "bg-[#5D1C6A] text-white"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
@@ -254,7 +254,7 @@ export default function CommunityChat() {
                   >
                     <div className="flex items-baseline gap-1.5 mb-0.5">
                       {!isOwn && m.username ? (
-                        <Link href={`/u/${m.username}`} className="text-[10px] font-medium text-muted-foreground hover:text-green-600 dark:hover:text-green-400 hover:underline">
+                        <Link href={`/u/${m.username}`} className="text-[10px] font-medium text-muted-foreground hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline">
                           {name}
                         </Link>
                       ) : (
@@ -271,7 +271,7 @@ export default function CommunityChat() {
                         m.deleted
                           ? "bg-muted text-muted-foreground italic"
                           : isOwn
-                          ? "bg-green-600 text-white"
+                          ? "bg-[#5D1C6A] text-white"
                           : "bg-muted"
                       }`}
                     >
@@ -307,7 +307,7 @@ export default function CommunityChat() {
           <button
             onClick={send}
             disabled={!text.trim() || isSending}
-            className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg bg-green-600 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
+            className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg bg-[#5D1C6A] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#CA5995] transition-colors"
           >
             <Send className="h-3.5 w-3.5" />
           </button>

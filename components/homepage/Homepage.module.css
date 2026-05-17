@@ -18,6 +18,11 @@
   --accent: #8fa9c2;
   --accent-ink: #ffffff;
   --accent-soft: #e1e8f0;
+  --hero-gradient: linear-gradient(
+    135deg,
+    #dcdcfc 40%,
+    #f06c41 100%
+  );
 
   --font-body: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;

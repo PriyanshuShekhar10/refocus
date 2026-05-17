@@ -152,7 +152,7 @@ export function MobileBottomSheet({
               <button
                 onClick={() => onQuietModeChange(!quietMode)}
                 className={`relative w-12 h-7 rounded-full transition-colors ${
-                  quietMode ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"
+                  quietMode ? "bg-[#CA5995]" : "bg-gray-300 dark:bg-gray-600"
                 }`}
               >
                 <span
@@ -172,14 +172,14 @@ export function MobileBottomSheet({
             <button
               onClick={onBookSession}
               disabled={isBooking}
-              className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold rounded-xl transition-colors"
+              className="flex-1 py-4 bg-[#5D1C6A] hover:bg-[#CA5995] disabled:bg-[#CA5995]/60 text-white font-semibold rounded-xl transition-colors"
             >
               {isBooking ? "Booking..." : "Book session"}
             </button>
             <button
               onClick={onQuickBook}
               disabled={isBooking}
-              className="p-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl transition-colors"
+              className="p-4 bg-[#5D1C6A] hover:bg-[#CA5995] disabled:bg-[#CA5995]/60 text-white rounded-xl transition-colors"
             >
               <Zap className="h-5 w-5" />
             </button>

@@ -116,7 +116,7 @@ export default async function SessionJoinPage({
       {/* Session Partner */}
       {partnerName && (
         <div className="mt-4 flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-600 text-sm font-medium text-white">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-sm font-medium text-white">
             {partnerInitial}
           </div>
           <div className="flex-1 min-w-0">

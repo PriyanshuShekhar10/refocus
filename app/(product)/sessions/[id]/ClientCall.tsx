@@ -17,7 +17,7 @@ type PrejoinInfo = {
   endIso: string;
 };
 
-const ACCENT = "4f46e5"; // indigo-600, matches the rest of the app
+const ACCENT = "5D1C6A"; // shared plum accent
 
 export default function ClientCall({
   sessionId,
@@ -206,7 +206,7 @@ export default function ClientCall({
           <button
             type="button"
             onClick={() => router.refresh()}
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className="rounded-md bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995]"
           >
             Try again
           </button>
@@ -224,7 +224,7 @@ export default function ClientCall({
   if (phase === "ended") {
     return (
       <CenteredCard>
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/30 dark:text-[#CA5995]">
           <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
@@ -240,7 +240,7 @@ export default function ClientCall({
         <div className="mt-5 flex justify-center gap-3">
           <Link
             href="/dashboard"
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className="rounded-md bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995]"
           >
             Back to dashboard
           </Link>
@@ -257,12 +257,12 @@ export default function ClientCall({
 
   if (phase === "ready") {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-4 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#FFF1D3]/50 via-white to-slate-50 p-4 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
           <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
+                <p className="text-xs font-medium uppercase tracking-wide text-[#5D1C6A] dark:text-[#CA5995]">
                   Refocus session
                 </p>
                 <h1 className="mt-0.5 text-lg font-semibold text-slate-900 dark:text-slate-100">
@@ -290,7 +290,7 @@ export default function ClientCall({
 
             {prejoin.partnerName && (
               <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-sm font-semibold text-white">
                   {prejoin.partnerInitial ?? prejoin.partnerName.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -337,7 +337,7 @@ export default function ClientCall({
             <button
               type="button"
               onClick={startCall}
-              className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+              className="w-full rounded-lg bg-[#5D1C6A] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#CA5995] focus:outline-none focus:ring-2 focus:ring-[#CA5995] focus:ring-offset-2 dark:focus:ring-offset-slate-900"
             >
               Join session
             </button>
@@ -374,7 +374,7 @@ export default function ClientCall({
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-950">
       <div className="flex items-center justify-between border-b border-white/10 bg-slate-900/90 px-4 py-2.5 text-white backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+          <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-[#CA5995]" />
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">
               {prejoin.sessionName || `${prejoin.sessionType} session`}
@@ -441,7 +441,7 @@ export default function ClientCall({
 
 function CenteredCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-slate-50 p-4 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#FFF1D3]/50 via-white to-slate-50 p-4 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white px-6 py-8 text-center shadow-xl dark:border-slate-700 dark:bg-slate-900">
         {children}
       </div>
@@ -451,6 +451,6 @@ function CenteredCard({ children }: { children: React.ReactNode }) {
 
 function Spinner() {
   return (
-    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600 dark:border-slate-700 dark:border-t-indigo-400" />
+    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#5D1C6A] dark:border-slate-700 dark:border-t-[#CA5995]" />
   );
 }
