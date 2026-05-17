@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useCallback } from "react";
+import { useEffect, useMemo, useReducer, useCallback, useState } from "react";
 import type { CalendarEvent } from "@/types/calendar";
 import {
   startOfDay,
@@ -50,6 +50,13 @@ type ProcessedEvent = CalendarEvent & {
   endMs: number;
   /** minutes from midnight for positioning */
   startMinutes: number;
+};
+
+type SidebarProfilePreview = {
+  username: string;
+  name: string;
+  about?: string | null;
+  avatarUrl?: string | null;
 };
 
 // ============================================
@@ -208,6 +215,9 @@ export default function Calendar({
     uiReducer,
     startDateProp,
     createInitialState,
+  );
+  const [profilePreview, setProfilePreview] = useState<SidebarProfilePreview | null>(
+    null,
   );
 
   // Sync external startDate prop
@@ -708,6 +718,7 @@ export default function Calendar({
                                 dispatch({ type: "OPEN_LEAVE_CONFIRM", event: ev })
                             : undefined
                         }
+                        onPreviewProfile={(profile) => setProfilePreview(profile)}
                       />
                     );
                   });
@@ -739,6 +750,8 @@ export default function Calendar({
             .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())[0];
           return joinable || null;
         })()}
+        profilePreview={profilePreview}
+        onClearProfilePreview={() => setProfilePreview(null)}
       />
 
       {/* Modals – only one can be open at a time (enforced by state machine) */}

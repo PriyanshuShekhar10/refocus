@@ -58,7 +58,28 @@ interface CalendarRightSidebarProps {
     start: string | Date;
     end?: string | Date;
   } | null;
+  profilePreview?: {
+    username: string;
+    name: string;
+    about?: string | null;
+    avatarUrl?: string | null;
+  } | null;
+  onClearProfilePreview?: () => void;
+  onCollapseChange?: (collapsed: boolean) => void;
 }
+
+type DetailedProfile = {
+  username: string;
+  name: string | null;
+  firstname: string | null;
+  lastname: string | null;
+  avatarUrl: string | null;
+  about: string | null;
+  interests: string[];
+  location: string | null;
+  website: string | null;
+  createdAt: string | null;
+};
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -75,15 +96,75 @@ function formatDate(): string {
   });
 }
 
-export function CalendarRightSidebar({ sessionCount, onGoToday, joinableSession }: CalendarRightSidebarProps) {
+export function CalendarRightSidebar({
+  sessionCount,
+  onGoToday,
+  joinableSession,
+  profilePreview,
+  onClearProfilePreview,
+  onCollapseChange,
+}: CalendarRightSidebarProps) {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [detailedProfile, setDetailedProfile] = useState<DetailedProfile | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
   
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (profilePreview) {
+      setIsCollapsed(false);
+    }
+  }, [profilePreview]);
+
+  useEffect(() => {
+    onCollapseChange?.(isCollapsed);
+  }, [isCollapsed, onCollapseChange]);
+
+  useEffect(() => {
+    const username = profilePreview?.username;
+    if (!username) {
+      setDetailedProfile(null);
+      setIsProfileLoading(false);
+      setProfileError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setIsProfileLoading(true);
+    setProfileError(null);
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/profile/${encodeURIComponent(username)}`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data.error || "Unable to load profile");
+        }
+        if (!cancelled) {
+          setDetailedProfile((data.user as DetailedProfile) ?? null);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setDetailedProfile(null);
+          setProfileError((e as Error).message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsProfileLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profilePreview?.username]);
 
   const user = session?.user as { name?: string; email?: string; image?: string } | undefined;
   
@@ -95,6 +176,38 @@ export function CalendarRightSidebar({ sessionCount, onGoToday, joinableSession 
     .join("")
     .substring(0, 2)
     .toUpperCase();
+  const previewName =
+    [
+      detailedProfile?.firstname?.trim() || "",
+      detailedProfile?.lastname?.trim() || "",
+    ]
+      .filter(Boolean)
+      .join(" ") ||
+    detailedProfile?.name ||
+    profilePreview?.name ||
+    "User";
+  const previewInitials = previewName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+  const previewAvatarUrl = detailedProfile?.avatarUrl || profilePreview?.avatarUrl || null;
+  const previewAbout =
+    detailedProfile?.about?.trim() ||
+    profilePreview?.about?.trim() ||
+    "No bio added yet.";
+  const joinedDate = detailedProfile?.createdAt
+    ? new Date(detailedProfile.createdAt).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+  const websiteHref = detailedProfile?.website
+    ? detailedProfile.website.startsWith("http")
+      ? detailedProfile.website
+      : `https://${detailedProfile.website}`
+    : null;
 
   return (
     <aside
@@ -119,11 +232,15 @@ export function CalendarRightSidebar({ sessionCount, onGoToday, joinableSession 
             </svg>
           </button>
           <Avatar className="h-10 w-10">
-            {user?.image ? (
+            {previewAvatarUrl ? (
+              <AvatarImage src={previewAvatarUrl} alt={previewName} />
+            ) : user?.image ? (
               <AvatarImage src={user.image} alt={displayName} />
             ) : null}
             <AvatarFallback className="text-sm font-semibold bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300">
-              {initials}
+              {profilePreview
+                ? previewInitials
+                : initials}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1" />
@@ -179,7 +296,108 @@ export function CalendarRightSidebar({ sessionCount, onGoToday, joinableSession 
         </svg>
       </button>
 
-      {/* User Profile Card */}
+      {/* Main card (selected profile OR current user quick card) */}
+      {profilePreview ? (
+        <div className="rounded-lg border border-indigo-200 dark:border-indigo-700 bg-indigo-50/70 dark:bg-indigo-900/20 p-3 flex-1 min-h-0 overflow-y-auto">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+              Profile preview
+            </p>
+            <div className="flex items-center gap-1">
+              <Link
+                href={`/u/${profilePreview.username}`}
+                className="rounded p-1 text-indigo-600 hover:bg-indigo-100 dark:text-indigo-300 dark:hover:bg-indigo-900/40"
+                title="Open full profile"
+                aria-label="Open full profile"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5 3a2 2 0 00-2 2v3a1 1 0 102 0V5h3a1 1 0 100-2H5zm7 0a1 1 0 100 2h3v3a1 1 0 102 0V5a2 2 0 00-2-2h-3zM3 12a1 1 0 011 1v2h2a1 1 0 110 2H4a2 2 0 01-2-2v-2a1 1 0 011-1zm14 0a1 1 0 011 1v2a2 2 0 01-2 2h-2a1 1 0 110-2h2v-2a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+              </Link>
+              {onClearProfilePreview ? (
+                <button
+                  type="button"
+                  onClick={onClearProfilePreview}
+                  className="rounded p-1 text-indigo-600 hover:bg-indigo-100 dark:text-indigo-300 dark:hover:bg-indigo-900/40"
+                  title="Close preview"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mt-2 flex items-center gap-2">
+            <Avatar className="h-12 w-12 border border-indigo-200 dark:border-indigo-700">
+              {previewAvatarUrl ? (
+                <AvatarImage src={previewAvatarUrl} alt={previewName} />
+              ) : null}
+              <AvatarFallback className="text-sm font-semibold bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300">
+                {previewInitials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                {previewName}
+              </p>
+              <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                @{profilePreview.username}
+              </p>
+            </div>
+          </div>
+
+          {isProfileLoading ? (
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+              Loading profile details...
+            </p>
+          ) : profileError ? (
+            <p className="mt-3 text-xs text-red-600 dark:text-red-400">
+              {profileError}
+            </p>
+          ) : (
+            <>
+              <p className="mt-3 text-xs leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                {previewAbout}
+              </p>
+
+              {(detailedProfile?.location || joinedDate || websiteHref) && (
+                <div className="mt-3 space-y-1.5 text-[11px] text-gray-600 dark:text-gray-300">
+                  {detailedProfile?.location && (
+                    <p>Location: {detailedProfile.location}</p>
+                  )}
+                  {joinedDate && <p>Joined: {joinedDate}</p>}
+                  {websiteHref && (
+                    <a
+                      href={websiteHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200 underline"
+                    >
+                      {detailedProfile?.website}
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {detailedProfile?.interests?.length ? (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {detailedProfile.interests.map((interest) => (
+                    <span
+                      key={interest}
+                      className="rounded-full border border-indigo-200 dark:border-indigo-700 px-2 py-0.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300"
+                    >
+                      {interest}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </>
+          )}
+
+        </div>
+      ) : (
       <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2.5">
         <div className="flex flex-col items-center text-center">
           <Avatar className="h-11 w-11 mb-2">
@@ -271,6 +489,7 @@ export function CalendarRightSidebar({ sessionCount, onGoToday, joinableSession 
           </button>
         </div>
       </div>
+      )}
 
       {/* Spacer */}
       <div className="flex-1 min-h-0" />

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
-import Link from "next/link";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/types/calendar";
 import { getResolvedSessionColor } from "@/constants/calendar";
@@ -53,6 +52,13 @@ interface CalendarEventCardProps {
   onDelete: (e: React.MouseEvent) => void;
   /** When provided and user is participant (booked, not owner), shows Leave button */
   onLeave?: () => void;
+  /** Open the partner preview in dashboard sidebar instead of navigating away */
+  onPreviewProfile?: (profile: {
+    username: string;
+    name: string;
+    about?: string | null;
+    avatarUrl?: string | null;
+  }) => void;
 }
 
 export function CalendarEventCard({
@@ -70,6 +76,7 @@ export function CalendarEventCard({
   onDetails,
   onDelete,
   onLeave,
+  onPreviewProfile,
 }: CalendarEventCardProps) {
   const s = new Date(event.start);
   const { resolvedTheme } = useTheme();
@@ -255,14 +262,27 @@ export function CalendarEventCard({
                 "Focused member. Open profile to learn more."}
             </p>
             {compactPartner.username ? (
-              <Link
-                href={`/u/${compactPartner.username}`}
+              <button
+                type="button"
                 className="pointer-events-auto mt-2 inline-flex w-full justify-center rounded-lg bg-indigo-600 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-indigo-700"
                 onMouseDown={(evt) => evt.stopPropagation()}
-                onClick={(evt) => evt.stopPropagation()}
+                onClick={(evt) => {
+                  evt.stopPropagation();
+                  if (!compactPartner.username) return;
+                  if (onPreviewProfile) {
+                    onPreviewProfile({
+                      username: compactPartner.username,
+                      name: compactPartner.name,
+                      about: compactPartner.about,
+                      avatarUrl: compactPartner.avatar_url,
+                    });
+                    return;
+                  }
+                  window.location.href = `/u/${compactPartner.username}`;
+                }}
               >
                 View profile
-              </Link>
+              </button>
             ) : (
               <button
                 type="button"

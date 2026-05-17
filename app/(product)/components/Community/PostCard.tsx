@@ -45,6 +45,12 @@ interface PostCardProps {
   onLike: (postId: string) => void;
   onDelete: (postId: string) => void;
   onComment: (postId: string, content: string) => Promise<Comment | null>;
+  onPreviewProfile?: (profile: {
+    username: string;
+    name: string;
+    about?: string | null;
+    avatarUrl?: string | null;
+  }) => void;
 }
 
 export default function PostCard({
@@ -53,6 +59,7 @@ export default function PostCard({
   onLike,
   onDelete,
   onComment,
+  onPreviewProfile,
 }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -146,7 +153,23 @@ export default function PostCard({
     >
       {/* Post Header */}
       <div className="flex items-start gap-3">
-        {post.authorUsername ? (
+        {post.authorUsername && onPreviewProfile ? (
+          <button
+            type="button"
+            onClick={() =>
+              onPreviewProfile({
+                username: post.authorUsername!,
+                name: post.authorName,
+              })
+            }
+          >
+            <Avatar className="h-10 w-10 hover:ring-2 hover:ring-green-500 transition-shadow cursor-pointer">
+              <AvatarFallback className="text-sm bg-muted">
+                {post.authorInitials}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        ) : post.authorUsername ? (
           <Link href={`/u/${post.authorUsername}`}>
             <Avatar className="h-10 w-10 hover:ring-2 hover:ring-green-500 transition-shadow cursor-pointer">
               <AvatarFallback className="text-sm bg-muted">
@@ -164,7 +187,20 @@ export default function PostCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              {post.authorUsername ? (
+              {post.authorUsername && onPreviewProfile ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onPreviewProfile({
+                      username: post.authorUsername!,
+                      name: post.authorName,
+                    })
+                  }
+                  className="font-medium text-sm hover:text-green-600 dark:hover:text-green-400 hover:underline transition-colors"
+                >
+                  {post.authorName}
+                </button>
+              ) : post.authorUsername ? (
                 <Link href={`/u/${post.authorUsername}`} className="font-medium text-sm hover:text-green-600 dark:hover:text-green-400 hover:underline transition-colors">
                   {post.authorName}
                 </Link>
@@ -249,7 +285,23 @@ export default function PostCard({
                 <div className="space-y-3">
                   {comments.map((comment) => (
                     <div key={comment.id} className="flex gap-2">
-                      {comment.authorUsername ? (
+                      {comment.authorUsername && onPreviewProfile ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onPreviewProfile({
+                              username: comment.authorUsername!,
+                              name: comment.authorName,
+                            })
+                          }
+                        >
+                          <Avatar className="h-7 w-7 hover:ring-2 hover:ring-green-500 transition-shadow cursor-pointer">
+                            <AvatarFallback className="text-xs bg-muted">
+                              {comment.authorInitials}
+                            </AvatarFallback>
+                          </Avatar>
+                        </button>
+                      ) : comment.authorUsername ? (
                         <Link href={`/u/${comment.authorUsername}`}>
                           <Avatar className="h-7 w-7 hover:ring-2 hover:ring-green-500 transition-shadow cursor-pointer">
                             <AvatarFallback className="text-xs bg-muted">
@@ -266,7 +318,20 @@ export default function PostCard({
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          {comment.authorUsername ? (
+                          {comment.authorUsername && onPreviewProfile ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onPreviewProfile({
+                                  username: comment.authorUsername!,
+                                  name: comment.authorName,
+                                })
+                              }
+                              className="text-xs font-medium hover:text-green-600 dark:hover:text-green-400 hover:underline transition-colors"
+                            >
+                              {comment.authorName}
+                            </button>
+                          ) : comment.authorUsername ? (
                             <Link href={`/u/${comment.authorUsername}`} className="text-xs font-medium hover:text-green-600 dark:hover:text-green-400 hover:underline transition-colors">
                               {comment.authorName}
                             </Link>

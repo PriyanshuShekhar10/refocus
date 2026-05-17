@@ -9,6 +9,17 @@ import { Loader2, MessageSquare } from "lucide-react";
 import PostCard, { Post, Comment } from "./PostCard";
 import CommunityChat from "./CommunityChat";
 
+type ProfilePreviewPayload = {
+  username: string;
+  name: string;
+  about?: string | null;
+  avatarUrl?: string | null;
+};
+
+interface CommunityProps {
+  onPreviewProfile?: (profile: ProfilePreviewPayload) => void;
+}
+
 const PINNED_ADMIN_POST: Post = {
   id: "admin-pinned-welcome",
   content: `Hey everyone, welcome to Refocus Community.
@@ -38,7 +49,7 @@ We're glad you're here. Let's build a friendly, focused community together.`,
   isPinned: true,
 };
 
-export default function Community() {
+export default function Community({ onPreviewProfile }: CommunityProps) {
   const { data: session } = useSession();
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   const currentUserName =
@@ -254,6 +265,7 @@ export default function Community() {
                       onLike={handleLike}
                       onDelete={handleDelete}
                       onComment={handleComment}
+                      onPreviewProfile={onPreviewProfile}
                     />
                   </div>
                   {posts.map((post) => (
@@ -264,6 +276,7 @@ export default function Community() {
                         onLike={handleLike}
                         onDelete={handleDelete}
                         onComment={handleComment}
+                        onPreviewProfile={onPreviewProfile}
                       />
                     </div>
                   ))}

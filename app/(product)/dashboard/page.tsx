@@ -11,12 +11,20 @@ import Dashboard from "../components/dashboard";
 import Community from "../components/Community/Community";
 import Matchmaking from "../components/Matchmaking";
 import SmartScheduler from "../components/SmartScheduler";
+import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSidebar";
 
 type TabKey = "profile" | "dashboard" | "settings" | "friends" | "community" | "matches" | "scheduler";
 type TourStep = {
   title: string;
   description: string;
   tab: TabKey;
+};
+
+type ProfilePreviewPayload = {
+  username: string;
+  name: string;
+  about?: string | null;
+  avatarUrl?: string | null;
 };
 
 const TOUR_STORAGE_KEY = "refocus-dashboard-tour-v1";
@@ -55,6 +63,10 @@ const TOUR_STEPS: TourStep[] = [
 
 function DashboardContent() {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
+  const [profilePreview, setProfilePreview] = useState<ProfilePreviewPayload | null>(
+    null,
+  );
+  const [isPreviewSidebarCollapsed, setIsPreviewSidebarCollapsed] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [tourStepIndex, setTourStepIndex] = useState(0);
   const searchParams = useSearchParams();
@@ -89,6 +101,12 @@ function DashboardContent() {
     window.history.replaceState(null, "", nextUrl);
   }, [searchParams, pathname]);
 
+  useEffect(() => {
+    if (activeTab === "friends" || activeTab === "community") return;
+    setProfilePreview(null);
+    setIsPreviewSidebarCollapsed(false);
+  }, [activeTab]);
+
   const closeTour = () => {
     window.localStorage.setItem(TOUR_STORAGE_KEY, "done");
     setIsTourOpen(false);
@@ -111,14 +129,46 @@ function DashboardContent() {
     <div className="flex h-screen overflow-hidden">
       <SideBar activeTab={activeTab} onSelect={setActiveTab} />
       <main className={`ml-16 flex-1 overflow-hidden ${activeTab === "dashboard" ? "bg-dotted-grid" : ""}`}>
-        {activeTab === "dashboard" && <div className="h-full p-6"><Dashboard /></div>}
+        {activeTab === "dashboard" && (
+          <div className="h-full p-6">
+            <Dashboard />
+          </div>
+        )}
         {activeTab === "profile" && <div className="h-full overflow-y-auto p-6"><Profile /></div>}
         {activeTab === "settings" && <div className="h-full overflow-y-auto p-6"><Settings /></div>}
-        {activeTab === "friends" && <div className="h-full overflow-y-auto p-6"><Friends /></div>}
-        {activeTab === "community" && <Community />}
+        {activeTab === "friends" && (
+          <div className="h-full overflow-y-auto p-6">
+            <Friends onPreviewProfile={setProfilePreview} />
+          </div>
+        )}
+        {activeTab === "community" && (
+          <Community onPreviewProfile={setProfilePreview} />
+        )}
         {activeTab === "matches" && <div className="h-full overflow-y-auto p-6"><Matchmaking /></div>}
         {activeTab === "scheduler" && <div className="h-full overflow-hidden p-6"><SmartScheduler /></div>}
       </main>
+      {(activeTab === "friends" || activeTab === "community") && (
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-out ${
+            profilePreview
+              ? isPreviewSidebarCollapsed
+                ? "w-[4.5rem] translate-x-0 opacity-100 p-4 pl-0"
+                : "w-[16.5rem] translate-x-0 opacity-100 p-4 pl-0"
+              : "w-0 translate-x-2 opacity-0 p-0 pointer-events-none"
+          }`}
+        >
+          {profilePreview && (
+            <CalendarRightSidebar
+              sessionCount={0}
+              onGoToday={() => setActiveTab("dashboard")}
+              joinableSession={null}
+              profilePreview={profilePreview}
+              onClearProfilePreview={() => setProfilePreview(null)}
+              onCollapseChange={setIsPreviewSidebarCollapsed}
+            />
+          )}
+        </div>
+      )}
 
       {isTourOpen && (
         <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/45 p-4 sm:items-center">
