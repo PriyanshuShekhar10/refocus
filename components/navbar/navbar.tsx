@@ -177,10 +177,6 @@ const Navbar = ({ marketingHome = false }: { marketingHome?: boolean }) => {
       link: "/#how",
     },
     {
-      name: "Community",
-      link: "/#community",
-    },
-    {
       name: "FAQ",
       link: "/#faq",
     },

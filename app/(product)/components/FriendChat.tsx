@@ -1,6 +1,14 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiMinus, FiMaximize2, FiX } from "react-icons/fi";
+import {
+  FiMinus,
+  FiMaximize2,
+  FiX,
+  FiSend,
+  FiCalendar,
+  FiMessageCircle,
+  FiMoreHorizontal,
+} from "react-icons/fi";
 import { getAblyClient } from "@/lib/ably-client";
 import { chatChannel } from "@/lib/realtimeChannels";
 
@@ -72,6 +80,44 @@ export default function FriendChat({
   const [pendingMessageOps, setPendingMessageOps] = useState<Set<string>>(
     new Set(),
   );
+  const [menuOpenMessageId, setMenuOpenMessageId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!menuOpenMessageId) return;
+    const onDocPointerDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest("[data-chat-message-menu]")) return;
+      setMenuOpenMessageId(null);
+    };
+    document.addEventListener("mousedown", onDocPointerDown);
+    return () => document.removeEventListener("mousedown", onDocPointerDown);
+  }, [menuOpenMessageId]);
+
+  const formatDateSeparator = useCallback((date: Date) => {
+    const now = new Date();
+    const startOfDay = (d: Date) =>
+      new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const diffDays = Math.round(
+      (startOfDay(now) - startOfDay(date)) / 86400000,
+    );
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays > 1 && diffDays < 7) {
+      return date.toLocaleDateString(undefined, { weekday: "long" });
+    }
+    return date.toLocaleDateString(undefined, {
+      month: "long",
+      day: "numeric",
+      ...(date.getFullYear() !== now.getFullYear() ? { year: "numeric" } : {}),
+    });
+  }, []);
+
+  const formatTime = useCallback((iso: string) => {
+    return new Date(iso).toLocaleTimeString(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }, []);
 
   const refineGoal = async () => {
     if (!srGoal.trim()) return;
@@ -546,47 +592,70 @@ export default function FriendChat({
     if (m.type === "text") {
       const isEditing = editingMessageId === m.id;
       return (
-        <div className="space-y-1">
+        <div>
           {isEditing ? (
-            <div className="space-y-1">
+            <div className="flex flex-col gap-2 min-w-[220px]">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium text-white/70">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#FFB090]" />
+                Editing message
+              </div>
               <textarea
+                autoFocus
                 value={editingText}
                 onChange={(e) => setEditingText(e.target.value)}
-                className="w-full min-h-[56px] rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm text-gray-900 dark:text-gray-100"
-              />
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => saveEditedMessage(m.id)}
-                  disabled={pendingMessageOps.has(m.id)}
-                  className="rounded bg-[#5D1C6A] px-2 py-1 text-[11px] text-white disabled:opacity-60"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => {
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    saveEditedMessage(m.id);
+                  } else if (e.key === "Escape") {
+                    e.preventDefault();
                     setEditingMessageId(null);
                     setEditingText("");
-                  }}
-                  disabled={pendingMessageOps.has(m.id)}
-                  className="rounded border border-gray-300 px-2 py-1 text-[11px] text-gray-700 dark:border-gray-600 dark:text-gray-200"
-                >
-                  Cancel
-                </button>
+                  }
+                }}
+                rows={Math.min(6, Math.max(2, editingText.split("\n").length))}
+                className="w-full resize-none rounded-xl bg-white/15 px-3 py-2 text-sm text-white placeholder:text-white/60 ring-1 ring-inset ring-white/15 focus:outline-none focus:ring-white/40 focus:bg-white/20 transition-colors"
+                placeholder="Edit your message…"
+              />
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] text-white/60 hidden sm:inline">
+                  Enter to save · Esc to cancel
+                </span>
+                <div className="ml-auto flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingMessageId(null);
+                      setEditingText("");
+                    }}
+                    disabled={pendingMessageOps.has(m.id)}
+                    className="rounded-full px-3 py-1 text-[11px] font-medium text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-60 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => saveEditedMessage(m.id)}
+                    disabled={
+                      pendingMessageOps.has(m.id) ||
+                      !editingText.trim() ||
+                      editingText.trim() === (m.content ?? "").trim()
+                    }
+                    className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-[#5D1C6A] hover:bg-[#FFF1D3] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {pendingMessageOps.has(m.id) ? "Saving…" : "Save"}
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
-            <>
-              <div
-                className={`whitespace-pre-wrap break-words text-sm leading-5 ${
-                  m.deleted ? "italic opacity-80" : ""
-                }`}
-              >
-                {m.content}
-              </div>
-              {m.edited_at && !m.deleted ? (
-                <div className="text-[10px] text-gray-500">(edited)</div>
-              ) : null}
-            </>
+            <div
+              className={`whitespace-pre-wrap break-words text-sm leading-5 ${
+                m.deleted ? "italic opacity-80" : ""
+              }`}
+            >
+              {m.content}
+            </div>
           )}
         </div>
       );
@@ -678,32 +747,56 @@ export default function FriendChat({
     return <div className="text-xs text-gray-500">Unsupported message</div>;
   };
 
+  const isModal = layout === "modal";
   const header = (
-    <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 px-3 h-10">
-      <div className="flex items-center gap-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-[10px] font-semibold text-white">
+    <div
+      className={`flex items-center justify-between border-b border-gray-200/70 dark:border-gray-800 bg-white/95 dark:bg-gray-900/80 backdrop-blur-sm ${
+        isModal ? "px-5 py-4" : "px-3 h-10"
+      }`}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <div
+          className={`flex shrink-0 items-center justify-center rounded-full bg-[#FFF1D3] dark:bg-[#5D1C6A]/70 text-[#5D1C6A] dark:text-[#FFB090] font-semibold ${
+            isModal ? "h-10 w-10 text-sm" : "h-6 w-6 text-[10px]"
+          }`}
+        >
           {friendLabel?.[0]?.toUpperCase?.() || "F"}
         </div>
-        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[200px]">
-          {friendLabel}
+        <div className="min-w-0">
+          <div
+            className={`font-semibold text-gray-900 dark:text-gray-100 truncate ${
+              isModal ? "text-base max-w-[260px]" : "text-sm max-w-[200px]"
+            }`}
+          >
+            {friendLabel}
+          </div>
+          {isModal && (
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Direct message
+            </div>
+          )}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {onMinimizeToggle ? (
           <button
             onClick={onMinimizeToggle}
             aria-label={minimized ? "Maximize chat" : "Minimize chat"}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className={`inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+              isModal ? "h-8 w-8" : "h-6 w-6"
+            }`}
           >
-            {minimized ? <FiMaximize2 size={14} /> : <FiMinus size={14} />}
+            {minimized ? <FiMaximize2 size={isModal ? 16 : 14} /> : <FiMinus size={isModal ? 16 : 14} />}
           </button>
         ) : null}
         <button
           onClick={onClose}
           aria-label="Close chat"
-          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          className={`inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+            isModal ? "h-8 w-8" : "h-6 w-6"
+          }`}
         >
-          <FiX size={14} />
+          <FiX size={isModal ? 16 : 14} />
         </button>
       </div>
     </div>
@@ -712,101 +805,174 @@ export default function FriendChat({
   const body = (
     <>
       {error && (
-        <div className="px-3 py-2 text-xs text-red-700 dark:text-red-400">
+        <div className="mx-3 mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
           {error}
         </div>
       )}
       <div
         ref={listRef}
-        className={`flex flex-1 flex-col overflow-y-auto p-3 ${layout === "docked" ? "min-h-0" : ""}`}
+        className={`flex flex-1 flex-col overflow-y-auto ${
+          isModal ? "px-5 py-4" : "p-3"
+        } ${layout === "docked" ? "min-h-0" : ""} bg-gradient-to-b from-white to-[#FFF7E6]/40 dark:from-gray-900 dark:to-gray-900`}
         onScroll={handleListScroll}
       >
         {loading && messages.length === 0 ? (
-          <div className="text-xs text-gray-500">Loading…</div>
+          <div className="flex flex-1 items-center justify-center text-xs text-gray-500">
+            Loading…
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center text-center px-6">
+            <div
+              className={`flex items-center justify-center rounded-full bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 ${
+                isModal ? "h-14 w-14 mb-4" : "h-10 w-10 mb-3"
+              }`}
+            >
+              <FiMessageCircle
+                className={`text-[#5D1C6A] dark:text-[#FFB090] ${
+                  isModal ? "w-6 h-6" : "w-5 h-5"
+                }`}
+              />
+            </div>
+            <p
+              className={`font-semibold text-gray-900 dark:text-gray-100 ${
+                isModal ? "text-base" : "text-sm"
+              }`}
+            >
+              Say hi to {friendLabel.split(/[@\s]/)[0] || "your friend"}
+            </p>
+            <p
+              className={`mt-1 max-w-[260px] text-gray-500 dark:text-gray-400 ${
+                isModal ? "text-sm" : "text-xs"
+              }`}
+            >
+              Start the conversation, or send a session request to focus together.
+            </p>
+          </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {messages.map((m) => {
-              const isOwn = currentUserId
-                ? m.from_user_id === currentUserId
-                : false;
-              return (
-                <div
-                  key={m.id}
-                  className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
-                >
+          <div className="flex flex-col gap-1.5">
+            {(() => {
+              const nodes: React.ReactNode[] = [];
+              let lastDateKey: string | null = null;
+              for (const m of messages) {
+                const created = new Date(m.created_at);
+                const dateKey = created.toDateString();
+                if (dateKey !== lastDateKey) {
+                  nodes.push(
+                    <div
+                      key={`sep-${dateKey}-${m.id}`}
+                      className="flex items-center justify-center py-2"
+                    >
+                      <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-3 py-0.5 text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        {formatDateSeparator(created)}
+                      </span>
+                    </div>,
+                  );
+                  lastDateKey = dateKey;
+                }
+                const isOwn = currentUserId
+                  ? m.from_user_id === currentUserId
+                  : false;
+                const isEditingThisMessage = editingMessageId === m.id;
+                const canEditOrDelete =
+                  isOwn && m.type === "text" && !m.deleted && !isEditingThisMessage;
+                const isMenuOpen = menuOpenMessageId === m.id;
+                nodes.push(
                   <div
-                    className={`max-w-[75%] rounded-lg border p-2 shadow-sm ${
-                      isOwn
-                        ? "bg-[#FFF1D3] border-[#5D1C6A] text-[#5D1C6A] dark:bg-[#5D1C6A] dark:border-[#CA5995] dark:text-[#FFB090]"
-                        : "bg-gray-100 border-gray-300 text-gray-900 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200"
+                    key={m.id}
+                    className={`group flex items-end gap-1.5 ${
+                      isOwn ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {renderMessage(m)}
-                    {isOwn && m.type === "text" && !m.deleted ? (
-                      <div className="mt-1 flex items-center gap-2 text-[10px]">
+                    {canEditOrDelete && (
+                      <div
+                        className="relative order-first"
+                        data-chat-message-menu
+                      >
                         <button
-                          onClick={() => beginEditMessage(m)}
-                          disabled={pendingMessageOps.has(m.id)}
-                          className="text-[#5D1C6A] hover:underline disabled:opacity-60"
+                          type="button"
+                          aria-label="Message options"
+                          onClick={() =>
+                            setMenuOpenMessageId((prev) =>
+                              prev === m.id ? null : m.id,
+                            )
+                          }
+                          className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200 transition-opacity ${
+                            isMenuOpen
+                              ? "opacity-100"
+                              : "opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          }`}
                         >
-                          Edit
+                          <FiMoreHorizontal size={14} />
                         </button>
-                        <button
-                          onClick={() => deleteTextMessage(m.id)}
-                          disabled={pendingMessageOps.has(m.id)}
-                          className="text-red-600 hover:underline disabled:opacity-60"
-                        >
-                          Delete
-                        </button>
+                        {isMenuOpen && (
+                          <div className="absolute right-full top-1/2 -translate-y-1/2 mr-1 z-10 min-w-[112px] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMenuOpenMessageId(null);
+                                beginEditMessage(m);
+                              }}
+                              disabled={pendingMessageOps.has(m.id)}
+                              className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMenuOpenMessageId(null);
+                                deleteTextMessage(m.id);
+                              }}
+                              disabled={pendingMessageOps.has(m.id)}
+                              className="block w-full px-3 py-1.5 text-left text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-60"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    ) : null}
-                    <div className="mt-1 text-[10px] text-gray-500">
-                      {new Date(m.created_at).toLocaleString()}
+                    )}
+                    <div
+                      className={`rounded-2xl px-3 py-2 shadow-sm ${
+                        isEditingThisMessage ? "w-[88%] sm:w-[420px]" : "max-w-[78%]"
+                      } ${
+                        isOwn
+                          ? "bg-[#5D1C6A] text-white rounded-br-md dark:bg-[#5D1C6A] dark:text-[#FFF1D3]"
+                          : "bg-white border border-gray-200 text-gray-900 rounded-bl-md dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                      }`}
+                    >
+                      {renderMessage(m)}
+                      {!isEditingThisMessage && (
+                        <div
+                          className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
+                            isOwn
+                              ? "text-[#FFF1D3]/70"
+                              : "text-gray-500 dark:text-gray-400"
+                          }`}
+                        >
+                          {formatTime(m.created_at)}
+                          {m.edited_at && !m.deleted ? (
+                            <span className="opacity-80">· edited</span>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  </div>,
+                );
+              }
+              return nodes;
+            })()}
           </div>
         )}
       </div>
-      <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3">
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="Type a message"
-            className="flex-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-2 py-1 text-sm focus:outline-none focus:border-[#5D1C6A] dark:focus:border-[#CA5995]"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendText();
-              }
-            }}
-          />
-          <button
-            onClick={sendText}
-            disabled={isSending}
-            className="rounded-md bg-[#5D1C6A] dark:bg-[#5D1C6A] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#CA5995] dark:hover:bg-[#CA5995] disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isSending ? "Sending…" : "Send"}
-          </button>
-          <button
-            onClick={() => setSrOpen((v) => !v)}
-            className="rounded-md bg-[#5D1C6A] dark:bg-[#5D1C6A] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#CA5995] dark:hover:bg-[#CA5995]"
-          >
-            Session
-          </button>
-        </div>
-        {srOpen && (
-          <div
-            className={`mt-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 space-y-3 ${
-              layout === "docked"
-                ? "max-h-[200px] overflow-y-auto overflow-x-hidden p-2"
-                : "p-3"
-            }`}
-          >
+      {srOpen && (
+        <div
+          className={`shrink-0 border-t border-gray-200/70 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 overflow-y-auto overflow-x-hidden space-y-3 ${
+            layout === "docked"
+              ? "max-h-[200px] p-2"
+              : "max-h-[55%] px-5 py-4"
+          }`}
+        >
             {/* Date Selection */}
             <div className={layout === "docked" ? "space-y-1" : ""}>
               <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 block">
@@ -1078,8 +1244,52 @@ export default function FriendChat({
             >
               Cancel
             </button>
-          </div>
-        )}
+        </div>
+      )}
+      <div
+        className={`shrink-0 border-t border-gray-200/70 dark:border-gray-800 bg-white dark:bg-gray-900 ${
+          isModal ? "px-5 py-4" : "p-3"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder={`Message ${friendLabel.split(/[@\s]/)[0] || "friend"}…`}
+            className={`flex-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:border-[#5D1C6A] focus:bg-white dark:focus:border-[#CA5995] dark:focus:bg-gray-900 transition-colors ${
+              isModal ? "px-4 py-2 text-sm" : "px-3 py-1.5 text-sm"
+            }`}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendText();
+              }
+            }}
+          />
+          <button
+            onClick={() => setSrOpen((v) => !v)}
+            aria-label={srOpen ? "Close session request" : "Send session request"}
+            title="Send session request"
+            className={`inline-flex shrink-0 items-center justify-center rounded-full border transition-colors ${
+              srOpen
+                ? "border-[#5D1C6A] bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090] dark:border-[#CA5995]"
+                : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-[#5D1C6A] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-[#FFB090]"
+            } ${isModal ? "h-10 w-10" : "h-8 w-8"}`}
+          >
+            <FiCalendar size={isModal ? 16 : 14} />
+          </button>
+          <button
+            onClick={sendText}
+            disabled={isSending || !text.trim()}
+            aria-label="Send message"
+            className={`inline-flex shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-white shadow-sm hover:bg-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+              isModal ? "h-10 w-10" : "h-8 w-8"
+            }`}
+          >
+            <FiSend size={isModal ? 16 : 14} />
+          </button>
+        </div>
       </div>
     </>
   );
@@ -1087,7 +1297,7 @@ export default function FriendChat({
   if (layout === "docked") {
     return (
       <div
-        className={`flex w-[320px] h-[380px] min-w-[300px] min-h-[320px] flex-col rounded-md bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 animate-[slide-up_180ms_ease-out] ${
+        className={`flex w-[320px] h-[380px] min-w-[300px] min-h-[320px] flex-col overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 animate-[slide-up_180ms_ease-out] ${
           minimized ? "h-10" : ""
         }`}
         style={{ transformOrigin: "bottom left" }}
@@ -1099,9 +1309,9 @@ export default function FriendChat({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div
-        className="flex w-full max-w-lg max-h-[80vh] flex-col rounded-md bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 animate-[scale-in_180ms_ease-out]"
+        className="flex w-full max-w-lg h-[600px] max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl ring-1 ring-gray-200/70 dark:ring-gray-800 animate-[scale-in_180ms_ease-out]"
         style={{ transformOrigin: "center" }}
       >
         {header}
