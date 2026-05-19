@@ -46,6 +46,9 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [query, setQuery] = useState("");
   const [listMode, setListMode] = useState<ListMode>("all");
+  const [unfriendingIds, setUnfriendingIds] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const load = async () => {
     setLoading(true);
@@ -208,6 +211,50 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
     return list;
   }, [friends, listMode, query]);
 
+  const unfriend = async (f: FriendData) => {
+    const label = f.name || f.email || f.username || "this friend";
+    if (typeof window !== "undefined") {
+      const ok = window.confirm(
+        `Unfriend ${label}? You won't be able to chat or book sessions until they're added again. Existing booked sessions will remain.`,
+      );
+      if (!ok) return;
+    }
+    if (unfriendingIds[f.user_id]) return;
+    setUnfriendingIds((prev) => ({ ...prev, [f.user_id]: true }));
+    const snapshot = friends;
+    setFriends((prev) => prev.filter((x) => x.user_id !== f.user_id));
+    try {
+      const res = await fetch(
+        `/api/friends/${encodeURIComponent(f.user_id)}`,
+        { method: "DELETE" },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok && res.status !== 404)
+        throw new Error(data.error || "Failed to unfriend");
+      if (openChatFriendId === f.user_id) setOpenChatFriendId(null);
+      if (bookSessionFriendId === f.user_id) {
+        setBookSessionFriendId(null);
+        setBookSessionFriendLabel("");
+      }
+      setUnreadCounts((prev) => {
+        if (!(f.user_id in prev)) return prev;
+        const next = { ...prev };
+        delete next[f.user_id];
+        return next;
+      });
+      await load();
+    } catch (e) {
+      setFriends(snapshot);
+      alert((e as Error).message);
+    } finally {
+      setUnfriendingIds((prev) => {
+        const next = { ...prev };
+        delete next[f.user_id];
+        return next;
+      });
+    }
+  };
+
   const handleOpenChat = (f: FriendData) => {
     setOpenChatFriendId(f.user_id);
     setOpenChatFriendLabel(f.email || f.user_id);
@@ -307,6 +354,8 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
                       onOpenChat={handleOpenChat}
                       onBookSession={handleBookSession}
                       onOpenProfile={handleOpenProfile}
+                      onUnfriend={unfriend}
+                      unfriending={!!unfriendingIds[f.user_id]}
                     />
                   </Reveal>
                 ))}

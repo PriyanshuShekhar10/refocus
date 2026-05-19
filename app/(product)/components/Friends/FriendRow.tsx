@@ -16,6 +16,8 @@ interface FriendRowProps {
   onOpenChat: (friend: FriendData) => void;
   onBookSession: (friend: FriendData) => void;
   onOpenProfile?: (friend: FriendData) => void;
+  onUnfriend?: (friend: FriendData) => void;
+  unfriending?: boolean;
 }
 
 function formatSince(iso?: string): string | null {
@@ -39,6 +41,8 @@ export default function FriendRow({
   onOpenChat,
   onBookSession,
   onOpenProfile,
+  onUnfriend,
+  unfriending = false,
 }: FriendRowProps) {
   const label = friend.email || friend.user_id;
   const displayName = friend.name || label;
@@ -119,6 +123,30 @@ export default function FriendRow({
           </svg>
           Book session
         </button>
+        {onUnfriend ? (
+          <button
+            type="button"
+            className={`${styles.rowBtn} ${styles.rowBtnDanger}`}
+            onClick={() => onUnfriend(friend)}
+            disabled={unfriending}
+            aria-label={`Unfriend ${displayName}`}
+            title="Unfriend"
+          >
+            <svg
+              className="ico"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              style={{ width: 13, height: 13 }}
+            >
+              <circle cx="6" cy="5" r="2.4" />
+              <path d="M2 13c.4-2.2 2-3.3 4-3.3s3.6 1.1 4 3.3" />
+              <path d="M10.5 5.5l4 4M14.5 5.5l-4 4" />
+            </svg>
+            {unfriending ? "Removing…" : "Unfriend"}
+          </button>
+        ) : null}
       </div>
     </div>
   );
