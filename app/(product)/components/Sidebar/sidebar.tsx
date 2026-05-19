@@ -10,16 +10,26 @@ import { useTheme } from "next-themes";
 import { CgProfile } from "react-icons/cg";
 import { RiMessage3Line } from "react-icons/ri";
 import { HiOutlineUserGroup } from "react-icons/hi";
+import { LuListTodo } from "react-icons/lu";
 import Link from "next/link";
 
-export type TabKey = "profile" | "dashboard" | "settings" | "friends" | "community" | "matches" | "scheduler";
+export type TabKey =
+  | "profile"
+  | "dashboard"
+  | "backlog"
+  | "settings"
+  | "friends"
+  | "community"
+  | "matches"
+  | "scheduler";
 
 interface SideBarProps {
   activeTab: TabKey;
   onSelect: (t: TabKey) => void;
+  showBacklogTab?: boolean;
 }
 
-const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
+const SideBar: FC<SideBarProps> = ({ activeTab, onSelect, showBacklogTab = false }) => {
   const [friendsUnread, setFriendsUnread] = useState(0);
   const [pendingSessionRequests, setPendingSessionRequests] = useState(0);
 
@@ -70,6 +80,14 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect }) => {
         onClick={() => onSelect("dashboard")}
         active={activeTab === "dashboard"}
       />
+      {showBacklogTab && (
+        <SideBarIcon
+          icon={<LuListTodo size={18} />}
+          text="Backlog"
+          onClick={() => onSelect("backlog")}
+          active={activeTab === "backlog"}
+        />
+      )}
 
       <Divider />
 

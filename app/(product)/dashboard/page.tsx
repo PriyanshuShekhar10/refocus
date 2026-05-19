@@ -2,8 +2,8 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
-import SideBar from "../components/Sidebar/sidebar";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import SideBar, { type TabKey } from "../components/Sidebar/sidebar";
 import Profile from "../components/profile";
 import Settings from "../components/settings";
 import Friends from "../components/friends";
@@ -13,7 +13,6 @@ import Matchmaking from "../components/Matchmaking";
 import SmartScheduler from "../components/SmartScheduler";
 import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSidebar";
 
-type TabKey = "profile" | "dashboard" | "settings" | "friends" | "community" | "matches" | "scheduler";
 type TourStep = {
   title: string;
   description: string;
@@ -28,6 +27,15 @@ type ProfilePreviewPayload = {
 };
 
 const TOUR_STORAGE_KEY = "refocus-dashboard-tour-v1";
+const DASHBOARD_TABS: TabKey[] = [
+  "profile",
+  "dashboard",
+  "settings",
+  "friends",
+  "community",
+  "matches",
+  "scheduler",
+];
 const TOUR_STEPS: TourStep[] = [
   {
     title: "Profile",
@@ -71,6 +79,13 @@ function DashboardContent() {
   const [tourStepIndex, setTourStepIndex] = useState(0);
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const requestedTab = searchParams.get("tab");
+    if (!requestedTab || !DASHBOARD_TABS.includes(requestedTab as TabKey)) return;
+    setActiveTab(requestedTab as TabKey);
+  }, [searchParams]);
 
   useEffect(() => {
     if (searchParams.get("new") === "true") {
@@ -106,6 +121,11 @@ function DashboardContent() {
     setProfilePreview(null);
     setIsPreviewSidebarCollapsed(false);
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== "backlog") return;
+    router.push("/backlog");
+  }, [activeTab, router]);
 
   const closeTour = () => {
     window.localStorage.setItem(TOUR_STORAGE_KEY, "done");
