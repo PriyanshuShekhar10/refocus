@@ -23,7 +23,7 @@ const LENGTHS: Length[] = [
   {
     minutes: 75,
     name: "Marathon",
-    desc: "For writing, research, anything that needs runway. One long quiet hour and change.",
+    desc: "For writing, research, and heavy lift tasks. One long hour with clear accountability.",
   },
 ];
 

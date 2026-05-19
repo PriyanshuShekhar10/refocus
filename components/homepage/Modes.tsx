@@ -8,12 +8,12 @@ function FocusModeVisual() {
         <div className={`${styles.micCard} ${styles.micCardMuted}`}>
           <div className={styles.micAvatar} />
           <div className={styles.micName}>Maya</div>
-          <div className={styles.micPill}>Muted</div>
+          <div className={styles.micPill}>Mic optional</div>
         </div>
         <div className={`${styles.micCard} ${styles.micCardMuted}`}>
           <div className={styles.micAvatar} />
           <div className={styles.micName}>You</div>
-          <div className={styles.micPill}>Muted</div>
+          <div className={styles.micPill}>Mic optional</div>
         </div>
       </div>
     </div>
@@ -85,7 +85,7 @@ type Mode = {
 const MODES: Mode[] = [
   {
     title: "Focus mode",
-    body: "Both mics muted, both cameras off. You're present, not performing. Unmute to check in at the end.",
+    body: "Designed for accountability. Share your plan, keep working while someone else is there with you, and use mic only when needed.",
     visual: <FocusModeVisual />,
   },
   {
@@ -115,8 +115,8 @@ export function Modes() {
             Co-work that gets out of the way.
           </h2>
           <p className={styles.sectionSub}>
-            Four ways to share a room. All quiet by default, all built around
-            the work — not around the meeting.
+            Four ways to share a room, all built around accountability and real
+            progress, not meeting fatigue.
           </p>
         </Reveal>
 

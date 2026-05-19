@@ -10,7 +10,7 @@ const REASONS = [
   {
     num: "02",
     title: "Stated intent",
-    text: "Saying out loud what you'll do in the next 50 minutes — to one other person — quietly commits you to it.",
+    text: "Saying out loud what you'll do in the next 50 minutes — to one other person — makes the commitment real.",
   },
   {
     num: "03",

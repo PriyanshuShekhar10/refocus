@@ -4,6 +4,7 @@ import { LightDashboard } from "@/assets/exports";
 import styles from "./Homepage.module.css";
 import { Reveal } from "./Reveal";
 import { ArrowIcon } from "./ArrowIcon";
+import { LiveCount } from "./LiveCount";
 
 const AVATAR_COLORS = ["#FFF1D3", "#FFB090", "#CA5995", "#5D1C6A"];
 
@@ -11,18 +12,24 @@ export function Hero() {
   return (
     <section className={styles.hero}>
       <div className={styles.wrap}>
+        <Reveal as="span" className={styles.livePill}>
+          <span className={styles.liveDot} aria-hidden="true" />
+          <span>
+            <LiveCount /> people in live focus sessions
+          </span>
+        </Reveal>
         <Reveal as="h1" className={styles.heroTitle}>
-          Focus is better
+          Virtual coworking
           <br />
-          with company.
+          for accountability.
           <br />
-          <em>Quietly.</em>
+          <em>Get more done.</em>
         </Reveal>
 
         <Reveal as="p" className={styles.heroSub}>
-          Refocus is a virtual co-working room for deep work. Pick a 25, 50, or
-          75&nbsp;minute session, drop in alone, with a friend, or with someone
-          new — and get the thing done.
+          Refocus pairs you with another person for a 25, 50, or 75-minute
+          focus session. Share your goal, work side by side, and check in at
+          the end.
         </Reveal>
 
         <Reveal className={styles.heroCta}>
@@ -30,14 +37,14 @@ export function Hero() {
             href="/auth/sign-up"
             className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
           >
-            Start a session
+            Start free session
             <ArrowIcon />
           </Link>
           <Link
             href="/dashboard"
             className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`}
           >
-            Book with a partner
+            Find a partner
           </Link>
         </Reveal>
 

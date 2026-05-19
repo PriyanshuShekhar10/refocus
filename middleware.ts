@@ -17,6 +17,7 @@ const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 /** Paths that require an authenticated session. Match by exact-or-prefix-with-slash. */
 const PROTECTED_PREFIXES = [
   "/dashboard",
+  "/backlog",
   "/profile",
   "/features",
   "/notes",
@@ -102,6 +103,7 @@ export const config = {
   matcher: [
     // Page paths
     "/dashboard/:path*",
+    "/backlog/:path*",
     "/profile/:path*",
     "/features/:path*",
     "/notes/:path*",
