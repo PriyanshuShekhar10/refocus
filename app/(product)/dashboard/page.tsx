@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import SideBar from "../components/Sidebar/sidebar";
 import Profile from "../components/profile";
 import Settings from "../components/settings";
-import Friends from "../components/friends";
+import Friends from "../components/Friends";
 import Dashboard from "../components/dashboard";
 import Community from "../components/Community/Community";
 import Matchmaking from "../components/Matchmaking";
@@ -137,7 +137,7 @@ function DashboardContent() {
         {activeTab === "profile" && <div className="h-full overflow-y-auto p-6"><Profile /></div>}
         {activeTab === "settings" && <div className="h-full overflow-y-auto p-6"><Settings /></div>}
         {activeTab === "friends" && (
-          <div className="h-full overflow-y-auto p-6">
+          <div className="h-full overflow-y-auto no-scrollbar">
             <Friends onPreviewProfile={setProfilePreview} />
           </div>
         )}

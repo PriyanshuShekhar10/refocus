@@ -4,7 +4,6 @@ import { LightDashboard } from "@/assets/exports";
 import styles from "./Homepage.module.css";
 import { Reveal } from "./Reveal";
 import { ArrowIcon } from "./ArrowIcon";
-import { LiveCount } from "./LiveCount";
 
 const AVATAR_COLORS = ["#FFF1D3", "#FFB090", "#CA5995", "#5D1C6A"];
 
@@ -12,13 +11,6 @@ export function Hero() {
   return (
     <section className={styles.hero}>
       <div className={styles.wrap}>
-        <Reveal as="span" className={styles.livePill}>
-          <span className={styles.liveDot} aria-hidden="true" />
-          <span>
-            <LiveCount /> people focusing right now
-          </span>
-        </Reveal>
-
         <Reveal as="h1" className={styles.heroTitle}>
           Focus is better
           <br />

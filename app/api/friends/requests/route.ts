@@ -40,13 +40,50 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   const db = await getDb();
-  await db.collection("friend_requests").insertOne({
-    from_user_id: currentUserId,
-    to_user_id,
-    status: "pending",
-    created_at: new Date(),
+
+  const accepted = await db.collection("friend_requests").findOne({
+    $or: [
+      { from_user_id: currentUserId, to_user_id, status: "accepted" },
+      { from_user_id: to_user_id, to_user_id: currentUserId, status: "accepted" },
+    ],
   });
-  return NextResponse.json({ ok: true });
+  if (accepted) {
+    return NextResponse.json({ ok: true, alreadyFriends: true });
+  }
+
+  const reverse = await db.collection("friend_requests").findOne({
+    from_user_id: to_user_id,
+    to_user_id: currentUserId,
+    status: "pending",
+  });
+  if (reverse) {
+    return NextResponse.json(
+      { error: "This user already sent you a friend request" },
+      { status: 409 }
+    );
+  }
+
+  const result = await db.collection("friend_requests").updateOne(
+    {
+      from_user_id: currentUserId,
+      to_user_id,
+      status: "pending",
+    },
+    {
+      $setOnInsert: {
+        from_user_id: currentUserId,
+        to_user_id,
+        status: "pending",
+        created_at: new Date(),
+      },
+    },
+    { upsert: true }
+  );
+
+  return NextResponse.json({
+    ok: true,
+    alreadyPending: result.upsertedCount === 0,
+  });
 }
 
 // GET /api/friends/requests?type=incoming|outgoing

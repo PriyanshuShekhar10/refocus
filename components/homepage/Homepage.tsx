@@ -3,7 +3,6 @@ import { Hero } from "./Hero";
 import { Sessions } from "./Sessions";
 import { Modes } from "./Modes";
 import { WhyItWorks } from "./WhyItWorks";
-import { Stats } from "./Stats";
 import { Faq } from "./Faq";
 import { FinalCTA } from "./FinalCTA";
 import { Footer } from "./Footer";
@@ -18,7 +17,6 @@ export function Homepage() {
         <Sessions />
         <Modes />
         <WhyItWorks />
-        <Stats />
         <Faq />
         <FinalCTA />
       </main>

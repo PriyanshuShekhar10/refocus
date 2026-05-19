@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Quicksand, Geist_Mono, Bricolage_Grotesque } from "next/font/google";
+import { Quicksand, Geist, Geist_Mono, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers";
 import { ChatDock } from "@/components/chat-dock";
@@ -23,6 +23,14 @@ const quicksandSans = Quicksand({
   preload: true,
   weight: ["300", "400", "500", "600", "700"],
   style: "normal",
+});
+
+const geistSans = Geist({
+  variable: "--font-geist",
+  display: "swap",
+  subsets: ["latin"],
+  preload: true,
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -49,7 +57,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${quicksandSans.className} ${geistMono.variable} ${bricolage.variable} antialiased`}
+        className={`${quicksandSans.className} ${geistSans.variable} ${geistMono.variable} ${bricolage.variable} antialiased`}
       >
         <Providers>
           <Analytics />

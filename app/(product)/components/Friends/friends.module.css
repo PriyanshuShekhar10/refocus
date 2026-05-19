@@ -1,0 +1,714 @@
+/* Scoped design tokens for the Friends page only. */
+.root {
+  --bg: #FAFAF7;
+  --ink: #0A0A0A;
+  --ink-soft: #4A4A47;
+  --ink-mute: #8A8A85;
+  --line: #E8E7E1;
+  --line-soft: #F0EFEA;
+  --card: #FFFFFF;
+  --accent: #3F6B4E;
+  --accent-soft: #EEF2EA;
+  --warn: #B45A3C;
+  --warn-soft: #F4E9E2;
+
+  /* Pastel avatar tints (light). Dark mode swaps these below. */
+  --tint-sage: #DCE6DE;
+  --tint-blush: #F0DDD7;
+  --tint-butter: #ECE3CB;
+  --tint-lavender: #E0D9EC;
+  --tint-clay: #EAD7CB;
+  --tint-sky: #DEE5EE;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100%;
+  width: 100%;
+}
+
+.root button {
+  font-family: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+}
+
+.root ::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+.mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-feature-settings: "tnum";
+}
+
+/* ─── Main column ─── */
+.main {
+  padding: 40px 48px 80px;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+}
+@media (max-width: 720px) {
+  .main {
+    padding: 28px 24px 60px;
+  }
+}
+
+.crumb {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--ink-mute);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.crumb::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--ink-mute);
+}
+
+.pageHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+
+.pageTitle {
+  font-size: 44px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.pageSub {
+  color: var(--ink-soft);
+  margin-top: 12px;
+  font-size: 15px;
+  max-width: 52ch;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 16px;
+  height: 40px;
+  width: 280px;
+  max-width: 100%;
+}
+.search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.search input::placeholder {
+  color: var(--ink-mute);
+}
+.searchIcon {
+  color: var(--ink-mute);
+  flex-shrink: 0;
+}
+.kbd {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  border: 1px solid var(--line);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* ─── Stat strip ─── */
+.statStrip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 40px;
+}
+@media (max-width: 720px) {
+  .statStrip {
+    grid-template-columns: 1fr;
+  }
+}
+.stat {
+  padding: 18px 24px;
+  border-right: 1px solid var(--line);
+}
+.stat:last-child {
+  border-right: none;
+}
+@media (max-width: 720px) {
+  .stat {
+    border-right: none;
+    border-bottom: 1px solid var(--line-soft);
+    padding: 14px 0;
+  }
+  .stat:last-child {
+    border-bottom: none;
+  }
+}
+.statLbl {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.statVal {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-feature-settings: "tnum";
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  margin-top: 6px;
+}
+.statVal .unit {
+  font-size: 13px;
+  color: var(--ink-mute);
+  margin-left: 4px;
+}
+
+/* ─── Two-column layout ─── */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 56px;
+  }
+}
+
+/* ─── Section heading ─── */
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sectionHead h2 {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.count {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  color: var(--ink-mute);
+  font-size: 12px;
+  font-weight: 400;
+}
+.tools {
+  display: flex;
+  gap: 6px;
+}
+.tools button {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--ink-mute);
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.tools button:hover {
+  color: var(--ink);
+  background: var(--line-soft);
+}
+.tools button.on {
+  color: var(--ink);
+  background: var(--line-soft);
+}
+
+/* ─── Friends list ─── */
+.friendsList {
+  display: flex;
+  flex-direction: column;
+}
+.friendRow {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 4px;
+  border-bottom: 1px solid var(--line-soft);
+  transition: background 0.12s ease;
+}
+.friendRow:hover {
+  background: var(--line-soft);
+}
+.friendRow:hover .rowActions {
+  opacity: 1;
+  transform: translateX(0);
+}
+.friendRow:focus-within .rowActions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ─── Avatar ─── */
+.av {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  background: #e1e8f0;
+  position: relative;
+  flex-shrink: 0;
+}
+.avSm {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+.avSage {
+  background: var(--tint-sage);
+}
+.avBlush {
+  background: var(--tint-blush);
+}
+.avButter {
+  background: var(--tint-butter);
+}
+.avLavender {
+  background: var(--tint-lavender);
+}
+.avClay {
+  background: var(--tint-clay);
+}
+.avSky {
+  background: var(--tint-sky);
+}
+.dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink-mute);
+  border: 2px solid var(--bg);
+}
+.dotOnline {
+  background: var(--accent);
+}
+.dotBusy {
+  background: var(--warn);
+}
+.friendRow:hover .dot {
+  border-color: var(--line-soft);
+}
+
+/* ─── Friend meta ─── */
+.friendMeta {
+  min-width: 0;
+}
+.friendName {
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.statusText {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.statusTextSession {
+  color: var(--accent);
+}
+.handle {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  color: var(--ink-mute);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.unread {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  color: var(--bg);
+  background: var(--ink);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+/* ─── Row actions ─── */
+.rowActions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  opacity: 0.55;
+  transform: translateX(4px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.rowBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 450;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+  white-space: nowrap;
+}
+.rowBtn:hover {
+  border-color: var(--ink-soft);
+}
+.rowBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.rowBtnPrimary {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.rowBtnPrimary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.rowBtnDanger {
+  color: var(--warn);
+  border-color: color-mix(in oklab, var(--warn) 25%, var(--line));
+}
+.rowBtnDanger:hover {
+  border-color: var(--warn);
+  background: var(--warn-soft);
+}
+.rowBtn .ico {
+  width: 13px;
+  height: 13px;
+}
+
+/* ─── Empty state ─── */
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  margin-top: 8px;
+}
+.emptyIco {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--line-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  color: var(--ink-mute);
+}
+.empty h4 {
+  font-size: 14px;
+  font-weight: 500;
+}
+.empty p {
+  color: var(--ink-mute);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+
+/* ─── Requests column ─── */
+.panelStack {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.panel h3 {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--ink-mute);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.countPill {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 1px 6px;
+  border-radius: 999px;
+  letter-spacing: 0;
+}
+.countPillWarn {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.reqCard {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.reqHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.reqBody {
+  font-size: 13.5px;
+  color: var(--ink);
+  min-width: 0;
+}
+.reqBody .who {
+  font-weight: 500;
+}
+.reqMeta {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  color: var(--ink-mute);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+.reqMeta::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink-mute);
+  flex-shrink: 0;
+}
+.reqQuote {
+  font-size: 13px;
+  color: var(--ink-soft);
+  padding-left: 44px;
+  margin-top: -4px;
+  font-style: italic;
+}
+.reqActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.reqActions .rowBtn {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11.5px;
+}
+.reqActionsRight {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink-mute);
+}
+.chipPending {
+  color: var(--warn);
+  border-color: color-mix(in oklab, var(--warn) 25%, var(--line));
+  background: var(--warn-soft);
+}
+.chipPending::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--warn);
+}
+.chipAccepted {
+  color: var(--accent);
+  border-color: color-mix(in oklab, var(--accent) 30%, var(--line));
+  background: var(--accent-soft);
+}
+.chipAccepted::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.reqEmpty {
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  color: var(--ink-mute);
+  font-size: 12.5px;
+}
+.reqEmpty .label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.reqEmpty .sub {
+  margin-top: 6px;
+}
+
+.errorBanner {
+  border: 1px solid color-mix(in oklab, var(--warn) 40%, var(--line));
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+/* ─── Pulse for online dot ─── */
+@keyframes friendsPing {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 40%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.dotOnline {
+  animation: friendsPing 2.4s ease-out infinite;
+}
+
+/* ─── Reveal ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+.revealIn {
+  opacity: 1;
+  transform: none;
+}
+
+/* Inline note row used for incoming session-request optional message */
+.noteInput {
+  font: inherit;
+  font-size: 12.5px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: var(--ink);
+  outline: none;
+  min-width: 160px;
+  flex: 1 1 160px;
+}
+.noteInput:focus {
+  border-color: var(--ink-soft);
+}
+.noteInput::placeholder {
+  color: var(--ink-mute);
+}
+
+/* ─── Dark mode ───
+   next-themes toggles a `.dark` class on <html>. Overriding the design
+   tokens inside the scoped `.root` lets the page invert cleanly without
+   bleeding into the rest of the dashboard. */
+:global(.dark) .root {
+  --bg: #0A0A09;
+  --ink: #F5F4EF;
+  --ink-soft: #B0AFA8;
+  --ink-mute: #76756E;
+  --line: #2B2A26;
+  --line-soft: #16150F;
+  --card: #121110;
+  --accent: #7CB694;
+  --accent-soft: #1E2A22;
+  --warn: #D88663;
+  --warn-soft: #2C1F18;
+
+  /* Editorial dark avatars: deep, desaturated tints so the light initial
+     stays readable and the row keeps its splash of color. */
+  --tint-sage: #1F302A;
+  --tint-blush: #34241F;
+  --tint-butter: #312C1E;
+  --tint-lavender: #292335;
+  --tint-clay: #2F2118;
+  --tint-sky: #1E2630;
+}
+
+:global(.dark) .root .av {
+  background: #1E2229;
+}
