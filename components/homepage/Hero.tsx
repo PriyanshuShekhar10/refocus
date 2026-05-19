@@ -18,7 +18,6 @@ export function Hero() {
             <LiveCount /> people in live focus sessions
           </span>
         </Reveal>
-
         <Reveal as="h1" className={styles.heroTitle}>
           Virtual coworking
           <br />

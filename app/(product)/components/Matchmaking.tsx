@@ -46,6 +46,12 @@ export default function Matchmaking() {
   };
 
   const sendFriendRequest = async (userId: string) => {
+    setSentRequests((prev) => {
+      if (prev.has(userId)) return prev;
+      const next = new Set(prev);
+      next.add(userId);
+      return next;
+    });
     try {
       const res = await fetch("/api/friends/requests", {
         method: "POST",
@@ -53,9 +59,12 @@ export default function Matchmaking() {
         body: JSON.stringify({ to_user_id: userId }),
       });
       if (!res.ok) throw new Error("Failed to send request");
-      
-      setSentRequests(prev => new Set(prev).add(userId));
     } catch (e) {
+      setSentRequests((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
       console.error(e);
       alert("Failed to send friend request");
     }

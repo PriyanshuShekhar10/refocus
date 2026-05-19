@@ -233,6 +233,16 @@ html {
   @apply bg-gray-500 dark:bg-gray-500;
 }
 
+/* Utility: hide scrollbar but keep scrolling */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 /* Modal enter/exit animations */
 .modal-backdrop {
   background-color: rgba(0, 0, 0, 0.5);
