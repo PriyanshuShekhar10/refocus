@@ -62,7 +62,7 @@ function NavbarAuthButton({
   // Don't render anything until mounted to prevent hydration mismatch
   if (!mounted) {
     return (
-      <div className={isMobile ? styles.mobileAuthButtons : "flex gap-2"}>
+      <div className={isMobile ? styles.mobileAuthButtons : styles.desktopGuestGroup}>
         <button className={styles.loadingBtn} disabled>
           Loading...
         </button>
@@ -72,7 +72,7 @@ function NavbarAuthButton({
 
   if (status === "loading") {
     return (
-      <div className={isMobile ? styles.mobileAuthButtons : "flex gap-2"}>
+      <div className={isMobile ? styles.mobileAuthButtons : styles.desktopGuestGroup}>
         <button className={styles.loadingBtn} disabled>
           Loading...
         </button>
@@ -84,7 +84,7 @@ function NavbarAuthButton({
     return (
       <div
         className={
-          isMobile ? styles.mobileAuthButtons : "flex items-center gap-4"
+          isMobile ? styles.mobileAuthButtons : styles.desktopAuthGroup
         }
       >
         <Link
@@ -101,7 +101,7 @@ function NavbarAuthButton({
         >
           Dashboard
         </Link>
-        <button className={styles.signInBtn} onClick={logout}>
+        <button className={`${styles.signInBtn} ${styles.logoutBtnCompact}`} onClick={logout}>
           Logout
         </button>
       </div>
@@ -109,7 +109,7 @@ function NavbarAuthButton({
   }
 
   return (
-    <div className={isMobile ? styles.mobileAuthButtons : "flex gap-3"}>
+    <div className={isMobile ? styles.mobileAuthButtons : styles.desktopGuestGroup}>
       <Link
         href="/auth/login"
         className={styles.signInBtn}

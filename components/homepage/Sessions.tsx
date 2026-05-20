@@ -1,5 +1,7 @@
 import styles from "./Homepage.module.css";
 import { Reveal } from "./Reveal";
+import Image from "next/image";
+import { LightDashboard } from "@/assets/exports";
 
 type Length = {
   minutes: number;
@@ -12,18 +14,18 @@ const LENGTHS: Length[] = [
   {
     minutes: 25,
     name: "Sprint",
-    desc: "For shallow tasks, replies, planning. The Pomodoro classic.",
+    desc: "Quick tasks. Inbox. Planning.",
   },
   {
     minutes: 50,
     name: "Deep work",
-    desc: "The sweet spot for most focused sessions. Long enough to get in, short enough to come back.",
+    desc: "Deep focus. Best default.",
     featured: true,
   },
   {
     minutes: 75,
     name: "Marathon",
-    desc: "For writing, research, and heavy lift tasks. One long hour with clear accountability.",
+    desc: "Big tasks. Writing. Research.",
   },
 ];
 
@@ -33,11 +35,21 @@ export function Sessions() {
       <div className={styles.wrap}>
         <Reveal className={styles.sectionHead}>
           <span className={styles.eyebrow}>01 — Sessions</span>
-          <h2 className={styles.sectionTitle}>Three lengths. One ritual.</h2>
+          <h2 className={styles.sectionTitle}>Pick a timer. Start.</h2>
           <p className={styles.sectionSub}>
-            Match the timer to the task. Start solo or invite a partner — your
-            timer syncs to theirs automatically.
+            Solo or paired. Same clock. Clear finish.
           </p>
+        </Reveal>
+
+        <Reveal className={styles.sectionPreviewWrap}>
+          <Image
+            src={LightDashboard}
+            alt="Refocus dashboard preview"
+            className={styles.sectionPreviewImage}
+            placeholder="blur"
+            sizes="(max-width: 640px) calc(100vw - 40px), (max-width: 1200px) calc(100vw - 56px), 1080px"
+            quality={80}
+          />
         </Reveal>
 
         <div className={styles.lengths}>

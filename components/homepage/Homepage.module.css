@@ -20,8 +20,8 @@
   --accent-soft: #e1e8f0;
   --hero-gradient: linear-gradient(
     135deg,
-    #dcdcfc 40%,
-    #f06c41 100%
+    #ececff 42%,
+    #f7a98f 100%
   );
 
   --font-body: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
@@ -58,9 +58,9 @@
 }
 
 .wrap {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 0 28px;
+  padding: 0 32px;
 }
 @media (max-width: 640px) {
   .wrap {
@@ -204,14 +204,36 @@
 
 /* ───────── HERO ───────── */
 .hero {
-  padding: 132px 0 40px;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: clamp(18px, 2.8vh, 30px) 0 clamp(26px, 4vh, 40px);
   position: relative;
   background: var(--hero-gradient);
+  display: grid;
+  align-items: center;
+}
+
+.hero > .wrap {
+  width: 100%;
 }
 @media (max-width: 640px) {
   .hero {
-    padding: 96px 0 32px;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 14px 0 24px;
   }
+}
+
+.heroRow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.74fr) minmax(0, 1.26fr);
+  align-items: center;
+  gap: clamp(20px, 3.2vw, 42px);
+}
+
+.heroCopy {
+  min-width: 0;
+  max-width: 650px;
 }
 
 .livePill {
@@ -224,6 +246,7 @@
   border: 1px solid var(--line);
   font-size: 13px;
   color: var(--ink-soft);
+  margin-bottom: 14px;
 }
 .liveDot {
   width: 7px;
@@ -249,13 +272,13 @@
 }
 
 .heroTitle {
-  margin-top: 28px;
+  margin-top: 12px;
   font-family: var(--font-display);
-  font-size: clamp(44px, 7vw, 88px);
-  line-height: 0.98;
-  letter-spacing: var(--display-tracking);
+  font-size: clamp(29px, 4.1vw, 50px);
+  line-height: 1.14;
+  letter-spacing: -0.01em;
   font-weight: var(--display-weight);
-  max-width: 14ch;
+  max-width: 10ch;
 }
 .heroTitle em {
   font-style: var(--display-italic);
@@ -263,25 +286,26 @@
   font-weight: var(--display-weight);
 }
 .heroSub {
-  margin-top: 28px;
-  max-width: 52ch;
+  margin-top: 14px;
+  max-width: 34ch;
   color: var(--ink-soft);
-  font-size: clamp(16px, 1.4vw, 19px);
-  line-height: 1.5;
+  font-size: clamp(14px, 1vw, 17px);
+  line-height: 1.55;
+  letter-spacing: 0.01em;
 }
 .heroCta {
-  margin-top: 36px;
+  margin-top: 22px;
   display: flex;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
   align-items: center;
 }
 .heroFoot {
-  margin-top: 18px;
+  margin-top: 8px;
   display: flex;
   align-items: center;
   gap: 14px;
-  font-size: 13px;
+  font-size: 11px;
   color: var(--ink-mute);
 }
 .avatars {
@@ -299,43 +323,59 @@
   margin-left: 0;
 }
 
-/* ───────── DASHBOARD PREVIEW ───────── */
-.preview {
-  margin-top: 72px;
+.heroImageWrap {
   position: relative;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: var(--card);
-  padding: 10px;
-  box-shadow: 0 1px 0 rgba(10, 10, 10, 0.02),
-    0 30px 60px -30px rgba(10, 10, 10, 0.12);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
   overflow: hidden;
+  justify-self: end;
+  width: min(100%, 1180px);
 }
-.previewBar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 28px;
-  padding: 0 6px;
-}
-.previewBar i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--line);
-  display: inline-block;
-}
-.previewImg {
+
+.heroImage {
   width: 100%;
   display: block;
-  border-radius: 10px;
+  border-radius: 0;
   height: auto;
 }
-.previewOverlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(to bottom, transparent 60%, var(--bg) 100%);
+
+.sectionPreviewWrap {
+  margin-bottom: clamp(24px, 3.2vw, 36px);
+  border: 1px solid color-mix(in oklab, var(--line) 76%, white);
+  border-radius: 16px;
+  padding: 8px;
+  background: color-mix(in oklab, white 90%, var(--bg));
+  box-shadow: 0 20px 50px -34px rgba(10, 10, 10, 0.2);
+  overflow: hidden;
+}
+
+.sectionPreviewImage {
+  width: 100%;
+  display: block;
+  height: auto;
+  border-radius: 10px;
+}
+
+@media (max-width: 980px) {
+  .heroRow {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 24px;
+  }
+
+  .heroImageWrap {
+    margin-top: 8px;
+    justify-self: start;
+    width: min(100%, 700px);
+  }
+
+  .sectionPreviewWrap {
+    margin-bottom: 22px;
+    padding: 6px;
+  }
 }
 
 /* ───────── SECTION COMMON ───────── */
@@ -841,6 +881,105 @@
   .faqAnswer {
     padding-right: 8px;
     font-size: 14px;
+  }
+}
+
+/* ───────── MOBILE TYPE HIERARCHY ───────── */
+@media (max-width: 640px) {
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.035em;
+  }
+
+  .heroTitle {
+    font-size: clamp(34px, 9vw, 44px);
+    line-height: 1.08;
+    max-width: 9.5ch;
+  }
+
+  .heroSub {
+    font-size: 15px;
+    line-height: 1.45;
+    max-width: 32ch;
+  }
+
+  .heroCta {
+    margin-top: 18px;
+    gap: 12px;
+  }
+
+  .heroFoot {
+    font-size: 12px;
+    gap: 10px;
+  }
+
+  .sectionTitle {
+    font-size: clamp(28px, 7.6vw, 34px);
+    line-height: 1.08;
+    margin-top: 14px;
+  }
+
+  .sectionSub {
+    font-size: 15px;
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+
+  .sectionHead {
+    margin-bottom: 36px;
+  }
+
+  .lcTime {
+    font-size: 48px;
+  }
+
+  .lcName {
+    font-size: 17px;
+  }
+
+  .lcDesc {
+    font-size: 13px;
+  }
+
+  .modeCard {
+    padding: 24px;
+    min-height: 240px;
+  }
+
+  .modeCard h3 {
+    font-size: 20px;
+  }
+
+  .modeCard p {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .whyTitle {
+    font-size: 20px;
+  }
+
+  .whyText {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .statNum {
+    font-size: 48px;
+  }
+
+  .statLabel {
+    font-size: 13px;
+  }
+
+  .finalCta h2 {
+    font-size: clamp(34px, 9vw, 46px);
+    line-height: 1.03;
+  }
+
+  .finalCta p {
+    font-size: 15px;
+    line-height: 1.5;
   }
 }
 

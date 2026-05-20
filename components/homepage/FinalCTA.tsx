@@ -8,11 +8,11 @@ export function FinalCTA() {
     <section className={styles.finalCta}>
       <div className={styles.wrap}>
         <Reveal as="h2">
-          Sit down. Start the timer.
+          Start timer.
           <br />
-          Get the thing done.
+          Do the work.
         </Reveal>
-        <Reveal as="p">Free to start. One click to your first session.</Reveal>
+        <Reveal as="p">Free to start. One click.</Reveal>
         <Reveal className={styles.finalCtaRow}>
           <Link
             href="/auth/sign-up"
@@ -25,7 +25,7 @@ export function FinalCTA() {
             href="/features"
             className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`}
           >
-            See it in action
+            See features
           </Link>
         </Reveal>
       </div>

@@ -5,17 +5,17 @@ const REASONS = [
   {
     num: "01",
     title: "Body doubling",
-    text: "The presence of another working human reliably keeps you on task — there's research and there's your own experience.",
+    text: "Another person present. Easier to stay on task.",
   },
   {
     num: "02",
     title: "Stated intent",
-    text: "Saying out loud what you'll do in the next 50 minutes — to one other person — makes the commitment real.",
+    text: "Say the next task out loud. Commitment rises.",
   },
   {
     num: "03",
     title: "A hard stop",
-    text: "The timer ends. So does the session. That's the magic — the work has a shape.",
+    text: "Timer ends the block. Start and stop are clear.",
   },
 ];
 
@@ -26,7 +26,7 @@ export function WhyItWorks() {
         <Reveal className={styles.sectionHead}>
           <span className={styles.eyebrow}>03 — Why it works</span>
           <h2 className={styles.sectionTitle}>
-            Showing up is the hard part. Refocus makes it easy.
+            Small structure. Real output.
           </h2>
         </Reveal>
 

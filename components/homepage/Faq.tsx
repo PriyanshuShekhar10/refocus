@@ -13,32 +13,32 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Who is Refocus for?",
     answer:
-      "Refocus is for anyone who wants more structure and accountability in their day. Whether you're a student, freelancer, remote worker, or building personal habits, Refocus gives you a focused environment to stay on track.",
+      "Students, freelancers, remote workers, and anyone needing accountability.",
   },
   {
     question: "What kind of work can I do on Refocus?",
     answer:
-      "You can use Refocus for almost any type of work: studying, writing, coding, planning, administrative tasks, or personal projects. The platform is built to help you focus, whatever the task is.",
+      "Study, writing, coding, planning, admin, and personal projects.",
   },
   {
     question: "What is body doubling?",
     answer:
-      "Body doubling is a productivity technique where working alongside someone, even virtually, helps reduce procrastination and improve focus. Refocus uses this concept by pairing you with another focused person during sessions.",
+      "Working alongside someone else to reduce procrastination and stay focused.",
   },
   {
     question: "Who am I working with?",
     answer:
-      "You're matched with another member who is also there to focus. Everyone in the room shares the same goal: show up, work, and help each other stay accountable.",
+      "Another member focused on their own task at the same time.",
   },
   {
     question: "Do I have to download another video call app?",
     answer:
-      "No. Refocus has a built-in session experience, so you don't need to install or manage another video app. Everything happens directly in your browser.",
+      "No. Everything runs in your browser.",
   },
   {
     question: "Is Refocus free?",
     answer:
-      "Yes. Refocus offers a free plan to get started. If you want more advanced features and expanded usage, premium options are available as well.",
+      "Yes. Free to start. Paid upgrades are optional.",
   },
 ];
 
@@ -55,7 +55,7 @@ export function Faq() {
       <div className={styles.wrap}>
         <Reveal className={styles.sectionHead}>
           <span className={styles.eyebrow}>05 — FAQs</span>
-          <h2 className={styles.sectionTitle}>Answers before your first session.</h2>
+          <h2 className={styles.sectionTitle}>Quick answers.</h2>
         </Reveal>
 
         <ul className={styles.faqList} role="list">

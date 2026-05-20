@@ -85,22 +85,22 @@ type Mode = {
 const MODES: Mode[] = [
   {
     title: "Focus mode",
-    body: "Designed for accountability. Share your plan, keep working while someone else is there with you, and use mic only when needed.",
+    body: "State goal. Work quietly. Check in.",
     visual: <FocusModeVisual />,
   },
   {
     title: "Synced timers",
-    body: "Two clocks, one rhythm. When your partner starts, you start. Breaks land together.",
+    body: "Start together. Break together.",
     visual: <SyncedTimersVisual />,
   },
   {
     title: "Friends & session requests",
-    body: "Add the people you actually focus well with. Send a session request — they'll see it on their dashboard.",
+    body: "Add trusted people. Send quick requests.",
     visual: <FriendsVisual />,
   },
   {
     title: "Global chat",
-    body: "Between sessions, drop into the lounge. Say hi, find a partner for the next slot, or just lurk.",
+    body: "Find a partner fast. Or just read.",
     visual: <GlobalChatVisual />,
   },
 ];
@@ -111,12 +111,9 @@ export function Modes() {
       <div className={styles.wrap}>
         <Reveal className={styles.sectionHead}>
           <span className={styles.eyebrow}>02 — Modes</span>
-          <h2 className={styles.sectionTitle}>
-            Co-work that gets out of the way.
-          </h2>
+          <h2 className={styles.sectionTitle}>Simple co-work modes.</h2>
           <p className={styles.sectionSub}>
-            Four ways to share a room, all built around accountability and real
-            progress, not meeting fatigue.
+            Less meetings. More focus.
           </p>
         </Reveal>
 
