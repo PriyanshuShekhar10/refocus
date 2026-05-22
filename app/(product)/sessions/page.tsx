@@ -1,14 +1,44 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { SessionsList } from "./SessionsList";
+import { SessionsTabs } from "./SessionsTabs";
+
+type RawSession = {
+  _id: ObjectId;
+  owner_id: string;
+  start_time: Date;
+  end_time: Date;
+  duration_min: number;
+  session_type: string;
+  name?: string | null;
+  status?: string;
+  session_participants?: Array<{
+    user_id: string;
+    joined_at: Date | string;
+    quiet?: boolean;
+    call_joined_at?: Date | string;
+    call_completed?: boolean;
+  }>;
+};
+
+type UserDoc = {
+  _id: ObjectId;
+  email?: string | null;
+  name?: string | null;
+  firstname?: string | null;
+  lastname?: string | null;
+  username?: string | null;
+};
+
+const PAST_SESSION_LIMIT = 100;
 
 export default async function MySessionsPage() {
   const session = await getServerSession(authOptions);
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
-  
+
   if (!currentUserId) {
     redirect("/auth/login");
   }
@@ -16,79 +46,103 @@ export default async function MySessionsPage() {
   const db = await getDb();
   const now = new Date();
 
-  // Fetch upcoming sessions where user is owner or participant
-  const sessions = await db
-    .collection("sessions")
-    .find({
-      end_time: { $gte: now },
-      $or: [
-        { owner_id: currentUserId },
-        { "session_participants.user_id": currentUserId },
-      ],
-    })
-    .sort({ start_time: 1 })
-    .limit(50)
-    .toArray();
+  // Run upcoming and past queries in parallel — they hit the same collection
+  // but the index plan and result sets are independent.
+  const [upcomingRaw, pastRaw] = await Promise.all([
+    db
+      .collection<RawSession>("sessions")
+      .find({
+        end_time: { $gte: now },
+        $or: [
+          { owner_id: currentUserId },
+          { "session_participants.user_id": currentUserId },
+        ],
+      })
+      .sort({ start_time: 1 })
+      .limit(50)
+      .toArray(),
+    db
+      .collection<RawSession>("sessions")
+      .find({
+        end_time: { $lt: now },
+        // Only sessions the user was actually booked into count as "past
+        // attended" — listing sessions the user merely owned (and never
+        // had a participant added to) would be misleading. The owner is
+        // always pushed into session_participants at create time, so this
+        // also covers solo sessions.
+        "session_participants.user_id": currentUserId,
+      })
+      .sort({ start_time: -1 })
+      .limit(PAST_SESSION_LIMIT)
+      .toArray(),
+  ]);
 
-  // Get all unique user IDs for participant info
+  // Hydrate participant/owner profile info in a single users query.
   const userIds = new Set<string>();
-  sessions.forEach((s) => {
-    if (s.owner_id) userIds.add(s.owner_id);
-    (s.session_participants || []).forEach((p: { user_id: string }) => {
-      if (p.user_id) userIds.add(p.user_id);
+  for (const list of [upcomingRaw, pastRaw]) {
+    list.forEach((s) => {
+      if (s.owner_id) userIds.add(String(s.owner_id));
+      (s.session_participants || []).forEach((p) => {
+        if (p.user_id) userIds.add(String(p.user_id));
+      });
     });
-  });
+  }
 
-  // Fetch user details
-  const users = await db
-    .collection("users")
-    .find({ _id: { $in: Array.from(userIds).map((id) => {
-      try {
-        const { ObjectId } = require("mongodb");
-        return new ObjectId(id);
-      } catch {
-        return id;
-      }
-    }) } })
-    .project({ _id: 1, email: 1, name: 1, firstname: 1, lastname: 1 })
-    .toArray();
+  const objectIds = Array.from(userIds)
+    .filter((id) => ObjectId.isValid(id))
+    .map((id) => new ObjectId(id));
+
+  const users =
+    objectIds.length > 0
+      ? ((await db
+          .collection<UserDoc>("users")
+          .find({ _id: { $in: objectIds } })
+          .project({ _id: 1, email: 1, name: 1, firstname: 1, lastname: 1, username: 1 })
+          .toArray()) as unknown as UserDoc[])
+      : [];
 
   const userMap = new Map(
     users.map((u) => [
-      u._id.toString(),
+      String(u._id),
       {
-        email: u.email,
-        name: u.name,
-        firstname: u.firstname,
-        lastname: u.lastname,
+        email: u.email ?? undefined,
+        name: u.name ?? undefined,
+        firstname: u.firstname ?? undefined,
+        lastname: u.lastname ?? undefined,
+        username: u.username ?? undefined,
       },
-    ])
+    ]),
   );
 
-  // Transform sessions for client
-  const transformedSessions = sessions.map((s) => ({
-    id: s._id.toString(),
-    start: s.start_time.toISOString(),
-    end: s.end_time.toISOString(),
+  const transform = (s: RawSession) => ({
+    id: String(s._id),
+    start: new Date(s.start_time).toISOString(),
+    end: new Date(s.end_time).toISOString(),
     durationMin: s.duration_min,
     sessionType: s.session_type,
-    name: s.name || null,
-    status: s.status,
+    name: s.name ?? null,
+    status: s.status ?? null,
     ownerId: s.owner_id,
     isOwner: s.owner_id === currentUserId,
-    participants: (s.session_participants || []).map((p: { user_id: string; quiet?: boolean }) => {
-      const userInfo = userMap.get(p.user_id);
+    participants: (s.session_participants || []).map((p) => {
+      const userInfo = userMap.get(String(p.user_id));
       return {
-        userId: p.user_id,
+        userId: String(p.user_id),
         email: userInfo?.email,
         name: userInfo?.name,
         firstname: userInfo?.firstname,
         lastname: userInfo?.lastname,
+        username: userInfo?.username,
         quiet: p.quiet,
+        attended: Boolean(p.call_joined_at),
+        completed: Boolean(p.call_completed),
       };
     }),
-    ownerInfo: userMap.get(s.owner_id),
-  }));
+    ownerInfo: userMap.get(String(s.owner_id)),
+  });
+
+  const upcomingSessions = upcomingRaw.map(transform);
+  const pastSessions = pastRaw.map(transform);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -100,7 +154,7 @@ export default async function MySessionsPage() {
               My Sessions
             </h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Your upcoming focus sessions
+              Upcoming bookings and everything you’ve completed.
             </p>
           </div>
           <Link
@@ -114,10 +168,10 @@ export default async function MySessionsPage() {
           </Link>
         </div>
 
-        {/* Sessions List */}
-        <SessionsList 
-          sessions={transformedSessions} 
-          currentUserId={currentUserId} 
+        <SessionsTabs
+          upcoming={upcomingSessions}
+          past={pastSessions}
+          currentUserId={currentUserId}
         />
       </div>
     </div>

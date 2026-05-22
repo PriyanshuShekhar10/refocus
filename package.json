@@ -8,7 +8,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:indexes": "npx ts-node --project tsconfig.json scripts/create-indexes.ts",
-    "db:backfill-usernames": "npx ts-node --project tsconfig.json scripts/backfill-usernames.ts"
+    "db:backfill-usernames": "npx ts-node --project tsconfig.json scripts/backfill-usernames.ts",
+    "db:backfill-attendance": "npx ts-node --project tsconfig.json scripts/backfill-attendance.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.26",

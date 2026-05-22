@@ -10,6 +10,7 @@ import {
   DTextarea,
   designStyles,
 } from "@/components/design";
+import { ProfileStats } from "@/components/profile-stats";
 
 const ABOUT_ME_PROMPTS = [
   "My most important project today",
@@ -375,6 +376,9 @@ export function ProfileView({ embedded = false }: Props) {
           )}
         </div>
       </header>
+
+      {/* Session stats dashboard */}
+      {!isEditing && <ProfileStats />}
 
       {/* Basic info */}
       <section className={designStyles.card}>
