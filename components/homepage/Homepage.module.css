@@ -906,6 +906,24 @@
   font-family: var(--font-mono);
 }
 
+.footBadgeWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+  padding-bottom: 28px;
+}
+
+.footBadge {
+  width: 120px;
+  height: auto;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.footBadgeWrap a:hover .footBadge {
+  opacity: 1;
+}
+
 /* ───────── REVEAL ───────── */
 .reveal {
   opacity: 0;

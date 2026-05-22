@@ -17,6 +17,20 @@ export function Footer() {
         </div>
         <div className={styles.footMeta}>v0.4.2 · made for deep work</div>
       </div>
+      <div className={`${styles.wrap} ${styles.footBadgeWrap}`}>
+        <a
+          href="https://www.betterlaunch.co"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Featured on Better Launch"
+        >
+          <img
+            src="https://www.betterlaunch.co/badge-light.svg"
+            alt="Featured on Better Launch"
+            className={styles.footBadge}
+          />
+        </a>
+      </div>
     </footer>
   );
 }
