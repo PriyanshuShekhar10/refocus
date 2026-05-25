@@ -11,6 +11,7 @@ interface Participant {
   name?: string;
   firstname?: string;
   lastname?: string;
+  username?: string;
   quiet?: boolean;
 }
 
@@ -21,7 +22,7 @@ interface Session {
   durationMin: number;
   sessionType: string;
   name: string | null;
-  status: string;
+  status: string | null;
   ownerId: string;
   isOwner: boolean;
   participants: Participant[];
@@ -30,6 +31,7 @@ interface Session {
     name?: string;
     firstname?: string;
     lastname?: string;
+    username?: string;
   };
 }
 

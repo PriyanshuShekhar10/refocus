@@ -61,6 +61,30 @@ export async function POST(
       userName: user?.name,
       exp: tokenExp,
     });
+
+    // Mark the participant as having joined the call. Only set call_joined_at
+    // the first time so repeated token requests (refresh, rejoin) don't
+    // overwrite the original attendance timestamp. Best-effort — a failure
+    // here should not block call access.
+    try {
+      await db.collection("sessions").updateOne(
+        {
+          _id: sessionObjectId,
+          session_participants: {
+            $elemMatch: {
+              user_id: userId,
+              call_joined_at: { $exists: false },
+            },
+          },
+        },
+        {
+          $set: { "session_participants.$.call_joined_at": new Date() },
+        },
+      );
+    } catch (err) {
+      console.warn("[DailyToken] Failed to record call attendance", err);
+    }
+
     return NextResponse.json({ token, roomName, domain });
   } catch (e) {
     console.error("[DailyToken] Failed to create token", e);
