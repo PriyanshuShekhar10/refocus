@@ -7,6 +7,7 @@ import type { CalendarEvent } from "@/types/calendar";
 import { getResolvedSessionColor } from "@/constants/calendar";
 import { getLocalSessionColor } from "@/lib/sessionColors";
 import { isCallJoinable } from "@/lib/sessionWindow";
+import { VerifiedName } from "@/components/verified-tag";
 
 const COMPACT_PASTEL_COLORS_LIGHT = [
   { bg: "#FCE7F3", border: "#F9A8D4" }, // pink
@@ -58,6 +59,7 @@ interface CalendarEventCardProps {
     name: string;
     about?: string | null;
     avatarUrl?: string | null;
+    emailVerified?: boolean;
   }) => void;
 }
 
@@ -123,12 +125,13 @@ export function CalendarEventCard({
       .join(" ")
       .trim();
     if (event.owner && ownerName) {
-      return {
-        name: ownerName,
-        username: event.owner.username ?? null,
-        about: event.owner.about ?? null,
-        avatar_url: event.owner.avatar_url ?? null,
-      };
+    return {
+      name: ownerName,
+      username: event.owner.username ?? null,
+      about: event.owner.about ?? null,
+      avatar_url: event.owner.avatar_url ?? null,
+      emailVerified: event.owner.emailVerified,
+    };
     }
 
     const firstParticipant = event.participants?.[0];
@@ -142,6 +145,7 @@ export function CalendarEventCard({
       username: firstParticipant.username ?? null,
       about: firstParticipant.about ?? null,
       avatar_url: firstParticipant.avatar_url ?? null,
+      emailVerified: firstParticipant.emailVerified,
     };
   })();
 
@@ -250,7 +254,10 @@ export function CalendarEventCard({
               </Avatar>
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold text-gray-900 dark:text-gray-100">
-                  {compactPartner.name}
+                  <VerifiedName
+                    name={compactPartner.name}
+                    verified={compactPartner.emailVerified}
+                  />
                 </p>
                 <p className="text-[10px] text-gray-500 dark:text-gray-400">
                   Potential focus partner
@@ -275,6 +282,7 @@ export function CalendarEventCard({
                       name: compactPartner.name,
                       about: compactPartner.about,
                       avatarUrl: compactPartner.avatar_url,
+                      emailVerified: compactPartner.emailVerified,
                     });
                     return;
                   }

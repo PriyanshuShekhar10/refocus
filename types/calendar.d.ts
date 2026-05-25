@@ -26,6 +26,7 @@ export type CalendarEvent = {
     username?: string;
     about?: string;
     avatar_url?: string;
+    emailVerified?: boolean;
   } | null;
   participants?: {
     user_id: string;
@@ -38,6 +39,7 @@ export type CalendarEvent = {
     about?: string;
     quiet?: boolean;
     avatar_url?: string;
+    emailVerified?: boolean;
   }[];
 };
 
@@ -60,6 +62,7 @@ export type FetchedSession = {
     username?: string;
     about?: string;
     avatar_url?: string;
+    emailVerified?: boolean;
   } | null;
   participants?: Array<{
     user_id: string;
@@ -70,6 +73,7 @@ export type FetchedSession = {
     username?: string;
     about?: string;
     avatar_url?: string;
+    emailVerified?: boolean;
   }>;
 };
 

@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { publish, sessionsChannel } from "@/lib/sse";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { isEmailVerified } from "@/lib/emailVerification";
 import { DURATION_OPTIONS, SESSION_TYPES, type DurationMin, type SessionType } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 
@@ -99,6 +100,7 @@ export async function GET(req: NextRequest) {
     username?: string | null;
     about?: string | null;
     image?: string | null;
+    emailVerified?: Date | string | null;
   };
 
   let usersById: Record<
@@ -111,6 +113,7 @@ export async function GET(req: NextRequest) {
       username?: string | null;
       about?: string | null;
       avatar_url?: string | null;
+      emailVerified: boolean;
     }
   > = {};
   if (userIdSet.size > 0) {
@@ -127,6 +130,7 @@ export async function GET(req: NextRequest) {
           username: 1,
           about: 1,
           image: 1,
+          emailVerified: 1,
         })
         .toArray()) as unknown as DbUser[];
       usersById = Object.fromEntries(
@@ -141,6 +145,7 @@ export async function GET(req: NextRequest) {
             username: u.username ?? null,
             about: u.about ?? null,
             avatar_url: u.image ?? null,
+            emailVerified: isEmailVerified(u.emailVerified),
           },
         ]),
       );
@@ -177,9 +182,15 @@ export async function GET(req: NextRequest) {
         username: usersById[p.user_id]?.username ?? undefined,
         about: usersById[p.user_id]?.about ?? undefined,
         avatar_url: usersById[p.user_id]?.avatar_url ?? undefined,
+        emailVerified: usersById[p.user_id]?.emailVerified ?? false,
         quiet: Boolean(p.quiet),
       })),
-      owner: usersById[s.owner_id] ?? null,
+      owner: usersById[s.owner_id]
+        ? {
+            ...usersById[s.owner_id],
+            emailVerified: usersById[s.owner_id].emailVerified,
+          }
+        : null,
       status,
     };
   });

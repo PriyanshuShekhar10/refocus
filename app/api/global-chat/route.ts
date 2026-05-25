@@ -11,6 +11,8 @@ import {
   rateLimitedResponse,
   addRateLimitHeaders,
 } from "@/lib/ratelimit";
+import { fetchEmailVerifiedMap } from "@/lib/users/emailVerifiedMap";
+import { isEmailVerified } from "@/lib/emailVerification";
 
 /**
  * Default page size for pagination
@@ -120,6 +122,11 @@ export async function GET(req: NextRequest) {
     docs.reverse();
   }
 
+  const verifiedByUserId = await fetchEmailVerifiedMap(
+    db,
+    docs.map((m) => m.user_id),
+  );
+
   // Determine the next cursor
   let nextCursor: string | null = null;
   if (hasMore && docs.length > 0) {
@@ -135,6 +142,7 @@ export async function GET(req: NextRequest) {
       user_id: m.user_id,
       user_name: m.user_name ?? null,
       username: m.username ?? null,
+      emailVerified: verifiedByUserId[m.user_id] ?? false,
       content: m.content,
       created_at: m.created_at.toISOString(),
       deleted: m.deleted ?? false,
@@ -175,9 +183,10 @@ export async function POST(req: NextRequest) {
   // Look up the sender's username for profile linking
   const userDoc = await db.collection("users").findOne(
     { _id: new ObjectId(currentUserId) },
-    { projection: { username: 1 } }
+    { projection: { username: 1, emailVerified: 1 } },
   );
   const username = userDoc?.username ?? null;
+  const emailVerified = isEmailVerified(userDoc?.emailVerified);
 
   const insert = await db.collection("global_messages").insertOne({
     user_id: currentUserId,
@@ -195,6 +204,7 @@ export async function POST(req: NextRequest) {
       user_id: currentUserId,
       user_name: currentUser?.name ?? null,
       username,
+      emailVerified,
       content: trimmedContent,
       created_at: createdAt.toISOString(),
       deleted: false,

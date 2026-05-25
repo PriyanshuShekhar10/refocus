@@ -11,6 +11,10 @@ import {
   designStyles,
 } from "@/components/design";
 import { ProfileStats } from "@/components/profile-stats";
+import {
+  EmailVerificationBanner,
+  EmailVerifiedBadge,
+} from "@/components/email-verification-banner";
 
 const ABOUT_ME_PROMPTS = [
   "My most important project today",
@@ -49,6 +53,7 @@ function emptyAboutMe(): Record<AboutMeKey, string> {
 
 type UserInfo = {
   email?: string;
+  emailVerified?: boolean;
   username?: string | null;
   firstname?: string | null;
   lastname?: string | null;
@@ -278,6 +283,10 @@ export function ProfileView({ embedded = false }: Props) {
         marginInline: embedded ? 0 : "auto",
       }}
     >
+      {user && user.emailVerified === false && (
+        <EmailVerificationBanner email={user.email} />
+      )}
+
       {/* Header */}
       <header style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
         <div
@@ -330,15 +339,41 @@ export function ProfileView({ embedded = false }: Props) {
             </div>
           )}
           {user?.email && (
-            <p
+            <div
               style={{
-                fontSize: 12,
-                color: "var(--ink-mute)",
+                display: "flex",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
                 marginTop: 4,
               }}
             >
-              {user.email}
-            </p>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "var(--ink-mute)",
+                  margin: 0,
+                }}
+              >
+                {user.email}
+              </p>
+              {user.emailVerified ? (
+                <EmailVerifiedBadge />
+              ) : (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: "3px 8px",
+                    borderRadius: 999,
+                    background: "var(--accent-soft)",
+                    color: "var(--ink-soft)",
+                  }}
+                >
+                  Unverified
+                </span>
+              )}
+            </div>
           )}
         </div>
         <div>

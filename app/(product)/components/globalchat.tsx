@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, Send, Trash2 } from "lucide-react";
+import { VerifiedName } from "@/components/verified-tag";
 import { useSession } from "next-auth/react";
 import { getAblyClient } from "@/lib/ably-client";
 import { globalChatChannel } from "@/lib/realtimeChannels";
@@ -12,6 +13,7 @@ type GlobalMessage = {
   user_id: string;
   user_name?: string | null;
   username?: string | null;
+  emailVerified?: boolean;
   content: string;
   created_at: string;
   deleted?: boolean;
@@ -41,11 +43,13 @@ export default function GlobalChat() {
     user_id: string;
     user_name?: string | null;
     username?: string | null;
+    emailVerified?: boolean;
   } | null>(null);
   const [profileFriendStatus, setProfileFriendStatus] = useState<
     "loading" | "friend" | "request_sent" | "none"
   >("none");
   const [profileFriendReqStatus, setProfileFriendReqStatus] = useState<string | null>(null);
+  const [myEmailVerified, setMyEmailVerified] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const topRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -171,6 +175,13 @@ export default function GlobalChat() {
   }, [loadMore, pagination.hasMore, pagination.isLoadingMore]);
 
   useEffect(() => {
+    fetch("/api/users/me")
+      .then((res) => res.json())
+      .then((data) => setMyEmailVerified(!!data?.user?.emailVerified))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     load();
     const client = getAblyClient();
     const channel = client.channels.get(globalChatChannel());
@@ -268,6 +279,7 @@ export default function GlobalChat() {
       id: tempId,
       user_id: currentUserId!,
       user_name: userName,
+      emailVerified: myEmailVerified,
       content: content,
       created_at: new Date().toISOString(),
       deleted: false,
@@ -411,7 +423,12 @@ export default function GlobalChat() {
 
   const openProfile = (m: GlobalMessage) => {
     if (m.user_id === currentUserId) return;
-    setProfileUser({ user_id: m.user_id, user_name: m.user_name, username: m.username });
+    setProfileUser({
+      user_id: m.user_id,
+      user_name: m.user_name,
+      username: m.username,
+      emailVerified: m.emailVerified,
+    });
     setProfileFriendStatus("loading");
     setProfileFriendReqStatus(null);
   };
@@ -558,7 +575,11 @@ export default function GlobalChat() {
                 {profileDisplayName.charAt(0).toUpperCase() || "?"}
               </div>
               <p className="text-base font-medium text-gray-900 dark:text-gray-100">
-                {profileDisplayName}
+                <VerifiedName
+                  name={profileDisplayName}
+                  verified={profileUser.emailVerified}
+                  className="justify-center"
+                />
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-full">
                 {profileUser.user_id}
@@ -726,25 +747,27 @@ export default function GlobalChat() {
                     >
                       <div className="flex items-baseline gap-2">
                         {isOwnMessage ? (
-                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                            You
-                          </span>
+                          <VerifiedName
+                            name="You"
+                            verified={m.emailVerified ?? myEmailVerified}
+                            className="text-xs font-medium text-gray-600 dark:text-gray-400"
+                          />
                         ) : m.username ? (
                           <Link
                             href={`/u/${m.username}`}
-                            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline cursor-pointer text-left"
+                            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline cursor-pointer text-left max-w-full"
                             title="View profile"
                           >
-                            {name}
+                            <VerifiedName name={name} verified={m.emailVerified} />
                           </Link>
                         ) : (
                           <button
                             type="button"
                             onClick={() => openProfile(m)}
-                            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline cursor-pointer text-left"
+                            className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline cursor-pointer text-left max-w-full"
                             title="View profile"
                           >
-                            {name}
+                            <VerifiedName name={name} verified={m.emailVerified} />
                           </button>
                         )}
                         <span className="text-[10px] text-gray-400 dark:text-gray-500">

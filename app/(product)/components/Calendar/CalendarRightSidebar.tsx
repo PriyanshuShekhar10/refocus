@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { VerifiedName } from "@/components/verified-tag";
 
 function JoinCountdown({ startTime }: { startTime: string | Date }) {
   const [timeLeft, setTimeLeft] = useState<{ minutes: number; seconds: number } | null>(null);
@@ -63,6 +64,7 @@ interface CalendarRightSidebarProps {
     name: string;
     about?: string | null;
     avatarUrl?: string | null;
+    emailVerified?: boolean;
   } | null;
   onClearProfilePreview?: () => void;
   onCollapseChange?: (collapsed: boolean) => void;
@@ -79,6 +81,7 @@ type DetailedProfile = {
   location: string | null;
   website: string | null;
   createdAt: string | null;
+  emailVerified?: boolean;
 };
 
 function getGreeting(): string {
@@ -340,7 +343,13 @@ export function CalendarRightSidebar({
             </Avatar>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                {previewName}
+                <VerifiedName
+                  name={previewName}
+                  verified={
+                    detailedProfile?.emailVerified ??
+                    profilePreview.emailVerified
+                  }
+                />
               </p>
               <p className="truncate text-xs text-gray-500 dark:text-gray-400">
                 @{profilePreview.username}

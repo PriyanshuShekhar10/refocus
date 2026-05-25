@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
 import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/ratelimit";
 import { validatePassword } from "@/lib/validatePassword";
+import { sendWelcomeVerificationEmail } from "@/lib/email/sendWelcomeEmail";
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -78,7 +80,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const res = await db.collection("users").insertOne(doc);
-    return NextResponse.json({ id: String(res.insertedId) });
+    const userId = String(res.insertedId);
+
+    after(() =>
+      sendWelcomeVerificationEmail({
+        userId,
+        email: doc.email,
+        firstName: doc.firstname,
+      }).catch((err) => {
+        console.error("[register] Welcome email failed:", err);
+      }),
+    );
+
+    return NextResponse.json({ id: userId });
   } catch (e: unknown) {
     // MongoDB duplicate key error code is 11000
     if (e instanceof Error && "code" in e && (e as { code: number }).code === 11000) {

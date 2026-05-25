@@ -57,6 +57,7 @@ type SidebarProfilePreview = {
   name: string;
   about?: string | null;
   avatarUrl?: string | null;
+  emailVerified?: boolean;
 };
 
 // ============================================

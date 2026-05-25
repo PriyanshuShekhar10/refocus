@@ -23,6 +23,18 @@ vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
 }));
 
+vi.mock("@/lib/email/sendWelcomeEmail", () => ({
+  sendWelcomeVerificationEmail: vi.fn().mockResolvedValue({ sent: true }),
+}));
+
+vi.mock("next/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/server")>();
+  return {
+    ...actual,
+    after: (fn: () => void) => fn(),
+  };
+});
+
 import { POST } from "@/app/api/auth/register/route";
 import { checkRateLimit } from "@/lib/ratelimit";
 

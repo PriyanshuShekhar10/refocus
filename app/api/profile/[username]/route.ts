@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
+import { isEmailVerified } from "@/lib/emailVerification";
 
 /** GET /api/users/profile/:username — public profile data */
 export async function GET(
@@ -30,6 +31,7 @@ export async function GET(
         location: 1,
         website: 1,
         createdAt: 1,
+        emailVerified: 1,
         "preferences.publicProfile": 1,
       },
     }
@@ -55,6 +57,7 @@ export async function GET(
       location: user.location ?? null,
       website: user.website ?? null,
       createdAt: user.createdAt ?? null,
+      emailVerified: isEmailVerified(user.emailVerified),
     },
   });
 }

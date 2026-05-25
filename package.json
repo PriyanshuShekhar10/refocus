@@ -9,6 +9,7 @@
     "test:watch": "vitest",
     "db:indexes": "npx ts-node --project tsconfig.json scripts/create-indexes.ts",
     "db:backfill-usernames": "npx ts-node --project tsconfig.json scripts/backfill-usernames.ts",
+    "graphify:update": "$HOME/.local/bin/graphify update .",
     "db:backfill-attendance": "npx ts-node --project tsconfig.json scripts/backfill-attendance.ts"
   },
   "dependencies": {
@@ -37,6 +38,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-icons": "^5.5.0",
+    "resend": "^6.12.4",
     "tailwind-merge": "^3.3.0",
     "zod": "^4.3.6"
   },

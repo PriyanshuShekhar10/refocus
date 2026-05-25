@@ -9,12 +9,14 @@ import {
   KeyRound,
   Lock,
   LogOut,
+  Mail,
   ShieldAlert,
   Sparkles,
   Sun,
   Moon,
   Monitor,
 } from "lucide-react";
+import { EmailVerificationBanner } from "@/components/email-verification-banner";
 import {
   DButton,
   Field,
@@ -68,6 +70,7 @@ export default function Settings() {
         </header>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <EmailVerificationSection />
           <FocusPreferences />
           <NotificationsSection />
           <PrivacySection />
@@ -78,6 +81,46 @@ export default function Settings() {
         </div>
       </div>
     </Shell>
+  );
+}
+
+/* ─────────────────────────────────────────────────────
+   Email verification
+   ───────────────────────────────────────────────────── */
+function EmailVerificationSection() {
+  const [email, setEmail] = useState<string | null>(null);
+  const [verified, setVerified] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/me");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        setEmail(data?.user?.email ?? null);
+        setVerified(data?.user?.emailVerified ?? false);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading || verified) return null;
+
+  return (
+    <SectionCard
+      icon={<Mail size={16} />}
+      title="Email verification"
+      subtitle="Optional — does not affect dashboard access."
+    >
+      <EmailVerificationBanner email={email} compact />
+    </SectionCard>
   );
 }
 

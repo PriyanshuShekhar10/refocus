@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useReducer, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import type { CalendarEvent } from "@/types/calendar";
+import { VerifiedName } from "@/components/verified-tag";
 import {
   startOfDay,
   addMinutes,
@@ -499,7 +500,12 @@ export default function MobileCalendar() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{otherName}</p>
+                      <p className="text-xs font-medium truncate">
+                        <VerifiedName
+                          name={otherName}
+                          verified={other?.emailVerified}
+                        />
+                      </p>
                       <p className="text-[10px] text-gray-500">{ev.durationMin}m session</p>
                     </div>
                   </div>

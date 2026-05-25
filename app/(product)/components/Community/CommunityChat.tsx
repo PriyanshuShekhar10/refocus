@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, Send } from "lucide-react";
+import { VerifiedName } from "@/components/verified-tag";
 import { useSession } from "next-auth/react";
 import { getAblyClient } from "@/lib/ably-client";
 import { globalChatChannel } from "@/lib/realtimeChannels";
@@ -12,6 +13,7 @@ type GlobalMessage = {
   user_id: string;
   user_name?: string | null;
   username?: string | null;
+  emailVerified?: boolean;
   content: string;
   created_at: string;
   deleted?: boolean;
@@ -25,8 +27,16 @@ export default function CommunityChat() {
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [myEmailVerified, setMyEmailVerified] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    fetch("/api/users/me")
+      .then((res) => res.json())
+      .then((data) => setMyEmailVerified(!!data?.user?.emailVerified))
+      .catch(() => {});
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -254,13 +264,18 @@ export default function CommunityChat() {
                   >
                     <div className="flex items-baseline gap-1.5 mb-0.5">
                       {!isOwn && m.username ? (
-                        <Link href={`/u/${m.username}`} className="text-[10px] font-medium text-muted-foreground hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline">
-                          {name}
+                        <Link
+                          href={`/u/${m.username}`}
+                          className="text-[10px] font-medium text-muted-foreground hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline max-w-full"
+                        >
+                          <VerifiedName name={name} verified={m.emailVerified} />
                         </Link>
                       ) : (
-                        <span className="text-[10px] font-medium text-muted-foreground">
-                          {isOwn ? "You" : name}
-                        </span>
+                        <VerifiedName
+                          name={isOwn ? "You" : name}
+                          verified={isOwn ? (m.emailVerified ?? myEmailVerified) : m.emailVerified}
+                          className="text-[10px] font-medium text-muted-foreground"
+                        />
                       )}
                       <span className="text-[9px] text-muted-foreground/70">
                         {formatTime(m.created_at)}

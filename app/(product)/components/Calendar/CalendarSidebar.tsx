@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import BookSessionButton from "../BookSessionButton";
 import { DURATION_OPTIONS, TIME_CONFIG, type DurationMin } from "@/constants/calendar";
 import type { CalendarEvent } from "@/types/calendar";
+import { VerifiedName } from "@/components/verified-tag";
 
 function toYmd(d: Date) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
@@ -204,7 +205,12 @@ export function CalendarSidebar({
                       <p className="mt-0.5 text-xs font-medium text-gray-900 dark:text-gray-100">
                         {timeRange}
                       </p>
-                      <p className="truncate text-xs text-gray-600 dark:text-gray-300">{otherName}</p>
+                      <p className="truncate text-xs text-gray-600 dark:text-gray-300">
+                        <VerifiedName
+                          name={otherName}
+                          verified={other?.emailVerified}
+                        />
+                      </p>
                       <div className="mt-2 flex items-center gap-1">
                         {isBooked ? (
                           <a

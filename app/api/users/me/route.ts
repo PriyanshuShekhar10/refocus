@@ -8,6 +8,7 @@ import { embed } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { isEmailVerified } from "@/lib/emailVerification";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -30,6 +31,7 @@ export async function GET() {
         interests: 1,
         location: 1,
         website: 1,
+        emailVerified: 1,
       },
     }
   )) as null | {
@@ -43,7 +45,10 @@ export async function GET() {
     interests?: string[] | null;
     location?: string | null;
     website?: string | null;
+    emailVerified?: Date | string | null;
   };
+
+  const verified = user ? isEmailVerified(user.emailVerified) : false;
 
   return NextResponse.json({
     user: user
@@ -58,6 +63,7 @@ export async function GET() {
           interests: user.interests ?? [],
           location: user.location ?? null,
           website: user.website ?? null,
+          emailVerified: verified,
         }
       : null,
   });
