@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { designStyles } from "@/components/design";
 
@@ -49,6 +55,10 @@ function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
+/** GitHub-style contribution grid cell size */
+const HEAT_CELL_PX = 11;
+const HEAT_GAP_PX = 3;
+
 function formatRecentTime(iso: string): string {
   const date = new Date(iso);
   const now = new Date();
@@ -83,6 +93,7 @@ export function ProfileStats() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -122,19 +133,13 @@ export function ProfileStats() {
   if (loading) {
     return (
       <section className={designStyles.card}>
-        <div className={designStyles.cardHead}>
-          <div>
-            <h2 className={designStyles.cardTitle}>Session stats</h2>
-            <p className={designStyles.cardSub}>
-              Your attendance, completion, and focused-time history.
-            </p>
-          </div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div className={designStyles.shimmer} style={{ height: 88 }} />
-          <div className={designStyles.shimmer} style={{ height: 140 }} />
-          <div className={designStyles.shimmer} style={{ height: 80 }} />
-        </div>
+        <StatsSectionHeader
+          expanded={false}
+          onToggle={() => {}}
+          toggleDisabled
+          subtitle="Loading your session history…"
+        />
+        <div className={designStyles.shimmer} style={{ height: 20, marginTop: 12 }} />
       </section>
     );
   }
@@ -142,14 +147,12 @@ export function ProfileStats() {
   if (error || !stats) {
     return (
       <section className={designStyles.card}>
-        <div className={designStyles.cardHead}>
-          <div>
-            <h2 className={designStyles.cardTitle}>Session stats</h2>
-            <p className={designStyles.cardSub}>
-              {error ?? "Stats are unavailable right now."}
-            </p>
-          </div>
-        </div>
+        <StatsSectionHeader
+          expanded={false}
+          onToggle={() => {}}
+          toggleDisabled
+          subtitle={error ?? "Stats are unavailable right now."}
+        />
       </section>
     );
   }
@@ -157,57 +160,59 @@ export function ProfileStats() {
   if (stats.booked === 0) {
     return (
       <section className={designStyles.card}>
-        <div className={designStyles.cardHead}>
-          <div>
-            <h2 className={designStyles.cardTitle}>Session stats</h2>
-            <p className={designStyles.cardSub}>
-              Complete your first session to start tracking your focus history.
-            </p>
+        <StatsSectionHeader
+          expanded={expanded}
+          onToggle={() => setExpanded((e) => !e)}
+          subtitle="Complete your first session to start tracking focus history."
+        />
+        {expanded && (
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line-soft)" }}>
+            <Link
+              href="/dashboard"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 14,
+                color: "var(--ink)",
+                textDecoration: "none",
+                padding: "8px 14px",
+                borderRadius: 999,
+                border: "1px solid var(--line)",
+                width: "fit-content",
+              }}
+            >
+              Book a session →
+            </Link>
           </div>
-        </div>
-        <Link
-          href="/dashboard"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: 14,
-            color: "var(--ink)",
-            textDecoration: "none",
-            padding: "8px 14px",
-            borderRadius: 999,
-            border: "1px solid var(--line)",
-            width: "fit-content",
-          }}
-        >
-          Book a session →
-        </Link>
+        )}
       </section>
     );
   }
 
   return (
     <section className={designStyles.card}>
-      <div className={designStyles.cardHead}>
-        <div>
-          <h2 className={designStyles.cardTitle}>Session stats</h2>
-          <p className={designStyles.cardSub}>
-            How often you show up and follow through.
-          </p>
-        </div>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 12,
-            color: "var(--ink-mute)",
-          }}
-        >
-          <span>{stats.booked} sessions tracked</span>
-        </div>
-      </div>
+      <StatsSectionHeader
+        expanded={expanded}
+        onToggle={() => setExpanded((e) => !e)}
+        subtitle={
+          expanded
+            ? "How often you show up and follow through."
+            : undefined
+        }
+        summary={<StatsSummaryLine stats={stats} />}
+        trailing={
+          <span style={{ fontSize: 12, color: "var(--ink-mute)", flexShrink: 0 }}>
+            {stats.booked} tracked
+          </span>
+        }
+      />
 
+      {expanded && (
+        <div
+          id="profile-stats-panel"
+          style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--line-soft)" }}
+        >
       {/* Headline metrics */}
       <div
         style={{
@@ -329,18 +334,25 @@ export function ProfileStats() {
           >
             Last 8 weeks
           </h3>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--ink-mute)" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: HEAT_GAP_PX,
+              fontSize: 11,
+              color: "var(--ink-mute)",
+            }}
+          >
             <span>Less</span>
-            {[0, 0.25, 0.5, 0.75, 1].map((scale) => (
+            {([0, 1, 2, 3, 4] as const).map((level) => (
               <span
-                key={scale}
+                key={level}
                 aria-hidden
                 style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: 3,
-                  background: heatColor(scale),
-                  border: "1px solid var(--line-soft)",
+                  width: HEAT_CELL_PX,
+                  height: HEAT_CELL_PX,
+                  borderRadius: 2,
+                  background: heatColor(level),
                 }}
               />
             ))}
@@ -350,37 +362,43 @@ export function ProfileStats() {
         <div
           role="img"
           aria-label={`Activity over the past 8 weeks. ${stats.completed} completed sessions.`}
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
-            gap: 4,
-          }}
+          style={{ overflowX: "auto", paddingBottom: 2 }}
         >
-          {weeks.map((week, wIdx) => (
-            <div
-              key={wIdx}
-              style={{ display: "grid", gridTemplateRows: "repeat(7, 1fr)", gap: 4 }}
-            >
-              {week.map((day) => {
-                const scale =
-                  maxPerDay > 0 && day.sessions > 0
-                    ? Math.max(0.25, day.sessions / maxPerDay)
-                    : 0;
-                return (
-                  <div
-                    key={day.date}
-                    title={`${day.date}: ${day.sessions} session${day.sessions === 1 ? "" : "s"}, ${formatTotalMinutes(day.minutes)}`}
-                    style={{
-                      aspectRatio: "1 / 1",
-                      borderRadius: 3,
-                      background: heatColor(scale),
-                      border: "1px solid var(--line-soft)",
-                    }}
-                  />
-                );
-              })}
-            </div>
-          ))}
+          <div
+            style={{
+              display: "inline-flex",
+              gap: HEAT_GAP_PX,
+              alignItems: "flex-start",
+            }}
+          >
+            {weeks.map((week, wIdx) => (
+              <div
+                key={wIdx}
+                style={{
+                  display: "grid",
+                  gridTemplateRows: `repeat(7, ${HEAT_CELL_PX}px)`,
+                  gap: HEAT_GAP_PX,
+                }}
+              >
+                {week.map((day) => {
+                  const level = heatLevel(day.sessions, maxPerDay);
+                  return (
+                    <div
+                      key={day.date}
+                      title={`${day.date}: ${day.sessions} session${day.sessions === 1 ? "" : "s"}, ${formatTotalMinutes(day.minutes)}`}
+                      style={{
+                        width: HEAT_CELL_PX,
+                        height: HEAT_CELL_PX,
+                        borderRadius: 2,
+                        background: heatColor(level),
+                        flexShrink: 0,
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -538,7 +556,169 @@ export function ProfileStats() {
           ))}
         </ul>
       </div>
+        </div>
+      )}
     </section>
+  );
+}
+
+function StatsSectionHeader({
+  expanded,
+  onToggle,
+  subtitle,
+  summary,
+  trailing,
+  toggleDisabled = false,
+}: {
+  expanded: boolean;
+  onToggle: () => void;
+  subtitle?: string;
+  summary?: ReactNode;
+  trailing?: ReactNode;
+  toggleDisabled?: boolean;
+}) {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (toggleDisabled) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onToggle();
+    }
+  };
+
+  return (
+    <div
+      role={toggleDisabled ? undefined : "button"}
+      tabIndex={toggleDisabled ? undefined : 0}
+      onClick={toggleDisabled ? undefined : onToggle}
+      onKeyDown={handleKeyDown}
+      aria-expanded={toggleDisabled ? undefined : expanded}
+      aria-controls={toggleDisabled ? undefined : "profile-stats-panel"}
+      style={{
+        display: "flex",
+        width: "100%",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        gap: 12,
+        cursor: toggleDisabled ? "default" : "pointer",
+      }}
+    >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          <h2 className={designStyles.cardTitle} style={{ margin: 0 }}>
+            Session stats
+          </h2>
+          {!toggleDisabled && (
+            <span
+              style={{
+                fontSize: 12,
+                color: "var(--ink-mute)",
+                fontWeight: 500,
+              }}
+            >
+              {expanded ? "Hide" : "Show details"}
+            </span>
+          )}
+        </div>
+        {!expanded && summary}
+        {expanded && subtitle && (
+          <p className={designStyles.cardSub} style={{ margin: "6px 0 0" }}>
+            {subtitle}
+          </p>
+        )}
+        {!expanded && subtitle && !summary && (
+          <p className={designStyles.cardSub} style={{ margin: "6px 0 0" }}>
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          flexShrink: 0,
+        }}
+      >
+        {!expanded && trailing}
+        {!toggleDisabled && <StatsChevron expanded={expanded} />}
+      </div>
+    </div>
+  );
+}
+
+function StatsSummaryLine({ stats }: { stats: Stats }) {
+  const items: ReactNode[] = [
+    <>
+      <strong style={{ color: "var(--ink)", fontWeight: 600 }}>
+        {stats.completed}
+      </strong>{" "}
+      completed
+    </>,
+    <>{formatTotalMinutes(stats.totalMinutes)} focused</>,
+    <>{formatPercent(stats.attendanceRate)} attendance</>,
+    <>
+      {stats.currentStreak}d streak
+      {stats.longestStreak > stats.currentStreak
+        ? ` (best ${stats.longestStreak}d)`
+        : ""}
+    </>,
+  ];
+  if (stats.missed > 0) {
+    items.push(
+      <span style={{ color: "var(--danger)" }}>{stats.missed} missed</span>,
+    );
+  }
+
+  return (
+    <p
+      style={{
+        margin: "8px 0 0",
+        fontSize: 13,
+        color: "var(--ink-soft)",
+        lineHeight: 1.5,
+      }}
+    >
+      {items.map((item, i) => (
+        <span key={i}>
+          {i > 0 && (
+            <span aria-hidden style={{ margin: "0 8px", color: "var(--ink-mute)" }}>
+              ·
+            </span>
+          )}
+          {item}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+function StatsChevron({ expanded }: { expanded: boolean }) {
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: "inline-flex",
+        color: "var(--ink-mute)",
+        transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+        transition: "transform 0.2s ease",
+      }}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
+      </svg>
+    </span>
   );
 }
 
@@ -756,14 +936,21 @@ function RecentBadge({
   );
 }
 
-function heatColor(scale: number): string {
-  // 0 = empty cell, 1 = strongest. Uses the same plum/sky accent as the
-  // rest of the surface so the heatmap fits visually with the design system.
-  if (scale <= 0) return "color-mix(in oklab, var(--card) 60%, var(--bg))";
-  // Step the scale into 4 buckets for cleaner visual differentiation.
-  const buckets = [0.25, 0.5, 0.75, 1];
-  const stepped =
-    buckets.find((b) => scale <= b + 0.0001) ?? 1;
-  const mix = Math.round(stepped * 70) + 15; // 15%..85%
-  return `color-mix(in oklab, var(--accent) ${mix}%, var(--card))`;
+function heatLevel(sessions: number, maxPerDay: number): 0 | 1 | 2 | 3 | 4 {
+  if (sessions <= 0) return 0;
+  if (maxPerDay <= 1) return 4;
+  const ratio = sessions / maxPerDay;
+  if (ratio <= 0.25) return 1;
+  if (ratio <= 0.5) return 2;
+  if (ratio <= 0.75) return 3;
+  return 4;
+}
+
+/** Discrete levels 0–4, GitHub-style (empty → accent). */
+function heatColor(level: 0 | 1 | 2 | 3 | 4): string {
+  const mix = [0, 28, 48, 68, 88][level];
+  if (level === 0) {
+    return "color-mix(in oklab, var(--line) 55%, var(--bg))";
+  }
+  return `color-mix(in oklab, var(--accent) ${mix}%, var(--bg))`;
 }
