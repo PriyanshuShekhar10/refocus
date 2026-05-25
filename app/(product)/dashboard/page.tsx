@@ -12,6 +12,7 @@ import Community from "../components/Community/Community";
 import Matchmaking from "../components/Matchmaking";
 import SmartScheduler from "../components/SmartScheduler";
 import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSidebar";
+import { EmailVerificationStrip } from "@/components/email-verification-strip";
 
 type TourStep = {
   title: string;
@@ -148,47 +149,70 @@ function DashboardContent() {
   return (
     <div className="flex h-screen overflow-hidden">
       <SideBar activeTab={activeTab} onSelect={setActiveTab} />
-      <main className={`ml-16 flex-1 overflow-hidden ${activeTab === "dashboard" ? "bg-dotted-grid" : ""}`}>
-        {activeTab === "dashboard" && (
-          <div className="h-full p-6">
-            <Dashboard />
-          </div>
-        )}
-        {activeTab === "profile" && <div className="h-full overflow-y-auto p-6"><Profile /></div>}
-        {activeTab === "settings" && <div className="h-full overflow-y-auto p-6"><Settings /></div>}
-        {activeTab === "friends" && (
-          <div className="h-full overflow-y-auto no-scrollbar">
-            <Friends onPreviewProfile={setProfilePreview} />
-          </div>
-        )}
-        {activeTab === "community" && (
-          <Community onPreviewProfile={setProfilePreview} />
-        )}
-        {activeTab === "matches" && <div className="h-full overflow-y-auto p-6"><Matchmaking /></div>}
-        {activeTab === "scheduler" && <div className="h-full overflow-hidden p-6"><SmartScheduler /></div>}
-      </main>
-      {(activeTab === "friends" || activeTab === "community") && (
-        <div
-          className={`overflow-hidden transition-all duration-300 ease-out ${
-            profilePreview
-              ? isPreviewSidebarCollapsed
-                ? "w-[4.5rem] translate-x-0 opacity-100 p-4 pl-0"
-                : "w-[16.5rem] translate-x-0 opacity-100 p-4 pl-0"
-              : "w-0 translate-x-2 opacity-0 p-0 pointer-events-none"
-          }`}
-        >
-          {profilePreview && (
-            <CalendarRightSidebar
-              sessionCount={0}
-              onGoToday={() => setActiveTab("dashboard")}
-              joinableSession={null}
-              profilePreview={profilePreview}
-              onClearProfilePreview={() => setProfilePreview(null)}
-              onCollapseChange={setIsPreviewSidebarCollapsed}
-            />
+      <div className="ml-16 flex min-w-0 flex-1 flex-col overflow-hidden">
+        <EmailVerificationStrip />
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <main
+            className={`min-h-0 flex-1 overflow-hidden ${activeTab === "dashboard" ? "bg-dotted-grid" : ""}`}
+          >
+            {activeTab === "dashboard" && (
+              <div className="h-full p-6">
+                <Dashboard />
+              </div>
+            )}
+            {activeTab === "profile" && (
+              <div className="h-full overflow-y-auto p-6">
+                <Profile />
+              </div>
+            )}
+            {activeTab === "settings" && (
+              <div className="h-full overflow-y-auto p-6">
+                <Settings />
+              </div>
+            )}
+            {activeTab === "friends" && (
+              <div className="h-full overflow-y-auto no-scrollbar">
+                <Friends onPreviewProfile={setProfilePreview} />
+              </div>
+            )}
+            {activeTab === "community" && (
+              <Community onPreviewProfile={setProfilePreview} />
+            )}
+            {activeTab === "matches" && (
+              <div className="h-full overflow-y-auto p-6">
+                <Matchmaking />
+              </div>
+            )}
+            {activeTab === "scheduler" && (
+              <div className="h-full overflow-hidden p-6">
+                <SmartScheduler />
+              </div>
+            )}
+          </main>
+          {(activeTab === "friends" || activeTab === "community") && (
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-out ${
+                profilePreview
+                  ? isPreviewSidebarCollapsed
+                    ? "w-[4.5rem] translate-x-0 opacity-100 p-4 pl-0"
+                    : "w-[16.5rem] translate-x-0 opacity-100 p-4 pl-0"
+                  : "w-0 translate-x-2 opacity-0 p-0 pointer-events-none"
+              }`}
+            >
+              {profilePreview && (
+                <CalendarRightSidebar
+                  sessionCount={0}
+                  onGoToday={() => setActiveTab("dashboard")}
+                  joinableSession={null}
+                  profilePreview={profilePreview}
+                  onClearProfilePreview={() => setProfilePreview(null)}
+                  onCollapseChange={setIsPreviewSidebarCollapsed}
+                />
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {isTourOpen && (
         <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/45 p-4 sm:items-center">
