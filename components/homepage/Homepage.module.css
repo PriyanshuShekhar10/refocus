@@ -3,7 +3,7 @@
    Design system locked in:
      · type: Bricolage Grotesque (display + body), Geist Mono for numerals
      · color: cool white bg, near-black ink, sky pastel accent
-     · motion: pulse on live-dot, fade-up on scroll, 3px arrow shift
+     · motion: fade-up on scroll, 3px arrow shift
    ───────────────────────────────────────────────────────────── */
 
 .root {
@@ -214,42 +214,8 @@
   }
 }
 
-.livePill {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 14px 6px 12px;
-  border-radius: 999px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  font-size: 13px;
-  color: var(--ink-soft);
-}
-.liveDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  position: relative;
-  box-shadow: 0 0 0 0
-    color-mix(in oklab, var(--accent) 50%, transparent);
-  animation: pulse 2.4s ease-out infinite;
-}
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0
-      color-mix(in oklab, var(--accent) 45%, transparent);
-  }
-  70% {
-    box-shadow: 0 0 0 8px transparent;
-  }
-  100% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-}
-
 .heroTitle {
-  margin-top: 28px;
+  margin-top: 0;
   font-family: var(--font-display);
   font-size: clamp(44px, 7vw, 88px);
   line-height: 0.98;
@@ -945,9 +911,6 @@
     opacity: 1;
     transform: none;
     transition: none;
-  }
-  .liveDot {
-    animation: none;
   }
   .arrow {
     transition: none;
