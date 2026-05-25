@@ -13,7 +13,7 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "Refocus",
-  description: "Finding you a buddy who matters.",
+  description: "Finding you an accountability partner.",
 };
 
 const quicksandSans = Quicksand({
