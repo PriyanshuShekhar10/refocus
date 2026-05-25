@@ -1,4 +1,4 @@
-import { emailBrand, getEmailLogoDataUri } from "@/lib/email/brand";
+import { emailBrand, getEmailLogoUrl } from "@/lib/email/brand";
 
 export type WelcomeEmailParams = {
   firstName?: string | null;
@@ -18,7 +18,7 @@ export function buildWelcomeVerifyEmail(params: WelcomeEmailParams): {
 } {
   const { verifyUrl, signInUrl } = params;
   const greet = greeting(params.firstName);
-  const logoSrc = getEmailLogoDataUri();
+  const logoSrc = getEmailLogoUrl();
   const c = emailBrand;
 
   const subject = "Welcome to Refocus — verify your email";
@@ -50,7 +50,7 @@ You don't need to verify to access your dashboard. Verification helps secure you
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:${c.card};border-radius:16px;border:1px solid ${c.line};overflow:hidden;">
           <tr>
             <td style="padding:32px 32px 24px;text-align:center;background:${c.accentSoft};border-bottom:1px solid ${c.line};">
-              <img src="${logoSrc}" alt="Refocus" width="96" height="96" style="display:block;margin:0 auto 16px;width:96px;height:96px;border-radius:16px;" />
+              <img src="${logoSrc}" alt="Refocus" width="96" height="96" border="0" style="display:block;margin:0 auto 16px;width:96px;height:96px;border:0;border-radius:16px;" />
               <p style="margin:0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:${c.inkMute};font-weight:600;">Welcome aboard</p>
             </td>
           </tr>
@@ -106,7 +106,7 @@ export function buildPasswordResetEmail(params: PasswordResetEmailParams): {
 } {
   const { resetUrl } = params;
   const greet = greeting(params.firstName);
-  const logoSrc = getEmailLogoDataUri();
+  const logoSrc = getEmailLogoUrl();
   const c = emailBrand;
 
   const subject = "Reset your Refocus password";
@@ -136,7 +136,7 @@ This link expires in 1 hour. If you didn't ask for a reset, you can ignore this 
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:${c.card};border-radius:16px;border:1px solid ${c.line};overflow:hidden;">
           <tr>
             <td style="padding:32px 32px 24px;text-align:center;background:${c.accentSoft};border-bottom:1px solid ${c.line};">
-              <img src="${logoSrc}" alt="Refocus" width="96" height="96" style="display:block;margin:0 auto 16px;width:96px;height:96px;border-radius:16px;" />
+              <img src="${logoSrc}" alt="Refocus" width="96" height="96" border="0" style="display:block;margin:0 auto 16px;width:96px;height:96px;border:0;border-radius:16px;" />
               <p style="margin:0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:${c.inkMute};font-weight:600;">Password reset</p>
             </td>
           </tr>

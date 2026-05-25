@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { getSiteUrl } from "@/lib/site";
 
 /** Matches components/design/design.module.css */
 export const emailBrand = {
@@ -16,7 +17,30 @@ export const emailBrand = {
 
 let logoDataUriCache: string | null = null;
 
-/** Inline logo so images work in email clients (localhost URLs never load). */
+function emailAssetBaseUrl(): string {
+  const fromEnv =
+    process.env.EMAIL_ASSET_BASE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+
+  if (fromEnv) return fromEnv.replace(/\/$/, "");
+  return getSiteUrl();
+}
+
+/**
+ * Public HTTPS URL for the logo — required for Gmail, Outlook, Apple Mail, etc.
+ * Most clients block or strip data: URIs in img src.
+ */
+export function getEmailLogoUrl(): string {
+  const base = emailAssetBaseUrl();
+  if (base.includes("localhost") || base.startsWith("http://127.0.0.1")) {
+    return getEmailLogoDataUri();
+  }
+  return `${base}/brand/logo.png`;
+}
+
+/** Fallback for local dev only; do not rely on this in production emails. */
 export function getEmailLogoDataUri(): string {
   if (logoDataUriCache) return logoDataUriCache;
   const logoPath = path.join(process.cwd(), "public", "brand", "logo.png");
