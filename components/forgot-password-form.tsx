@@ -20,8 +20,13 @@ export function ForgotPasswordForm({
     setError(null);
 
     try {
-      // With NextAuth + credentials, implement your own email flow if needed.
-      // For now, just show a success message to unblock the UI.
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send reset email");
       setSuccess(true);
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");

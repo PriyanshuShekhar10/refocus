@@ -93,3 +93,82 @@ You don't need to verify to access your dashboard. Verification helps secure you
 
   return { subject, html, text };
 }
+
+export type PasswordResetEmailParams = {
+  firstName?: string | null;
+  resetUrl: string;
+};
+
+export function buildPasswordResetEmail(params: PasswordResetEmailParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const { resetUrl } = params;
+  const greet = greeting(params.firstName);
+  const logoSrc = getEmailLogoDataUri();
+  const c = emailBrand;
+
+  const subject = "Reset your Refocus password";
+
+  const text = `${greet}
+
+We received a request to reset your Refocus password.
+
+Reset your password:
+${resetUrl}
+
+This link expires in 1 hour. If you didn't ask for a reset, you can ignore this email — your password won't change.
+
+— The Refocus team`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:${c.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${c.ink};">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${c.bg};padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:${c.card};border-radius:16px;border:1px solid ${c.line};overflow:hidden;">
+          <tr>
+            <td style="padding:32px 32px 24px;text-align:center;background:${c.accentSoft};border-bottom:1px solid ${c.line};">
+              <img src="${logoSrc}" alt="Refocus" width="96" height="96" style="display:block;margin:0 auto 16px;width:96px;height:96px;border-radius:16px;" />
+              <p style="margin:0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:${c.inkMute};font-weight:600;">Password reset</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 16px;font-size:17px;line-height:1.5;color:${c.ink};font-weight:500;">${greet}</p>
+              <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:${c.inkSoft};">
+                We received a request to reset the password for your <strong style="color:${c.ink};">Refocus</strong> account. Tap the button below to choose a new one.
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 24px;">
+                <tr>
+                  <td style="border-radius:10px;background:${c.ink};">
+                    <a href="${resetUrl}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:${c.accentInk};text-decoration:none;">Reset password</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;font-size:12px;line-height:1.55;color:${c.inkMute};">
+                Link expires in 1 hour. If you didn&rsquo;t request this, ignore this email and your password will stay the same.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 32px;background:${c.bg};border-top:1px solid ${c.line};text-align:center;">
+              <p style="margin:0;font-size:12px;color:${c.inkMute};">Finding you a buddy who matters.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  return { subject, html, text };
+}
