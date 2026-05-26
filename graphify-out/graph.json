@@ -76,6 +76,24 @@
       "norm_label": "config"
     },
     {
+      "label": "vercel.json",
+      "file_type": "code",
+      "source_file": "vercel.json",
+      "source_location": "L1",
+      "id": "vercel_json",
+      "community": 96,
+      "norm_label": "vercel.json"
+    },
+    {
+      "label": "crons",
+      "file_type": "code",
+      "source_file": "vercel.json",
+      "source_location": "L2",
+      "id": "refocus_vercel_crons",
+      "community": 96,
+      "norm_label": "crons"
+    },
+    {
       "label": "postcss.config.mjs",
       "file_type": "code",
       "source_file": "postcss.config.mjs",
@@ -1386,7 +1404,7 @@
       "source_file": "app/page.tsx",
       "source_location": "L1",
       "id": "app_page_tsx",
-      "community": 6,
+      "community": 3,
       "norm_label": "page.tsx"
     },
     {
@@ -1395,7 +1413,7 @@
       "source_file": "app/page.tsx",
       "source_location": "L6",
       "id": "app_page_siteurl",
-      "community": 6,
+      "community": 3,
       "norm_label": "siteurl"
     },
     {
@@ -1404,7 +1422,7 @@
       "source_file": "app/page.tsx",
       "source_location": "L8",
       "id": "app_page_metadata",
-      "community": 6,
+      "community": 3,
       "norm_label": "metadata"
     },
     {
@@ -1413,7 +1431,7 @@
       "source_file": "app/page.tsx",
       "source_location": "L63",
       "id": "app_page_home",
-      "community": 6,
+      "community": 3,
       "norm_label": "home()"
     },
     {
@@ -1431,7 +1449,7 @@
       "source_file": "app/not-found.tsx",
       "source_location": "L7",
       "id": "app_not_found_notfound",
-      "community": 20,
+      "community": 94,
       "norm_label": "notfound()"
     },
     {
@@ -1440,7 +1458,7 @@
       "source_file": "app/career/page.tsx",
       "source_location": "L1",
       "id": "app_career_page_tsx",
-      "community": 6,
+      "community": 22,
       "norm_label": "page.tsx"
     },
     {
@@ -1449,7 +1467,7 @@
       "source_file": "app/career/page.tsx",
       "source_location": "L10",
       "id": "career_page_siteurl",
-      "community": 6,
+      "community": 22,
       "norm_label": "siteurl"
     },
     {
@@ -1458,7 +1476,7 @@
       "source_file": "app/career/page.tsx",
       "source_location": "L13",
       "id": "career_page_metadata",
-      "community": 6,
+      "community": 22,
       "norm_label": "metadata"
     },
     {
@@ -1467,7 +1485,7 @@
       "source_file": "app/career/page.tsx",
       "source_location": "L45",
       "id": "career_page_openroles",
-      "community": 6,
+      "community": 22,
       "norm_label": "openroles"
     },
     {
@@ -1476,7 +1494,7 @@
       "source_file": "app/career/page.tsx",
       "source_location": "L84",
       "id": "career_page_careerpage",
-      "community": 6,
+      "community": 22,
       "norm_label": "careerpage()"
     },
     {
@@ -1512,7 +1530,7 @@
       "source_file": "app/auth/sign-up/page.tsx",
       "source_location": "L1",
       "id": "app_auth_sign_up_page_tsx",
-      "community": 23,
+      "community": 70,
       "norm_label": "page.tsx"
     },
     {
@@ -1521,7 +1539,7 @@
       "source_file": "app/auth/sign-up/page.tsx",
       "source_location": "L4",
       "id": "sign_up_page_page",
-      "community": 23,
+      "community": 70,
       "norm_label": "page()"
     },
     {
@@ -1566,7 +1584,7 @@
       "source_file": "app/auth/verify-email/page.tsx",
       "source_location": "L1",
       "id": "app_auth_verify_email_page_tsx",
-      "community": 33,
+      "community": 23,
       "norm_label": "page.tsx"
     },
     {
@@ -1575,7 +1593,7 @@
       "source_file": "app/auth/verify-email/page.tsx",
       "source_location": "L5",
       "id": "verify_email_page_props",
-      "community": 33,
+      "community": 23,
       "norm_label": "props"
     },
     {
@@ -1584,7 +1602,7 @@
       "source_file": "app/auth/verify-email/page.tsx",
       "source_location": "L9",
       "id": "verify_email_page_verifyemailpage",
-      "community": 33,
+      "community": 23,
       "norm_label": "verifyemailpage()"
     },
     {
@@ -1737,7 +1755,7 @@
       "source_file": "app/u/[username]/page.tsx",
       "source_location": "L1",
       "id": "app_u_username_page_tsx",
-      "community": 22,
+      "community": 94,
       "norm_label": "page.tsx"
     },
     {
@@ -1746,7 +1764,7 @@
       "source_file": "app/u/[username]/page.tsx",
       "source_location": "L11",
       "id": "username_page_props",
-      "community": 22,
+      "community": 94,
       "norm_label": "props"
     },
     {
@@ -1755,7 +1773,7 @@
       "source_file": "app/u/[username]/page.tsx",
       "source_location": "L12",
       "id": "username_page_siteurl",
-      "community": 22,
+      "community": 94,
       "norm_label": "siteurl"
     },
     {
@@ -1764,7 +1782,7 @@
       "source_file": "app/u/[username]/page.tsx",
       "source_location": "L13",
       "id": "username_page_about_me_prompts",
-      "community": 22,
+      "community": 94,
       "norm_label": "about_me_prompts"
     },
     {
@@ -1773,7 +1791,7 @@
       "source_file": "app/u/[username]/page.tsx",
       "source_location": "L36",
       "id": "username_page_getuser",
-      "community": 22,
+      "community": 94,
       "norm_label": "getuser()"
     },
     {
@@ -1782,7 +1800,7 @@
       "source_file": "app/u/[username]/page.tsx",
       "source_location": "L62",
       "id": "username_page_getpublicuser",
-      "community": 22,
+      "community": 94,
       "norm_label": "getpublicuser()"
     },
     {
@@ -1791,7 +1809,7 @@
       "source_file": "app/u/[username]/page.tsx",
       "source_location": "L69",
       "id": "username_page_generatemetadata",
-      "community": 22,
+      "community": 94,
       "norm_label": "generatemetadata()"
     },
     {
@@ -1800,7 +1818,7 @@
       "source_file": "app/u/[username]/page.tsx",
       "source_location": "L111",
       "id": "username_page_publicprofilepage",
-      "community": 22,
+      "community": 94,
       "norm_label": "publicprofilepage()"
     },
     {
@@ -1863,7 +1881,7 @@
       "source_file": "app/profile/page.tsx",
       "source_location": "L1",
       "id": "app_profile_page_tsx",
-      "community": 10,
+      "community": 43,
       "norm_label": "page.tsx"
     },
     {
@@ -1872,7 +1890,7 @@
       "source_file": "app/profile/page.tsx",
       "source_location": "L6",
       "id": "profile_page_profilepage",
-      "community": 10,
+      "community": 43,
       "norm_label": "profilepage()"
     },
     {
@@ -1917,7 +1935,7 @@
       "source_file": "app/(product)/dashboard/page.tsx",
       "source_location": "L1",
       "id": "app_product_dashboard_page_tsx",
-      "community": 34,
+      "community": 5,
       "norm_label": "page.tsx"
     },
     {
@@ -1926,7 +1944,7 @@
       "source_file": "app/(product)/dashboard/page.tsx",
       "source_location": "L17",
       "id": "dashboard_page_tourstep",
-      "community": 34,
+      "community": 5,
       "norm_label": "tourstep"
     },
     {
@@ -1935,7 +1953,7 @@
       "source_file": "app/(product)/dashboard/page.tsx",
       "source_location": "L23",
       "id": "dashboard_page_profilepreviewpayload",
-      "community": 34,
+      "community": 5,
       "norm_label": "profilepreviewpayload"
     },
     {
@@ -1944,7 +1962,7 @@
       "source_file": "app/(product)/dashboard/page.tsx",
       "source_location": "L31",
       "id": "dashboard_page_dashboard_tabs",
-      "community": 34,
+      "community": 5,
       "norm_label": "dashboard_tabs"
     },
     {
@@ -1953,7 +1971,7 @@
       "source_file": "app/(product)/dashboard/page.tsx",
       "source_location": "L40",
       "id": "dashboard_page_tour_steps",
-      "community": 34,
+      "community": 5,
       "norm_label": "tour_steps"
     },
     {
@@ -1962,7 +1980,7 @@
       "source_file": "app/(product)/dashboard/page.tsx",
       "source_location": "L73",
       "id": "dashboard_page_dashboardcontent",
-      "community": 34,
+      "community": 5,
       "norm_label": "dashboardcontent()"
     },
     {
@@ -1971,7 +1989,7 @@
       "source_file": "app/(product)/dashboard/page.tsx",
       "source_location": "L282",
       "id": "dashboard_page_dashboardpage",
-      "community": 34,
+      "community": 5,
       "norm_label": "dashboardpage()"
     },
     {
@@ -1987,7 +2005,7 @@
       "label": "Prefs",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L30",
+      "source_location": "L35",
       "id": "components_settings_prefs",
       "community": 27,
       "norm_label": "prefs"
@@ -1996,7 +2014,7 @@
       "label": "DEFAULT_PREFS",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L41",
+      "source_location": "L47",
       "id": "components_settings_default_prefs",
       "community": 27,
       "norm_label": "default_prefs"
@@ -2005,7 +2023,7 @@
       "label": "Settings()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L52",
+      "source_location": "L59",
       "id": "components_settings_settings",
       "community": 27,
       "norm_label": "settings()"
@@ -2014,7 +2032,7 @@
       "label": "EmailVerificationSection()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L90",
+      "source_location": "L97",
       "id": "components_settings_emailverificationsection",
       "community": 27,
       "norm_label": "emailverificationsection()"
@@ -2023,7 +2041,7 @@
       "label": "FocusPreferences()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L130",
+      "source_location": "L137",
       "id": "components_settings_focuspreferences",
       "community": 27,
       "norm_label": "focuspreferences()"
@@ -2032,7 +2050,7 @@
       "label": "NotificationsSection()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L175",
+      "source_location": "L182",
       "id": "components_settings_notificationssection",
       "community": 27,
       "norm_label": "notificationssection()"
@@ -2041,7 +2059,7 @@
       "label": "PrivacySection()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L222",
+      "source_location": "L259",
       "id": "components_settings_privacysection",
       "community": 27,
       "norm_label": "privacysection()"
@@ -2050,7 +2068,7 @@
       "label": "AppearanceSection()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L269",
+      "source_location": "L306",
       "id": "components_settings_appearancesection",
       "community": 27,
       "norm_label": "appearancesection()"
@@ -2059,16 +2077,16 @@
       "label": "ChangePasswordSection()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L312",
+      "source_location": "L349",
       "id": "components_settings_changepasswordsection",
-      "community": 27,
+      "community": 70,
       "norm_label": "changepasswordsection()"
     },
     {
       "label": "SessionSection()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L441",
+      "source_location": "L478",
       "id": "components_settings_sessionsection",
       "community": 27,
       "norm_label": "sessionsection()"
@@ -2077,7 +2095,7 @@
       "label": "DangerZone()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L472",
+      "source_location": "L509",
       "id": "components_settings_dangerzone",
       "community": 27,
       "norm_label": "dangerzone()"
@@ -2086,7 +2104,7 @@
       "label": "SectionCard()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L600",
+      "source_location": "L637",
       "id": "components_settings_sectioncard",
       "community": 27,
       "norm_label": "sectioncard()"
@@ -2095,7 +2113,7 @@
       "label": "RowGroup()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L660",
+      "source_location": "L697",
       "id": "components_settings_rowgroup",
       "community": 27,
       "norm_label": "rowgroup()"
@@ -2104,7 +2122,7 @@
       "label": "Row()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L675",
+      "source_location": "L712",
       "id": "components_settings_row",
       "community": 27,
       "norm_label": "row()"
@@ -2113,7 +2131,7 @@
       "label": "Toggle()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L717",
+      "source_location": "L754",
       "id": "components_settings_toggle",
       "community": 27,
       "norm_label": "toggle()"
@@ -2122,7 +2140,7 @@
       "label": "usePrefs()",
       "file_type": "code",
       "source_file": "app/(product)/components/settings.tsx",
-      "source_location": "L745",
+      "source_location": "L782",
       "id": "components_settings_useprefs",
       "community": 27,
       "norm_label": "useprefs()"
@@ -2376,7 +2394,7 @@
       "source_file": "app/(product)/components/SmartScheduler.tsx",
       "source_location": "L1",
       "id": "app_product_components_smartscheduler_tsx",
-      "community": 43,
+      "community": 5,
       "norm_label": "smartscheduler.tsx"
     },
     {
@@ -2385,7 +2403,7 @@
       "source_file": "app/(product)/components/SmartScheduler.tsx",
       "source_location": "L15",
       "id": "components_smartscheduler_proposal",
-      "community": 43,
+      "community": 5,
       "norm_label": "proposal"
     },
     {
@@ -2394,7 +2412,7 @@
       "source_file": "app/(product)/components/SmartScheduler.tsx",
       "source_location": "L24",
       "id": "components_smartscheduler_message",
-      "community": 43,
+      "community": 5,
       "norm_label": "message"
     },
     {
@@ -2403,7 +2421,7 @@
       "source_file": "app/(product)/components/SmartScheduler.tsx",
       "source_location": "L35",
       "id": "components_smartscheduler_formatdate",
-      "community": 43,
+      "community": 5,
       "norm_label": "formatdate()"
     },
     {
@@ -2412,7 +2430,7 @@
       "source_file": "app/(product)/components/SmartScheduler.tsx",
       "source_location": "L55",
       "id": "components_smartscheduler_formattime",
-      "community": 43,
+      "community": 5,
       "norm_label": "formattime()"
     },
     {
@@ -2421,7 +2439,7 @@
       "source_file": "app/(product)/components/SmartScheduler.tsx",
       "source_location": "L64",
       "id": "components_smartscheduler_typecolors",
-      "community": 43,
+      "community": 5,
       "norm_label": "typecolors"
     },
     {
@@ -2430,7 +2448,7 @@
       "source_file": "app/(product)/components/SmartScheduler.tsx",
       "source_location": "L72",
       "id": "components_smartscheduler_suggestions",
-      "community": 43,
+      "community": 5,
       "norm_label": "suggestions"
     },
     {
@@ -2439,7 +2457,7 @@
       "source_file": "app/(product)/components/SmartScheduler.tsx",
       "source_location": "L79",
       "id": "components_smartscheduler_smartscheduler",
-      "community": 43,
+      "community": 5,
       "norm_label": "smartscheduler()"
     },
     {
@@ -2520,7 +2538,7 @@
       "source_file": "app/(product)/components/Calendar.tsx",
       "source_location": "L123",
       "id": "components_calendar_uireducer",
-      "community": 16,
+      "community": 19,
       "norm_label": "uireducer()"
     },
     {
@@ -2529,7 +2547,7 @@
       "source_file": "app/(product)/components/Calendar.tsx",
       "source_location": "L187",
       "id": "components_calendar_createinitialstate",
-      "community": 16,
+      "community": 19,
       "norm_label": "createinitialstate()"
     },
     {
@@ -2736,7 +2754,7 @@
       "source_file": "app/(product)/components/Calendar/CalendarEventCard.tsx",
       "source_location": "L1",
       "id": "app_product_components_calendar_calendareventcard_tsx",
-      "community": 24,
+      "community": 93,
       "norm_label": "calendareventcard.tsx"
     },
     {
@@ -2745,7 +2763,7 @@
       "source_file": "app/(product)/components/Calendar/CalendarEventCard.tsx",
       "source_location": "L12",
       "id": "calendar_calendareventcard_compact_pastel_colors_light",
-      "community": 24,
+      "community": 93,
       "norm_label": "compact_pastel_colors_light"
     },
     {
@@ -2754,7 +2772,7 @@
       "source_file": "app/(product)/components/Calendar/CalendarEventCard.tsx",
       "source_location": "L21",
       "id": "calendar_calendareventcard_compact_pastel_colors_dark",
-      "community": 24,
+      "community": 93,
       "norm_label": "compact_pastel_colors_dark"
     },
     {
@@ -2763,7 +2781,7 @@
       "source_file": "app/(product)/components/Calendar/CalendarEventCard.tsx",
       "source_location": "L31",
       "id": "calendar_calendareventcard_isjoinable",
-      "community": 24,
+      "community": 93,
       "norm_label": "isjoinable()"
     },
     {
@@ -2772,7 +2790,7 @@
       "source_file": "app/(product)/components/Calendar/CalendarEventCard.tsx",
       "source_location": "L37",
       "id": "calendar_calendareventcard_calendareventcardprops",
-      "community": 24,
+      "community": 93,
       "norm_label": "calendareventcardprops"
     },
     {
@@ -2961,7 +2979,7 @@
       "source_file": "app/(product)/components/Calendar/CalendarSidebar.tsx",
       "source_location": "L1",
       "id": "app_product_components_calendar_calendarsidebar_tsx",
-      "community": 14,
+      "community": 26,
       "norm_label": "calendarsidebar.tsx"
     },
     {
@@ -2970,7 +2988,7 @@
       "source_file": "app/(product)/components/Calendar/CalendarSidebar.tsx",
       "source_location": "L9",
       "id": "calendar_calendarsidebar_toymd",
-      "community": 14,
+      "community": 26,
       "norm_label": "toymd()"
     },
     {
@@ -2979,7 +2997,7 @@
       "source_file": "app/(product)/components/Calendar/CalendarSidebar.tsx",
       "source_location": "L13",
       "id": "calendar_calendarsidebar_formatupcomingdate",
-      "community": 14,
+      "community": 26,
       "norm_label": "formatupcomingdate()"
     },
     {
@@ -2988,7 +3006,7 @@
       "source_file": "app/(product)/components/Calendar/CalendarSidebar.tsx",
       "source_location": "L23",
       "id": "calendar_calendarsidebar_calendarsidebarprops",
-      "community": 14,
+      "community": 26,
       "norm_label": "calendarsidebarprops"
     },
     {
@@ -2997,7 +3015,7 @@
       "source_file": "app/(product)/components/Calendar/CalendarSidebar.tsx",
       "source_location": "L35",
       "id": "calendar_calendarsidebar_calendarsidebar",
-      "community": 14,
+      "community": 26,
       "norm_label": "calendarsidebar()"
     },
     {
@@ -3069,7 +3087,7 @@
       "source_file": "app/(product)/components/Calendar/Modals/Toast.tsx",
       "source_location": "L1",
       "id": "app_product_components_calendar_modals_toast_tsx",
-      "community": 19,
+      "community": 14,
       "norm_label": "toast.tsx"
     },
     {
@@ -3078,7 +3096,7 @@
       "source_file": "app/(product)/components/Calendar/Modals/Toast.tsx",
       "source_location": "L2",
       "id": "modals_toast_toast",
-      "community": 19,
+      "community": 14,
       "norm_label": "toast()"
     },
     {
@@ -3159,7 +3177,7 @@
       "source_file": "app/(product)/components/Mobile/MobileCalendar.tsx",
       "source_location": "L82",
       "id": "mobile_mobilecalendar_uireducer",
-      "community": 16,
+      "community": 19,
       "norm_label": "uireducer()"
     },
     {
@@ -3168,7 +3186,7 @@
       "source_file": "app/(product)/components/Mobile/MobileCalendar.tsx",
       "source_location": "L137",
       "id": "mobile_mobilecalendar_createinitialstate",
-      "community": 16,
+      "community": 19,
       "norm_label": "createinitialstate()"
     },
     {
@@ -3177,7 +3195,7 @@
       "source_file": "app/(product)/components/Mobile/MobileCalendar.tsx",
       "source_location": "L152",
       "id": "mobile_mobilecalendar_mobilecalendar",
-      "community": 19,
+      "community": 16,
       "norm_label": "mobilecalendar()"
     },
     {
@@ -3681,7 +3699,7 @@
       "source_file": "app/(product)/components/Community/CommunityChat.tsx",
       "source_location": "L1",
       "id": "app_product_components_community_communitychat_tsx",
-      "community": 2,
+      "community": 34,
       "norm_label": "communitychat.tsx"
     },
     {
@@ -3690,7 +3708,7 @@
       "source_file": "app/(product)/components/Community/CommunityChat.tsx",
       "source_location": "L11",
       "id": "community_communitychat_globalmessage",
-      "community": 2,
+      "community": 34,
       "norm_label": "globalmessage"
     },
     {
@@ -3699,7 +3717,7 @@
       "source_file": "app/(product)/components/Community/CommunityChat.tsx",
       "source_location": "L23",
       "id": "community_communitychat_communitychat",
-      "community": 2,
+      "community": 34,
       "norm_label": "communitychat()"
     },
     {
@@ -3753,7 +3771,7 @@
       "source_file": "app/(product)/components/Community/index.ts",
       "source_location": "L1",
       "id": "app_product_components_community_index_ts",
-      "community": 2,
+      "community": 34,
       "norm_label": "index.ts"
     },
     {
@@ -3816,7 +3834,7 @@
       "source_file": "app/(product)/sessions/PastSessionsList.tsx",
       "source_location": "L68",
       "id": "sessions_pastsessionslist_formatrelativeday",
-      "community": 16,
+      "community": 12,
       "norm_label": "formatrelativeday()"
     },
     {
@@ -3879,7 +3897,7 @@
       "source_file": "app/(product)/sessions/SessionsList.tsx",
       "source_location": "L1",
       "id": "app_product_sessions_sessionslist_tsx",
-      "community": 24,
+      "community": 93,
       "norm_label": "sessionslist.tsx"
     },
     {
@@ -3888,7 +3906,7 @@
       "source_file": "app/(product)/sessions/SessionsList.tsx",
       "source_location": "L8",
       "id": "sessions_sessionslist_participant",
-      "community": 24,
+      "community": 93,
       "norm_label": "participant"
     },
     {
@@ -3897,7 +3915,7 @@
       "source_file": "app/(product)/sessions/SessionsList.tsx",
       "source_location": "L18",
       "id": "sessions_sessionslist_session",
-      "community": 24,
+      "community": 93,
       "norm_label": "session"
     },
     {
@@ -3906,7 +3924,7 @@
       "source_file": "app/(product)/sessions/SessionsList.tsx",
       "source_location": "L38",
       "id": "sessions_sessionslist_sessionslistprops",
-      "community": 24,
+      "community": 93,
       "norm_label": "sessionslistprops"
     },
     {
@@ -3915,7 +3933,7 @@
       "source_file": "app/(product)/sessions/SessionsList.tsx",
       "source_location": "L43",
       "id": "sessions_sessionslist_isjoinable",
-      "community": 24,
+      "community": 93,
       "norm_label": "isjoinable()"
     },
     {
@@ -3924,7 +3942,7 @@
       "source_file": "app/(product)/sessions/SessionsList.tsx",
       "source_location": "L47",
       "id": "sessions_sessionslist_gettimeuntil",
-      "community": 24,
+      "community": 93,
       "norm_label": "gettimeuntil()"
     },
     {
@@ -3933,7 +3951,7 @@
       "source_file": "app/(product)/sessions/SessionsList.tsx",
       "source_location": "L67",
       "id": "sessions_sessionslist_formatdatetime",
-      "community": 24,
+      "community": 93,
       "norm_label": "formatdatetime()"
     },
     {
@@ -3942,7 +3960,7 @@
       "source_file": "app/(product)/sessions/SessionsList.tsx",
       "source_location": "L85",
       "id": "sessions_sessionslist_getparticipantname",
-      "community": 24,
+      "community": 93,
       "norm_label": "getparticipantname()"
     },
     {
@@ -3951,7 +3969,7 @@
       "source_file": "app/(product)/sessions/SessionsList.tsx",
       "source_location": "L94",
       "id": "sessions_sessionslist_getinitials",
-      "community": 24,
+      "community": 93,
       "norm_label": "getinitials()"
     },
     {
@@ -4131,7 +4149,7 @@
       "source_file": "app/(product)/sessions/[id]/ClientCall.tsx",
       "source_location": "L35",
       "id": "id_clientcall_formatremaining",
-      "community": 16,
+      "community": 24,
       "norm_label": "formatremaining()"
     },
     {
@@ -4167,7 +4185,7 @@
       "source_file": "app/(product)/sessions/[id]/ClientCall.tsx",
       "source_location": "L702",
       "id": "id_clientcall_timerpill",
-      "community": 16,
+      "community": 24,
       "norm_label": "timerpill()"
     },
     {
@@ -4338,7 +4356,7 @@
       "source_file": "app/api/chat/[friendId]/read/route.ts",
       "source_location": "L1",
       "id": "app_api_chat_friendid_read_route_ts",
-      "community": 21,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -4347,7 +4365,7 @@
       "source_file": "app/api/chat/[friendId]/read/route.ts",
       "source_location": "L10",
       "id": "read_route_post",
-      "community": 21,
+      "community": 4,
       "norm_label": "post()"
     },
     {
@@ -4401,7 +4419,7 @@
       "source_file": "app/api/chat/[friendId]/events/route.ts",
       "source_location": "L1",
       "id": "app_api_chat_friendid_events_route_ts",
-      "community": 21,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -4410,7 +4428,7 @@
       "source_file": "app/api/chat/[friendId]/events/route.ts",
       "source_location": "L7",
       "id": "app_api_chat_friendid_events_route_ts_events_route_get",
-      "community": 21,
+      "community": 4,
       "norm_label": "get()"
     },
     {
@@ -4419,7 +4437,7 @@
       "source_file": "app/api/chat/unread-counts/route.ts",
       "source_location": "L1",
       "id": "app_api_chat_unread_counts_route_ts",
-      "community": 10,
+      "community": 43,
       "norm_label": "route.ts"
     },
     {
@@ -4428,7 +4446,7 @@
       "source_file": "app/api/chat/unread-counts/route.ts",
       "source_location": "L8",
       "id": "unread_counts_route_get",
-      "community": 10,
+      "community": 43,
       "norm_label": "get()"
     },
     {
@@ -4509,7 +4527,7 @@
       "source_file": "app/api/auth/[...nextauth]/route.ts",
       "source_location": "L1",
       "id": "app_api_auth_nextauth_route_ts",
-      "community": 21,
+      "community": 43,
       "norm_label": "route.ts"
     },
     {
@@ -4518,7 +4536,7 @@
       "source_file": "app/api/auth/[...nextauth]/route.ts",
       "source_location": "L4",
       "id": "nextauth_route_handler",
-      "community": 21,
+      "community": 43,
       "norm_label": "handler"
     },
     {
@@ -4725,7 +4743,7 @@
       "source_file": "app/api/sessions/route.ts",
       "source_location": "L1",
       "id": "app_api_sessions_route_ts",
-      "community": 4,
+      "community": 21,
       "norm_label": "route.ts"
     },
     {
@@ -4734,7 +4752,7 @@
       "source_file": "app/api/sessions/route.ts",
       "source_location": "L13",
       "id": "sessions_route_dbsession",
-      "community": 4,
+      "community": 21,
       "norm_label": "dbsession"
     },
     {
@@ -4743,7 +4761,7 @@
       "source_file": "app/api/sessions/route.ts",
       "source_location": "L30",
       "id": "sessions_route_get",
-      "community": 4,
+      "community": 21,
       "norm_label": "get()"
     },
     {
@@ -4752,7 +4770,7 @@
       "source_file": "app/api/sessions/route.ts",
       "source_location": "L205",
       "id": "sessions_route_post",
-      "community": 4,
+      "community": 21,
       "norm_label": "post()"
     },
     {
@@ -4761,7 +4779,7 @@
       "source_file": "app/api/sessions/busy/route.ts",
       "source_location": "L1",
       "id": "app_api_sessions_busy_route_ts",
-      "community": 21,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -4770,7 +4788,7 @@
       "source_file": "app/api/sessions/busy/route.ts",
       "source_location": "L9",
       "id": "busy_route_get",
-      "community": 21,
+      "community": 4,
       "norm_label": "get()"
     },
     {
@@ -4779,7 +4797,7 @@
       "source_file": "app/api/sessions/events/route.ts",
       "source_location": "L1",
       "id": "app_api_sessions_events_route_ts",
-      "community": 8,
+      "community": 43,
       "norm_label": "route.ts"
     },
     {
@@ -4788,7 +4806,7 @@
       "source_file": "app/api/sessions/events/route.ts",
       "source_location": "L5",
       "id": "app_api_sessions_events_route_ts_events_route_get",
-      "community": 8,
+      "community": 43,
       "norm_label": "get()"
     },
     {
@@ -4869,7 +4887,7 @@
       "source_file": "app/api/sessions/[id]/join/route.ts",
       "source_location": "L1",
       "id": "app_api_sessions_id_join_route_ts",
-      "community": 4,
+      "community": 21,
       "norm_label": "route.ts"
     },
     {
@@ -4878,7 +4896,7 @@
       "source_file": "app/api/sessions/[id]/join/route.ts",
       "source_location": "L10",
       "id": "join_route_post",
-      "community": 4,
+      "community": 21,
       "norm_label": "post()"
     },
     {
@@ -4986,7 +5004,7 @@
       "source_file": "app/api/ai/schedule/confirm/route.ts",
       "source_location": "L1",
       "id": "app_api_ai_schedule_confirm_route_ts",
-      "community": 10,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -4995,7 +5013,7 @@
       "source_file": "app/api/ai/schedule/confirm/route.ts",
       "source_location": "L7",
       "id": "confirm_route_post",
-      "community": 10,
+      "community": 4,
       "norm_label": "post()"
     },
     {
@@ -5065,7 +5083,7 @@
       "label": "Prefs",
       "file_type": "code",
       "source_file": "app/api/users/preferences/route.ts",
-      "source_location": "L14",
+      "source_location": "L20",
       "id": "preferences_route_prefs",
       "community": 10,
       "norm_label": "prefs"
@@ -5074,7 +5092,7 @@
       "label": "DEFAULTS",
       "file_type": "code",
       "source_file": "app/api/users/preferences/route.ts",
-      "source_location": "L25",
+      "source_location": "L32",
       "id": "preferences_route_defaults",
       "community": 10,
       "norm_label": "defaults"
@@ -5083,7 +5101,7 @@
       "label": "GET()",
       "file_type": "code",
       "source_file": "app/api/users/preferences/route.ts",
-      "source_location": "L36",
+      "source_location": "L44",
       "id": "preferences_route_get",
       "community": 10,
       "norm_label": "get()"
@@ -5092,7 +5110,7 @@
       "label": "PATCH()",
       "file_type": "code",
       "source_file": "app/api/users/preferences/route.ts",
-      "source_location": "L54",
+      "source_location": "L62",
       "id": "preferences_route_patch",
       "community": 10,
       "norm_label": "patch()"
@@ -5103,7 +5121,7 @@
       "source_file": "app/api/users/me/route.ts",
       "source_location": "L1",
       "id": "app_api_users_me_route_ts",
-      "community": 11,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -5112,7 +5130,7 @@
       "source_file": "app/api/users/me/route.ts",
       "source_location": "L13",
       "id": "me_route_get",
-      "community": 11,
+      "community": 10,
       "norm_label": "get()"
     },
     {
@@ -5121,7 +5139,7 @@
       "source_file": "app/api/users/me/route.ts",
       "source_location": "L78",
       "id": "me_route_regenerateembedding",
-      "community": 11,
+      "community": 10,
       "norm_label": "regenerateembedding()"
     },
     {
@@ -5130,7 +5148,7 @@
       "source_file": "app/api/users/me/route.ts",
       "source_location": "L115",
       "id": "me_route_patch",
-      "community": 1,
+      "community": 10,
       "norm_label": "patch()"
     },
     {
@@ -5157,7 +5175,7 @@
       "source_file": "app/api/users/me/stats/route.ts",
       "source_location": "L1",
       "id": "app_api_users_me_stats_route_ts",
-      "community": 10,
+      "community": 43,
       "norm_label": "route.ts"
     },
     {
@@ -5166,7 +5184,7 @@
       "source_file": "app/api/users/me/stats/route.ts",
       "source_location": "L7",
       "id": "stats_route_participantdoc",
-      "community": 10,
+      "community": 43,
       "norm_label": "participantdoc"
     },
     {
@@ -5175,7 +5193,7 @@
       "source_file": "app/api/users/me/stats/route.ts",
       "source_location": "L14",
       "id": "stats_route_sessiondoc",
-      "community": 10,
+      "community": 43,
       "norm_label": "sessiondoc"
     },
     {
@@ -5184,7 +5202,7 @@
       "source_file": "app/api/users/me/stats/route.ts",
       "source_location": "L25",
       "id": "stats_route_sessiontypebreakdown",
-      "community": 10,
+      "community": 43,
       "norm_label": "sessiontypebreakdown"
     },
     {
@@ -5193,7 +5211,7 @@
       "source_file": "app/api/users/me/stats/route.ts",
       "source_location": "L26",
       "id": "stats_route_weekdaycount",
-      "community": 10,
+      "community": 43,
       "norm_label": "weekdaycount"
     },
     {
@@ -5202,7 +5220,7 @@
       "source_file": "app/api/users/me/stats/route.ts",
       "source_location": "L33",
       "id": "stats_route_get",
-      "community": 10,
+      "community": 43,
       "norm_label": "get()"
     },
     {
@@ -5229,7 +5247,7 @@
       "source_file": "app/api/friends/route.ts",
       "source_location": "L1",
       "id": "app_api_friends_route_ts",
-      "community": 10,
+      "community": 43,
       "norm_label": "route.ts"
     },
     {
@@ -5238,7 +5256,7 @@
       "source_file": "app/api/friends/route.ts",
       "source_location": "L12",
       "id": "friends_route_get",
-      "community": 10,
+      "community": 43,
       "norm_label": "get()"
     },
     {
@@ -5373,7 +5391,7 @@
       "source_file": "app/api/session-requests/[id]/route.ts",
       "source_location": "L1",
       "id": "app_api_session_requests_id_route_ts",
-      "community": 4,
+      "community": 21,
       "norm_label": "route.ts"
     },
     {
@@ -5382,7 +5400,7 @@
       "source_file": "app/api/session-requests/[id]/route.ts",
       "source_location": "L14",
       "id": "app_api_session_requests_id_route_ts_id_route_post",
-      "community": 4,
+      "community": 21,
       "norm_label": "post()"
     },
     {
@@ -5427,7 +5445,7 @@
       "source_file": "app/api/community/posts/[postId]/route.ts",
       "source_location": "L1",
       "id": "app_api_community_posts_postid_route_ts",
-      "community": 10,
+      "community": 43,
       "norm_label": "route.ts"
     },
     {
@@ -5436,7 +5454,7 @@
       "source_file": "app/api/community/posts/[postId]/route.ts",
       "source_location": "L8",
       "id": "postid_route_delete",
-      "community": 10,
+      "community": 43,
       "norm_label": "delete()"
     },
     {
@@ -5472,7 +5490,7 @@
       "source_file": "app/api/community/posts/[postId]/like/route.ts",
       "source_location": "L1",
       "id": "app_api_community_posts_postid_like_route_ts",
-      "community": 10,
+      "community": 43,
       "norm_label": "route.ts"
     },
     {
@@ -5481,7 +5499,7 @@
       "source_file": "app/api/community/posts/[postId]/like/route.ts",
       "source_location": "L8",
       "id": "like_route_post",
-      "community": 10,
+      "community": 43,
       "norm_label": "post()"
     },
     {
@@ -5503,6 +5521,42 @@
       "norm_label": "get()"
     },
     {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L1",
+      "id": "app_api_cron_morning_session_reminders_route_ts",
+      "community": 15,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L9",
+      "id": "morning_session_reminders_route_get",
+      "community": 15,
+      "norm_label": "get()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L1",
+      "id": "app_api_cron_session_reminders_route_ts",
+      "community": 15,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L9",
+      "id": "session_reminders_route_get",
+      "community": 15,
+      "norm_label": "get()"
+    },
+    {
       "label": "calendar.ts",
       "file_type": "code",
       "source_file": "constants/calendar.ts",
@@ -5517,7 +5571,7 @@
       "source_file": "constants/calendar.ts",
       "source_location": "L20",
       "id": "constants_calendar_duration_options",
-      "community": 4,
+      "community": 21,
       "norm_label": "duration_options"
     },
     {
@@ -5535,7 +5589,7 @@
       "source_file": "constants/calendar.ts",
       "source_location": "L36",
       "id": "constants_calendar_default_duration_filter",
-      "community": 19,
+      "community": 17,
       "norm_label": "default_duration_filter"
     },
     {
@@ -5544,7 +5598,7 @@
       "source_file": "constants/calendar.ts",
       "source_location": "L42",
       "id": "constants_calendar_calendar_layout",
-      "community": 17,
+      "community": 16,
       "norm_label": "calendar_layout"
     },
     {
@@ -5553,7 +5607,7 @@
       "source_file": "constants/calendar.ts",
       "source_location": "L60",
       "id": "constants_calendar_time_config",
-      "community": 14,
+      "community": 26,
       "norm_label": "time_config"
     },
     {
@@ -5688,7 +5742,7 @@
       "source_file": "components/hero.tsx",
       "source_location": "L1",
       "id": "components_hero_tsx",
-      "community": 70,
+      "community": 62,
       "norm_label": "hero.tsx"
     },
     {
@@ -5697,7 +5751,7 @@
       "source_file": "components/hero.tsx",
       "source_location": "L12",
       "id": "components_hero_heroprops",
-      "community": 70,
+      "community": 62,
       "norm_label": "heroprops"
     },
     {
@@ -5706,7 +5760,7 @@
       "source_file": "components/hero.tsx",
       "source_location": "L17",
       "id": "components_hero_hero",
-      "community": 70,
+      "community": 62,
       "norm_label": "hero()"
     },
     {
@@ -5850,7 +5904,7 @@
       "source_file": "components/PasswordStrengthMeter.tsx",
       "source_location": "L1",
       "id": "components_passwordstrengthmeter_tsx",
-      "community": 27,
+      "community": 70,
       "norm_label": "passwordstrengthmeter.tsx"
     },
     {
@@ -5859,7 +5913,7 @@
       "source_file": "components/PasswordStrengthMeter.tsx",
       "source_location": "L5",
       "id": "components_passwordstrengthmeter_props",
-      "community": 27,
+      "community": 70,
       "norm_label": "props"
     },
     {
@@ -5868,7 +5922,7 @@
       "source_file": "components/PasswordStrengthMeter.tsx",
       "source_location": "L9",
       "id": "components_passwordstrengthmeter_strength_labels",
-      "community": 27,
+      "community": 70,
       "norm_label": "strength_labels"
     },
     {
@@ -5877,7 +5931,7 @@
       "source_file": "components/PasswordStrengthMeter.tsx",
       "source_location": "L15",
       "id": "components_passwordstrengthmeter_passwordstrengthmeter",
-      "community": 27,
+      "community": 70,
       "norm_label": "passwordstrengthmeter()"
     },
     {
@@ -5886,7 +5940,7 @@
       "source_file": "components/PasswordStrengthMeter.tsx",
       "source_location": "L52",
       "id": "components_passwordstrengthmeter_requirement",
-      "community": 27,
+      "community": 70,
       "norm_label": "requirement()"
     },
     {
@@ -5895,7 +5949,7 @@
       "source_file": "components/verified-tag.tsx",
       "source_location": "L1",
       "id": "components_verified_tag_tsx",
-      "community": 2,
+      "community": 34,
       "norm_label": "verified-tag.tsx"
     },
     {
@@ -5904,7 +5958,7 @@
       "source_file": "components/verified-tag.tsx",
       "source_location": "L4",
       "id": "components_verified_tag_props",
-      "community": 2,
+      "community": 34,
       "norm_label": "props"
     },
     {
@@ -5913,7 +5967,7 @@
       "source_file": "components/verified-tag.tsx",
       "source_location": "L10",
       "id": "components_verified_tag_verifiedtag",
-      "community": 2,
+      "community": 34,
       "norm_label": "verifiedtag()"
     },
     {
@@ -5922,7 +5976,7 @@
       "source_file": "components/verified-tag.tsx",
       "source_location": "L30",
       "id": "components_verified_tag_verifiednameprops",
-      "community": 2,
+      "community": 34,
       "norm_label": "verifiednameprops"
     },
     {
@@ -5931,7 +5985,7 @@
       "source_file": "components/verified-tag.tsx",
       "source_location": "L37",
       "id": "components_verified_tag_verifiedname",
-      "community": 2,
+      "community": 34,
       "norm_label": "verifiedname()"
     },
     {
@@ -5994,7 +6048,7 @@
       "source_file": "components/profile-stats.tsx",
       "source_location": "L62",
       "id": "components_profile_stats_formatrecenttime",
-      "community": 16,
+      "community": 29,
       "norm_label": "formatrecenttime()"
     },
     {
@@ -6129,7 +6183,7 @@
       "source_file": "components/landing-light-lock.tsx",
       "source_location": "L1",
       "id": "components_landing_light_lock_tsx",
-      "community": 6,
+      "community": 3,
       "norm_label": "landing-light-lock.tsx"
     },
     {
@@ -6138,7 +6192,7 @@
       "source_file": "components/landing-light-lock.tsx",
       "source_location": "L11",
       "id": "components_landing_light_lock_landinglightlock",
-      "community": 6,
+      "community": 3,
       "norm_label": "landinglightlock()"
     },
     {
@@ -6147,7 +6201,7 @@
       "source_file": "components/email-verification-strip.tsx",
       "source_location": "L1",
       "id": "components_email_verification_strip_tsx",
-      "community": 34,
+      "community": 5,
       "norm_label": "email-verification-strip.tsx"
     },
     {
@@ -6156,7 +6210,7 @@
       "source_file": "components/email-verification-strip.tsx",
       "source_location": "L6",
       "id": "components_email_verification_strip_emailverificationstrip",
-      "community": 34,
+      "community": 5,
       "norm_label": "emailverificationstrip()"
     },
     {
@@ -6183,7 +6237,7 @@
       "source_file": "components/video-modal.tsx",
       "source_location": "L1",
       "id": "components_video_modal_tsx",
-      "community": 70,
+      "community": 62,
       "norm_label": "video-modal.tsx"
     },
     {
@@ -6192,7 +6246,7 @@
       "source_file": "components/video-modal.tsx",
       "source_location": "L4",
       "id": "components_video_modal_videomodal",
-      "community": 70,
+      "community": 62,
       "norm_label": "videomodal()"
     },
     {
@@ -6363,7 +6417,7 @@
       "source_file": "components/sign-up-form.tsx",
       "source_location": "L1",
       "id": "components_sign_up_form_tsx",
-      "community": 33,
+      "community": 70,
       "norm_label": "sign-up-form.tsx"
     },
     {
@@ -6372,7 +6426,7 @@
       "source_file": "components/sign-up-form.tsx",
       "source_location": "L18",
       "id": "components_sign_up_form_signupform",
-      "community": 23,
+      "community": 70,
       "norm_label": "signupform()"
     },
     {
@@ -6687,7 +6741,7 @@
       "source_file": "components/ui/label.tsx",
       "source_location": "L1",
       "id": "components_ui_label_tsx",
-      "community": 34,
+      "community": 62,
       "norm_label": "label.tsx"
     },
     {
@@ -6696,7 +6750,7 @@
       "source_file": "components/ui/label.tsx",
       "source_location": "L9",
       "id": "ui_label_labelvariants",
-      "community": 34,
+      "community": 62,
       "norm_label": "labelvariants"
     },
     {
@@ -6705,7 +6759,7 @@
       "source_file": "components/ui/label.tsx",
       "source_location": "L13",
       "id": "ui_label_label",
-      "community": 34,
+      "community": 62,
       "norm_label": "label"
     },
     {
@@ -6732,7 +6786,7 @@
       "source_file": "components/ui/avatar.tsx",
       "source_location": "L24",
       "id": "ui_avatar_avatarimage",
-      "community": 30,
+      "community": 93,
       "norm_label": "avatarimage()"
     },
     {
@@ -7569,7 +7623,7 @@
       "source_file": "components/homepage/index.ts",
       "source_location": "L1",
       "id": "components_homepage_index_ts",
-      "community": 6,
+      "community": 3,
       "norm_label": "index.ts"
     },
     {
@@ -7650,7 +7704,7 @@
       "source_file": "components/homepage/Homepage.tsx",
       "source_location": "L11",
       "id": "homepage_homepage_homepage",
-      "community": 6,
+      "community": 3,
       "norm_label": "homepage()"
     },
     {
@@ -7659,7 +7713,7 @@
       "source_file": "__tests__/helpers.ts",
       "source_location": "L1",
       "id": "tests_helpers_ts",
-      "community": 38,
+      "community": 95,
       "norm_label": "helpers.ts"
     },
     {
@@ -7677,7 +7731,7 @@
       "source_file": "__tests__/helpers.ts",
       "source_location": "L28",
       "id": "tests_helpers_parseresponse",
-      "community": 50,
+      "community": 95,
       "norm_label": "parseresponse()"
     },
     {
@@ -7686,7 +7740,7 @@
       "source_file": "__tests__/helpers.ts",
       "source_location": "L36",
       "id": "tests_helpers_mockcollection",
-      "community": 38,
+      "community": 57,
       "norm_label": "mockcollection()"
     },
     {
@@ -7695,7 +7749,7 @@
       "source_file": "__tests__/helpers.ts",
       "source_location": "L64",
       "id": "tests_helpers_mockdb",
-      "community": 38,
+      "community": 50,
       "norm_label": "mockdb()"
     },
     {
@@ -7704,7 +7758,7 @@
       "source_file": "__tests__/helpers.ts",
       "source_location": "L76",
       "id": "tests_helpers_mocksession",
-      "community": 57,
+      "community": 52,
       "norm_label": "mocksession()"
     },
     {
@@ -7816,12 +7870,57 @@
       "norm_label": "modified"
     },
     {
+      "label": "sessionReminders.test.ts",
+      "file_type": "code",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L1",
+      "id": "tests_lib_sessionreminders_test_ts",
+      "community": 15,
+      "norm_label": "sessionreminders.test.ts"
+    },
+    {
+      "label": "now",
+      "file_type": "code",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L25",
+      "id": "lib_sessionreminders_test_now",
+      "community": 15,
+      "norm_label": "now"
+    },
+    {
+      "label": "{ start, end, dayKey }",
+      "file_type": "code",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L26",
+      "id": "lib_sessionreminders_test_start_end_daykey",
+      "community": 15,
+      "norm_label": "{ start, end, daykey }"
+    },
+    {
+      "label": "oneHour",
+      "file_type": "code",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L34",
+      "id": "lib_sessionreminders_test_onehour",
+      "community": 15,
+      "norm_label": "onehour"
+    },
+    {
+      "label": "tenMin",
+      "file_type": "code",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L35",
+      "id": "lib_sessionreminders_test_tenmin",
+      "community": 15,
+      "norm_label": "tenmin"
+    },
+    {
       "label": "validatePassword.test.ts",
       "file_type": "code",
       "source_file": "__tests__/lib/validatePassword.test.ts",
       "source_location": "L1",
       "id": "tests_lib_validatepassword_test_ts",
-      "community": 27,
+      "community": 70,
       "norm_label": "validatepassword.test.ts"
     },
     {
@@ -7830,7 +7929,7 @@
       "source_file": "__tests__/lib/validatePassword.test.ts",
       "source_location": "L7",
       "id": "lib_validatepassword_test_result",
-      "community": 27,
+      "community": 70,
       "norm_label": "result"
     },
     {
@@ -8338,6 +8437,33 @@
       "norm_label": "req"
     },
     {
+      "label": "session-reminders.test.ts",
+      "file_type": "code",
+      "source_file": "__tests__/api/cron/session-reminders.test.ts",
+      "source_location": "L1",
+      "id": "tests_api_cron_session_reminders_test_ts",
+      "community": 95,
+      "norm_label": "session-reminders.test.ts"
+    },
+    {
+      "label": "mocks",
+      "file_type": "code",
+      "source_file": "__tests__/api/cron/session-reminders.test.ts",
+      "source_location": "L5",
+      "id": "cron_session_reminders_test_mocks",
+      "community": 95,
+      "norm_label": "mocks"
+    },
+    {
+      "label": "req",
+      "file_type": "code",
+      "source_file": "__tests__/api/cron/session-reminders.test.ts",
+      "source_location": "L29",
+      "id": "cron_session_reminders_test_req",
+      "community": 95,
+      "norm_label": "req"
+    },
+    {
       "label": "useCalendarSessions.ts",
       "file_type": "code",
       "source_file": "hooks/useCalendarSessions.ts",
@@ -8361,7 +8487,7 @@
       "source_file": "hooks/useCalendarSessions.ts",
       "source_location": "L22",
       "id": "hooks_usecalendarsessions_usecalendarsessionsreturn",
-      "community": 16,
+      "community": 26,
       "norm_label": "usecalendarsessionsreturn"
     },
     {
@@ -8379,7 +8505,7 @@
       "source_file": "hooks/useCalendarSessions.ts",
       "source_location": "L84",
       "id": "hooks_usecalendarsessions_usecalendarsessions",
-      "community": 19,
+      "community": 14,
       "norm_label": "usecalendarsessions()"
     },
     {
@@ -8406,7 +8532,7 @@
       "source_file": "hooks/useCalendarGrid.ts",
       "source_location": "L29",
       "id": "hooks_usecalendargrid_usecalendargridoptions",
-      "community": 26,
+      "community": 16,
       "norm_label": "usecalendargridoptions"
     },
     {
@@ -8503,7 +8629,7 @@
       "label": "createCollectionIndexes()",
       "file_type": "code",
       "source_file": "scripts/create-indexes.ts",
-      "source_location": "L192",
+      "source_location": "L203",
       "id": "scripts_create_indexes_createcollectionindexes",
       "community": 61,
       "norm_label": "createcollectionindexes()"
@@ -8512,7 +8638,7 @@
       "label": "runMigration()",
       "file_type": "code",
       "source_file": "scripts/create-indexes.ts",
-      "source_location": "L233",
+      "source_location": "L244",
       "id": "scripts_create_indexes_runmigration",
       "community": 61,
       "norm_label": "runmigration()"
@@ -8579,6 +8705,186 @@
       "id": "lib_realtimechannels_sessionschannel",
       "community": 2,
       "norm_label": "sessionschannel()"
+    },
+    {
+      "label": "sessionReminders.ts",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L1",
+      "id": "lib_sessionreminders_ts",
+      "community": 15,
+      "norm_label": "sessionreminders.ts"
+    },
+    {
+      "label": "SessionDoc",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L16",
+      "id": "lib_sessionreminders_sessiondoc",
+      "community": 15,
+      "norm_label": "sessiondoc"
+    },
+    {
+      "label": "UserDoc",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L27",
+      "id": "lib_sessionreminders_userdoc",
+      "community": 15,
+      "norm_label": "userdoc"
+    },
+    {
+      "label": "SessionReminderItem",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L38",
+      "id": "lib_sessionreminders_sessionreminderitem",
+      "community": 15,
+      "norm_label": "sessionreminderitem"
+    },
+    {
+      "label": "ReminderRecipient",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L49",
+      "id": "lib_sessionreminders_reminderrecipient",
+      "community": 15,
+      "norm_label": "reminderrecipient"
+    },
+    {
+      "label": "istDateKey()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L56",
+      "id": "lib_sessionreminders_istdatekey",
+      "community": 15,
+      "norm_label": "istdatekey()"
+    },
+    {
+      "label": "getISTDayBounds()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L60",
+      "id": "lib_sessionreminders_getistdaybounds",
+      "community": 15,
+      "norm_label": "getistdaybounds()"
+    },
+    {
+      "label": "formatSessionTimeIST()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L67",
+      "id": "lib_sessionreminders_formatsessiontimeist",
+      "community": 15,
+      "norm_label": "formatsessiontimeist()"
+    },
+    {
+      "label": "sessionJoinUrl()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L79",
+      "id": "lib_sessionreminders_sessionjoinurl",
+      "community": 15,
+      "norm_label": "sessionjoinurl()"
+    },
+    {
+      "label": "resolveReminderTiming()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L83",
+      "id": "lib_sessionreminders_resolveremindertiming",
+      "community": 15,
+      "norm_label": "resolveremindertiming()"
+    },
+    {
+      "label": "startWindowForTiming()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L92",
+      "id": "lib_sessionreminders_startwindowfortiming",
+      "community": 15,
+      "norm_label": "startwindowfortiming()"
+    },
+    {
+      "label": "isMatchedSessionParticipants()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L108",
+      "id": "lib_sessionreminders_ismatchedsessionparticipants",
+      "community": 15,
+      "norm_label": "ismatchedsessionparticipants()"
+    },
+    {
+      "label": "displayName()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L114",
+      "id": "lib_sessionreminders_displayname",
+      "community": 15,
+      "norm_label": "displayname()"
+    },
+    {
+      "label": "sessionTitle()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L120",
+      "id": "lib_sessionreminders_sessiontitle",
+      "community": 15,
+      "norm_label": "sessiontitle()"
+    },
+    {
+      "label": "loadUserNames()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L126",
+      "id": "lib_sessionreminders_loadusernames",
+      "community": 15,
+      "norm_label": "loadusernames()"
+    },
+    {
+      "label": "toReminderItems()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L148",
+      "id": "lib_sessionreminders_toreminderitems",
+      "community": 15,
+      "norm_label": "toreminderitems()"
+    },
+    {
+      "label": "findReminderRecipients()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L185",
+      "id": "lib_sessionreminders_findreminderrecipients",
+      "community": 15,
+      "norm_label": "findreminderrecipients()"
+    },
+    {
+      "label": "findUserSessionsInRange()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L214",
+      "id": "lib_sessionreminders_findusersessionsinrange",
+      "community": 15,
+      "norm_label": "findusersessionsinrange()"
+    },
+    {
+      "label": "markReminderSent()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L238",
+      "id": "lib_sessionreminders_markremindersent",
+      "community": 15,
+      "norm_label": "markremindersent()"
+    },
+    {
+      "label": "joinWindowNote()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L259",
+      "id": "lib_sessionreminders_joinwindownote",
+      "community": 15,
+      "norm_label": "joinwindownote()"
     },
     {
       "label": "sessionAccess.ts",
@@ -8653,6 +8959,33 @@
       "norm_label": "createdailymeetingtoken()"
     },
     {
+      "label": "cronAuth.ts",
+      "file_type": "code",
+      "source_file": "lib/cronAuth.ts",
+      "source_location": "L1",
+      "id": "lib_cronauth_ts",
+      "community": 15,
+      "norm_label": "cronauth.ts"
+    },
+    {
+      "label": "verifyCronSecret()",
+      "file_type": "code",
+      "source_file": "lib/cronAuth.ts",
+      "source_location": "L3",
+      "id": "lib_cronauth_verifycronsecret",
+      "community": 15,
+      "norm_label": "verifycronsecret()"
+    },
+    {
+      "label": "unauthorizedCronResponse()",
+      "file_type": "code",
+      "source_file": "lib/cronAuth.ts",
+      "source_location": "L10",
+      "id": "lib_cronauth_unauthorizedcronresponse",
+      "community": 15,
+      "norm_label": "unauthorizedcronresponse()"
+    },
+    {
       "label": "resend.ts",
       "file_type": "code",
       "source_file": "lib/resend.ts",
@@ -8694,7 +9027,7 @@
       "source_file": "lib/redis.ts",
       "source_location": "L1",
       "id": "lib_redis_ts",
-      "community": 15,
+      "community": 8,
       "norm_label": "redis.ts"
     },
     {
@@ -8712,7 +9045,7 @@
       "source_file": "lib/redis.ts",
       "source_location": "L9",
       "id": "lib_redis_baseoptions",
-      "community": 15,
+      "community": 8,
       "norm_label": "baseoptions"
     },
     {
@@ -8721,7 +9054,7 @@
       "source_file": "lib/redis.ts",
       "source_location": "L24",
       "id": "lib_redis_redisstate",
-      "community": 15,
+      "community": 8,
       "norm_label": "redisstate"
     },
     {
@@ -8730,7 +9063,7 @@
       "source_file": "lib/redis.ts",
       "source_location": "L31",
       "id": "lib_redis_getredisstate",
-      "community": 15,
+      "community": 8,
       "norm_label": "getredisstate()"
     },
     {
@@ -8739,7 +9072,7 @@
       "source_file": "lib/redis.ts",
       "source_location": "L44",
       "id": "lib_redis_getpublisher",
-      "community": 1,
+      "community": 8,
       "norm_label": "getpublisher()"
     },
     {
@@ -8748,7 +9081,7 @@
       "source_file": "lib/redis.ts",
       "source_location": "L84",
       "id": "lib_redis_getsubscriber",
-      "community": 15,
+      "community": 8,
       "norm_label": "getsubscriber()"
     },
     {
@@ -8757,7 +9090,7 @@
       "source_file": "lib/redis.ts",
       "source_location": "L130",
       "id": "lib_redis_issubscriberready",
-      "community": 15,
+      "community": 8,
       "norm_label": "issubscriberready()"
     },
     {
@@ -8766,7 +9099,7 @@
       "source_file": "lib/redis.ts",
       "source_location": "L134",
       "id": "lib_redis_ismessagehandlerattached",
-      "community": 15,
+      "community": 8,
       "norm_label": "ismessagehandlerattached()"
     },
     {
@@ -8775,7 +9108,7 @@
       "source_file": "lib/redis.ts",
       "source_location": "L138",
       "id": "lib_redis_setmessagehandlerattached",
-      "community": 15,
+      "community": 8,
       "norm_label": "setmessagehandlerattached()"
     },
     {
@@ -8784,7 +9117,7 @@
       "source_file": "lib/redis.ts",
       "source_location": "L142",
       "id": "lib_redis_closeredisconnections",
-      "community": 15,
+      "community": 8,
       "norm_label": "closeredisconnections()"
     },
     {
@@ -8838,7 +9171,7 @@
       "source_file": "lib/utils.ts",
       "source_location": "L4",
       "id": "lib_utils_cn",
-      "community": 30,
+      "community": 62,
       "norm_label": "cn()"
     },
     {
@@ -8865,7 +9198,7 @@
       "source_file": "lib/utils.ts",
       "source_location": "L12",
       "id": "lib_utils_startofday",
-      "community": 16,
+      "community": 19,
       "norm_label": "startofday()"
     },
     {
@@ -8883,7 +9216,7 @@
       "source_file": "lib/utils.ts",
       "source_location": "L21",
       "id": "lib_utils_adddays",
-      "community": 16,
+      "community": 19,
       "norm_label": "adddays()"
     },
     {
@@ -8971,7 +9304,7 @@
       "label": "isWithinCallWindow()",
       "file_type": "code",
       "source_file": "lib/sessionWindow.ts",
-      "source_location": "L12",
+      "source_location": "L11",
       "id": "lib_sessionwindow_iswithincallwindow",
       "community": 24,
       "norm_label": "iswithincallwindow()"
@@ -8980,9 +9313,9 @@
       "label": "isCallJoinable()",
       "file_type": "code",
       "source_file": "lib/sessionWindow.ts",
-      "source_location": "L30",
+      "source_location": "L29",
       "id": "lib_sessionwindow_iscalljoinable",
-      "community": 24,
+      "community": 93,
       "norm_label": "iscalljoinable()"
     },
     {
@@ -8991,7 +9324,7 @@
       "source_file": "lib/validatePassword.ts",
       "source_location": "L1",
       "id": "lib_validatepassword_ts",
-      "community": 27,
+      "community": 70,
       "norm_label": "validatepassword.ts"
     },
     {
@@ -9000,7 +9333,7 @@
       "source_file": "lib/validatePassword.ts",
       "source_location": "L1",
       "id": "lib_validatepassword_passwordstrength",
-      "community": 27,
+      "community": 70,
       "norm_label": "passwordstrength"
     },
     {
@@ -9009,7 +9342,7 @@
       "source_file": "lib/validatePassword.ts",
       "source_location": "L3",
       "id": "lib_validatepassword_passwordvalidationresult",
-      "community": 27,
+      "community": 70,
       "norm_label": "passwordvalidationresult"
     },
     {
@@ -9018,7 +9351,7 @@
       "source_file": "lib/validatePassword.ts",
       "source_location": "L14",
       "id": "lib_validatepassword_validatepassword",
-      "community": 27,
+      "community": 70,
       "norm_label": "validatepassword()"
     },
     {
@@ -9072,7 +9405,7 @@
       "source_file": "lib/sse.ts",
       "source_location": "L49",
       "id": "lib_sse_initializeredismessagehandler",
-      "community": 15,
+      "community": 8,
       "norm_label": "initializeredismessagehandler()"
     },
     {
@@ -9081,7 +9414,7 @@
       "source_file": "lib/sse.ts",
       "source_location": "L77",
       "id": "lib_sse_subscribetoredischannel",
-      "community": 15,
+      "community": 8,
       "norm_label": "subscribetoredischannel()"
     },
     {
@@ -9171,7 +9504,7 @@
       "source_file": "lib/sse.ts",
       "source_location": "L257",
       "id": "lib_sse_sessionschannel",
-      "community": 4,
+      "community": 21,
       "norm_label": "sessionschannel()"
     },
     {
@@ -9315,7 +9648,7 @@
       "source_file": "lib/sessionOverlap.ts",
       "source_location": "L1",
       "id": "lib_sessionoverlap_ts",
-      "community": 4,
+      "community": 21,
       "norm_label": "sessionoverlap.ts"
     },
     {
@@ -9324,7 +9657,7 @@
       "source_file": "lib/sessionOverlap.ts",
       "source_location": "L10",
       "id": "lib_sessionoverlap_hassessionoverlap",
-      "community": 4,
+      "community": 21,
       "norm_label": "hassessionoverlap()"
     },
     {
@@ -9382,12 +9715,57 @@
       "norm_label": "isemailverified()"
     },
     {
+      "label": "sessionReminderJobs.ts",
+      "file_type": "code",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "id": "lib_sessionreminderjobs_ts",
+      "community": 15,
+      "norm_label": "sessionreminderjobs.ts"
+    },
+    {
+      "label": "ReminderRunResult",
+      "file_type": "code",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L19",
+      "id": "lib_sessionreminderjobs_reminderrunresult",
+      "community": 15,
+      "norm_label": "reminderrunresult"
+    },
+    {
+      "label": "runMorningSessionReminders()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L27",
+      "id": "lib_sessionreminderjobs_runmorningsessionreminders",
+      "community": 15,
+      "norm_label": "runmorningsessionreminders()"
+    },
+    {
+      "label": "runTimedSessionReminders()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L80",
+      "id": "lib_sessionreminderjobs_runtimedsessionreminders",
+      "community": 15,
+      "norm_label": "runtimedsessionreminders()"
+    },
+    {
+      "label": "sendTimedReminderForSession()",
+      "file_type": "code",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L117",
+      "id": "lib_sessionreminderjobs_sendtimedreminderforsession",
+      "community": 15,
+      "norm_label": "sendtimedreminderforsession()"
+    },
+    {
       "label": "mongodb.ts",
       "file_type": "code",
       "source_file": "lib/mongodb.ts",
       "source_location": "L1",
       "id": "lib_mongodb_ts",
-      "community": 11,
+      "community": 4,
       "norm_label": "mongodb.ts"
     },
     {
@@ -9396,7 +9774,7 @@
       "source_file": "lib/mongodb.ts",
       "source_location": "L3",
       "id": "lib_mongodb_uri",
-      "community": 11,
+      "community": 4,
       "norm_label": "uri"
     },
     {
@@ -9459,7 +9837,7 @@
       "source_file": "lib/friendship.ts",
       "source_location": "L1",
       "id": "lib_friendship_ts",
-      "community": 21,
+      "community": 4,
       "norm_label": "friendship.ts"
     },
     {
@@ -9468,7 +9846,7 @@
       "source_file": "lib/friendship.ts",
       "source_location": "L3",
       "id": "lib_friendship_arefriends",
-      "community": 21,
+      "community": 4,
       "norm_label": "arefriends()"
     },
     {
@@ -9517,12 +9895,39 @@
       "norm_label": "resetpasswordwithtoken()"
     },
     {
+      "label": "sessionReminderPrefs.ts",
+      "file_type": "code",
+      "source_file": "lib/sessionReminderPrefs.ts",
+      "source_location": "L1",
+      "id": "lib_sessionreminderprefs_ts",
+      "community": 15,
+      "norm_label": "sessionreminderprefs.ts"
+    },
+    {
+      "label": "SessionReminderTiming",
+      "file_type": "code",
+      "source_file": "lib/sessionReminderPrefs.ts",
+      "source_location": "L1",
+      "id": "lib_sessionreminderprefs_sessionremindertiming",
+      "community": 15,
+      "norm_label": "sessionremindertiming"
+    },
+    {
+      "label": "SESSION_REMINDER_TIMINGS",
+      "file_type": "code",
+      "source_file": "lib/sessionReminderPrefs.ts",
+      "source_location": "L3",
+      "id": "lib_sessionreminderprefs_session_reminder_timings",
+      "community": 15,
+      "norm_label": "session_reminder_timings"
+    },
+    {
       "label": "auth.ts",
       "file_type": "code",
       "source_file": "lib/auth.ts",
       "source_location": "L1",
       "id": "lib_auth_ts",
-      "community": 10,
+      "community": 43,
       "norm_label": "auth.ts"
     },
     {
@@ -9531,7 +9936,7 @@
       "source_file": "lib/auth.ts",
       "source_location": "L8",
       "id": "lib_auth_authoptions",
-      "community": 21,
+      "community": 43,
       "norm_label": "authoptions"
     },
     {
@@ -9742,6 +10147,42 @@
       "norm_label": "getemaillogodatauri()"
     },
     {
+      "label": "sendSessionReminderEmail.ts",
+      "file_type": "code",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L1",
+      "id": "lib_email_sendsessionreminderemail_ts",
+      "community": 6,
+      "norm_label": "sendsessionreminderemail.ts"
+    },
+    {
+      "label": "logResendFailure()",
+      "file_type": "code",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L8",
+      "id": "email_sendsessionreminderemail_logresendfailure",
+      "community": 6,
+      "norm_label": "logresendfailure()"
+    },
+    {
+      "label": "sendMorningSessionDigestEmail()",
+      "file_type": "code",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L12",
+      "id": "email_sendsessionreminderemail_sendmorningsessiondigestemail",
+      "community": 6,
+      "norm_label": "sendmorningsessiondigestemail()"
+    },
+    {
+      "label": "sendTimedSessionReminderEmail()",
+      "file_type": "code",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L48",
+      "id": "email_sendsessionreminderemail_sendtimedsessionreminderemail",
+      "community": 6,
+      "norm_label": "sendtimedsessionreminderemail()"
+    },
+    {
       "label": "templates.ts",
       "file_type": "code",
       "source_file": "lib/email/templates.ts",
@@ -9857,6 +10298,78 @@
       "id": "email_sendpasswordresetemail_sendpasswordresetemail",
       "community": 6,
       "norm_label": "sendpasswordresetemail()"
+    },
+    {
+      "label": "sessionReminderTemplates.ts",
+      "file_type": "code",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L1",
+      "id": "lib_email_sessionremindertemplates_ts",
+      "community": 6,
+      "norm_label": "sessionremindertemplates.ts"
+    },
+    {
+      "label": "greeting()",
+      "file_type": "code",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L4",
+      "id": "email_sessionremindertemplates_greeting",
+      "community": 6,
+      "norm_label": "greeting()"
+    },
+    {
+      "label": "emailShell()",
+      "file_type": "code",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L9",
+      "id": "email_sessionremindertemplates_emailshell",
+      "community": 6,
+      "norm_label": "emailshell()"
+    },
+    {
+      "label": "sessionListHtml()",
+      "file_type": "code",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L56",
+      "id": "email_sessionremindertemplates_sessionlisthtml",
+      "community": 6,
+      "norm_label": "sessionlisthtml()"
+    },
+    {
+      "label": "sessionListText()",
+      "file_type": "code",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L73",
+      "id": "email_sessionremindertemplates_sessionlisttext",
+      "community": 6,
+      "norm_label": "sessionlisttext()"
+    },
+    {
+      "label": "formatSessionTime()",
+      "file_type": "code",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L82",
+      "id": "email_sessionremindertemplates_formatsessiontime",
+      "community": 6,
+      "norm_label": "formatsessiontime()"
+    },
+    {
+      "label": "buildMorningSessionDigestEmail()",
+      "file_type": "code",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L94",
+      "id": "email_sessionremindertemplates_buildmorningsessiondigestemail",
+      "community": 6,
+      "norm_label": "buildmorningsessiondigestemail()"
+    },
+    {
+      "label": "buildTimedSessionReminderEmail()",
+      "file_type": "code",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L133",
+      "id": "email_sessionremindertemplates_buildtimedsessionreminderemail",
+      "community": 6,
+      "norm_label": "buildtimedsessionreminderemail()"
     },
     {
       "label": "settings.json",
@@ -10614,6 +11127,16 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "vercel.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "vercel_json",
+      "target": "refocus_vercel_crons",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "postcss.config.mjs",
       "source_location": "L2",
       "weight": 1.0,
@@ -11027,9 +11550,9 @@
       "source_file": "package.json",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "refocus_package_dependencies",
-      "target": "refocus_package_dependencies_resend",
-      "confidence_score": 1.0
+      "target": "refocus_package_dependencies_resend"
     },
     {
       "relation": "contains",
@@ -12554,9 +13077,9 @@
       "source_file": "app/auth/verify-email/page.tsx",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_auth_verify_email_page_tsx",
-      "target": "components_auth_shell_tsx",
-      "confidence_score": 1.0
+      "target": "components_auth_shell_tsx"
     },
     {
       "relation": "imports",
@@ -12565,9 +13088,9 @@
       "source_file": "app/auth/verify-email/page.tsx",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_auth_verify_email_page_tsx",
-      "target": "components_auth_shell_authshell",
-      "confidence_score": 1.0
+      "target": "components_auth_shell_authshell"
     },
     {
       "relation": "imports_from",
@@ -12576,9 +13099,9 @@
       "source_file": "app/auth/verify-email/page.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_auth_verify_email_page_tsx",
-      "target": "components_design_index_ts",
-      "confidence_score": 1.0
+      "target": "components_design_index_ts"
     },
     {
       "relation": "contains",
@@ -12586,9 +13109,9 @@
       "source_file": "app/auth/verify-email/page.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_auth_verify_email_page_tsx",
-      "target": "verify_email_page_props",
-      "confidence_score": 1.0
+      "target": "verify_email_page_props"
     },
     {
       "relation": "contains",
@@ -12596,9 +13119,9 @@
       "source_file": "app/auth/verify-email/page.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_auth_verify_email_page_tsx",
-      "target": "verify_email_page_verifyemailpage",
-      "confidence_score": 1.0
+      "target": "verify_email_page_verifyemailpage"
     },
     {
       "relation": "imports",
@@ -12607,9 +13130,9 @@
       "source_file": "app/auth/verify-email/page.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_auth_verify_email_page_tsx",
-      "target": "design_button_dbutton",
-      "confidence_score": 1.0
+      "target": "design_button_dbutton"
     },
     {
       "relation": "imports_from",
@@ -12682,9 +13205,9 @@
       "source_file": "app/auth/reset-password/page.tsx",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_auth_reset_password_page_tsx",
-      "target": "components_auth_shell_tsx",
-      "confidence_score": 1.0
+      "target": "components_auth_shell_tsx"
     },
     {
       "relation": "imports",
@@ -12693,9 +13216,9 @@
       "source_file": "app/auth/reset-password/page.tsx",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_auth_reset_password_page_tsx",
-      "target": "components_auth_shell_authshell",
-      "confidence_score": 1.0
+      "target": "components_auth_shell_authshell"
     },
     {
       "relation": "contains",
@@ -12703,9 +13226,9 @@
       "source_file": "app/auth/reset-password/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_auth_reset_password_page_tsx",
-      "target": "reset_password_page_props",
-      "confidence_score": 1.0
+      "target": "reset_password_page_props"
     },
     {
       "relation": "contains",
@@ -12713,9 +13236,9 @@
       "source_file": "app/auth/reset-password/page.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_auth_reset_password_page_tsx",
-      "target": "reset_password_page_resetpasswordpage",
-      "confidence_score": 1.0
+      "target": "reset_password_page_resetpasswordpage"
     },
     {
       "relation": "imports_from",
@@ -13465,9 +13988,9 @@
       "source_file": "app/(product)/dashboard/page.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_dashboard_page_tsx",
-      "target": "components_email_verification_strip_tsx",
-      "confidence_score": 1.0
+      "target": "components_email_verification_strip_tsx"
     },
     {
       "relation": "imports",
@@ -13476,9 +13999,9 @@
       "source_file": "app/(product)/dashboard/page.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_dashboard_page_tsx",
-      "target": "components_email_verification_strip_emailverificationstrip",
-      "confidence_score": 1.0
+      "target": "components_email_verification_strip_emailverificationstrip"
     },
     {
       "relation": "contains",
@@ -13547,9 +14070,9 @@
       "source_file": "app/(product)/components/settings.tsx",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_settings_tsx",
-      "target": "components_email_verification_banner_tsx",
-      "confidence_score": 1.0
+      "target": "components_email_verification_banner_tsx"
     },
     {
       "relation": "imports",
@@ -13558,9 +14081,9 @@
       "source_file": "app/(product)/components/settings.tsx",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_settings_tsx",
-      "target": "components_email_verification_banner_emailverificationbanner",
-      "confidence_score": 1.0
+      "target": "components_email_verification_banner_emailverificationbanner"
     },
     {
       "relation": "imports_from",
@@ -13618,6 +14141,28 @@
       "target": "components_passwordstrengthmeter_passwordstrengthmeter"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(product)/components/settings.tsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "app_product_components_settings_tsx",
+      "target": "lib_sessionreminderprefs_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(product)/components/settings.tsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "app_product_components_settings_tsx",
+      "target": "lib_sessionreminderprefs_sessionremindertiming",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(product)/components/settings.tsx",
@@ -13653,9 +14198,9 @@
       "source_file": "app/(product)/components/settings.tsx",
       "source_location": "L90",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_settings_tsx",
-      "target": "components_settings_emailverificationsection",
-      "confidence_score": 1.0
+      "target": "components_settings_emailverificationsection"
     },
     {
       "relation": "contains",
@@ -15115,9 +15660,9 @@
       "source_file": "app/(product)/components/globalchat.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_globalchat_tsx",
-      "target": "components_verified_tag_tsx",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_tsx"
     },
     {
       "relation": "imports",
@@ -15126,9 +15671,9 @@
       "source_file": "app/(product)/components/globalchat.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_globalchat_tsx",
-      "target": "components_verified_tag_verifiedname",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_verifiedname"
     },
     {
       "relation": "imports_from",
@@ -15391,9 +15936,9 @@
       "source_file": "app/(product)/components/Calendar/CalendarEventCard.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_calendar_calendareventcard_tsx",
-      "target": "components_verified_tag_tsx",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_tsx"
     },
     {
       "relation": "imports",
@@ -15402,9 +15947,9 @@
       "source_file": "app/(product)/components/Calendar/CalendarEventCard.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_calendar_calendareventcard_tsx",
-      "target": "components_verified_tag_verifiedname",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_verifiedname"
     },
     {
       "relation": "contains",
@@ -15540,9 +16085,9 @@
       "source_file": "app/(product)/components/Calendar/CalendarRightSidebar.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_calendar_calendarrightsidebar_tsx",
-      "target": "components_verified_tag_tsx",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_tsx"
     },
     {
       "relation": "imports",
@@ -15551,9 +16096,9 @@
       "source_file": "app/(product)/components/Calendar/CalendarRightSidebar.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_calendar_calendarrightsidebar_tsx",
-      "target": "components_verified_tag_verifiedname",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_verifiedname"
     },
     {
       "relation": "contains",
@@ -15887,9 +16432,9 @@
       "source_file": "app/(product)/components/Calendar/CalendarSidebar.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_calendar_calendarsidebar_tsx",
-      "target": "components_verified_tag_tsx",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_tsx"
     },
     {
       "relation": "imports",
@@ -15898,9 +16443,9 @@
       "source_file": "app/(product)/components/Calendar/CalendarSidebar.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_calendar_calendarsidebar_tsx",
-      "target": "components_verified_tag_verifiedname",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_verifiedname"
     },
     {
       "relation": "contains",
@@ -16305,9 +16850,9 @@
       "source_file": "app/(product)/components/Mobile/MobileCalendar.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_mobile_mobilecalendar_tsx",
-      "target": "components_verified_tag_tsx",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_tsx"
     },
     {
       "relation": "imports",
@@ -16316,9 +16861,9 @@
       "source_file": "app/(product)/components/Mobile/MobileCalendar.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_mobile_mobilecalendar_tsx",
-      "target": "components_verified_tag_verifiedname",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_verifiedname"
     },
     {
       "relation": "imports_from",
@@ -17522,9 +18067,9 @@
       "source_file": "app/(product)/components/Community/CommunityChat.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_community_communitychat_tsx",
-      "target": "components_verified_tag_tsx",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_tsx"
     },
     {
       "relation": "imports",
@@ -17533,9 +18078,9 @@
       "source_file": "app/(product)/components/Community/CommunityChat.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_product_components_community_communitychat_tsx",
-      "target": "components_verified_tag_verifiedname",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_verifiedname"
     },
     {
       "relation": "imports_from",
@@ -18837,9 +19382,9 @@
       "source_file": "app/api/global-chat/route.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_global_chat_route_ts",
-      "target": "lib_users_emailverifiedmap_ts",
-      "confidence_score": 1.0
+      "target": "lib_users_emailverifiedmap_ts"
     },
     {
       "relation": "imports",
@@ -18848,9 +19393,9 @@
       "source_file": "app/api/global-chat/route.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_global_chat_route_ts",
-      "target": "users_emailverifiedmap_fetchemailverifiedmap",
-      "confidence_score": 1.0
+      "target": "users_emailverifiedmap_fetchemailverifiedmap"
     },
     {
       "relation": "imports_from",
@@ -18859,9 +19404,9 @@
       "source_file": "app/api/global-chat/route.ts",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_global_chat_route_ts",
-      "target": "lib_emailverification_ts",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_ts"
     },
     {
       "relation": "imports",
@@ -18870,9 +19415,9 @@
       "source_file": "app/api/global-chat/route.ts",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_global_chat_route_ts",
-      "target": "lib_emailverification_isemailverified",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_isemailverified"
     },
     {
       "relation": "contains",
@@ -20283,9 +20828,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "lib_auth_ts",
-      "confidence_score": 1.0
+      "target": "lib_auth_ts"
     },
     {
       "relation": "imports",
@@ -20294,9 +20839,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "lib_auth_authoptions",
-      "confidence_score": 1.0
+      "target": "lib_auth_authoptions"
     },
     {
       "relation": "imports_from",
@@ -20305,9 +20850,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "lib_mongodb_ts",
-      "confidence_score": 1.0
+      "target": "lib_mongodb_ts"
     },
     {
       "relation": "imports",
@@ -20316,9 +20861,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "lib_mongodb_getdb",
-      "confidence_score": 1.0
+      "target": "lib_mongodb_getdb"
     },
     {
       "relation": "imports_from",
@@ -20327,9 +20872,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "lib_ratelimit_ts",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_ts"
     },
     {
       "relation": "imports",
@@ -20338,9 +20883,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "lib_ratelimit_checkratelimit",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_checkratelimit"
     },
     {
       "relation": "imports",
@@ -20349,9 +20894,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "lib_ratelimit_ratelimitedresponse",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_ratelimitedresponse"
     },
     {
       "relation": "imports_from",
@@ -20360,9 +20905,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "lib_emailverification_ts",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_ts"
     },
     {
       "relation": "imports",
@@ -20371,9 +20916,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "lib_emailverification_isemailverified",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_isemailverified"
     },
     {
       "relation": "imports_from",
@@ -20382,9 +20927,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "lib_email_sendwelcomeemail_ts",
-      "confidence_score": 1.0
+      "target": "lib_email_sendwelcomeemail_ts"
     },
     {
       "relation": "imports",
@@ -20393,9 +20938,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "email_sendwelcomeemail_sendwelcomeverificationemail",
-      "confidence_score": 1.0
+      "target": "email_sendwelcomeemail_sendwelcomeverificationemail"
     },
     {
       "relation": "contains",
@@ -20403,9 +20948,9 @@
       "source_file": "app/api/auth/resend-verification/route.ts",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_resend_verification_route_ts",
-      "target": "resend_verification_route_post",
-      "confidence_score": 1.0
+      "target": "resend_verification_route_post"
     },
     {
       "relation": "calls",
@@ -20469,9 +21014,9 @@
       "source_file": "app/api/auth/verify-email/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_verify_email_route_ts",
-      "target": "lib_emailverification_ts",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_ts"
     },
     {
       "relation": "imports",
@@ -20480,9 +21025,9 @@
       "source_file": "app/api/auth/verify-email/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_verify_email_route_ts",
-      "target": "lib_emailverification_verifyemailwithtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_verifyemailwithtoken"
     },
     {
       "relation": "imports_from",
@@ -20491,9 +21036,9 @@
       "source_file": "app/api/auth/verify-email/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_verify_email_route_ts",
-      "target": "lib_site_ts",
-      "confidence_score": 1.0
+      "target": "lib_site_ts"
     },
     {
       "relation": "imports",
@@ -20502,9 +21047,9 @@
       "source_file": "app/api/auth/verify-email/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_verify_email_route_ts",
-      "target": "lib_site_getsiteurl",
-      "confidence_score": 1.0
+      "target": "lib_site_getsiteurl"
     },
     {
       "relation": "contains",
@@ -20512,9 +21057,9 @@
       "source_file": "app/api/auth/verify-email/route.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_verify_email_route_ts",
-      "target": "verify_email_route_get",
-      "confidence_score": 1.0
+      "target": "verify_email_route_get"
     },
     {
       "relation": "calls",
@@ -20633,9 +21178,9 @@
       "source_file": "app/api/auth/register/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_register_route_ts",
-      "target": "lib_email_sendwelcomeemail_ts",
-      "confidence_score": 1.0
+      "target": "lib_email_sendwelcomeemail_ts"
     },
     {
       "relation": "imports",
@@ -20644,9 +21189,9 @@
       "source_file": "app/api/auth/register/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_register_route_ts",
-      "target": "email_sendwelcomeemail_sendwelcomeverificationemail",
-      "confidence_score": 1.0
+      "target": "email_sendwelcomeemail_sendwelcomeverificationemail"
     },
     {
       "relation": "contains",
@@ -20774,9 +21319,9 @@
       "source_file": "app/api/auth/forgot-password/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_forgot_password_route_ts",
-      "target": "lib_mongodb_ts",
-      "confidence_score": 1.0
+      "target": "lib_mongodb_ts"
     },
     {
       "relation": "imports",
@@ -20785,9 +21330,9 @@
       "source_file": "app/api/auth/forgot-password/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_forgot_password_route_ts",
-      "target": "lib_mongodb_getdb",
-      "confidence_score": 1.0
+      "target": "lib_mongodb_getdb"
     },
     {
       "relation": "imports_from",
@@ -20796,9 +21341,9 @@
       "source_file": "app/api/auth/forgot-password/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_forgot_password_route_ts",
-      "target": "lib_ratelimit_ts",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_ts"
     },
     {
       "relation": "imports",
@@ -20807,9 +21352,9 @@
       "source_file": "app/api/auth/forgot-password/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_forgot_password_route_ts",
-      "target": "lib_ratelimit_checkratelimit",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_checkratelimit"
     },
     {
       "relation": "imports",
@@ -20818,9 +21363,9 @@
       "source_file": "app/api/auth/forgot-password/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_forgot_password_route_ts",
-      "target": "lib_ratelimit_getclientip",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_getclientip"
     },
     {
       "relation": "imports",
@@ -20829,9 +21374,9 @@
       "source_file": "app/api/auth/forgot-password/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_forgot_password_route_ts",
-      "target": "lib_ratelimit_ratelimitedresponse",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_ratelimitedresponse"
     },
     {
       "relation": "imports_from",
@@ -20840,9 +21385,9 @@
       "source_file": "app/api/auth/forgot-password/route.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_forgot_password_route_ts",
-      "target": "lib_email_sendpasswordresetemail_ts",
-      "confidence_score": 1.0
+      "target": "lib_email_sendpasswordresetemail_ts"
     },
     {
       "relation": "imports",
@@ -20851,9 +21396,9 @@
       "source_file": "app/api/auth/forgot-password/route.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_forgot_password_route_ts",
-      "target": "email_sendpasswordresetemail_sendpasswordresetemail",
-      "confidence_score": 1.0
+      "target": "email_sendpasswordresetemail_sendpasswordresetemail"
     },
     {
       "relation": "contains",
@@ -20861,9 +21406,9 @@
       "source_file": "app/api/auth/forgot-password/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_forgot_password_route_ts",
-      "target": "forgot_password_route_post",
-      "confidence_score": 1.0
+      "target": "forgot_password_route_post"
     },
     {
       "relation": "calls",
@@ -20927,9 +21472,9 @@
       "source_file": "app/api/auth/reset-password/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_reset_password_route_ts",
-      "target": "lib_ratelimit_ts",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_ts"
     },
     {
       "relation": "imports",
@@ -20938,9 +21483,9 @@
       "source_file": "app/api/auth/reset-password/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_reset_password_route_ts",
-      "target": "lib_ratelimit_checkratelimit",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_checkratelimit"
     },
     {
       "relation": "imports",
@@ -20949,9 +21494,9 @@
       "source_file": "app/api/auth/reset-password/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_reset_password_route_ts",
-      "target": "lib_ratelimit_getclientip",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_getclientip"
     },
     {
       "relation": "imports",
@@ -20960,9 +21505,9 @@
       "source_file": "app/api/auth/reset-password/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_reset_password_route_ts",
-      "target": "lib_ratelimit_ratelimitedresponse",
-      "confidence_score": 1.0
+      "target": "lib_ratelimit_ratelimitedresponse"
     },
     {
       "relation": "imports_from",
@@ -20971,9 +21516,9 @@
       "source_file": "app/api/auth/reset-password/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_reset_password_route_ts",
-      "target": "lib_passwordreset_ts",
-      "confidence_score": 1.0
+      "target": "lib_passwordreset_ts"
     },
     {
       "relation": "imports",
@@ -20982,9 +21527,9 @@
       "source_file": "app/api/auth/reset-password/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_reset_password_route_ts",
-      "target": "lib_passwordreset_ispasswordresettokenvalid",
-      "confidence_score": 1.0
+      "target": "lib_passwordreset_ispasswordresettokenvalid"
     },
     {
       "relation": "imports",
@@ -20993,9 +21538,9 @@
       "source_file": "app/api/auth/reset-password/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_reset_password_route_ts",
-      "target": "lib_passwordreset_resetpasswordwithtoken",
-      "confidence_score": 1.0
+      "target": "lib_passwordreset_resetpasswordwithtoken"
     },
     {
       "relation": "contains",
@@ -21003,9 +21548,9 @@
       "source_file": "app/api/auth/reset-password/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_reset_password_route_ts",
-      "target": "reset_password_route_get",
-      "confidence_score": 1.0
+      "target": "reset_password_route_get"
     },
     {
       "relation": "contains",
@@ -21013,9 +21558,9 @@
       "source_file": "app/api/auth/reset-password/route.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_auth_reset_password_route_ts",
-      "target": "reset_password_route_post",
-      "confidence_score": 1.0
+      "target": "reset_password_route_post"
     },
     {
       "relation": "calls",
@@ -21626,9 +22171,9 @@
       "source_file": "app/api/sessions/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_sessions_route_ts",
-      "target": "lib_emailverification_ts",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_ts"
     },
     {
       "relation": "imports",
@@ -21637,9 +22182,9 @@
       "source_file": "app/api/sessions/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_sessions_route_ts",
-      "target": "lib_emailverification_isemailverified",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_isemailverified"
     },
     {
       "relation": "imports_from",
@@ -23084,9 +23629,9 @@
       "source_file": "app/api/profile/[username]/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_profile_username_route_ts",
-      "target": "lib_emailverification_ts",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_ts"
     },
     {
       "relation": "imports",
@@ -23095,9 +23640,9 @@
       "source_file": "app/api/profile/[username]/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_profile_username_route_ts",
-      "target": "lib_emailverification_isemailverified",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_isemailverified"
     },
     {
       "relation": "contains",
@@ -23597,6 +24142,39 @@
       "target": "lib_ratelimit_ratelimitedresponse"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/users/preferences/route.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_api_users_preferences_route_ts",
+      "target": "lib_sessionreminderprefs_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/users/preferences/route.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_api_users_preferences_route_ts",
+      "target": "lib_sessionreminderprefs_session_reminder_timings",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/users/preferences/route.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_api_users_preferences_route_ts",
+      "target": "lib_sessionreminderprefs_sessionremindertiming",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/api/users/preferences/route.ts",
@@ -23764,9 +24342,9 @@
       "source_file": "app/api/users/me/route.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_users_me_route_ts",
-      "target": "lib_emailverification_ts",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_ts"
     },
     {
       "relation": "imports",
@@ -23775,9 +24353,9 @@
       "source_file": "app/api/users/me/route.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_api_users_me_route_ts",
-      "target": "lib_emailverification_isemailverified",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_isemailverified"
     },
     {
       "relation": "contains",
@@ -25763,6 +26341,224 @@
       "target": "lib_mongodb_getdb"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_api_cron_morning_session_reminders_route_ts",
+      "target": "lib_cronauth_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_api_cron_morning_session_reminders_route_ts",
+      "target": "lib_cronauth_unauthorizedcronresponse",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_api_cron_morning_session_reminders_route_ts",
+      "target": "lib_cronauth_verifycronsecret",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_cron_morning_session_reminders_route_ts",
+      "target": "lib_sessionreminderjobs_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_cron_morning_session_reminders_route_ts",
+      "target": "lib_sessionreminderjobs_runmorningsessionreminders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "app_api_cron_morning_session_reminders_route_ts",
+      "target": "morning_session_reminders_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "morning_session_reminders_route_get",
+      "target": "lib_cronauth_verifycronsecret"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "morning_session_reminders_route_get",
+      "target": "lib_cronauth_unauthorizedcronresponse"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/api/cron/morning-session-reminders/route.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "morning_session_reminders_route_get",
+      "target": "lib_sessionreminderjobs_runmorningsessionreminders"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_api_cron_session_reminders_route_ts",
+      "target": "lib_cronauth_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_api_cron_session_reminders_route_ts",
+      "target": "lib_cronauth_unauthorizedcronresponse",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_api_cron_session_reminders_route_ts",
+      "target": "lib_cronauth_verifycronsecret",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_cron_session_reminders_route_ts",
+      "target": "lib_sessionreminderjobs_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_cron_session_reminders_route_ts",
+      "target": "lib_sessionreminderjobs_runtimedsessionreminders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "app_api_cron_session_reminders_route_ts",
+      "target": "session_reminders_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/api/cron/session-reminders.test.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "tests_api_cron_session_reminders_test_ts",
+      "target": "app_api_cron_session_reminders_route_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/api/cron/session-reminders.test.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "tests_api_cron_session_reminders_test_ts",
+      "target": "session_reminders_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "session_reminders_route_get",
+      "target": "lib_cronauth_verifycronsecret"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "session_reminders_route_get",
+      "target": "lib_cronauth_unauthorizedcronresponse"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/api/cron/session-reminders/route.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "session_reminders_route_get",
+      "target": "lib_sessionreminderjobs_runtimedsessionreminders"
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "constants/calendar.ts",
@@ -25948,6 +26744,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "constants_calendar_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "lib/api/sessionsApi.ts",
       "source_location": "L7",
       "weight": 1.0,
@@ -26031,6 +26838,17 @@
       "confidence_score": 1.0,
       "source": "hooks_usecalendargrid_ts",
       "target": "constants_calendar_time_config"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "constants_calendar_time_config",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -26241,9 +27059,9 @@
       "source_file": "components/profile-view.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_profile_view_tsx",
-      "target": "components_email_verification_banner_tsx",
-      "confidence_score": 1.0
+      "target": "components_email_verification_banner_tsx"
     },
     {
       "relation": "imports",
@@ -26252,9 +27070,9 @@
       "source_file": "components/profile-view.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_profile_view_tsx",
-      "target": "components_email_verification_banner_emailverificationbanner",
-      "confidence_score": 1.0
+      "target": "components_email_verification_banner_emailverificationbanner"
     },
     {
       "relation": "imports",
@@ -26263,9 +27081,9 @@
       "source_file": "components/profile-view.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_profile_view_tsx",
-      "target": "components_email_verification_banner_emailverifiedbadge",
-      "confidence_score": 1.0
+      "target": "components_email_verification_banner_emailverifiedbadge"
     },
     {
       "relation": "contains",
@@ -26535,9 +27353,9 @@
       "source_file": "components/verified-tag.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_verified_tag_tsx",
-      "target": "components_verified_tag_props",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_props"
     },
     {
       "relation": "contains",
@@ -26545,9 +27363,9 @@
       "source_file": "components/verified-tag.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_verified_tag_tsx",
-      "target": "components_verified_tag_verifiedtag",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_verifiedtag"
     },
     {
       "relation": "contains",
@@ -26555,9 +27373,9 @@
       "source_file": "components/verified-tag.tsx",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_verified_tag_tsx",
-      "target": "components_verified_tag_verifiednameprops",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_verifiednameprops"
     },
     {
       "relation": "contains",
@@ -26565,9 +27383,9 @@
       "source_file": "components/verified-tag.tsx",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_verified_tag_tsx",
-      "target": "components_verified_tag_verifiedname",
-      "confidence_score": 1.0
+      "target": "components_verified_tag_verifiedname"
     },
     {
       "relation": "imports_from",
@@ -26656,9 +27474,9 @@
       "source_file": "components/profile-stats.tsx",
       "source_location": "L565",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_profile_stats_tsx",
-      "target": "components_profile_stats_statssectionheader",
-      "confidence_score": 1.0
+      "target": "components_profile_stats_statssectionheader"
     },
     {
       "relation": "contains",
@@ -26666,9 +27484,9 @@
       "source_file": "components/profile-stats.tsx",
       "source_location": "L656",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_profile_stats_tsx",
-      "target": "components_profile_stats_statssummaryline",
-      "confidence_score": 1.0
+      "target": "components_profile_stats_statssummaryline"
     },
     {
       "relation": "contains",
@@ -26676,9 +27494,9 @@
       "source_file": "components/profile-stats.tsx",
       "source_location": "L702",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_profile_stats_tsx",
-      "target": "components_profile_stats_statschevron",
-      "confidence_score": 1.0
+      "target": "components_profile_stats_statschevron"
     },
     {
       "relation": "contains",
@@ -26736,9 +27554,9 @@
       "source_file": "components/profile-stats.tsx",
       "source_location": "L939",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_profile_stats_tsx",
-      "target": "components_profile_stats_heatlevel",
-      "confidence_score": 1.0
+      "target": "components_profile_stats_heatlevel"
     },
     {
       "relation": "contains",
@@ -26768,9 +27586,9 @@
       "source_file": "components/profile-stats.tsx",
       "source_location": "L664",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_profile_stats_statssummaryline",
-      "target": "components_profile_stats_formattotalminutes",
-      "confidence_score": 1.0
+      "target": "components_profile_stats_formattotalminutes"
     },
     {
       "relation": "calls",
@@ -26790,9 +27608,9 @@
       "source_file": "components/profile-stats.tsx",
       "source_location": "L665",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_profile_stats_statssummaryline",
-      "target": "components_profile_stats_formatpercent",
-      "confidence_score": 1.0
+      "target": "components_profile_stats_formatpercent"
     },
     {
       "relation": "calls",
@@ -26874,9 +27692,9 @@
       "source_file": "components/email-verification-strip.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_email_verification_strip_tsx",
-      "target": "components_email_verification_strip_emailverificationstrip",
-      "confidence_score": 1.0
+      "target": "components_email_verification_strip_emailverificationstrip"
     },
     {
       "relation": "imports_from",
@@ -26949,9 +27767,9 @@
       "source_file": "components/email-verification-banner.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_email_verification_banner_tsx",
-      "target": "components_design_index_ts",
-      "confidence_score": 1.0
+      "target": "components_design_index_ts"
     },
     {
       "relation": "contains",
@@ -26959,9 +27777,9 @@
       "source_file": "components/email-verification-banner.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_email_verification_banner_tsx",
-      "target": "components_email_verification_banner_props",
-      "confidence_score": 1.0
+      "target": "components_email_verification_banner_props"
     },
     {
       "relation": "contains",
@@ -26969,9 +27787,9 @@
       "source_file": "components/email-verification-banner.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_email_verification_banner_tsx",
-      "target": "components_email_verification_banner_emailverificationbanner",
-      "confidence_score": 1.0
+      "target": "components_email_verification_banner_emailverificationbanner"
     },
     {
       "relation": "contains",
@@ -26979,9 +27797,9 @@
       "source_file": "components/email-verification-banner.tsx",
       "source_location": "L118",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_email_verification_banner_tsx",
-      "target": "components_email_verification_banner_emailverifiedbadge",
-      "confidence_score": 1.0
+      "target": "components_email_verification_banner_emailverifiedbadge"
     },
     {
       "relation": "imports",
@@ -26990,9 +27808,9 @@
       "source_file": "components/email-verification-banner.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "components_email_verification_banner_tsx",
-      "target": "design_button_dbutton",
-      "confidence_score": 1.0
+      "target": "design_button_dbutton"
     },
     {
       "relation": "imports_from",
@@ -29616,6 +30434,17 @@
       "target": "tests_helpers_ts"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/api/cron/session-reminders.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "tests_api_cron_session_reminders_test_ts",
+      "target": "tests_helpers_ts",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -29768,6 +30597,17 @@
       "confidence_score": 1.0,
       "source": "tests_api_session_requests_accept_test_ts",
       "target": "tests_helpers_parseresponse"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/api/cron/session-reminders.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "tests_api_cron_session_reminders_test_ts",
+      "target": "tests_helpers_parseresponse",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -30166,6 +31006,112 @@
       "confidence_score": 1.0,
       "source": "tests_lib_ratelimit_test_ts",
       "target": "lib_ratelimit_test_modified"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_lib_sessionreminders_test_ts",
+      "target": "lib_sessionreminders_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_lib_sessionreminders_test_ts",
+      "target": "lib_sessionreminders_getistdaybounds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_lib_sessionreminders_test_ts",
+      "target": "lib_sessionreminders_ismatchedsessionparticipants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_lib_sessionreminders_test_ts",
+      "target": "lib_sessionreminders_resolveremindertiming",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_lib_sessionreminders_test_ts",
+      "target": "lib_sessionreminders_startwindowfortiming",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "tests_lib_sessionreminders_test_ts",
+      "target": "lib_sessionreminderprefs_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "tests_lib_sessionreminders_test_ts",
+      "target": "lib_sessionreminders_test_now",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "tests_lib_sessionreminders_test_ts",
+      "target": "lib_sessionreminders_test_start_end_daykey",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "tests_lib_sessionreminders_test_ts",
+      "target": "lib_sessionreminders_test_onehour",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/lib/sessionReminders.test.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "tests_lib_sessionreminders_test_ts",
+      "target": "lib_sessionreminders_test_tenmin",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -30712,6 +31658,26 @@
       "target": "session_requests_accept_test_req"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/api/cron/session-reminders.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "tests_api_cron_session_reminders_test_ts",
+      "target": "cron_session_reminders_test_mocks",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/api/cron/session-reminders.test.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "tests_api_cron_session_reminders_test_ts",
+      "target": "cron_session_reminders_test_req",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -31044,6 +32010,680 @@
       "target": "lib_realtimechannels_sessionschannel"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_mongodb_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_mongodb_getdb",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_site_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_site_getsiteurl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionwindow_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminderprefs_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminderprefs_session_reminder_timings",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "re_exports",
+      "context": "re-export",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminderprefs_sessionremindertiming",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_sessiondoc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_userdoc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_sessionreminderitem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_reminderrecipient",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_istdatekey",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_getistdaybounds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_formatsessiontimeist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L79",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_sessionjoinurl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_resolveremindertiming",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L92",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_startwindowfortiming",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_ismatchedsessionparticipants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_displayname",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L120",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_sessiontitle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L126",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_loadusernames",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L148",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_toreminderitems",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L185",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_findreminderrecipients",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L214",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_findusersessionsinrange",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L238",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_markremindersent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L259",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_ts",
+      "target": "lib_sessionreminders_joinwindownote",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "lib_sessionreminders_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
+      "target": "lib_sessionreminders_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_sessionreminderitem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "lib_sessionreminders_sessionreminderitem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
+      "target": "lib_sessionreminders_sessionreminderitem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_reminderrecipient",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_getistdaybounds",
+      "target": "lib_sessionreminders_istdatekey",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_getistdaybounds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runmorningsessionreminders",
+      "target": "lib_sessionreminders_getistdaybounds"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_formatsessiontimeist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_sendtimedreminderforsession",
+      "target": "lib_sessionreminders_formatsessiontimeist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_sessionjoinurl",
+      "target": "lib_site_getsiteurl"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L200",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_findreminderrecipients",
+      "target": "lib_sessionreminders_resolveremindertiming",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_startwindowfortiming",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L92",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runtimedsessionreminders",
+      "target": "lib_sessionreminders_startwindowfortiming"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L207",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_findreminderrecipients",
+      "target": "lib_sessionreminders_displayname",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L161",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_toreminderitems",
+      "target": "lib_sessionreminders_loadusernames",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L131",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_loadusernames",
+      "target": "lib_mongodb_getdb",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_toreminderitems",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runmorningsessionreminders",
+      "target": "lib_sessionreminders_toreminderitems"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L105",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runtimedsessionreminders",
+      "target": "lib_sessionreminders_toreminderitems"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_findreminderrecipients",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L188",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_findreminderrecipients",
+      "target": "lib_mongodb_getdb"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runmorningsessionreminders",
+      "target": "lib_sessionreminders_findreminderrecipients"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runtimedsessionreminders",
+      "target": "lib_sessionreminders_findreminderrecipients"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_findusersessionsinrange",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L220",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_findusersessionsinrange",
+      "target": "lib_mongodb_getdb"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runmorningsessionreminders",
+      "target": "lib_sessionreminders_findusersessionsinrange"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runtimedsessionreminders",
+      "target": "lib_sessionreminders_findusersessionsinrange"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_markremindersent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L123",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_sendtimedreminderforsession",
+      "target": "lib_sessionreminders_markremindersent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminders.ts",
+      "source_location": "L243",
+      "weight": 1.0,
+      "source": "lib_sessionreminders_markremindersent",
+      "target": "lib_mongodb_getdb"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runmorningsessionreminders",
+      "target": "lib_sessionreminders_markremindersent"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminders_joinwindownote",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_sendtimedreminderforsession",
+      "target": "lib_sessionreminders_joinwindownote",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "re_exports",
       "context": "export",
       "confidence": "EXTRACTED",
@@ -31118,12 +32758,32 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "lib/cronAuth.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "lib_cronauth_ts",
+      "target": "lib_cronauth_verifycronsecret",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/cronAuth.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "lib_cronauth_ts",
+      "target": "lib_cronauth_unauthorizedcronresponse",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "lib/resend.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_resend_ts",
-      "target": "lib_resend_getresend",
-      "confidence_score": 1.0
+      "target": "lib_resend_getresend"
     },
     {
       "relation": "contains",
@@ -31131,9 +32791,9 @@
       "source_file": "lib/resend.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_resend_ts",
-      "target": "lib_resend_getresendfromemail",
-      "confidence_score": 1.0
+      "target": "lib_resend_getresendfromemail"
     },
     {
       "relation": "contains",
@@ -31141,8 +32801,19 @@
       "source_file": "lib/resend.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_resend_ts",
-      "target": "lib_resend_isresendconfigured",
+      "target": "lib_resend_isresendconfigured"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "lib_resend_ts",
       "confidence_score": 1.0
     },
     {
@@ -31152,9 +32823,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "lib_resend_ts",
-      "confidence_score": 1.0
+      "target": "lib_resend_ts"
     },
     {
       "relation": "imports_from",
@@ -31163,8 +32834,19 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "lib_resend_ts",
+      "target": "lib_resend_ts"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "lib_resend_getresend",
       "confidence_score": 1.0
     },
     {
@@ -31174,9 +32856,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "lib_resend_getresend",
-      "confidence_score": 1.0
+      "target": "lib_resend_getresend"
     },
     {
       "relation": "imports",
@@ -31185,9 +32867,31 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "lib_resend_getresend",
-      "confidence_score": 1.0
+      "target": "lib_resend_getresend"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "email_sendsessionreminderemail_sendmorningsessiondigestemail",
+      "target": "lib_resend_getresend"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "email_sendsessionreminderemail_sendtimedsessionreminderemail",
+      "target": "lib_resend_getresend"
     },
     {
       "relation": "calls",
@@ -31215,12 +32919,23 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "lib_resend_getresendfromemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "lib_resend_getresendfromemail",
-      "confidence_score": 1.0
+      "target": "lib_resend_getresendfromemail"
     },
     {
       "relation": "imports",
@@ -31229,9 +32944,31 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "lib_resend_getresendfromemail",
-      "confidence_score": 1.0
+      "target": "lib_resend_getresendfromemail"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "email_sendsessionreminderemail_sendmorningsessiondigestemail",
+      "target": "lib_resend_getresendfromemail"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "email_sendsessionreminderemail_sendtimedsessionreminderemail",
+      "target": "lib_resend_getresendfromemail"
     },
     {
       "relation": "calls",
@@ -31259,12 +32996,23 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "lib_resend_isresendconfigured",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "lib_resend_isresendconfigured",
-      "confidence_score": 1.0
+      "target": "lib_resend_isresendconfigured"
     },
     {
       "relation": "imports",
@@ -31273,9 +33021,31 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "lib_resend_isresendconfigured",
-      "confidence_score": 1.0
+      "target": "lib_resend_isresendconfigured"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "email_sendsessionreminderemail_sendmorningsessiondigestemail",
+      "target": "lib_resend_isresendconfigured"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "email_sendsessionreminderemail_sendtimedsessionreminderemail",
+      "target": "lib_resend_isresendconfigured"
     },
     {
       "relation": "calls",
@@ -31896,9 +33666,9 @@
       "source_file": "lib/email/brand.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_brand_ts",
-      "target": "lib_site_ts",
-      "confidence_score": 1.0
+      "target": "lib_site_ts"
     },
     {
       "relation": "imports_from",
@@ -31907,9 +33677,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "lib_site_ts",
-      "confidence_score": 1.0
+      "target": "lib_site_ts"
     },
     {
       "relation": "imports_from",
@@ -31918,9 +33688,9 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "lib_site_ts",
-      "confidence_score": 1.0
+      "target": "lib_site_ts"
     },
     {
       "relation": "calls",
@@ -31940,9 +33710,9 @@
       "source_file": "lib/email/brand.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_brand_ts",
-      "target": "lib_site_getsiteurl",
-      "confidence_score": 1.0
+      "target": "lib_site_getsiteurl"
     },
     {
       "relation": "imports",
@@ -31951,9 +33721,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "lib_site_getsiteurl",
-      "confidence_score": 1.0
+      "target": "lib_site_getsiteurl"
     },
     {
       "relation": "imports",
@@ -31962,9 +33732,9 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "lib_site_getsiteurl",
-      "confidence_score": 1.0
+      "target": "lib_site_getsiteurl"
     },
     {
       "relation": "calls",
@@ -31973,9 +33743,9 @@
       "source_file": "lib/email/brand.ts",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "email_brand_emailassetbaseurl",
-      "target": "lib_site_getsiteurl",
-      "confidence_score": 1.0
+      "target": "lib_site_getsiteurl"
     },
     {
       "relation": "calls",
@@ -32067,9 +33837,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_validatepassword_ts",
-      "confidence_score": 1.0
+      "target": "lib_validatepassword_ts"
     },
     {
       "relation": "imports",
@@ -32078,9 +33848,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_validatepassword_validatepassword",
-      "confidence_score": 1.0
+      "target": "lib_validatepassword_validatepassword"
     },
     {
       "relation": "calls",
@@ -32575,9 +34345,9 @@
       "source_file": "lib/emailVerification.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_emailverification_ts",
-      "target": "lib_mongodb_ts",
-      "confidence_score": 1.0
+      "target": "lib_mongodb_ts"
     },
     {
       "relation": "imports",
@@ -32586,9 +34356,9 @@
       "source_file": "lib/emailVerification.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_emailverification_ts",
-      "target": "lib_mongodb_getdb",
-      "confidence_score": 1.0
+      "target": "lib_mongodb_getdb"
     },
     {
       "relation": "contains",
@@ -32596,9 +34366,9 @@
       "source_file": "lib/emailVerification.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_emailverification_ts",
-      "target": "lib_emailverification_hashverificationtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_hashverificationtoken"
     },
     {
       "relation": "contains",
@@ -32606,9 +34376,9 @@
       "source_file": "lib/emailVerification.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_emailverification_ts",
-      "target": "lib_emailverification_createverificationtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_createverificationtoken"
     },
     {
       "relation": "contains",
@@ -32616,9 +34386,9 @@
       "source_file": "lib/emailVerification.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_emailverification_ts",
-      "target": "lib_emailverification_setemailverificationtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_setemailverificationtoken"
     },
     {
       "relation": "contains",
@@ -32626,9 +34396,9 @@
       "source_file": "lib/emailVerification.ts",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_emailverification_ts",
-      "target": "lib_emailverification_verifyemailwithtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_verifyemailwithtoken"
     },
     {
       "relation": "contains",
@@ -32636,9 +34406,9 @@
       "source_file": "lib/emailVerification.ts",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_emailverification_ts",
-      "target": "lib_emailverification_isemailverified",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_isemailverified"
     },
     {
       "relation": "imports_from",
@@ -32647,9 +34417,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_emailverification_ts",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_ts"
     },
     {
       "relation": "imports_from",
@@ -32658,9 +34428,9 @@
       "source_file": "lib/users/emailVerifiedMap.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_users_emailverifiedmap_ts",
-      "target": "lib_emailverification_ts",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_ts"
     },
     {
       "relation": "imports_from",
@@ -32669,9 +34439,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "lib_emailverification_ts",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_ts"
     },
     {
       "relation": "calls",
@@ -32680,9 +34450,9 @@
       "source_file": "lib/emailVerification.ts",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_emailverification_setemailverificationtoken",
-      "target": "lib_emailverification_hashverificationtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_hashverificationtoken"
     },
     {
       "relation": "calls",
@@ -32691,9 +34461,9 @@
       "source_file": "lib/emailVerification.ts",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_emailverification_verifyemailwithtoken",
-      "target": "lib_emailverification_hashverificationtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_hashverificationtoken"
     },
     {
       "relation": "imports",
@@ -32702,9 +34472,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_emailverification_hashverificationtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_hashverificationtoken"
     },
     {
       "relation": "calls",
@@ -32746,9 +34516,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_emailverification_createverificationtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_createverificationtoken"
     },
     {
       "relation": "imports",
@@ -32757,9 +34527,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "lib_emailverification_createverificationtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_createverificationtoken"
     },
     {
       "relation": "calls",
@@ -32790,9 +34560,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "lib_emailverification_setemailverificationtoken",
-      "confidence_score": 1.0
+      "target": "lib_emailverification_setemailverificationtoken"
     },
     {
       "relation": "calls",
@@ -32834,8 +34604,125 @@
       "source_file": "lib/users/emailVerifiedMap.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_users_emailverifiedmap_ts",
-      "target": "lib_emailverification_isemailverified",
+      "target": "lib_emailverification_isemailverified"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_email_sendsessionreminderemail_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "email_sendsessionreminderemail_sendmorningsessiondigestemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "email_sendsessionreminderemail_sendtimedsessionreminderemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminderjobs_reminderrunresult",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminderjobs_runmorningsessionreminders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminderjobs_runtimedsessionreminders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminderjobs_sendtimedreminderforsession",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_ts",
+      "target": "lib_sessionreminderprefs_sessionremindertiming",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runmorningsessionreminders",
+      "target": "email_sendsessionreminderemail_sendmorningsessiondigestemail"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L107",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_runtimedsessionreminders",
+      "target": "lib_sessionreminderjobs_sendtimedreminderforsession",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderJobs.ts",
+      "source_location": "L130",
+      "weight": 1.0,
+      "source": "lib_sessionreminderjobs_sendtimedreminderforsession",
+      "target": "email_sendsessionreminderemail_sendtimedsessionreminderemail",
       "confidence_score": 1.0
     },
     {
@@ -32876,9 +34763,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_mongodb_ts",
-      "confidence_score": 1.0
+      "target": "lib_mongodb_ts"
     },
     {
       "relation": "imports_from",
@@ -32909,9 +34796,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_mongodb_getdb",
-      "confidence_score": 1.0
+      "target": "lib_mongodb_getdb"
     },
     {
       "relation": "imports",
@@ -33057,9 +34944,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_passwordreset_createpasswordresettoken",
-      "confidence_score": 1.0
+      "target": "lib_passwordreset_createpasswordresettoken"
     },
     {
       "relation": "contains",
@@ -33067,9 +34954,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_passwordreset_setpasswordresettoken",
-      "confidence_score": 1.0
+      "target": "lib_passwordreset_setpasswordresettoken"
     },
     {
       "relation": "contains",
@@ -33077,9 +34964,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_passwordreset_ispasswordresettokenvalid",
-      "confidence_score": 1.0
+      "target": "lib_passwordreset_ispasswordresettokenvalid"
     },
     {
       "relation": "contains",
@@ -33087,9 +34974,9 @@
       "source_file": "lib/passwordReset.ts",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_passwordreset_ts",
-      "target": "lib_passwordreset_resetpasswordwithtoken",
-      "confidence_score": 1.0
+      "target": "lib_passwordreset_resetpasswordwithtoken"
     },
     {
       "relation": "imports_from",
@@ -33098,9 +34985,9 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "lib_passwordreset_ts",
-      "confidence_score": 1.0
+      "target": "lib_passwordreset_ts"
     },
     {
       "relation": "imports",
@@ -33109,9 +34996,9 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "lib_passwordreset_createpasswordresettoken",
-      "confidence_score": 1.0
+      "target": "lib_passwordreset_createpasswordresettoken"
     },
     {
       "relation": "calls",
@@ -33131,9 +35018,9 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "lib_passwordreset_setpasswordresettoken",
-      "confidence_score": 1.0
+      "target": "lib_passwordreset_setpasswordresettoken"
     },
     {
       "relation": "calls",
@@ -33145,6 +35032,26 @@
       "weight": 1.0,
       "source": "email_sendpasswordresetemail_sendpasswordresetemail",
       "target": "lib_passwordreset_setpasswordresettoken"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderPrefs.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_sessionreminderprefs_ts",
+      "target": "lib_sessionreminderprefs_sessionremindertiming",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/sessionReminderPrefs.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "lib_sessionreminderprefs_ts",
+      "target": "lib_sessionreminderprefs_session_reminder_timings",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -33162,9 +35069,9 @@
       "source_file": "lib/users/emailVerifiedMap.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_users_emailverifiedmap_ts",
-      "target": "users_emailverifiedmap_fetchemailverifiedmap",
-      "confidence_score": 1.0
+      "target": "users_emailverifiedmap_fetchemailverifiedmap"
     },
     {
       "relation": "contains",
@@ -33454,9 +35361,9 @@
       "source_file": "lib/email/brand.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_brand_ts",
-      "target": "email_brand_emailbrand",
-      "confidence_score": 1.0
+      "target": "email_brand_emailbrand"
     },
     {
       "relation": "contains",
@@ -33464,9 +35371,9 @@
       "source_file": "lib/email/brand.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_brand_ts",
-      "target": "email_brand_emailassetbaseurl",
-      "confidence_score": 1.0
+      "target": "email_brand_emailassetbaseurl"
     },
     {
       "relation": "contains",
@@ -33474,9 +35381,9 @@
       "source_file": "lib/email/brand.ts",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_brand_ts",
-      "target": "email_brand_getemaillogourl",
-      "confidence_score": 1.0
+      "target": "email_brand_getemaillogourl"
     },
     {
       "relation": "contains",
@@ -33484,9 +35391,9 @@
       "source_file": "lib/email/brand.ts",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_brand_ts",
-      "target": "email_brand_getemaillogodatauri",
-      "confidence_score": 1.0
+      "target": "email_brand_getemaillogodatauri"
     },
     {
       "relation": "imports_from",
@@ -33495,7 +35402,18 @@
       "source_file": "lib/email/templates.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_templates_ts",
+      "target": "lib_email_brand_ts"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
       "target": "lib_email_brand_ts",
       "confidence_score": 1.0
     },
@@ -33506,7 +35424,18 @@
       "source_file": "lib/email/templates.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_templates_ts",
+      "target": "email_brand_emailbrand"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
       "target": "email_brand_emailbrand",
       "confidence_score": 1.0
     },
@@ -33517,9 +35446,9 @@
       "source_file": "lib/email/brand.ts",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "email_brand_getemaillogourl",
-      "target": "email_brand_emailassetbaseurl",
-      "confidence_score": 1.0
+      "target": "email_brand_emailassetbaseurl"
     },
     {
       "relation": "calls",
@@ -33528,9 +35457,9 @@
       "source_file": "lib/email/brand.ts",
       "source_location": "L38",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "email_brand_getemaillogourl",
-      "target": "email_brand_getemaillogodatauri",
-      "confidence_score": 1.0
+      "target": "email_brand_getemaillogodatauri"
     },
     {
       "relation": "imports",
@@ -33539,7 +35468,29 @@
       "source_file": "lib/email/templates.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_templates_ts",
+      "target": "email_brand_getemaillogourl"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
+      "target": "email_brand_getemaillogourl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "email_sessionremindertemplates_emailshell",
       "target": "email_brand_getemaillogourl",
       "confidence_score": 1.0
     },
@@ -33566,14 +35517,121 @@
       "target": "email_brand_getemaillogourl"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "lib_email_sessionremindertemplates_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "email_sessionremindertemplates_buildmorningsessiondigestemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "email_sessionremindertemplates_buildtimedsessionreminderemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "email_sendsessionreminderemail_logresendfailure",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "email_sendsessionreminderemail_sendmorningsessiondigestemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "lib_email_sendsessionreminderemail_ts",
+      "target": "email_sendsessionreminderemail_sendtimedsessionreminderemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "email_sendsessionreminderemail_sendmorningsessiondigestemail",
+      "target": "email_sendsessionreminderemail_logresendfailure",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "email_sendsessionreminderemail_sendtimedsessionreminderemail",
+      "target": "email_sendsessionreminderemail_logresendfailure",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "email_sendsessionreminderemail_sendmorningsessiondigestemail",
+      "target": "email_sessionremindertemplates_buildmorningsessiondigestemail"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/email/sendSessionReminderEmail.ts",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "email_sendsessionreminderemail_sendtimedsessionreminderemail",
+      "target": "email_sessionremindertemplates_buildtimedsessionreminderemail"
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/email/templates.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_templates_ts",
-      "target": "email_templates_welcomeemailparams",
-      "confidence_score": 1.0
+      "target": "email_templates_welcomeemailparams"
     },
     {
       "relation": "contains",
@@ -33581,9 +35639,9 @@
       "source_file": "lib/email/templates.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_templates_ts",
-      "target": "email_templates_greeting",
-      "confidence_score": 1.0
+      "target": "email_templates_greeting"
     },
     {
       "relation": "contains",
@@ -33591,9 +35649,9 @@
       "source_file": "lib/email/templates.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_templates_ts",
-      "target": "email_templates_buildwelcomeverifyemail",
-      "confidence_score": 1.0
+      "target": "email_templates_buildwelcomeverifyemail"
     },
     {
       "relation": "contains",
@@ -33601,9 +35659,9 @@
       "source_file": "lib/email/templates.ts",
       "source_location": "L97",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_templates_ts",
-      "target": "email_templates_passwordresetemailparams",
-      "confidence_score": 1.0
+      "target": "email_templates_passwordresetemailparams"
     },
     {
       "relation": "contains",
@@ -33611,9 +35669,9 @@
       "source_file": "lib/email/templates.ts",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_templates_ts",
-      "target": "email_templates_buildpasswordresetemail",
-      "confidence_score": 1.0
+      "target": "email_templates_buildpasswordresetemail"
     },
     {
       "relation": "imports_from",
@@ -33622,9 +35680,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "lib_email_templates_ts",
-      "confidence_score": 1.0
+      "target": "lib_email_templates_ts"
     },
     {
       "relation": "imports_from",
@@ -33633,9 +35691,9 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "lib_email_templates_ts",
-      "confidence_score": 1.0
+      "target": "lib_email_templates_ts"
     },
     {
       "relation": "calls",
@@ -33644,9 +35702,9 @@
       "source_file": "lib/email/templates.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "email_templates_buildwelcomeverifyemail",
-      "target": "email_templates_greeting",
-      "confidence_score": 1.0
+      "target": "email_templates_greeting"
     },
     {
       "relation": "calls",
@@ -33655,9 +35713,9 @@
       "source_file": "lib/email/templates.ts",
       "source_location": "L108",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "email_templates_buildpasswordresetemail",
-      "target": "email_templates_greeting",
-      "confidence_score": 1.0
+      "target": "email_templates_greeting"
     },
     {
       "relation": "imports",
@@ -33666,9 +35724,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "email_templates_buildwelcomeverifyemail",
-      "confidence_score": 1.0
+      "target": "email_templates_buildwelcomeverifyemail"
     },
     {
       "relation": "calls",
@@ -33688,9 +35746,9 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "email_templates_buildpasswordresetemail",
-      "confidence_score": 1.0
+      "target": "email_templates_buildpasswordresetemail"
     },
     {
       "relation": "calls",
@@ -33709,9 +35767,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "email_sendwelcomeemail_sendwelcomeemailinput",
-      "confidence_score": 1.0
+      "target": "email_sendwelcomeemail_sendwelcomeemailinput"
     },
     {
       "relation": "contains",
@@ -33719,9 +35777,9 @@
       "source_file": "lib/email/sendWelcomeEmail.ts",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendwelcomeemail_ts",
-      "target": "email_sendwelcomeemail_sendwelcomeverificationemail",
-      "confidence_score": 1.0
+      "target": "email_sendwelcomeemail_sendwelcomeverificationemail"
     },
     {
       "relation": "contains",
@@ -33729,9 +35787,9 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "email_sendpasswordresetemail_sendpasswordresetemailinput",
-      "confidence_score": 1.0
+      "target": "email_sendpasswordresetemail_sendpasswordresetemailinput"
     },
     {
       "relation": "contains",
@@ -33739,9 +35797,9 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "email_sendpasswordresetemail_logresendfailure",
-      "confidence_score": 1.0
+      "target": "email_sendpasswordresetemail_logresendfailure"
     },
     {
       "relation": "contains",
@@ -33749,9 +35807,9 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_email_sendpasswordresetemail_ts",
-      "target": "email_sendpasswordresetemail_sendpasswordresetemail",
-      "confidence_score": 1.0
+      "target": "email_sendpasswordresetemail_sendpasswordresetemail"
     },
     {
       "relation": "calls",
@@ -33760,8 +35818,144 @@
       "source_file": "lib/email/sendPasswordResetEmail.ts",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "email_sendpasswordresetemail_sendpasswordresetemail",
-      "target": "email_sendpasswordresetemail_logresendfailure",
+      "target": "email_sendpasswordresetemail_logresendfailure"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
+      "target": "email_sessionremindertemplates_greeting",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
+      "target": "email_sessionremindertemplates_emailshell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
+      "target": "email_sessionremindertemplates_sessionlisthtml",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
+      "target": "email_sessionremindertemplates_sessionlisttext",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L82",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
+      "target": "email_sessionremindertemplates_formatsessiontime",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L94",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
+      "target": "email_sessionremindertemplates_buildmorningsessiondigestemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L133",
+      "weight": 1.0,
+      "source": "lib_email_sessionremindertemplates_ts",
+      "target": "email_sessionremindertemplates_buildtimedsessionreminderemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L99",
+      "weight": 1.0,
+      "source": "email_sessionremindertemplates_buildmorningsessiondigestemail",
+      "target": "email_sessionremindertemplates_greeting",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L141",
+      "weight": 1.0,
+      "source": "email_sessionremindertemplates_buildtimedsessionreminderemail",
+      "target": "email_sessionremindertemplates_greeting",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L125",
+      "weight": 1.0,
+      "source": "email_sessionremindertemplates_buildmorningsessiondigestemail",
+      "target": "email_sessionremindertemplates_emailshell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L190",
+      "weight": 1.0,
+      "source": "email_sessionremindertemplates_buildtimedsessionreminderemail",
+      "target": "email_sessionremindertemplates_emailshell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L122",
+      "weight": 1.0,
+      "source": "email_sessionremindertemplates_buildmorningsessiondigestemail",
+      "target": "email_sessionremindertemplates_sessionlisthtml",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/email/sessionReminderTemplates.ts",
+      "source_location": "L110",
+      "weight": 1.0,
+      "source": "email_sessionremindertemplates_buildmorningsessiondigestemail",
+      "target": "email_sessionremindertemplates_sessionlisttext",
       "confidence_score": 1.0
     },
     {
@@ -34436,5 +36630,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "ea0a751b5bd92a031344001448cbf7b1cf42093a"
+  "built_at_commit": "97cd36aa6f8664d5f0485f59f6117ad65db61c46"
 }

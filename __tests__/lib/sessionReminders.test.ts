@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getISTDayBounds,
+  isMatchedSessionParticipants,
   resolveReminderTiming,
   startWindowForTiming,
 } from "@/lib/sessionReminders";
@@ -37,5 +38,13 @@ describe("sessionReminders", () => {
     expect(oneHour.to.getTime()).toBe(now.getTime() + 63 * 60 * 1000);
     expect(tenMin.from.getTime()).toBe(now.getTime() + 7 * 60 * 1000);
     expect(tenMin.to.getTime()).toBe(now.getTime() + 13 * 60 * 1000);
+  });
+
+  it("treats sessions as matched only with two participants", () => {
+    expect(isMatchedSessionParticipants([])).toBe(false);
+    expect(isMatchedSessionParticipants([{ user_id: "a" }])).toBe(false);
+    expect(
+      isMatchedSessionParticipants([{ user_id: "a" }, { user_id: "b" }]),
+    ).toBe(true);
   });
 });

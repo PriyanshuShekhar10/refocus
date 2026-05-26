@@ -102,6 +102,15 @@ export function startWindowForTiming(
   };
 }
 
+/** Reminders only go out once a session has a partner (fully booked). */
+export const SESSION_REMINDER_MIN_PARTICIPANTS = 2;
+
+export function isMatchedSessionParticipants(
+  participants: Array<{ user_id: string }> | null | undefined,
+): boolean {
+  return (participants?.length ?? 0) >= SESSION_REMINDER_MIN_PARTICIPANTS;
+}
+
 function displayName(user: UserDoc | null | undefined): string | null {
   if (!user) return null;
   const first = user.firstname?.trim() || user.name?.trim();
@@ -215,6 +224,12 @@ export async function findUserSessionsInRange(
       start_time: { $gte: startFrom, $lt: startTo },
       end_time: { $gt: now },
       $or: [{ owner_id: userId }, { "session_participants.user_id": userId }],
+      $expr: {
+        $gte: [
+          { $size: { $ifNull: ["$session_participants", []] } },
+          SESSION_REMINDER_MIN_PARTICIPANTS,
+        ],
+      },
     })
     .sort({ start_time: 1 })
     .toArray();
