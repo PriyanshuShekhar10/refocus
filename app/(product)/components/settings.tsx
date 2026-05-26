@@ -27,6 +27,11 @@ import {
 import { validatePassword } from "@/lib/validatePassword";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 
+import {
+  DEFAULT_SESSION_REMINDER_TIMING,
+  type SessionReminderTiming,
+} from "@/lib/sessionReminderPrefs";
+
 type Prefs = {
   defaultSessionLength: 25 | 50 | 75;
   focusModeDefault: boolean;
@@ -34,6 +39,7 @@ type Prefs = {
   allowFriendRequests: boolean;
   showInGlobalChat: boolean;
   emailSessionReminders: boolean;
+  sessionReminderTiming: SessionReminderTiming;
   emailFriendRequests: boolean;
   emailWeeklyDigest: boolean;
 };
@@ -45,6 +51,7 @@ const DEFAULT_PREFS: Prefs = {
   allowFriendRequests: true,
   showInGlobalChat: true,
   emailSessionReminders: true,
+  sessionReminderTiming: DEFAULT_SESSION_REMINDER_TIMING,
   emailFriendRequests: true,
   emailWeeklyDigest: false,
 };
@@ -178,12 +185,12 @@ function NotificationsSection() {
     <SectionCard
       icon={<Bell size={16} />}
       title="Notifications"
-      subtitle="Saved delivery preferences (email sending controls are not active yet)."
+      subtitle="Email reminders for your booked focus sessions."
     >
       <RowGroup>
         <Row
           label="Session reminders"
-          hint="Saved preference for future reminder emails."
+          hint="Get an email before your sessions based on the timing below."
         >
           <Toggle
             checked={prefs.emailSessionReminders}
@@ -191,6 +198,36 @@ function NotificationsSection() {
             disabled={saving}
           />
         </Row>
+        {prefs.emailSessionReminders && (
+          <Row
+            label="Reminder timing"
+            hint="Morning sends a summary of today's sessions. Join links work from 10 minutes before start."
+          >
+            <div className={designStyles.segmented}>
+              {(
+                [
+                  { value: "morning", label: "Morning" },
+                  { value: "1h", label: "1 hour" },
+                  { value: "10m", label: "10 min" },
+                ] as const
+              ).map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPref("sessionReminderTiming", value)}
+                  className={`${designStyles.segmentedBtn} ${
+                    prefs.sessionReminderTiming === value
+                      ? designStyles.segmentedBtnActive
+                      : ""
+                  }`}
+                  disabled={saving}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </Row>
+        )}
         <Row
           label="Friend & session requests"
           hint="Saved preference for future request emails."

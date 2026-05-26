@@ -154,6 +154,17 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
     ],
   },
   {
+    collection: "email_reminders",
+    indexes: [
+      {
+        // Prevent duplicate session reminder sends per user/kind/session-or-day
+        name: "email_reminders_dedupe",
+        keys: { userId: 1, kind: 1, dedupeKey: 1 },
+        options: { unique: true },
+      },
+    ],
+  },
+  {
     collection: "friends",
     indexes: [
       {

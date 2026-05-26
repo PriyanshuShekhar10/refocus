@@ -5,6 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 
+import {
+  DEFAULT_SESSION_REMINDER_TIMING,
+  SESSION_REMINDER_TIMINGS,
+  type SessionReminderTiming,
+} from "@/lib/sessionReminderPrefs";
+
 /**
  * Read and update the current user's preferences. Stored under
  * `users.preferences` as a nested doc. All flags are optional and merged
@@ -18,6 +24,7 @@ type Prefs = {
   allowFriendRequests: boolean;
   showInGlobalChat: boolean;
   emailSessionReminders: boolean;
+  sessionReminderTiming: SessionReminderTiming;
   emailFriendRequests: boolean;
   emailWeeklyDigest: boolean;
 };
@@ -29,6 +36,7 @@ const DEFAULTS: Prefs = {
   allowFriendRequests: true,
   showInGlobalChat: true,
   emailSessionReminders: true,
+  sessionReminderTiming: DEFAULT_SESSION_REMINDER_TIMING,
   emailFriendRequests: true,
   emailWeeklyDigest: false,
 };
@@ -83,6 +91,12 @@ export async function PATCH(req: NextRequest) {
     if (typeof body[k] === "boolean") {
       update[`preferences.${k}`] = body[k];
     }
+  }
+  if (
+    body.sessionReminderTiming &&
+    SESSION_REMINDER_TIMINGS.includes(body.sessionReminderTiming)
+  ) {
+    update["preferences.sessionReminderTiming"] = body.sessionReminderTiming;
   }
 
   if (Object.keys(update).length === 1) {

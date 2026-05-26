@@ -1,13 +1,12 @@
 /** Window during which a participant may open the live call. */
-export const CALL_JOIN_GRACE_MINUTES = 5;
+export const CALL_JOIN_GRACE_MINUTES = 10;
 
 /**
  * Minutes before a session's start when the "Join" button becomes visible
- * to participants. We keep this slightly larger than CALL_JOIN_GRACE_MINUTES
- * so users have a head-start to navigate to the session page; the API still
- * gates actual room access by CALL_JOIN_GRACE_MINUTES.
+ * to participants. Matches CALL_JOIN_GRACE_MINUTES so email links and UI
+ * align with API enforcement.
  */
-export const CALL_JOIN_VISIBLE_MINUTES = 5;
+export const CALL_JOIN_VISIBLE_MINUTES = 10;
 
 export function isWithinCallWindow(
   startTime: Date | string,
