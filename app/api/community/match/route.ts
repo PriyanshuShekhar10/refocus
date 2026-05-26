@@ -25,7 +25,7 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  let userEmbedding = currentUser.embedding;
+  const userEmbedding = currentUser.embedding;
 
   // If no embedding yet, tell the user to complete their profile.
   // Embeddings are generated automatically when the profile is saved

@@ -164,7 +164,7 @@ export async function GET() {
   const yesterdayKey = dayKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
 
   let currentStreak = 0;
-  let cursor = new Date(now);
+  const cursor = new Date(now);
   cursor.setHours(0, 0, 0, 0);
   // If no session today, start counting from yesterday (so today not yet
   // counted doesn't break the streak before evening).
