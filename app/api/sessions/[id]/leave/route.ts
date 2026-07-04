@@ -3,12 +3,19 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { publish, sessionsChannel } from "@/lib/sse";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 
 type SessionDoc = {
   _id: ObjectId;
   owner_id: string;
+  start_time?: Date | string;
+  end_time?: Date | string;
+  duration_min?: number;
+  session_type?: string;
+  status?: string;
+  name?: string | null;
+  color?: string | null;
   session_participants?: Array<{
     user_id: string;
     joined_at: Date | string;
@@ -67,12 +74,22 @@ export async function POST(
     {
       $set: {
         session_participants: newParticipants,
+        participant_count: newParticipants.length,
         status: "available",
         updated_at: new Date(),
       },
     },
   );
 
-  await publish(sessionsChannel(), { type: "sessions_updated" });
+  const updated = await col.findOne({ _id: new ObjectId(sessionId) });
+  if (updated?.start_time && updated?.end_time) {
+    await publishSessionDocUpserted(db, {
+      ...updated,
+      start_time: updated.start_time,
+      end_time: updated.end_time,
+      duration_min: updated.duration_min ?? 50,
+      session_type: updated.session_type ?? "focus",
+    });
+  }
   return NextResponse.json({ ok: true });
 }

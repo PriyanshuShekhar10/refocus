@@ -68,6 +68,7 @@ export async function runMorningSessionReminders(
       firstName: recipient.firstName,
       dayKey,
       sessions: items,
+      timeZone: recipient.timezone,
     });
 
     if (sendResult.sent) result.sent += 1;
@@ -132,7 +133,10 @@ async function sendTimedReminderForSession(
     firstName: recipient.firstName,
     timing,
     session,
-    startsAtLabel: formatSessionTimeIST(session.startTime),
+    startsAtLabel: formatSessionTimeIST(
+      session.startTime,
+      recipient.timezone,
+    ),
     joinNote: joinWindowNote(),
   });
 

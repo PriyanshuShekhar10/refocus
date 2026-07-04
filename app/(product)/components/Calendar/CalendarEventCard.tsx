@@ -7,6 +7,7 @@ import type { CalendarEvent } from "@/types/calendar";
 import { getResolvedSessionColor } from "@/constants/calendar";
 import { getLocalSessionColor } from "@/lib/sessionColors";
 import { isCallJoinable } from "@/lib/sessionWindow";
+import { formatLocalTime } from "@/lib/localTime";
 import { VerifiedName } from "@/components/verified-tag";
 
 const COMPACT_PASTEL_COLORS_LIGHT = [
@@ -112,11 +113,10 @@ export function CalendarEventCard({
     };
   }, []);
 
-  const timeLabel = s.toLocaleTimeString("en-IN", {
+  const timeLabel = formatLocalTime(s, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: "Asia/Kolkata",
   });
 
   const compactPartner = (() => {
@@ -401,11 +401,10 @@ export function CalendarEventCard({
 
         <div className={`${canJoin && isBooked ? "pr-8" : "pr-8"}`}>
           <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
-            {s.toLocaleTimeString("en-IN", {
+            {formatLocalTime(s, {
               hour: "2-digit",
               minute: "2-digit",
               hour12: false,
-              timeZone: "Asia/Kolkata",
             })}
           </p>
           <p

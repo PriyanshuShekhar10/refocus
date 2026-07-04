@@ -3,9 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { publish, sessionsChannel } from "@/lib/sse";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
+import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 
 export async function POST(
   req: NextRequest,
@@ -37,6 +37,11 @@ export async function POST(
     owner_id: string;
     start_time: Date | string;
     end_time: Date | string;
+    duration_min?: number;
+    session_type?: string;
+    status?: string;
+    name?: string | null;
+    color?: string | null;
     session_participants?: Array<{
       user_id: string;
       joined_at: Date | string;
@@ -74,12 +79,20 @@ export async function POST(
   }
 
   // Atomic check-and-update: only join if < 2 participants and user not already in.
+  // Support legacy docs missing participant_count via $or with array length check.
   const result = await col.findOneAndUpdate(
     {
       _id: new ObjectId(sessionId),
-      $and: [
-        { $or: [{ session_participants: { $exists: false } }, { "session_participants.1": { $exists: false } }] },
-        { "session_participants.user_id": { $ne: userId } },
+      "session_participants.user_id": { $ne: userId },
+      $or: [
+        { participant_count: { $lt: 2 } },
+        {
+          participant_count: { $exists: false },
+          $or: [
+            { session_participants: { $exists: false } },
+            { "session_participants.1": { $exists: false } },
+          ],
+        },
       ],
     },
     {
@@ -90,7 +103,7 @@ export async function POST(
           quiet,
         },
       } as never,
-      $set: { status: "booked", updated_at: new Date() },
+      $set: { status: "booked", participant_count: 2, updated_at: new Date() },
     },
     { returnDocument: "after" }
   );
@@ -105,6 +118,10 @@ export async function POST(
     return NextResponse.json({ error: "Session already has 2 participants" }, { status: 409 });
   }
 
-  await publish(sessionsChannel(), { type: "sessions_updated" });
+  await publishSessionDocUpserted(db, {
+    ...result,
+    duration_min: result.duration_min ?? 50,
+    session_type: result.session_type ?? "focus",
+  });
   return NextResponse.json({ ok: true });
 }

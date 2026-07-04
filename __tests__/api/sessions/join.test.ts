@@ -122,6 +122,11 @@ describe("POST /api/sessions/:id/join", () => {
     sessionsCol.findOneAndUpdate.mockResolvedValue({
       _id: SESSION_ID,
       owner_id: "owner1",
+      start_time: FUTURE_START,
+      end_time: FUTURE_END,
+      duration_min: 25,
+      session_type: "focus",
+      participant_count: 2,
       session_participants: [
         { user_id: "owner1", joined_at: new Date() },
         { user_id: USER_ID, joined_at: new Date(), quiet: false },
@@ -150,6 +155,12 @@ describe("POST /api/sessions/:id/join", () => {
     sessionsCol.findOne.mockResolvedValueOnce(null);
     sessionsCol.findOneAndUpdate.mockResolvedValue({
       _id: SESSION_ID,
+      owner_id: "owner1",
+      start_time: FUTURE_START,
+      end_time: FUTURE_END,
+      duration_min: 25,
+      session_type: "focus",
+      participant_count: 2,
       session_participants: [{ user_id: USER_ID }],
     });
 
@@ -160,23 +171,22 @@ describe("POST /api/sessions/:id/join", () => {
 
     const [filter, update, options] = sessionsCol.findOneAndUpdate.mock.calls[0];
 
-    // Verify atomic filter prevents race conditions
-    expect(filter.$and).toBeDefined();
-    expect(filter.$and).toHaveLength(2);
-    // Must check < 2 participants
-    expect(filter.$and[0].$or).toContainEqual({
-      "session_participants.1": { $exists: false },
-    });
     // Must check user not already in
-    expect(filter.$and[1]).toEqual({
-      "session_participants.user_id": { $ne: USER_ID },
-    });
+    expect(filter["session_participants.user_id"]).toEqual({ $ne: USER_ID });
+    // Must check < 2 participants (participant_count or legacy array)
+    expect(filter.$or).toEqual(
+      expect.arrayContaining([
+        { participant_count: { $lt: 2 } },
+        expect.objectContaining({ participant_count: { $exists: false } }),
+      ]),
+    );
     // Uses returnDocument: "after"
     expect(options.returnDocument).toBe("after");
 
-    // Verify quiet flag is passed through
+    // Verify quiet flag and participant_count are set
     const pushed = update.$push.session_participants;
     expect(pushed.quiet).toBe(true);
+    expect(update.$set.participant_count).toBe(2);
   });
 
   it("returns 400 when session has already ended", async () => {

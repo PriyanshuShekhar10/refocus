@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { formatLocalDateTime } from "@/lib/localTime";
 import { CALL_JOIN_GRACE_MINUTES } from "@/lib/sessionWindow";
 
 interface SessionCountdownProps {
@@ -116,16 +117,14 @@ export default function SessionCountdown({ startTime, sessionId: _sessionId }: S
 
       <p className="mt-5 text-xs text-gray-500 dark:text-gray-400">
         Session starts at{" "}
-        <span className="font-medium text-gray-700 dark:text-gray-300">
-          {new Date(startTime).toLocaleString("en-IN", {
-            timeZone: "Asia/Kolkata",
+        <span className="font-medium text-gray-700 dark:text-gray-300" suppressHydrationWarning>
+          {formatLocalDateTime(startTime, {
             hour: "2-digit",
             minute: "2-digit",
             day: "numeric",
             month: "short",
           })}
-        </span>{" "}
-        IST
+        </span>
       </p>
     </div>
   );

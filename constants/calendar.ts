@@ -58,13 +58,16 @@ export const CALENDAR_LAYOUT = {
 // ============================================
 
 export const TIME_CONFIG = {
-  /** Default timezone for display */
+  /**
+   * Server-side only (emails / digests). Product UI must use
+   * browser-local helpers from `@/lib/localTime` — never this field.
+   */
   timezone: "Asia/Kolkata",
 
-  /** Default locale for formatting */
+  /** Fallback locale when browser locale is unavailable (server) */
   locale: "en-IN",
 
-  /** Time format options for displaying time labels */
+  /** Time format options for grid hover labels (local clock, no forced TZ) */
   timeFormatOptions: {
     hour: "2-digit",
     minute: "2-digit",

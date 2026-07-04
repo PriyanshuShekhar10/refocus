@@ -1,4 +1,5 @@
 import type { CalendarEvent } from "@/types/calendar";
+import { formatLocalDateTime } from "@/lib/localTime";
 import { ModalWrapper } from "./ModalWrapper";
 
 export function BookingModal({
@@ -37,13 +38,12 @@ export function BookingModal({
           session for:
         </p>
         <div className="mt-4 rounded-md bg-gray-100 dark:bg-gray-900/60 p-3 text-center font-medium text-gray-900 dark:text-gray-100">
-          {new Date(event.start).toLocaleString("en-IN", {
+          {formatLocalDateTime(event.start, {
             weekday: "long",
             month: "long",
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-            timeZone: "Asia/Kolkata",
           })}
         </div>
 

@@ -74,6 +74,7 @@ export type FetchedSession = {
     about?: string;
     avatar_url?: string;
     emailVerified?: boolean;
+    quiet?: boolean;
   }>;
 };
 

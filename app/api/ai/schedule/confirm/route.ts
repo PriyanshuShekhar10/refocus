@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
-import { publish, sessionsChannel } from "@/lib/sse";
+import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -100,17 +100,26 @@ export async function POST(req: NextRequest) {
       status: friendId ? "booked" : "available",
       name: s.goal || null,
       color: null,
+      participant_count: participants.length,
       session_participants: participants,
       created_at: new Date(),
       updated_at: new Date(),
     });
 
     created.push(String(insert.insertedId));
-  }
-
-  // Publish SSE update
-  if (created.length > 0) {
-    await publish(sessionsChannel(), { type: "sessions_updated" });
+    await publishSessionDocUpserted(db, {
+      _id: insert.insertedId,
+      owner_id: userId,
+      start_time: startTime,
+      end_time: endTime,
+      duration_min: s.durationMin,
+      session_type: s.sessionType,
+      status: friendId ? "booked" : "available",
+      name: s.goal || null,
+      color: null,
+      participant_count: participants.length,
+      session_participants: participants,
+    });
   }
 
   return NextResponse.json({

@@ -9,6 +9,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { designStyles } from "@/components/design";
+import { formatLocalDate, formatLocalTime } from "@/lib/localTime";
 
 type RecentSession = {
   id: string;
@@ -71,20 +72,18 @@ function formatRecentTime(iso: string): string {
     (startOfDay(now).getTime() - startOfDay(date).getTime()) /
       (1000 * 60 * 60 * 24),
   );
-  const time = date.toLocaleTimeString("en-IN", {
+  const time = formatLocalTime(date, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-    timeZone: "Asia/Kolkata",
   });
   if (diffDays === 0) return `Today · ${time}`;
   if (diffDays === 1) return `Yesterday · ${time}`;
   if (diffDays < 7) return `${diffDays}d ago · ${time}`;
   return (
-    date.toLocaleDateString("en-IN", {
+    formatLocalDate(date, {
       month: "short",
       day: "numeric",
-      timeZone: "Asia/Kolkata",
     }) + ` · ${time}`
   );
 }

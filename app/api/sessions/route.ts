@@ -3,13 +3,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { publish, sessionsChannel } from "@/lib/sse";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { isEmailVerified } from "@/lib/emailVerification";
 import { DURATION_OPTIONS, SESSION_TYPES, type DurationMin, type SessionType } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 
 // GET /api/sessions?from=ISO&to=ISO
+/** Soft cap on open (bookable) slots returned per range request. */
+const MAX_OPEN_SLOTS = 200;
+
 type DbSession = {
   _id: ObjectId;
   owner_id: string;
@@ -20,12 +23,18 @@ type DbSession = {
   status?: string;
   name?: string | null;
   color?: string | null;
+  participant_count?: number;
   session_participants?: Array<{
     user_id: string;
     joined_at: Date | string;
     quiet?: boolean;
   }>;
 };
+
+function participantCount(s: DbSession): number {
+  if (typeof s.participant_count === "number") return s.participant_count;
+  return s.session_participants?.length ?? 0;
+}
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -54,33 +63,52 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Fetch sessions in range, pushing visibility filter into the DB query.
-  // Visibility rule: sessions with < 2 participants are visible to everyone;
-  // fully-booked sessions (>= 2 participants) are only visible to
-  // their owner or participants.
+  // Two index-friendly queries:
+  // A) open bookable slots (participant_count < 2), capped
+  // B) current user's sessions (including fully booked)
   const db = await getDb();
   const col = db.collection<DbSession>("sessions");
-  const sessions: DbSession[] = (await col
-    .find({
-      start_time: { $gte: fromDate, $lt: toDate },
-      $or: [
-        // Not fully booked (fewer than 2 participants)
-        {
-          $expr: {
-            $lt: [
-              { $size: { $ifNull: ["$session_participants", []] } },
-              2,
+  const rangeFilter = { start_time: { $gte: fromDate, $lt: toDate } };
+
+  const [openSlots, mySessions] = await Promise.all([
+    col
+      .find({
+        ...rangeFilter,
+        // Prefer participant_count; include legacy docs missing the field
+        // that still have fewer than 2 participants.
+        $or: [
+          { participant_count: { $lt: 2 } },
+          {
+            participant_count: { $exists: false },
+            $or: [
+              { session_participants: { $exists: false } },
+              { "session_participants.1": { $exists: false } },
             ],
           },
-        },
-        // Current user is the session owner
-        { owner_id: userId },
-        // Current user is a participant
-        { "session_participants.user_id": userId },
-      ],
-    })
-    .sort({ start_time: 1 })
-    .toArray()) as unknown as DbSession[];
+        ],
+      })
+      .sort({ start_time: 1 })
+      .limit(MAX_OPEN_SLOTS)
+      .toArray(),
+    col
+      .find({
+        ...rangeFilter,
+        $or: [
+          { owner_id: userId },
+          { "session_participants.user_id": userId },
+        ],
+      })
+      .sort({ start_time: 1 })
+      .toArray(),
+  ]);
+
+  const byId = new Map<string, DbSession>();
+  for (const s of openSlots) byId.set(String(s._id), s);
+  for (const s of mySessions) byId.set(String(s._id), s);
+  const sessions = Array.from(byId.values()).sort(
+    (a, b) =>
+      new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+  );
 
   // Collect unique user IDs (owner + participants) to hydrate with user profile info
   const userIdSet = new Set<string>();
@@ -153,10 +181,10 @@ export async function GET(req: NextRequest) {
   }
 
   const now = new Date();
-  const mapped = (sessions ?? []).map((s) => {
+  const mapped = sessions.map((s) => {
     const start = new Date(s.start_time);
     const end = new Date(s.end_time);
-    const count = (s.session_participants?.length ?? 0) as number;
+    const count = participantCount(s);
     // Compute status deterministically from time and participants
     let status: "available" | "booked" | "in-progress" | "completed";
     if (now > end) status = "completed";
@@ -164,6 +192,7 @@ export async function GET(req: NextRequest) {
     else if (count >= 2) status = "booked";
     else status = "available";
 
+    const owner = usersById[s.owner_id];
     return {
       id: String(s._id),
       owner_id: s.owner_id,
@@ -185,10 +214,16 @@ export async function GET(req: NextRequest) {
         emailVerified: usersById[p.user_id]?.emailVerified ?? false,
         quiet: Boolean(p.quiet),
       })),
-      owner: usersById[s.owner_id]
+      owner: owner
         ? {
-            ...usersById[s.owner_id],
-            emailVerified: usersById[s.owner_id].emailVerified,
+            id: owner.id,
+            email: owner.email ?? undefined,
+            firstname: owner.firstname ?? undefined,
+            lastname: owner.lastname ?? undefined,
+            username: owner.username ?? undefined,
+            about: owner.about ?? undefined,
+            avatar_url: owner.avatar_url ?? undefined,
+            emailVerified: owner.emailVerified,
           }
         : null,
       status,
@@ -271,6 +306,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const joinedAt = new Date();
   const insert = await db.collection("sessions").insertOne({
     owner_id: userId,
     start_time: s,
@@ -278,12 +314,25 @@ export async function POST(req: NextRequest) {
     duration_min: durationMin as DurationMin,
     session_type: sessionType as SessionType,
     status: "available",
+    participant_count: 1,
     session_participants: [
-      { user_id: userId, joined_at: new Date(), quiet: Boolean(quietOwner) },
+      { user_id: userId, joined_at: joinedAt, quiet: Boolean(quietOwner) },
     ],
     created_at: new Date(),
     updated_at: new Date(),
   });
-  await publish(sessionsChannel(), { type: "sessions_updated" });
+  await publishSessionDocUpserted(db, {
+    _id: insert.insertedId,
+    owner_id: userId,
+    start_time: s,
+    end_time: e,
+    duration_min: durationMin as DurationMin,
+    session_type: sessionType as SessionType,
+    status: "available",
+    participant_count: 1,
+    session_participants: [
+      { user_id: userId, joined_at: joinedAt, quiet: Boolean(quietOwner) },
+    ],
+  });
   return NextResponse.json({ id: String(insert.insertedId) });
 }

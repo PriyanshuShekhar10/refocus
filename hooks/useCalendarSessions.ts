@@ -5,6 +5,9 @@ import type { CalendarEvent, FetchedSession } from "@/types/calendar";
 import { toISO, addDays, addMinutes } from "@/lib/utils";
 import { type DurationMin } from "@/constants/calendar";
 import * as sessionsApi from "@/lib/api/sessionsApi";
+import { getAblyClient } from "@/lib/ably-client";
+import { sessionsChannel } from "@/lib/realtimeChannels";
+import type { SessionRealtimeEvent } from "@/types/sessionRealtime";
 
 // ============================================
 // Types
@@ -71,6 +74,27 @@ function mapFetchedToEvent(s: FetchedSession): CalendarEvent {
   };
 }
 
+function isSessionVisibleToUser(
+  session: FetchedSession,
+  userId: string | null,
+): boolean {
+  const count = session.participants?.length ?? 0;
+  if (count < 2) return true;
+  if (!userId) return false;
+  if (session.owner_id === userId) return true;
+  return (session.participants ?? []).some((p) => p.user_id === userId);
+}
+
+function sessionOverlapsRange(
+  session: FetchedSession,
+  rangeStart: Date,
+  rangeEnd: Date,
+): boolean {
+  const startMs = new Date(session.start).getTime();
+  const endMs = new Date(session.end).getTime();
+  return startMs < rangeEnd.getTime() && endMs > rangeStart.getTime();
+}
+
 // ============================================
 // Hook Implementation
 // ============================================
@@ -94,6 +118,11 @@ export function useCalendarSessions({
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const daysRef = useRef(days);
+  const currentUserIdRef = useRef<string | null>(null);
+  const ablyConnectedRef = useRef(false);
+
+  daysRef.current = days;
 
   const events = eventsProp ?? internalEvents;
 
@@ -135,7 +164,9 @@ export function useCalendarSessions({
         return;
       }
 
-      setCurrentUserId(result.data.currentUserId ?? null);
+      const uid = result.data.currentUserId ?? null;
+      setCurrentUserId(uid);
+      currentUserIdRef.current = uid;
       setEvents(result.data.sessions.map(mapFetchedToEvent));
       setIsLoading(false);
     }
@@ -146,7 +177,7 @@ export function useCalendarSessions({
     };
   }, [days, refreshTrigger, setEvents]);
 
-  // Real-time: subscribe to session updates via SSE (no polling)
+  // Real-time: Ably session deltas (no full-list refetch on every write)
   useEffect(() => {
     if (days.length === 0) return;
 
@@ -159,42 +190,109 @@ export function useCalendarSessions({
       }, 200);
     };
 
-    const es = new EventSource("/api/sessions/events", { withCredentials: true });
-    const onMessage = (e: MessageEvent<string>) => {
-      try {
-        const data = JSON.parse(e.data) as { type?: string };
-        if (data.type === "sessions_updated") {
-          scheduleRefresh();
+    const applyRealtimeEvent = (data: SessionRealtimeEvent) => {
+      const visibleDays = daysRef.current;
+      if (visibleDays.length === 0) return;
+      const rangeStart = visibleDays[0];
+      const rangeEnd = addDays(visibleDays[visibleDays.length - 1], 1);
+      const userId = currentUserIdRef.current;
+
+      if (data.type === "session_removed") {
+        setEvents((prev) => prev.filter((e) => e.id !== data.sessionId));
+        return;
+      }
+
+      if (data.type !== "session_upserted" || !data.session) return;
+      const session = data.session;
+      const inRange = sessionOverlapsRange(session, rangeStart, rangeEnd);
+      const visible = isSessionVisibleToUser(session, userId);
+
+      if (!inRange || !visible) {
+        setEvents((prev) => prev.filter((e) => e.id !== session.id));
+        return;
+      }
+
+      const mapped = mapFetchedToEvent(session);
+      setEvents((prev) => {
+        const withoutTemps = prev.filter((e) => {
+          if (!e.id.startsWith("temp_")) return true;
+          return !(
+            e.start === mapped.start &&
+            e.owner_id === mapped.owner_id &&
+            e.durationMin === mapped.durationMin
+          );
+        });
+        const idx = withoutTemps.findIndex((e) => e.id === mapped.id);
+        if (idx === -1) return [...withoutTemps, mapped];
+        const next = [...withoutTemps];
+        next[idx] = mapped;
+        return next;
+      });
+    };
+
+    let channel: ReturnType<ReturnType<typeof getAblyClient>["channels"]["get"]> | null =
+      null;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+
+    try {
+      const client = getAblyClient();
+      channel = client.channels.get(sessionsChannel());
+      const onEvent = (message: { data?: unknown }) => {
+        try {
+          const data = message.data as SessionRealtimeEvent | undefined;
+          if (!data?.type) return;
+          applyRealtimeEvent(data);
+        } catch {
+          // ignore malformed payloads
         }
-      } catch {
-        // ignore non-JSON or parse errors
-      }
-    };
+      };
+      channel.subscribe("event", onEvent);
 
-    es.onmessage = onMessage;
-    es.onerror = () => {
-      // Don't close here; EventSource handles reconnect automatically.
-    };
+      const onConnectionChange = () => {
+        const state = client.connection.state;
+        ablyConnectedRef.current = state === "connected";
+        if (state === "failed" || state === "suspended") {
+          if (!pollInterval) {
+            pollInterval = setInterval(scheduleRefresh, 120_000);
+          }
+        } else if (state === "connected" && pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+      };
+      ablyConnectedRef.current = client.connection.state === "connected";
+      client.connection.on(onConnectionChange);
 
-    // Fallback polling so updates still land if SSE delivery degrades.
-    const pollInterval = setInterval(() => {
-      scheduleRefresh();
-    }, 30000);
+      const onFocus = () => {
+        if (!ablyConnectedRef.current) scheduleRefresh();
+      };
+      window.addEventListener("focus", onFocus);
 
-    // Refresh when user returns focus to the tab.
-    const onFocus = () => scheduleRefresh();
-    window.addEventListener("focus", onFocus);
-
-    return () => {
-      es.close();
-      clearInterval(pollInterval);
-      window.removeEventListener("focus", onFocus);
-      if (refreshDebounceRef.current) {
-        clearTimeout(refreshDebounceRef.current);
-        refreshDebounceRef.current = null;
-      }
-    };
-  }, [days.length]);
+      return () => {
+        channel?.unsubscribe("event", onEvent);
+        client.connection.off(onConnectionChange);
+        window.removeEventListener("focus", onFocus);
+        if (pollInterval) clearInterval(pollInterval);
+        if (refreshDebounceRef.current) {
+          clearTimeout(refreshDebounceRef.current);
+          refreshDebounceRef.current = null;
+        }
+      };
+    } catch {
+      // Ably unavailable — rare full refresh fallback
+      pollInterval = setInterval(scheduleRefresh, 120_000);
+      const onFocus = () => scheduleRefresh();
+      window.addEventListener("focus", onFocus);
+      return () => {
+        if (pollInterval) clearInterval(pollInterval);
+        window.removeEventListener("focus", onFocus);
+        if (refreshDebounceRef.current) {
+          clearTimeout(refreshDebounceRef.current);
+          refreshDebounceRef.current = null;
+        }
+      };
+    }
+  }, [days.length, setEvents]);
 
   const createSession = useCallback(
     async (

@@ -134,6 +134,11 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
         name: "sessions_busy_lookup",
         keys: { "session_participants.user_id": 1, end_time: 1, start_time: 1 },
       },
+      {
+        // Open bookable slots in a time range (participant_count < 2)
+        name: "sessions_open_by_start",
+        keys: { start_time: 1, participant_count: 1 },
+      },
     ],
   },
   {

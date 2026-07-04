@@ -31,6 +31,9 @@ import {
   DEFAULT_SESSION_REMINDER_TIMING,
   type SessionReminderTiming,
 } from "@/lib/sessionReminderPrefs";
+import { getBrowserTimeZone } from "@/lib/localTime";
+import { listTimeZones } from "@/lib/zonedTime";
+import { TIMEZONE_PREF_EVENT } from "@/components/user-timezone-provider";
 
 type Prefs = {
   defaultSessionLength: 25 | 50 | 75;
@@ -42,6 +45,7 @@ type Prefs = {
   sessionReminderTiming: SessionReminderTiming;
   emailFriendRequests: boolean;
   emailWeeklyDigest: boolean;
+  timezone: string;
 };
 
 const DEFAULT_PREFS: Prefs = {
@@ -54,6 +58,7 @@ const DEFAULT_PREFS: Prefs = {
   sessionReminderTiming: DEFAULT_SESSION_REMINDER_TIMING,
   emailFriendRequests: true,
   emailWeeklyDigest: false,
+  timezone: "auto",
 };
 
 export default function Settings() {
@@ -136,6 +141,27 @@ function EmailVerificationSection() {
    ───────────────────────────────────────────────────── */
 function FocusPreferences() {
   const { prefs, setPref, saving } = usePrefs();
+  const [deviceTz, setDeviceTz] = useState("UTC");
+  const [zones, setZones] = useState<string[]>([]);
+
+  useEffect(() => {
+    setDeviceTz(getBrowserTimeZone());
+    setZones(listTimeZones());
+  }, []);
+
+  const setTimezone = async (value: string) => {
+    await setPref("timezone", value);
+    try {
+      window.dispatchEvent(
+        new CustomEvent(TIMEZONE_PREF_EVENT, {
+          detail: { timezone: value },
+        }),
+      );
+    } catch {
+      // ignore
+    }
+  };
+
   return (
     <SectionCard
       icon={<Sparkles size={16} />}
@@ -160,6 +186,24 @@ function FocusPreferences() {
               </button>
             ))}
           </div>
+        </Row>
+        <Row
+          label="Timezone"
+          hint="Calendar, sessions, and reminders use this timezone."
+        >
+          <select
+            value={prefs.timezone || "auto"}
+            disabled={saving}
+            onChange={(e) => setTimezone(e.target.value)}
+            className="max-w-[min(100%,280px)] rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          >
+            <option value="auto">Device timezone ({deviceTz.replace(/_/g, " ")})</option>
+            {zones.map((z) => (
+              <option key={z} value={z}>
+                {z.replace(/_/g, " ")}
+              </option>
+            ))}
+          </select>
         </Row>
         <Row
           label="Start in focus mode"

@@ -53,7 +53,10 @@ function emailShell(params: {
   return { subject: params.subject, html, text: params.bodyText };
 }
 
-function sessionListHtml(sessions: SessionReminderItem[]): string {
+function sessionListHtml(
+  sessions: SessionReminderItem[],
+  timeZone: string,
+): string {
   return sessions
     .map((s) => {
       const partner = s.partnerLabel
@@ -62,7 +65,7 @@ function sessionListHtml(sessions: SessionReminderItem[]): string {
       return `<tr>
         <td style="padding:12px 0;border-bottom:1px solid ${emailBrand.line};">
           <p style="margin:0 0 4px;font-size:15px;font-weight:600;color:${emailBrand.ink};">${s.title}${partner}</p>
-          <p style="margin:0 0 8px;font-size:13px;color:${emailBrand.inkSoft};">${formatSessionTime(s.startTime)}</p>
+          <p style="margin:0 0 8px;font-size:13px;color:${emailBrand.inkSoft};">${formatSessionTime(s.startTime, timeZone)}</p>
           <a href="${s.joinUrl}" style="font-size:13px;font-weight:600;color:${emailBrand.accent};text-decoration:none;">View session &rarr;</a>
         </td>
       </tr>`;
@@ -70,16 +73,19 @@ function sessionListHtml(sessions: SessionReminderItem[]): string {
     .join("");
 }
 
-function sessionListText(sessions: SessionReminderItem[]): string {
+function sessionListText(
+  sessions: SessionReminderItem[],
+  timeZone: string,
+): string {
   return sessions
     .map((s) => {
       const partner = s.partnerLabel ? ` with ${s.partnerLabel}` : "";
-      return `- ${s.title}${partner}\n  ${formatSessionTime(s.startTime)}\n  ${s.joinUrl}`;
+      return `- ${s.title}${partner}\n  ${formatSessionTime(s.startTime, timeZone)}\n  ${s.joinUrl}`;
     })
     .join("\n\n");
 }
 
-function formatSessionTime(date: Date): string {
+function formatSessionTime(date: Date, timeZone: string): string {
   return date.toLocaleString("en-IN", {
     weekday: "short",
     month: "short",
@@ -87,7 +93,7 @@ function formatSessionTime(date: Date): string {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-    timeZone: "Asia/Kolkata",
+    timeZone,
   });
 }
 
@@ -95,9 +101,11 @@ export function buildMorningSessionDigestEmail(params: {
   firstName?: string | null;
   dayKey: string;
   sessions: SessionReminderItem[];
+  timeZone?: string;
 }): { subject: string; html: string; text: string } {
   const greet = greeting(params.firstName);
   const count = params.sessions.length;
+  const timeZone = params.timeZone || "Asia/Kolkata";
   const subject =
     count === 1
       ? "Today's focus session on Refocus"
@@ -107,7 +115,7 @@ export function buildMorningSessionDigestEmail(params: {
 
 Here's your session summary for ${params.dayKey}:
 
-${sessionListText(params.sessions)}
+${sessionListText(params.sessions, timeZone)}
 
 Open Refocus to review details or join when your session window opens.
 
@@ -119,7 +127,7 @@ Open Refocus to review details or join when your session window opens.
       You have <strong style="color:${emailBrand.ink};">${count}</strong> focus session${count === 1 ? "" : "s"} scheduled for today.
     </p>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-      ${sessionListHtml(params.sessions)}
+      ${sessionListHtml(params.sessions, timeZone)}
     </table>`;
 
   return emailShell({

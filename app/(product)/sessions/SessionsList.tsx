@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { formatLocalDate, formatLocalTime } from "@/lib/localTime";
 import { isCallJoinable } from "@/lib/sessionWindow";
 
 interface Participant {
@@ -65,19 +66,16 @@ function getTimeUntil(startTime: string): string {
 }
 
 function formatDateTime(dateStr: string): { date: string; time: string } {
-  const date = new Date(dateStr);
   return {
-    date: date.toLocaleDateString("en-IN", {
+    date: formatLocalDate(dateStr, {
       weekday: "short",
       month: "short",
       day: "numeric",
-      timeZone: "Asia/Kolkata",
     }),
-    time: date.toLocaleTimeString("en-IN", {
+    time: formatLocalTime(dateStr, {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-      timeZone: "Asia/Kolkata",
     }),
   };
 }
@@ -134,12 +132,11 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
   // Group sessions by date
   const groupedSessions: { [key: string]: Session[] } = {};
   sessions.forEach((s) => {
-    const dateKey = new Date(s.start).toLocaleDateString("en-IN", {
+    const dateKey = formatLocalDate(s.start, {
       weekday: "long",
       month: "long",
       day: "numeric",
       year: "numeric",
-      timeZone: "Asia/Kolkata",
     });
     if (!groupedSessions[dateKey]) {
       groupedSessions[dateKey] = [];

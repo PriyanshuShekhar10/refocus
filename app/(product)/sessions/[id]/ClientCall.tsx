@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { formatLocalDateTime } from "@/lib/localTime";
 
 type Phase = "loading" | "ready" | "in-call" | "ended" | "error";
 
@@ -252,19 +253,19 @@ export default function ClientCall({
     return Math.max(0, Math.min(1, elapsed / totalMs));
   }, [phase, totalMs, remainingMs]);
 
-  const startsAt = useMemo(
-    () =>
-      new Date(prejoin.startIso).toLocaleString("en-IN", {
+  const [startsAt, setStartsAt] = useState("");
+  useEffect(() => {
+    setStartsAt(
+      formatLocalDateTime(prejoin.startIso, {
         weekday: "short",
         day: "numeric",
         month: "short",
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
-        timeZone: "Asia/Kolkata",
       }),
-    [prejoin.startIso],
-  );
+    );
+  }, [prejoin.startIso]);
 
   if (phase === "loading") {
     return (
@@ -412,7 +413,7 @@ export default function ClientCall({
                 When
               </p>
               <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
-                {startsAt} IST · {prejoin.durationMin} min
+                {startsAt || "…"} · {prejoin.durationMin} min
               </p>
             </div>
 

@@ -37,7 +37,6 @@ const cspDirectives: Record<string, string[]> = {
     "https://*.ably-realtime.com",
     "wss://*.ably.io",
     "wss://*.ably-realtime.com",
-    "https://*.upstash.io",
   ].filter(Boolean),
   "frame-src": [dailyOrigin, dailyWildcard].filter(Boolean),
   "media-src": ["'self'", dailyOrigin, dailyWildcard].filter(Boolean),
@@ -89,7 +88,7 @@ const nextConfig: NextConfig = {
         // Apply security headers everywhere except Next-internal assets and
         // SSE endpoints (custom Content-Security-Policy can break streaming
         // proxies in some configurations).
-        source: "/((?!_next/static|_next/image|api/sessions/events|api/chat/events).*)",
+        source: "/((?!_next/static|_next/image|api/chat/events).*)",
         headers: securityHeaders,
       },
     ];

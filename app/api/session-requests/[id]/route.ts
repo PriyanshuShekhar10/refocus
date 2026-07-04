@@ -3,11 +3,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { chatChannel, publish, sessionsChannel } from "@/lib/sse";
+import { publish } from "@/lib/sse";
+import { chatChannel } from "@/lib/realtimeChannels";
 import { publishAbly } from "@/lib/ably-server";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
+import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 
 // POST /api/session-requests/:id { action: 'accept'|'decline', message?: string }
 // On accept: create a session and add both users as participants
@@ -139,6 +141,7 @@ export async function POST(
       return NextResponse.json({ error: acceptError }, { status: 409 });
     }
 
+    const joinedAt = new Date();
     const insert = await db.collection("sessions").insertOne({
       owner_id: reqDoc.from_user_id,
       start_time: start,
@@ -146,15 +149,29 @@ export async function POST(
       duration_min: duration,
       session_type: "focus",
       status: "booked",
+      participant_count: 2,
       session_participants: [
-        { user_id: reqDoc.from_user_id, joined_at: new Date(), quiet: false },
-        { user_id: reqDoc.to_user_id, joined_at: new Date(), quiet: false },
+        { user_id: reqDoc.from_user_id, joined_at: joinedAt, quiet: false },
+        { user_id: reqDoc.to_user_id, joined_at: joinedAt, quiet: false },
       ],
       created_at: new Date(),
       updated_at: new Date(),
     });
     createdSessionId = String(insert.insertedId);
-    await publish(sessionsChannel(), { type: "sessions_updated" });
+    await publishSessionDocUpserted(db, {
+      _id: insert.insertedId,
+      owner_id: reqDoc.from_user_id,
+      start_time: start,
+      end_time: end,
+      duration_min: duration,
+      session_type: "focus",
+      status: "booked",
+      participant_count: 2,
+      session_participants: [
+        { user_id: reqDoc.from_user_id, joined_at: joinedAt, quiet: false },
+        { user_id: reqDoc.to_user_id, joined_at: joinedAt, quiet: false },
+      ],
+    });
   }
 
   // Best-effort: update any chat message payload that references this request

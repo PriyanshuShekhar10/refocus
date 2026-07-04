@@ -7,9 +7,9 @@ import { ModalWrapper } from "./ModalWrapper";
 import {
   SESSION_COLOR_PRESETS,
   getSessionColorPresetIndex,
-  TIME_CONFIG,
 } from "@/constants/calendar";
 import { getLocalSessionColor, setLocalSessionColor } from "@/lib/sessionColors";
+import { formatLocalDate, formatLocalTimeRange } from "@/lib/localTime";
 import { isCallJoinable } from "@/lib/sessionWindow";
 
 export function SessionDetailsModal({
@@ -123,24 +123,17 @@ export function SessionDetailsModal({
   };
   const startDate = new Date(event.start);
   const endDate = new Date(event.end);
-  const dateLabel = startDate.toLocaleDateString("en-IN", {
+  const dateLabel = formatLocalDate(startDate, {
     weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
-    timeZone: TIME_CONFIG.timezone,
   });
-  const timeRange = `${startDate.toLocaleTimeString("en-IN", {
+  const timeRange = formatLocalTimeRange(startDate, endDate, {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-    timeZone: TIME_CONFIG.timezone,
-  })} – ${endDate.toLocaleTimeString("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: TIME_CONFIG.timezone,
-  })}`;
+  });
 
   return (
     <ModalWrapper onClose={onClose}>

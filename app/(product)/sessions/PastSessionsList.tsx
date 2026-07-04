@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { formatLocalDate, formatLocalTime } from "@/lib/localTime";
 
 export interface PastParticipant {
   userId: string;
@@ -81,22 +82,19 @@ function formatRelativeDay(dateStr: string): string {
   if (diffDays === 1) return "Yesterday";
   if (diffDays < 7) return `${diffDays} days ago`;
 
-  return date.toLocaleDateString("en-IN", {
+  return formatLocalDate(date, {
     weekday: "long",
     month: "long",
     day: "numeric",
-    year:
-      date.getFullYear() === today.getFullYear() ? undefined : "numeric",
-    timeZone: "Asia/Kolkata",
+    year: date.getFullYear() === today.getFullYear() ? undefined : "numeric",
   });
 }
 
 function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString("en-IN", {
+  return formatLocalTime(dateStr, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-    timeZone: "Asia/Kolkata",
   });
 }
 
@@ -221,11 +219,10 @@ export function PastSessionsList({
                         </div>
 
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          {new Date(session.start).toLocaleDateString("en-IN", {
+                          {formatLocalDate(session.start, {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
-                            timeZone: "Asia/Kolkata",
                           })}{" "}
                           · {session.sessionType}
                         </p>

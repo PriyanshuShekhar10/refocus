@@ -2,7 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalendarEvent } from "@/types/calendar";
-import { startOfDay, addDays, ymd, clamp, minutesBetween } from "@/lib/utils";
+import { clamp } from "@/lib/utils";
+import { formatLocalTime } from "@/lib/localTime";
+import {
+  addDaysInTimeZone,
+  minutesOfDayInTimeZone,
+  startOfDayInTimeZone,
+  wallMinutesOnDayToUtc,
+  ymdInTimeZone,
+} from "@/lib/zonedTime";
 import {
   CALENDAR_LAYOUT,
   TIME_CONFIG,
@@ -41,6 +49,8 @@ interface UseCalendarGridOptions {
   createDuration: DurationMin;
   /** Events organized by day (for overlap detection) */
   eventsByDay: Record<string, CalendarEvent[]>;
+  /** IANA timezone for grid placement and click-to-create */
+  timeZone: string;
 }
 
 interface UseCalendarGridReturn {
@@ -109,6 +119,7 @@ export function useCalendarGrid({
   visibleDays,
   createDuration,
   eventsByDay,
+  timeZone,
 }: UseCalendarGridOptions): UseCalendarGridReturn {
   const { rowPx, gutterWidth } = CALENDAR_LAYOUT;
   const totalMinutes = (endHour - startHour) * 60;
@@ -146,13 +157,15 @@ export function useCalendarGrid({
     if (!day0 || !dayLast) return null;
 
     const n = now;
-    if (n < startOfDay(day0) || n > addDays(startOfDay(dayLast), 1)) {
+    const rangeStart = startOfDayInTimeZone(day0, timeZone);
+    const rangeEnd = addDaysInTimeZone(dayLast, 1, timeZone);
+    if (n < rangeStart || n >= rangeEnd) {
       return null;
     }
 
-    const m = n.getHours() * 60 + n.getMinutes() - startHour * 60;
+    const m = minutesOfDayInTimeZone(n, timeZone) - startHour * 60;
     return clamp(minuteToPx(m), 0, minuteToPx(totalMinutes));
-  }, [days, now, startHour, totalMinutes, minuteToPx]);
+  }, [days, now, startHour, totalMinutes, minuteToPx, timeZone]);
 
   // Auto-scroll to current time once per visible range
   useEffect(() => {
@@ -162,22 +175,22 @@ export function useCalendarGrid({
     const dayLast = days[days.length - 1];
     if (!day0 || !dayLast) return;
 
-    const start = startOfDay(day0).getTime();
-    const end = addDays(startOfDay(dayLast), 1).getTime();
+    const start = startOfDayInTimeZone(day0, timeZone).getTime();
+    const end = addDaysInTimeZone(dayLast, 1, timeZone).getTime();
     const nowMs = now.getTime();
     const todayVisible = nowMs >= start && nowMs <= end;
 
     if (!todayVisible) return;
     if (nowLine == null) return;
 
-    const key = `${ymd(day0)}-${ymd(dayLast)}`;
+    const key = `${ymdInTimeZone(day0, timeZone)}-${ymdInTimeZone(dayLast, timeZone)}`;
     if (autoScrolledKeyRef.current === key) return;
 
     const scroller = gridRef.current;
     const target = Math.max(0, nowLine - scroller.clientHeight / 2);
     scroller.scrollTop = target;
     autoScrolledKeyRef.current = key;
-  }, [days, nowLine, now]);
+  }, [days, nowLine, now, timeZone]);
 
   // Compute hover state from client coordinates
   const computeHoverFromClient = useCallback(
@@ -211,30 +224,26 @@ export function useCalendarGrid({
       const d = days[dayIndex];
       if (!d) return;
 
-      const when = new Date(startOfDay(d));
-      when.setMinutes(minutesOfDay);
-
-      const label = when.toLocaleTimeString(TIME_CONFIG.locale, {
-        ...TIME_CONFIG.timeFormatOptions,
-        timeZone: TIME_CONFIG.timezone,
-      });
+      const when = wallMinutesOnDayToUtc(d, minutesOfDay, timeZone);
+      const label = formatLocalTime(when, TIME_CONFIG.timeFormatOptions);
 
       // Check if cursor is over an existing event
-      const dayKey = ymd(d);
+      const dayKey = ymdInTimeZone(d, timeZone);
       const overEvent = (eventsByDay[dayKey] ?? []).some((ev) => {
         const s = new Date(ev.start);
-        const startMin = minutesBetween(startOfDay(s), s);
+        const startMin = minutesOfDayInTimeZone(s, timeZone);
         const endMin = startMin + ev.durationMin;
         return minutesOfDay >= startMin && minutesOfDay < endMin;
       });
 
       const topPx = minuteToPx(minutesOfDay - startHour * 60);
-      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const nowMinutes = minutesOfDayInTimeZone(now, timeZone);
 
       // Hide hover for past times
       if (
-        ymd(d) < ymd(now) ||
-        (ymd(d) === ymd(now) && minutesOfDay < nowMinutes)
+        ymdInTimeZone(d, timeZone) < ymdInTimeZone(now, timeZone) ||
+        (ymdInTimeZone(d, timeZone) === ymdInTimeZone(now, timeZone) &&
+          minutesOfDay < nowMinutes)
       ) {
         setHoverState(null);
         return;
@@ -260,6 +269,7 @@ export function useCalendarGrid({
       gutterWidth,
       rowPx,
       minuteToPx,
+      timeZone,
     ],
   );
 
@@ -294,8 +304,7 @@ export function useCalendarGrid({
         endHour * 60 - createDuration,
       );
 
-      const start = new Date(startOfDay(dayDate));
-      start.setMinutes(minutesOfDay);
+      const start = wallMinutesOnDayToUtc(dayDate, minutesOfDay, timeZone);
 
       return { dayDate, start, minutesOfDay };
     },
@@ -308,6 +317,7 @@ export function useCalendarGrid({
       createDuration,
       gutterWidth,
       rowPx,
+      timeZone,
     ],
   );
 

@@ -5,19 +5,24 @@ import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react"
 import type { CalendarEvent } from "@/types/calendar";
 import { VerifiedName } from "@/components/verified-tag";
 import {
-  startOfDay,
   addMinutes,
-  addDays,
-  ymd,
   formatHour,
 } from "@/lib/utils";
 import {
-  TIME_CONFIG,
   DEFAULT_DURATION,
   DEFAULT_DURATION_FILTER,
   isValidDuration,
   type DurationMin,
 } from "@/constants/calendar";
+import { formatLocalDateTime } from "@/lib/localTime";
+import {
+  addDaysInTimeZone,
+  minutesOfDayInTimeZone,
+  startOfDayInTimeZone,
+  wallMinutesOnDayToUtc,
+  ymdInTimeZone,
+} from "@/lib/zonedTime";
+import { useUserTimezone } from "@/components/user-timezone-provider";
 import { useCalendarSessions } from "@/hooks/useCalendarSessions";
 import { BookingModal } from "../Calendar/Modals/BookingModal";
 import { Toast } from "../Calendar/Modals/Toast";
@@ -46,7 +51,7 @@ type ModalState =
       type: "confirm-create";
       start: Date;
       preferred: DurationMin;
-      whenIst: string;
+      whenLabel: string;
       quiet: boolean;
     }
   | { type: "confirm-delete"; event: CalendarEvent }
@@ -63,14 +68,14 @@ interface UIState {
 
 type UIAction =
   | { type: "SET_START_DATE"; date: Date }
-  | { type: "SHIFT_DAY"; delta: number }
-  | { type: "GO_TODAY" }
+  | { type: "SHIFT_DAY"; delta: number; timeZone: string }
+  | { type: "GO_TODAY"; timeZone: string }
   | { type: "TOGGLE_DURATION_FILTER"; duration: DurationMin }
   | { type: "SET_CREATE_DURATION"; duration: DurationMin }
   | { type: "OPEN_BOOKING_MODAL"; event: CalendarEvent }
   | { type: "SET_BOOKING_QUIET"; quiet: boolean }
   | { type: "OPEN_DETAILS_MODAL"; event: CalendarEvent }
-  | { type: "OPEN_CREATE_CONFIRM"; start: Date; preferred: DurationMin; whenIst: string }
+  | { type: "OPEN_CREATE_CONFIRM"; start: Date; preferred: DurationMin; whenLabel: string }
   | { type: "SET_CREATE_QUIET"; quiet: boolean }
   | { type: "OPEN_DELETE_CONFIRM"; event: CalendarEvent }
   | { type: "OPEN_LEAVE_CONFIRM"; event: CalendarEvent }
@@ -82,11 +87,17 @@ type UIAction =
 function uiReducer(state: UIState, action: UIAction): UIState {
   switch (action.type) {
     case "SET_START_DATE":
-      return { ...state, startDate: startOfDay(action.date) };
+      return { ...state, startDate: action.date };
     case "SHIFT_DAY":
-      return { ...state, startDate: addDays(state.startDate, action.delta) };
+      return {
+        ...state,
+        startDate: addDaysInTimeZone(state.startDate, action.delta, action.timeZone),
+      };
     case "GO_TODAY":
-      return { ...state, startDate: startOfDay(new Date()) };
+      return {
+        ...state,
+        startDate: startOfDayInTimeZone(new Date(), action.timeZone),
+      };
     case "TOGGLE_DURATION_FILTER":
       return {
         ...state,
@@ -110,7 +121,7 @@ function uiReducer(state: UIState, action: UIAction): UIState {
           type: "confirm-create",
           start: action.start,
           preferred: action.preferred,
-          whenIst: action.whenIst,
+          whenLabel: action.whenLabel,
           quiet: false,
         },
       };
@@ -135,8 +146,12 @@ function uiReducer(state: UIState, action: UIAction): UIState {
 }
 
 function createInitialState(): UIState {
+  const tz =
+    typeof Intl !== "undefined"
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+      : "UTC";
   return {
-    startDate: startOfDay(new Date()),
+    startDate: startOfDayInTimeZone(new Date(), tz),
     durationFilter: DEFAULT_DURATION_FILTER,
     createDuration: DEFAULT_DURATION,
     modal: { type: "none" },
@@ -153,6 +168,11 @@ export default function MobileCalendar() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [ui, dispatch] = useReducer(uiReducer, undefined, createInitialState);
   const [now, setNow] = useState(new Date());
+  const { timeZone } = useUserTimezone();
+
+  useEffect(() => {
+    dispatch({ type: "GO_TODAY", timeZone });
+  }, [timeZone]);
 
   useEffect(() => {
     let cancelled = false;
@@ -214,7 +234,7 @@ export default function MobileCalendar() {
   // Filter and process events
   const eventsByDay = useMemo(() => {
     const map: Record<string, ProcessedEvent[]> = {};
-    for (const d of days) map[ymd(d)] = [];
+    for (const d of days) map[ymdInTimeZone(d, timeZone)] = [];
 
     const filtered = events.filter((ev) => ui.durationFilter.includes(ev.durationMin));
 
@@ -222,8 +242,8 @@ export default function MobileCalendar() {
       const startMs = new Date(ev.start).getTime();
       const endMs = new Date(ev.end).getTime();
       const evStartDate = new Date(startMs);
-      const startMinutes = evStartDate.getHours() * 60 + evStartDate.getMinutes();
-      const key = ymd(evStartDate);
+      const startMinutes = minutesOfDayInTimeZone(evStartDate, timeZone);
+      const key = ymdInTimeZone(evStartDate, timeZone);
 
       if (map[key]) {
         map[key].push({ ...ev, startMs, endMs, startMinutes });
@@ -235,12 +255,21 @@ export default function MobileCalendar() {
     }
 
     return map;
-  }, [days, events, ui.durationFilter]);
+  }, [days, events, ui.durationFilter, timeZone]);
 
   // Navigation
-  const goToday = useCallback(() => dispatch({ type: "GO_TODAY" }), []);
-  const goNext = useCallback(() => dispatch({ type: "SHIFT_DAY", delta: 1 }), []);
-  const goPrev = useCallback(() => dispatch({ type: "SHIFT_DAY", delta: -1 }), []);
+  const goToday = useCallback(
+    () => dispatch({ type: "GO_TODAY", timeZone }),
+    [timeZone],
+  );
+  const goNext = useCallback(
+    () => dispatch({ type: "SHIFT_DAY", delta: 1, timeZone }),
+    [timeZone],
+  );
+  const goPrev = useCallback(
+    () => dispatch({ type: "SHIFT_DAY", delta: -1, timeZone }),
+    [timeZone],
+  );
 
   // Booking flow
   const handleBookSlot = useCallback(
@@ -311,23 +340,24 @@ export default function MobileCalendar() {
     const y = e.clientY - rect.top + (scrollRef.current?.scrollTop || 0);
     const totalMinutes = (y / HOUR_HEIGHT) * 60;
     const snappedMinutes = Math.floor(totalMinutes / STEP_MINUTES) * STEP_MINUTES;
-    const hour = Math.floor(snappedMinutes / 60);
-    const minute = snappedMinutes % 60;
 
-    const start = new Date(ui.startDate);
-    start.setHours(hour, minute, 0, 0);
+    const start = wallMinutesOnDayToUtc(ui.startDate, snappedMinutes, timeZone);
 
     const nowDate = new Date();
-    const nowMinutes = nowDate.getHours() * 60 + nowDate.getMinutes();
+    const nowMinutes = minutesOfDayInTimeZone(nowDate, timeZone);
 
     // Prevent creating sessions in the past
-    if (ymd(ui.startDate) < ymd(nowDate) || (ymd(ui.startDate) === ymd(nowDate) && snappedMinutes < nowMinutes)) {
+    if (
+      ymdInTimeZone(ui.startDate, timeZone) < ymdInTimeZone(nowDate, timeZone) ||
+      (ymdInTimeZone(ui.startDate, timeZone) === ymdInTimeZone(nowDate, timeZone) &&
+        snappedMinutes < nowMinutes)
+    ) {
       dispatch({ type: "SHOW_TOAST", message: "Cannot create a session in the past" });
       return;
     }
 
     // Check for overlaps with my sessions
-    const dayKey = ymd(ui.startDate);
+    const dayKey = ymdInTimeZone(ui.startDate, timeZone);
     const startMs = start.getTime();
     const newEndMs = addMinutes(start, ui.createDuration).getTime();
     const mySessions = (eventsByDay[dayKey] ?? []).filter(
@@ -342,8 +372,13 @@ export default function MobileCalendar() {
       return;
     }
 
-    const whenIst = start.toLocaleString(TIME_CONFIG.locale, { timeZone: TIME_CONFIG.timezone });
-    dispatch({ type: "OPEN_CREATE_CONFIRM", start, preferred: ui.createDuration, whenIst });
+    const whenLabel = formatLocalDateTime(start, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    dispatch({ type: "OPEN_CREATE_CONFIRM", start, preferred: ui.createDuration, whenLabel });
   };
 
   // Format date
@@ -357,7 +392,8 @@ export default function MobileCalendar() {
   };
 
   const dateInfo = formatDate(ui.startDate);
-  const isToday = ymd(ui.startDate) === ymd(new Date());
+  const isToday =
+    ymdInTimeZone(ui.startDate, timeZone) === ymdInTimeZone(new Date(), timeZone);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const nowLineTop = (nowMinutes / 60) * HOUR_HEIGHT;
 
@@ -369,7 +405,7 @@ export default function MobileCalendar() {
     return `${displayHour}:${minutes.toString().padStart(2, "0")}${ampm}`;
   };
 
-  const dayKey = ymd(ui.startDate);
+  const dayKey = ymdInTimeZone(ui.startDate, timeZone);
   const dayEvents = eventsByDay[dayKey] ?? [];
 
   return (
@@ -405,7 +441,9 @@ export default function MobileCalendar() {
       {/* Day label */}
       <div className="shrink-0 px-4 py-2 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500 uppercase tracking-wide">IST</span>
+          <span className="text-xs text-gray-500 tracking-wide">
+            {timeZone.replace(/_/g, " ")}
+          </span>
           <span className={`text-sm font-medium ${isToday ? "text-[#5D1C6A]" : ""}`}>
             {dateInfo.day}
           </span>
@@ -650,7 +688,7 @@ export default function MobileCalendar() {
               <div>
                 Create a <strong>{ui.modal.preferred}-minute</strong> session at
                 <br />
-                <strong>{ui.modal.whenIst} (IST)</strong>?
+                <strong>{ui.modal.whenLabel}</strong>?
               </div>
               <label className="flex items-center gap-3 text-sm text-gray-700">
                 <input

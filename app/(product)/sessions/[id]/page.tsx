@@ -4,6 +4,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { LocalDateTime } from "@/components/local-datetime";
 import ClientCall from "./ClientCall";
 import SessionCountdown from "./SessionCountdown";
 import { CALL_JOIN_GRACE_MINUTES, isWithinCallWindow } from "@/lib/sessionAccess";
@@ -106,10 +107,23 @@ export default async function SessionJoinPage({
           Type: {s.session_type} • {s.duration_min} min
         </div>
         <div className="text-sm text-gray-700 dark:text-gray-300">
-          When (IST):{" "}
-          {new Date(s.start_time).toLocaleString("en-IN", {
-            timeZone: "Asia/Kolkata",
-          })}
+          When:{" "}
+          <LocalDateTime
+            value={
+              s.start_time instanceof Date
+                ? s.start_time.toISOString()
+                : String(s.start_time)
+            }
+            mode="datetime"
+            options={{
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            }}
+          />
         </div>
       </div>
 

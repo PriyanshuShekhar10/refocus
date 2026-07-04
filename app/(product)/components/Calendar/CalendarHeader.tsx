@@ -1,4 +1,7 @@
-import { formatDayLabel } from "@/lib/utils";
+"use client";
+
+import { formatLocalDate } from "@/lib/localTime";
+import { useUserTimezone } from "@/components/user-timezone-provider";
 
 type ViewDays = 3 | 5 | 7;
 
@@ -19,12 +22,13 @@ interface CalendarHeaderProps {
 
 export function CalendarHeader({
   startDate,
-  locale = "en-IN",
   onShiftRange,
   onGoToday,
   visibleDays,
   onVisibleDaysChange,
 }: CalendarHeaderProps) {
+  const { timeZone } = useUserTimezone();
+
   return (
     <div className="flex items-center justify-between border-b px-4 py-3 dark:border-gray-700">
       <div className="flex items-center gap-2">
@@ -53,7 +57,13 @@ export function CalendarHeader({
           </svg>
         </button>
         <span className="ml-4 text-lg font-semibold dark:text-gray-100">
-          {formatDayLabel(startDate, locale)}
+          {formatLocalDate(startDate, { weekday: "short", day: "numeric" })}
+        </span>
+        <span
+          className="ml-2 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+          title="Times shown in this timezone"
+        >
+          {timeZone.replace(/_/g, " ")}
         </span>
       </div>
 

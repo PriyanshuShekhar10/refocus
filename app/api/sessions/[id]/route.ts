@@ -3,8 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { publish, sessionsChannel } from "@/lib/sse";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import {
+  publishSessionDocUpserted,
+  publishSessionRemoved,
+} from "@/lib/sessionRealtime";
 
 // Shared session document type for this file
 type SessionDoc = {
@@ -12,6 +15,9 @@ type SessionDoc = {
   owner_id: string;
   start_time: Date;
   end_time: Date;
+  duration_min?: number;
+  session_type?: string;
+  status?: string;
   name?: string | null;
   color?: string | null;
   session_participants?: Array<{
@@ -110,16 +116,24 @@ export async function DELETE(
         $set: {
           owner_id: newOwnerId,
           session_participants: newParticipants,
+          participant_count: newParticipants.length,
           status: "available",
           updated_at: new Date(),
         },
       },
     );
+    const updated = await col.findOne({ _id: new ObjectId(sessionId) });
+    if (updated) {
+      await publishSessionDocUpserted(db, {
+        ...updated,
+        duration_min: updated.duration_min ?? 50,
+        session_type: updated.session_type ?? "focus",
+      });
+    }
   } else {
     await col.deleteOne({ _id: new ObjectId(sessionId) });
+    await publishSessionRemoved(sessionId);
   }
-  // Publish in both branches so calendars update everywhere.
-  await publish(sessionsChannel(), { type: "sessions_updated" });
   return NextResponse.json({ ok: true });
 }
 
@@ -163,6 +177,13 @@ export async function PATCH(
   if (typeof color !== "undefined") updates.color = color;
 
   await col.updateOne({ _id: new ObjectId(sessionId) }, { $set: updates });
-  await publish(sessionsChannel(), { type: "sessions_updated" });
+  const updated = await col.findOne({ _id: new ObjectId(sessionId) });
+  if (updated) {
+    await publishSessionDocUpserted(db, {
+      ...updated,
+      duration_min: updated.duration_min ?? 50,
+      session_type: updated.session_type ?? "focus",
+    });
+  }
   return NextResponse.json({ ok: true });
 }

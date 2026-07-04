@@ -10,6 +10,7 @@ import {
   SESSION_REMINDER_TIMINGS,
   type SessionReminderTiming,
 } from "@/lib/sessionReminderPrefs";
+import { isValidTimeZone } from "@/lib/zonedTime";
 
 /**
  * Read and update the current user's preferences. Stored under
@@ -27,6 +28,8 @@ type Prefs = {
   sessionReminderTiming: SessionReminderTiming;
   emailFriendRequests: boolean;
   emailWeeklyDigest: boolean;
+  /** "auto" = device timezone; otherwise an IANA timezone id */
+  timezone: string;
 };
 
 const DEFAULTS: Prefs = {
@@ -39,6 +42,7 @@ const DEFAULTS: Prefs = {
   sessionReminderTiming: DEFAULT_SESSION_REMINDER_TIMING,
   emailFriendRequests: true,
   emailWeeklyDigest: false,
+  timezone: "auto",
 };
 
 export async function GET() {
@@ -97,6 +101,13 @@ export async function PATCH(req: NextRequest) {
     SESSION_REMINDER_TIMINGS.includes(body.sessionReminderTiming)
   ) {
     update["preferences.sessionReminderTiming"] = body.sessionReminderTiming;
+  }
+  if (typeof body.timezone === "string") {
+    if (body.timezone === "auto") {
+      update["preferences.timezone"] = "auto";
+    } else if (isValidTimeZone(body.timezone)) {
+      update["preferences.timezone"] = body.timezone;
+    }
   }
 
   if (Object.keys(update).length === 1) {

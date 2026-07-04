@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import { getPublisher, isRedisConfigured } from "./redis";
 
 /**
- * Rate limiting backed by Redis (production) with an in-memory fallback
- * (dev / no REDIS_URL). The Redis implementation uses a sliding-window
- * sorted set, so limits are shared across every serverless instance.
+ * In-process rate limiting (sliding window per identifier).
+ * Realtime delivery uses Ably; no Redis/Upstash dependency.
  */
 
 export type RateLimitType =
@@ -15,8 +13,8 @@ export type RateLimitType =
   | "ai"; // AI / LLM calls (strict — external API cost)
 
 interface RateLimitConfig {
-  requests: number; // Number of requests allowed
-  window: `${number} ${"s" | "m" | "h" | "d"}`; // Time window
+  requests: number;
+  window: `${number} ${"s" | "m" | "h" | "d"}`;
 }
 
 const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
@@ -50,7 +48,7 @@ export interface RateLimitResult {
   success: boolean;
   limit: number;
   remaining: number;
-  reset: number; // Timestamp when the limit resets
+  reset: number;
 }
 
 /**
@@ -84,10 +82,6 @@ export function getClientIp(
 
   return ip.split(",")[0].trim();
 }
-
-// ---------------------------------------------------------------------------
-// In-memory backend (used in dev / when REDIS_URL is missing)
-// ---------------------------------------------------------------------------
 
 function checkInMemory(
   identifier: string,
@@ -125,92 +119,15 @@ function checkInMemory(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Redis backend (sliding-window sorted set)
-// ---------------------------------------------------------------------------
-
-async function checkRedis(
-  identifier: string,
-  type: RateLimitType,
-): Promise<RateLimitResult | null> {
-  const config = RATE_LIMIT_CONFIGS[type];
-  const windowMs = parseWindowMs(config.window);
-  const now = Date.now();
-  const key = `rl:${type}:${identifier}`;
-
-  let client;
-  try {
-    client = getPublisher();
-  } catch {
-    return null; // Redis not configured / connection failed
-  }
-
-  if (client.status !== "ready") return null;
-
-  try {
-    // 1) Drop entries older than the window.
-    // 2) Read current count.
-    // 3) Read the oldest remaining entry (for the reset timestamp).
-    const minScore = now - windowMs;
-    const pipeline = client.pipeline();
-    pipeline.zremrangebyscore(key, 0, minScore);
-    pipeline.zcard(key);
-    pipeline.zrange(key, 0, 0, "WITHSCORES");
-    const results = await pipeline.exec();
-
-    if (!results) return null;
-
-    const count = Number(results[1]?.[1] ?? 0);
-    const oldestEntry = results[2]?.[1] as string[] | undefined;
-    const oldestScore = oldestEntry && oldestEntry.length >= 2
-      ? Number(oldestEntry[1])
-      : now;
-
-    if (count >= config.requests) {
-      // Deny without consuming a slot.
-      return {
-        success: false,
-        limit: config.requests,
-        remaining: 0,
-        reset: oldestScore + windowMs,
-      };
-    }
-
-    // Consume a slot. Use a unique member so concurrent requests don't collide.
-    const member = `${now}-${Math.random().toString(36).slice(2, 10)}`;
-    const consume = client.pipeline();
-    consume.zadd(key, now, member);
-    consume.pexpire(key, windowMs);
-    await consume.exec();
-
-    return {
-      success: true,
-      limit: config.requests,
-      remaining: Math.max(config.requests - count - 1, 0),
-      reset: (count === 0 ? now : oldestScore) + windowMs,
-    };
-  } catch (err) {
-    console.error("[RateLimit] Redis error, falling back to memory:", err);
-    return null;
-  }
-}
-
 /**
  * Check rate limit for a given identifier.
- *
- * Uses Redis when available (so limits work across serverless instances);
- * falls back to a per-process map otherwise. Both branches return the same
- * shape, and fail open if anything unexpected happens.
+ * Fail-open if anything unexpected happens.
  */
 export async function checkRateLimit(
   identifier: string,
   type: RateLimitType = "api",
 ): Promise<RateLimitResult> {
   try {
-    if (isRedisConfigured()) {
-      const redisResult = await checkRedis(identifier, type);
-      if (redisResult) return redisResult;
-    }
     return checkInMemory(identifier, type);
   } catch (error) {
     console.error("[RateLimit] Error checking rate limit:", error);

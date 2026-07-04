@@ -3,15 +3,19 @@
 import { useEffect, useMemo, useReducer, useCallback, useState } from "react";
 import type { CalendarEvent } from "@/types/calendar";
 import {
-  startOfDay,
   addMinutes,
-  addDays,
-  ymd,
   formatHour,
 } from "@/lib/utils";
+import { formatLocalDateTime } from "@/lib/localTime";
+import {
+  addDaysInTimeZone,
+  minutesOfDayInTimeZone,
+  startOfDayInTimeZone,
+  ymdInTimeZone,
+} from "@/lib/zonedTime";
+import { useUserTimezone } from "@/components/user-timezone-provider";
 import {
   CALENDAR_LAYOUT,
-  TIME_CONFIG,
   DEFAULT_DURATION,
   DEFAULT_DURATION_FILTER,
   isValidDuration,
@@ -73,7 +77,7 @@ type ModalState =
       type: "confirm-create";
       start: Date;
       preferred: DurationMin;
-      whenIst: string;
+      whenLabel: string;
       quiet: boolean;
     }
   | { type: "confirm-delete"; event: CalendarEvent }
@@ -99,8 +103,8 @@ interface UIState {
 
 type UIAction =
   | { type: "SET_START_DATE"; date: Date }
-  | { type: "SHIFT_RANGE"; delta: number }
-  | { type: "GO_TODAY" }
+  | { type: "SHIFT_RANGE"; delta: number; timeZone: string }
+  | { type: "GO_TODAY"; timeZone: string }
   | { type: "SET_VISIBLE_DAYS"; days: ViewDays }
   | { type: "TOGGLE_DURATION_FILTER"; duration: DurationMin }
   | { type: "SET_CREATE_DURATION"; duration: DurationMin }
@@ -111,7 +115,7 @@ type UIAction =
       type: "OPEN_CREATE_CONFIRM";
       start: Date;
       preferred: DurationMin;
-      whenIst: string;
+      whenLabel: string;
     }
   | { type: "SET_CREATE_QUIET"; quiet: boolean }
   | { type: "OPEN_DELETE_CONFIRM"; event: CalendarEvent }
@@ -123,11 +127,21 @@ type UIAction =
 function uiReducer(state: UIState, action: UIAction): UIState {
   switch (action.type) {
     case "SET_START_DATE":
-      return { ...state, startDate: startOfDay(action.date) };
+      return { ...state, startDate: action.date };
     case "SHIFT_RANGE":
-      return { ...state, startDate: addDays(state.startDate, action.delta * state.visibleDays) };
+      return {
+        ...state,
+        startDate: addDaysInTimeZone(
+          state.startDate,
+          action.delta * state.visibleDays,
+          action.timeZone,
+        ),
+      };
     case "GO_TODAY":
-      return { ...state, startDate: startOfDay(new Date()) };
+      return {
+        ...state,
+        startDate: startOfDayInTimeZone(new Date(), action.timeZone),
+      };
     case "SET_VISIBLE_DAYS":
       return { ...state, visibleDays: action.days };
     case "TOGGLE_DURATION_FILTER":
@@ -156,7 +170,7 @@ function uiReducer(state: UIState, action: UIAction): UIState {
           type: "confirm-create",
           start: action.start,
           preferred: action.preferred,
-          whenIst: action.whenIst,
+          whenLabel: action.whenLabel,
           quiet: false,
         },
       };
@@ -185,8 +199,15 @@ function uiReducer(state: UIState, action: UIAction): UIState {
 }
 
 function createInitialState(startDateProp?: Date): UIState {
+  // Browser-local until UserTimezoneProvider applies preference.
+  const tz =
+    typeof Intl !== "undefined"
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+      : "UTC";
   return {
-    startDate: startDateProp ? startOfDay(startDateProp) : startOfDay(new Date()),
+    startDate: startDateProp
+      ? startOfDayInTimeZone(startDateProp, tz)
+      : startOfDayInTimeZone(new Date(), tz),
     visibleDays: 3,
     durationFilter: DEFAULT_DURATION_FILTER,
     createDuration: DEFAULT_DURATION,
@@ -205,11 +226,12 @@ export default function Calendar({
   stepMinutes = 15,
   startDate: startDateProp,
   events: eventsProp,
-  locale = TIME_CONFIG.locale,
+  locale,
   onEventsChange,
   className = "",
 }: CalendarProps) {
   const { hourBlockHeight, minorLinePositions } = CALENDAR_LAYOUT;
+  const { timeZone } = useUserTimezone();
 
   // UI state machine
   const [ui, dispatch] = useReducer(
@@ -217,6 +239,11 @@ export default function Calendar({
     startDateProp,
     createInitialState,
   );
+
+  // Re-anchor "today" when the display timezone preference changes.
+  useEffect(() => {
+    dispatch({ type: "GO_TODAY", timeZone });
+  }, [timeZone]);
   const [profilePreview, setProfilePreview] = useState<SidebarProfilePreview | null>(
     null,
   );
@@ -251,8 +278,11 @@ export default function Calendar({
   }, []);
 
   const days = useMemo(
-    () => new Array(ui.visibleDays).fill(0).map((_, i) => addDays(ui.startDate, i)),
-    [ui.visibleDays, ui.startDate],
+    () =>
+      new Array(ui.visibleDays)
+        .fill(0)
+        .map((_, i) => addDaysInTimeZone(ui.startDate, i, timeZone)),
+    [ui.visibleDays, ui.startDate, timeZone],
   );
 
   // Toast auto-clear
@@ -281,7 +311,7 @@ export default function Calendar({
   // Filter events by duration and precompute epoch ms for fast overlap checks
   const eventsByDay = useMemo(() => {
     const map: Record<string, ProcessedEvent[]> = {};
-    for (const d of days) map[ymd(d)] = [];
+    for (const d of days) map[ymdInTimeZone(d, timeZone)] = [];
 
     const filteredEvents = events.filter((ev) =>
       ui.durationFilter.includes(ev.durationMin),
@@ -291,9 +321,8 @@ export default function Calendar({
       const startMs = new Date(ev.start).getTime();
       const endMs = new Date(ev.end).getTime();
       const evStartDate = new Date(startMs);
-      const startMinutes =
-        evStartDate.getHours() * 60 + evStartDate.getMinutes();
-      const key = ymd(evStartDate);
+      const startMinutes = minutesOfDayInTimeZone(evStartDate, timeZone);
+      const key = ymdInTimeZone(evStartDate, timeZone);
 
       if (map[key]) {
         map[key].push({ ...ev, startMs, endMs, startMinutes });
@@ -306,7 +335,7 @@ export default function Calendar({
     }
 
     return map;
-  }, [days, events, ui.durationFilter]);
+  }, [days, events, ui.durationFilter, timeZone]);
 
   // Use the grid hook for layout and interactions
   const {
@@ -327,13 +356,17 @@ export default function Calendar({
     visibleDays: ui.visibleDays,
     createDuration: ui.createDuration,
     eventsByDay,
+    timeZone,
   });
 
   // Navigation handlers (dispatch actions)
-  const goToday = useCallback(() => dispatch({ type: "GO_TODAY" }), []);
+  const goToday = useCallback(
+    () => dispatch({ type: "GO_TODAY", timeZone }),
+    [timeZone],
+  );
   const shiftRange = useCallback(
-    (delta: number) => dispatch({ type: "SHIFT_RANGE", delta }),
-    [],
+    (delta: number) => dispatch({ type: "SHIFT_RANGE", delta, timeZone }),
+    [timeZone],
   );
   const setVisibleDays = useCallback(
     (days: ViewDays) => dispatch({ type: "SET_VISIBLE_DAYS", days }),
@@ -412,12 +445,13 @@ export default function Calendar({
     if (!clickInfo) return;
 
     const { dayDate, start, minutesOfDay } = clickInfo;
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const nowMinutes = minutesOfDayInTimeZone(now, timeZone);
 
     // Prevent creating sessions in the past
     if (
-      ymd(dayDate) < ymd(now) ||
-      (ymd(dayDate) === ymd(now) && minutesOfDay < nowMinutes)
+      ymdInTimeZone(dayDate, timeZone) < ymdInTimeZone(now, timeZone) ||
+      (ymdInTimeZone(dayDate, timeZone) === ymdInTimeZone(now, timeZone) &&
+        minutesOfDay < nowMinutes)
     ) {
       dispatch({ type: "SHOW_TOAST", message: "Cannot create a session in the past" });
       return;
@@ -425,7 +459,7 @@ export default function Calendar({
 
     // Only block if the overlapping session is one I'm already in (owner or participant).
     // Other people's slots (different duration or same time) don't block me — we just won't match.
-    const dayKey = ymd(dayDate);
+    const dayKey = ymdInTimeZone(dayDate, timeZone);
     const startMs = start.getTime();
     const newEndMs = addMinutes(start, ui.createDuration).getTime();
     const mySessions = (eventsByDay[dayKey] ?? []).filter(
@@ -442,15 +476,18 @@ export default function Calendar({
       return;
     }
 
-    // Show creation confirmation modal
-    const whenIst = start.toLocaleString(TIME_CONFIG.locale, {
-      timeZone: TIME_CONFIG.timezone,
+    // Show creation confirmation modal (browser-local wall clock)
+    const whenLabel = formatLocalDateTime(start, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
     dispatch({
       type: "OPEN_CREATE_CONFIRM",
       start,
       preferred: ui.createDuration,
-      whenIst,
+      whenLabel,
     });
   };
 
@@ -513,7 +550,7 @@ export default function Calendar({
           >
             {days.map((d, dayIdx) => (
               <div
-                key={ymd(d)}
+                key={ymdInTimeZone(d, timeZone)}
                 className="relative border-r dark:border-gray-700"
               >
                 {/* Horizontal Lines */}
@@ -536,7 +573,8 @@ export default function Calendar({
                   </div>
                 ))}
                 {/* Now Line */}
-                {nowLine !== null && ymd(now) === ymd(d) && (
+                {nowLine !== null &&
+                  ymdInTimeZone(now, timeZone) === ymdInTimeZone(d, timeZone) && (
                   <div
                     className="pointer-events-none absolute inset-x-0 z-10"
                     style={{ top: nowLine }}
@@ -554,7 +592,7 @@ export default function Calendar({
                   >
                     <div className="h-px w-full bg-[#CA5995]/70" />
                     <div className="absolute left-2 -top-3 rounded bg-[#5D1C6A] dark:bg-[#7A2D88] px-2 py-0.5 text-[10px] font-medium text-white shadow">
-                      {hoverState.label} IST
+                      {hoverState.label}
                     </div>
                   </div>
                 )}
@@ -575,7 +613,7 @@ export default function Calendar({
                 {/* Events */}
                 <div className="absolute inset-0">
                   {(() => {
-                    const dayEvents = eventsByDay[ymd(d)] ?? [];
+                    const dayEvents = eventsByDay[ymdInTimeZone(d, timeZone)] ?? [];
                     const mySessionsOnDay = dayEvents.filter(
                       (e) =>
                         (e.owner_id && currentUserId && e.owner_id === currentUserId) ||
@@ -796,7 +834,7 @@ export default function Calendar({
               <div>
                 Create a <strong>{ui.modal.preferred}-minute</strong> session at
                 <br />
-                <strong>{ui.modal.whenIst} (IST)</strong>?
+                <strong>{ui.modal.whenLabel}</strong>?
               </div>
               <label className="flex items-center gap-3 text-sm text-gray-700">
                 <input

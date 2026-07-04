@@ -14,6 +14,7 @@ export async function sendMorningSessionDigestEmail(input: {
   firstName?: string | null;
   dayKey: string;
   sessions: SessionReminderItem[];
+  timeZone?: string;
 }): Promise<{ sent: boolean; reason?: string }> {
   if (!isResendConfigured()) {
     console.warn("[email] RESEND_API_KEY not set; skipping morning session digest");
@@ -27,6 +28,7 @@ export async function sendMorningSessionDigestEmail(input: {
     firstName: input.firstName,
     dayKey: input.dayKey,
     sessions: input.sessions,
+    timeZone: input.timeZone,
   });
 
   const { error } = await resend.emails.send({

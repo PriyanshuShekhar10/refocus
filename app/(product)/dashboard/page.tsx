@@ -13,6 +13,7 @@ import Matchmaking from "../components/Matchmaking";
 import SmartScheduler from "../components/SmartScheduler";
 import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSidebar";
 import { EmailVerificationStrip } from "@/components/email-verification-strip";
+import { UserTimezoneProvider } from "@/components/user-timezone-provider";
 
 type TourStep = {
   title: string;
@@ -147,6 +148,7 @@ function DashboardContent() {
   };
 
   return (
+    <UserTimezoneProvider>
     <div className="flex h-screen overflow-hidden">
       <SideBar activeTab={activeTab} onSelect={setActiveTab} />
       <div className="ml-16 flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -276,6 +278,7 @@ function DashboardContent() {
         </div>
       )}
     </div>
+    </UserTimezoneProvider>
   );
 }
 

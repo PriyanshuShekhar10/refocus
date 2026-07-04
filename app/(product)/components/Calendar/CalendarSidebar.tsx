@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import BookSessionButton from "../BookSessionButton";
-import { DURATION_OPTIONS, TIME_CONFIG, type DurationMin } from "@/constants/calendar";
+import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import type { CalendarEvent } from "@/types/calendar";
+import { formatLocalTimeRange } from "@/lib/localTime";
 import { VerifiedName } from "@/components/verified-tag";
 
 function toYmd(d: Date) {
@@ -171,17 +172,11 @@ export function CalendarSidebar({
                     other.email ||
                     other.user_id
                   : "Partner needed";
-                const timeRange = `${start.toLocaleTimeString("en-IN", {
+                const timeRange = formatLocalTimeRange(start, end, {
                   hour: "numeric",
                   minute: "2-digit",
                   hour12: true,
-                  timeZone: TIME_CONFIG.timezone,
-                })} – ${end.toLocaleTimeString("en-IN", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                  timeZone: TIME_CONFIG.timezone,
-                })}`;
+                });
                 const initials = otherName
                   .split(/\s+/)
                   .map((s) => s[0])

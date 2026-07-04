@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import FriendChat from "../FriendChat";
 import BookSessionModal from "../BookSessionModal";
 import PageHeader from "./PageHeader";
@@ -11,6 +12,8 @@ import SessionRequestCard, { SessionRequestData } from "./SessionRequestCard";
 import EmptyCard from "./EmptyCard";
 import Reveal from "./Reveal";
 import styles from "./friends.module.css";
+import { getAblyClient } from "@/lib/ably-client";
+import { userChannel } from "@/lib/realtimeChannels";
 
 type ProfilePreviewPayload = {
   username: string;
@@ -26,6 +29,8 @@ interface FriendsProps {
 type ListMode = "all" | "recent";
 
 export default function Friends({ onPreviewProfile }: FriendsProps) {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   const [incoming, setIncoming] = useState<FriendRequestData[]>([]);
   const [outgoing, setOutgoing] = useState<FriendRequestData[]>([]);
   const [friends, setFriends] = useState<FriendData[]>([]);
@@ -110,33 +115,42 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
         if (res.ok) setUnreadCounts(data.counts || {});
       } catch {}
     })();
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource("/api/chat/events");
-      es.onmessage = (ev) => {
-        try {
-          const d = JSON.parse(ev.data || "{}");
-          if (d?.type === "unread:update") {
-            setUnreadCounts((prev) => ({
-              ...prev,
-              [d.payload.friendId]: d.payload.count,
-            }));
-          } else if (d?.type === "unread:inc") {
-            setUnreadCounts((prev) => {
-              const curr = prev[d.payload.friendId] || 0;
-              return {
-                ...prev,
-                [d.payload.friendId]: curr + (d.payload.delta || 1),
-              };
-            });
-          }
-        } catch {}
-      };
-    } catch {}
-    return () => {
-      if (es) es.close();
-    };
   }, []);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+    const client = getAblyClient();
+    const channel = client.channels.get(userChannel(currentUserId));
+    const onEvent = (message: { data?: unknown }) => {
+      try {
+        const d = message.data as
+          | {
+              type?: string;
+              payload?: { friendId?: string; count?: number; delta?: number };
+            }
+          | undefined;
+        if (!d?.type || !d.payload?.friendId) return;
+        if (d.type === "unread:update") {
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [d.payload!.friendId!]: d.payload!.count ?? 0,
+          }));
+        } else if (d.type === "unread:inc") {
+          setUnreadCounts((prev) => {
+            const curr = prev[d.payload!.friendId!] || 0;
+            return {
+              ...prev,
+              [d.payload!.friendId!]: curr + (d.payload!.delta || 1),
+            };
+          });
+        }
+      } catch {}
+    };
+    channel.subscribe("event", onEvent);
+    return () => {
+      channel.unsubscribe("event", onEvent);
+    };
+  }, [currentUserId]);
 
   const respondFriendRequest = async (
     id: string,

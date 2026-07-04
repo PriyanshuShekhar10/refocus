@@ -32,6 +32,7 @@ type UserDoc = {
   preferences?: {
     emailSessionReminders?: boolean;
     sessionReminderTiming?: SessionReminderTiming;
+    timezone?: string;
   };
 };
 
@@ -51,6 +52,8 @@ export type ReminderRecipient = {
   email: string;
   firstName: string | null;
   timing: SessionReminderTiming;
+  /** IANA timezone for email labels; falls back to IST when auto/missing */
+  timezone: string;
 };
 
 function istDateKey(date: Date): string {
@@ -64,7 +67,23 @@ export function getISTDayBounds(date: Date): { start: Date; end: Date; dayKey: s
   return { start, end, dayKey };
 }
 
-export function formatSessionTimeIST(date: Date): string {
+export function resolveUserTimeZone(prefs?: UserDoc["preferences"]): string {
+  const tz = prefs?.timezone;
+  if (tz && tz !== "auto") {
+    try {
+      Intl.DateTimeFormat("en-US", { timeZone: tz }).format(new Date());
+      return tz;
+    } catch {
+      // fall through
+    }
+  }
+  return TIME_CONFIG.timezone;
+}
+
+export function formatSessionTimeIST(
+  date: Date,
+  timeZone: string = TIME_CONFIG.timezone,
+): string {
   return date.toLocaleString(TIME_CONFIG.locale, {
     weekday: "short",
     month: "short",
@@ -72,7 +91,7 @@ export function formatSessionTimeIST(date: Date): string {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-    timeZone: TIME_CONFIG.timezone,
+    timeZone,
   });
 }
 
@@ -206,6 +225,7 @@ export async function findReminderRecipients(
       email,
       firstName: displayName(user),
       timing,
+      timezone: resolveUserTimeZone(user.preferences),
     });
   }
   return out;
@@ -223,13 +243,24 @@ export async function findUserSessionsInRange(
     .find({
       start_time: { $gte: startFrom, $lt: startTo },
       end_time: { $gt: now },
-      $or: [{ owner_id: userId }, { "session_participants.user_id": userId }],
-      $expr: {
-        $gte: [
-          { $size: { $ifNull: ["$session_participants", []] } },
-          SESSION_REMINDER_MIN_PARTICIPANTS,
-        ],
-      },
+      $and: [
+        {
+          $or: [
+            { owner_id: userId },
+            { "session_participants.user_id": userId },
+          ],
+        },
+        // Prefer participant_count; fall back for legacy docs not yet backfilled.
+        {
+          $or: [
+            { participant_count: { $gte: SESSION_REMINDER_MIN_PARTICIPANTS } },
+            {
+              participant_count: { $exists: false },
+              "session_participants.1": { $exists: true },
+            },
+          ],
+        },
+      ],
     })
     .sort({ start_time: 1 })
     .toArray();
