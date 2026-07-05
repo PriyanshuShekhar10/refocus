@@ -8,6 +8,7 @@ import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 type SessionRequestDoc = {
   _id: ObjectId;
@@ -185,15 +186,27 @@ export async function GET(req: NextRequest) {
     )
   ).filter((id): id is string => Boolean(id) && ObjectId.isValid(id));
 
-  let usersById: Record<string, { email?: string; name?: string | null }> = {};
+  let usersById: Record<
+    string,
+    { email?: string; name?: string | null; avatarUrl?: string | null }
+  > = {};
   if (otherIds.length > 0) {
     const users = await db
-      .collection<UserDoc>("users")
+      .collection<UserDoc & { avatar_url?: string | null; image?: string | null }>(
+        "users",
+      )
       .find({ _id: { $in: otherIds.map((id: string) => new ObjectId(id)) } })
-      .project({ email: 1, name: 1 })
+      .project({ email: 1, name: 1, avatar_url: 1, image: 1 })
       .toArray();
     usersById = Object.fromEntries(
-      users.map((u) => [String(u._id), { email: u.email, name: u.name ?? null }])
+      users.map((u) => [
+        String(u._id),
+        {
+          email: u.email,
+          name: u.name ?? null,
+          avatarUrl: resolveAvatarUrl(u),
+        },
+      ]),
     );
   }
 
@@ -206,6 +219,8 @@ export async function GET(req: NextRequest) {
       to_user_id: d.to_user_id,
       from_user_email: from.email,
       to_user_email: to.email,
+      from_user_avatar_url: from.avatarUrl ?? null,
+      to_user_avatar_url: to.avatarUrl ?? null,
       start: d.start_time.toISOString(),
       durationMin: d.duration_min,
       message: d.message ?? null,

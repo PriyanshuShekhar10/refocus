@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { Shell, MinimalNav, designStyles } from "@/components/design";
 import { Logo } from "@/assets/exports";
 import { getSiteUrl } from "@/lib/site";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 type Props = { params: Promise<{ username: string }> };
 const siteUrl = getSiteUrl();
@@ -53,6 +54,8 @@ async function getUser(username: string) {
         location: 1,
         website: 1,
         createdAt: 1,
+        avatar_url: 1,
+        image: 1,
         "preferences.publicProfile": 1,
       },
     }
@@ -122,6 +125,11 @@ export default async function PublicProfilePage({ params }: Props) {
   const initials = `${(firstname?.[0] || user.username?.[0] || "U").toUpperCase()}${(
     lastname?.[0] || ""
   ).toUpperCase()}`;
+  const profileUser = user as typeof user & {
+    avatar_url?: string | null;
+    image?: string | null;
+  };
+  const avatarUrl = resolveAvatarUrl(profileUser);
   const joinedDate = user.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", {
         month: "long",
@@ -177,9 +185,20 @@ export default async function PublicProfilePage({ params }: Props) {
           >
             <div
               className={`${designStyles.avatar} ${designStyles.avatarLg}`}
-              aria-hidden="true"
+              style={avatarUrl ? { overflow: "hidden", padding: 0 } : undefined}
+              aria-hidden={!!avatarUrl}
             >
-              {initials}
+              {avatarUrl ? (
+                <Image
+                  src={avatarUrl}
+                  alt={displayName}
+                  width={80}
+                  height={80}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                initials
+              )}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <h1

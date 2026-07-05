@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatLocalDate, formatLocalTime } from "@/lib/localTime";
 
 export interface PastParticipant {
@@ -11,6 +11,7 @@ export interface PastParticipant {
   firstname?: string;
   lastname?: string;
   username?: string;
+  avatarUrl?: string | null;
   quiet?: boolean;
   attended?: boolean;
   completed?: boolean;
@@ -230,6 +231,9 @@ export function PastSessionsList({
                         {partner && (
                           <div className="mt-2 flex items-center gap-2">
                             <Avatar className="h-6 w-6">
+                              {partner.avatarUrl ? (
+                                <AvatarImage src={partner.avatarUrl} alt={partnerName!} />
+                              ) : null}
                               <AvatarFallback className="bg-[#FFF1D3] text-xs text-[#5D1C6A] dark:bg-[#5D1C6A] dark:text-[#FFB090]">
                                 {getInitials(partnerName!)}
                               </AvatarFallback>

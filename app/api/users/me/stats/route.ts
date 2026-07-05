@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 type ParticipantDoc = {
   user_id: string;
@@ -94,6 +95,7 @@ export async function GET() {
     attended: boolean;
     completed: boolean;
     solo: boolean;
+    partnerId: string | null;
   }> = [];
 
   // For streaks, collect unique completion days and walk back from today.
@@ -136,6 +138,12 @@ export async function GET() {
       (typeBreakdown[s.session_type] || 0) + (didComplete ? 1 : 0);
 
     if (recent.length < 8) {
+      const partnerId =
+        hadPartner
+          ? (s.session_participants ?? []).find(
+              (p) => String(p.user_id) !== String(userId),
+            )?.user_id ?? null
+          : null;
       recent.push({
         id: String(s._id),
         start: new Date(s.start_time).toISOString(),
@@ -145,9 +153,61 @@ export async function GET() {
         attended: didAttend,
         completed: didComplete,
         solo: !hadPartner,
+        partnerId: partnerId ? String(partnerId) : null,
       });
     }
   }
+
+  const partnerIds = Array.from(
+    new Set(recent.map((r) => r.partnerId).filter(Boolean) as string[]),
+  ).filter((id) => ObjectId.isValid(id));
+
+  const partnerById: Record<
+    string,
+    { name: string | null; avatarUrl: string | null }
+  > = {};
+  if (partnerIds.length > 0) {
+    const partners = await db
+      .collection("users")
+      .find({ _id: { $in: partnerIds.map((id) => new ObjectId(id)) } })
+      .project({
+        name: 1,
+        firstname: 1,
+        lastname: 1,
+        avatar_url: 1,
+        image: 1,
+      })
+      .toArray();
+    for (const u of partners) {
+      const id = String(u._id);
+      const name =
+        [u.firstname, u.lastname].filter(Boolean).join(" ") ||
+        (u.name as string | null) ||
+        null;
+      partnerById[id] = {
+        name,
+        avatarUrl: resolveAvatarUrl(
+          u as { avatar_url?: string | null; image?: string | null },
+        ),
+      };
+    }
+  }
+
+  const recentWithPartners = recent.map((r) => {
+    const partner = r.partnerId ? partnerById[r.partnerId] : null;
+    return {
+      id: r.id,
+      start: r.start,
+      durationMin: r.durationMin,
+      sessionType: r.sessionType,
+      name: r.name,
+      attended: r.attended,
+      completed: r.completed,
+      solo: r.solo,
+      partnerName: partner?.name ?? null,
+      partnerAvatarUrl: partner?.avatarUrl ?? null,
+    };
+  });
 
   const missed = Math.max(0, booked - attended);
   const attendanceRate = booked > 0 ? attended / booked : 0;
@@ -211,7 +271,7 @@ export async function GET() {
       typeBreakdown,
       byWeekday,
       trend,
-      recent,
+      recent: recentWithPartners,
     },
   });
 }

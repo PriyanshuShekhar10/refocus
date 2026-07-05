@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Pencil, Check, X, Plus, Copy, MapPin, Globe, AtSign } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Pencil, Check, X, Plus, Copy, MapPin, Globe, AtSign, Camera, Trash2 } from "lucide-react";
 import {
   DButton,
   Field,
@@ -63,6 +64,7 @@ type UserInfo = {
   location?: string | null;
   website?: string | null;
   aboutMe?: Partial<Record<AboutMeKey, string>> | null;
+  avatarUrl?: string | null;
 };
 
 type EditableFields = {
@@ -83,6 +85,7 @@ type Props = {
 };
 
 export function ProfileView({ embedded = false }: Props) {
+  const { update: updateSession } = useSession();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -92,6 +95,9 @@ export function ProfileView({ embedded = false }: Props) {
   const [usernameStatus, setUsernameStatus] = useState<
     "idle" | "checking" | "available" | "taken"
   >("idle");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [editFields, setEditFields] = useState<EditableFields>({
     username: "",
     firstname: "",
@@ -233,6 +239,62 @@ export function ProfileView({ embedded = false }: Props) {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const handleAvatarPick = () => {
+    setAvatarError(null);
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setAvatarUploading(true);
+    setAvatarError(null);
+    try {
+      const form = new FormData();
+      form.append("avatar", file);
+      const res = await fetch("/api/users/me/avatar", {
+        method: "POST",
+        body: form,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAvatarError(data.error || "Upload failed");
+        return;
+      }
+      setUser((prev) =>
+        prev ? { ...prev, avatarUrl: data.avatarUrl ?? prev.avatarUrl } : prev,
+      );
+      await updateSession({ image: data.avatarUrl ?? null });
+    } catch {
+      setAvatarError("Upload failed");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    setAvatarUploading(true);
+    setAvatarError(null);
+    try {
+      const res = await fetch("/api/users/me/avatar", { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAvatarError(data.error || "Could not remove photo");
+        return;
+      }
+      setUser((prev) =>
+        prev ? { ...prev, avatarUrl: data.avatarUrl ?? null } : prev,
+      );
+      await updateSession({ image: data.avatarUrl ?? null });
+    } catch {
+      setAvatarError("Could not remove photo");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div
@@ -289,11 +351,95 @@ export function ProfileView({ embedded = false }: Props) {
 
       {/* Header */}
       <header style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
-        <div
-          className={`${designStyles.avatar} ${designStyles.avatarLg}`}
-          aria-hidden="true"
-        >
-          {initials}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+          <div style={{ position: "relative" }}>
+            <div
+              className={`${designStyles.avatar} ${designStyles.avatarLg}`}
+              style={{
+                overflow: "hidden",
+                opacity: avatarUploading ? 0.65 : 1,
+                transition: "opacity .2s",
+              }}
+              aria-hidden={!user?.avatarUrl}
+            >
+              {user?.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.avatarUrl}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+              ) : (
+                initials
+              )}
+            </div>
+            {isEditing && (
+              <button
+                type="button"
+                onClick={handleAvatarPick}
+                disabled={avatarUploading}
+                aria-label="Change profile photo"
+                title="Change photo"
+                style={{
+                  position: "absolute",
+                  right: -4,
+                  bottom: -4,
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  border: "2px solid var(--card)",
+                  background: "var(--accent)",
+                  color: "#fff",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: avatarUploading ? "wait" : "pointer",
+                  boxShadow: "0 2px 8px rgba(0,0,0,.12)",
+                }}
+              >
+                <Camera size={14} />
+              </button>
+            )}
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleAvatarChange}
+              style={{ display: "none" }}
+              aria-hidden
+              tabIndex={-1}
+            />
+          </div>
+          {isEditing && user?.avatarUrl && (
+            <button
+              type="button"
+              onClick={handleAvatarRemove}
+              disabled={avatarUploading}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 12,
+                color: "var(--ink-mute)",
+                background: "transparent",
+                border: "none",
+                cursor: avatarUploading ? "wait" : "pointer",
+                padding: 0,
+              }}
+            >
+              <Trash2 size={12} /> Remove photo
+            </button>
+          )}
+          {avatarError && (
+            <p style={{ fontSize: 12, color: "#b42318", margin: 0, maxWidth: 120, textAlign: "center" }}>
+              {avatarError}
+            </p>
+          )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1

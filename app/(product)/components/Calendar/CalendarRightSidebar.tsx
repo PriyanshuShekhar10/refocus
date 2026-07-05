@@ -114,10 +114,34 @@ export function CalendarRightSidebar({
   const [detailedProfile, setDetailedProfile] = useState<DetailedProfile | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
   
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const fromSession = session?.user?.image?.trim();
+    if (fromSession) {
+      setMyAvatarUrl(fromSession);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/me");
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok && data?.user?.avatarUrl) {
+          setMyAvatarUrl(data.user.avatarUrl);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.image]);
 
   useEffect(() => {
     if (profilePreview) {
@@ -170,6 +194,7 @@ export function CalendarRightSidebar({
   }, [profilePreview?.username]);
 
   const user = session?.user as { name?: string; email?: string; image?: string } | undefined;
+  const currentAvatarUrl = myAvatarUrl || user?.image || null;
   
   const displayName = user?.name || user?.email?.split("@")[0] || "User";
   const firstName = displayName.split(" ")[0];
@@ -237,8 +262,8 @@ export function CalendarRightSidebar({
           <Avatar className="h-10 w-10">
             {previewAvatarUrl ? (
               <AvatarImage src={previewAvatarUrl} alt={previewName} />
-            ) : user?.image ? (
-              <AvatarImage src={user.image} alt={displayName} />
+            ) : currentAvatarUrl ? (
+              <AvatarImage src={currentAvatarUrl} alt={displayName} />
             ) : null}
             <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
               {profilePreview
@@ -410,8 +435,8 @@ export function CalendarRightSidebar({
       <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2.5">
         <div className="flex flex-col items-center text-center">
           <Avatar className="h-11 w-11 mb-2">
-            {user?.image ? (
-              <AvatarImage src={user.image} alt={displayName} />
+            {currentAvatarUrl ? (
+              <AvatarImage src={currentAvatarUrl} alt={displayName} />
             ) : null}
             <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
               {initials}

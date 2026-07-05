@@ -12,6 +12,7 @@ type Phase = "loading" | "ready" | "in-call" | "ended" | "error";
 type PrejoinInfo = {
   partnerName: string | null;
   partnerInitial: string | null;
+  partnerAvatarUrl?: string | null;
   durationMin: number;
   sessionType: string;
   sessionName: string | null;
@@ -419,8 +420,17 @@ export default function ClientCall({
 
             {prejoin.partnerName && (
               <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-sm font-semibold text-white">
-                  {prejoin.partnerInitial ?? prejoin.partnerName.charAt(0).toUpperCase()}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#5D1C6A] text-sm font-semibold text-white">
+                  {prejoin.partnerAvatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={prejoin.partnerAvatarUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    prejoin.partnerInitial ?? prejoin.partnerName.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">

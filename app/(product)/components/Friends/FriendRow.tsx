@@ -7,6 +7,7 @@ export type FriendData = {
   email?: string;
   name?: string | null;
   username?: string | null;
+  avatarUrl?: string | null;
   since?: string;
 };
 
@@ -58,7 +59,12 @@ export default function FriendRow({
 
   return (
     <div className={styles.friendRow}>
-      <Avatar initial={initial} tint={tint} />
+      <Avatar
+        initial={initial}
+        tint={tint}
+        src={friend.avatarUrl}
+        alt={displayName}
+      />
       <button
         type="button"
         onClick={() => onOpenProfile?.(friend)}

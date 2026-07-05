@@ -10,6 +10,7 @@ import { openai } from "@ai-sdk/openai";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { isEmailVerified } from "@/lib/emailVerification";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -32,6 +33,8 @@ export async function GET() {
         interests: 1,
         location: 1,
         website: 1,
+        avatar_url: 1,
+        image: 1,
         emailVerified: 1,
       },
     }
@@ -46,6 +49,8 @@ export async function GET() {
     interests?: string[] | null;
     location?: string | null;
     website?: string | null;
+    avatar_url?: string | null;
+    image?: string | null;
     emailVerified?: Date | string | null;
   };
 
@@ -64,6 +69,7 @@ export async function GET() {
           interests: user.interests ?? [],
           location: user.location ?? null,
           website: user.website ?? null,
+          avatarUrl: resolveAvatarUrl(user),
           emailVerified: verified,
         }
       : null,

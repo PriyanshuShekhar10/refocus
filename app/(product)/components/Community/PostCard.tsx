@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,6 +22,7 @@ export type Post = {
   authorId: string;
   authorName: string;
   authorUsername?: string | null;
+  authorAvatarUrl?: string | null;
   authorInitials: string;
   likesCount: number;
   commentsCount: number;
@@ -36,8 +37,36 @@ export type Comment = {
   authorId: string;
   authorName: string;
   authorUsername?: string | null;
+  authorAvatarUrl?: string | null;
   authorInitials: string;
 };
+
+type AuthorLike = {
+  authorName: string;
+  authorInitials: string;
+  authorAvatarUrl?: string | null;
+};
+
+function AuthorAvatar({
+  author,
+  className,
+  fallbackClassName,
+}: {
+  author: AuthorLike;
+  className: string;
+  fallbackClassName: string;
+}) {
+  return (
+    <Avatar className={className}>
+      {author.authorAvatarUrl ? (
+        <AvatarImage src={author.authorAvatarUrl} alt={author.authorName} />
+      ) : null}
+      <AvatarFallback className={fallbackClassName}>
+        {author.authorInitials}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
 
 interface PostCardProps {
   post: Post;
@@ -160,29 +189,30 @@ export default function PostCard({
               onPreviewProfile({
                 username: post.authorUsername!,
                 name: post.authorName,
+                avatarUrl: post.authorAvatarUrl ?? null,
               })
             }
           >
-            <Avatar className="h-10 w-10 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer">
-              <AvatarFallback className="text-sm bg-muted">
-                {post.authorInitials}
-              </AvatarFallback>
-            </Avatar>
+            <AuthorAvatar
+              author={post}
+              className="h-10 w-10 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer"
+              fallbackClassName="text-sm bg-muted"
+            />
           </button>
         ) : post.authorUsername ? (
           <Link href={`/u/${post.authorUsername}`}>
-            <Avatar className="h-10 w-10 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer">
-              <AvatarFallback className="text-sm bg-muted">
-                {post.authorInitials}
-              </AvatarFallback>
-            </Avatar>
+            <AuthorAvatar
+              author={post}
+              className="h-10 w-10 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer"
+              fallbackClassName="text-sm bg-muted"
+            />
           </Link>
         ) : (
-          <Avatar className="h-10 w-10">
-            <AvatarFallback className="text-sm bg-muted">
-              {post.authorInitials}
-            </AvatarFallback>
-          </Avatar>
+          <AuthorAvatar
+            author={post}
+            className="h-10 w-10"
+            fallbackClassName="text-sm bg-muted"
+          />
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
@@ -194,6 +224,7 @@ export default function PostCard({
                     onPreviewProfile({
                       username: post.authorUsername!,
                       name: post.authorName,
+                      avatarUrl: post.authorAvatarUrl ?? null,
                     })
                   }
                   className="font-medium text-sm hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors"
@@ -292,29 +323,30 @@ export default function PostCard({
                             onPreviewProfile({
                               username: comment.authorUsername!,
                               name: comment.authorName,
+                              avatarUrl: comment.authorAvatarUrl ?? null,
                             })
                           }
                         >
-                          <Avatar className="h-7 w-7 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer">
-                            <AvatarFallback className="text-xs bg-muted">
-                              {comment.authorInitials}
-                            </AvatarFallback>
-                          </Avatar>
+                          <AuthorAvatar
+                            author={comment}
+                            className="h-7 w-7 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer"
+                            fallbackClassName="text-xs bg-muted"
+                          />
                         </button>
                       ) : comment.authorUsername ? (
                         <Link href={`/u/${comment.authorUsername}`}>
-                          <Avatar className="h-7 w-7 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer">
-                            <AvatarFallback className="text-xs bg-muted">
-                              {comment.authorInitials}
-                            </AvatarFallback>
-                          </Avatar>
+                          <AuthorAvatar
+                            author={comment}
+                            className="h-7 w-7 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer"
+                            fallbackClassName="text-xs bg-muted"
+                          />
                         </Link>
                       ) : (
-                        <Avatar className="h-7 w-7">
-                          <AvatarFallback className="text-xs bg-muted">
-                            {comment.authorInitials}
-                          </AvatarFallback>
-                        </Avatar>
+                        <AuthorAvatar
+                          author={comment}
+                          className="h-7 w-7"
+                          fallbackClassName="text-xs bg-muted"
+                        />
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -325,6 +357,7 @@ export default function PostCard({
                                 onPreviewProfile({
                                   username: comment.authorUsername!,
                                   name: comment.authorName,
+                                  avatarUrl: comment.authorAvatarUrl ?? null,
                                 })
                               }
                               className="text-xs font-medium hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors"

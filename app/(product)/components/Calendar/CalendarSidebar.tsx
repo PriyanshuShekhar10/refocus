@@ -6,6 +6,7 @@ import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import type { CalendarEvent } from "@/types/calendar";
 import { formatLocalTimeRange } from "@/lib/localTime";
 import { VerifiedName } from "@/components/verified-tag";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function toYmd(d: Date) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
@@ -257,9 +258,14 @@ export function CalendarSidebar({
                         )}
                       </div>
                     </div>
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF1D3] text-xs font-semibold text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
-                      {initials}
-                    </div>
+                    <Avatar className="h-8 w-8 shrink-0">
+                      {other?.avatar_url ? (
+                        <AvatarImage src={other.avatar_url} alt={otherName} />
+                      ) : null}
+                      <AvatarFallback className="text-xs bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
                   </li>
                 );
               })}

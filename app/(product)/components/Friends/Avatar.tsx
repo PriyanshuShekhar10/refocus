@@ -39,6 +39,8 @@ const tintClass: Record<AvatarTint, string> = {
 interface AvatarProps {
   initial: string;
   tint: AvatarTint;
+  src?: string | null;
+  alt?: string;
   size?: "md" | "sm";
   presence?: Presence;
   style?: CSSProperties;
@@ -48,6 +50,8 @@ interface AvatarProps {
 export default function Avatar({
   initial,
   tint,
+  src,
+  alt = "",
   size = "md",
   presence,
   style,
@@ -58,11 +62,28 @@ export default function Avatar({
   return (
     <span
       className={classes.join(" ")}
-      style={style}
-      aria-hidden={title ? undefined : true}
+      style={{
+        ...style,
+        ...(src ? { overflow: "hidden", padding: 0 } : undefined),
+      }}
+      aria-hidden={src ? undefined : title ? undefined : true}
       title={title}
     >
-      {initial.toUpperCase()}
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={alt}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
+      ) : (
+        initial.toUpperCase()
+      )}
       {presence ? (
         <span
           className={`${styles.dot} ${

@@ -4,16 +4,19 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, Send } from "lucide-react";
 import { VerifiedName } from "@/components/verified-tag";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "next-auth/react";
 import { getAblyClient } from "@/lib/ably-client";
 import { globalChatChannel } from "@/lib/realtimeChannels";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
+import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
 
 type GlobalMessage = {
   id: string;
   user_id: string;
   user_name?: string | null;
   username?: string | null;
+  avatar_url?: string | null;
   emailVerified?: boolean;
   content: string;
   created_at: string;
@@ -197,6 +200,42 @@ export default function CommunityChat() {
     return "Someone";
   };
 
+  const currentUserAvatar = useCurrentUserAvatar();
+
+  const renderMessageAvatar = (
+    m: GlobalMessage,
+    isOwn: boolean,
+    name: string,
+  ) => {
+    const initial = name.charAt(0).toUpperCase();
+    const avatarSrc = isOwn ? currentUserAvatar : m.avatar_url;
+    const avatar = (
+      <Avatar className="h-6 w-6 shrink-0">
+        {avatarSrc ? <AvatarImage src={avatarSrc} alt={name} /> : null}
+        <AvatarFallback
+          className={`text-[10px] font-medium ${
+            isOwn
+              ? "bg-[#5D1C6A] text-white"
+              : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {initial}
+        </AvatarFallback>
+      </Avatar>
+    );
+    if (!isOwn && m.username) {
+      return (
+        <Link
+          href={`/u/${m.username}`}
+          className="hover:ring-2 hover:ring-[#CA5995] rounded-full transition-shadow"
+        >
+          {avatar}
+        </Link>
+      );
+    }
+    return avatar;
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -220,7 +259,6 @@ export default function CommunityChat() {
             {messages.map((m, idx) => {
               const isOwn = m.user_id === currentUserId;
               const name = displayName(m);
-              const initial = name.charAt(0).toUpperCase();
               const showDate =
                 idx === 0 || !sameDay(messages[idx - 1].created_at, m.created_at);
 
@@ -236,24 +274,7 @@ export default function CommunityChat() {
                 <div
                   className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""}`}
                 >
-                  {!isOwn && m.username ? (
-                    <Link
-                      href={`/u/${m.username}`}
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium bg-muted text-muted-foreground hover:ring-2 hover:ring-[#CA5995] transition-shadow`}
-                    >
-                      {initial}
-                    </Link>
-                  ) : (
-                    <div
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium ${
-                        isOwn
-                          ? "bg-[#5D1C6A] text-white"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {initial}
-                    </div>
-                  )}
+                  {renderMessageAvatar(m, isOwn, name)}
                   <div
                     className={`max-w-[80%] ${isOwn ? "text-right" : "text-left"}`}
                   >

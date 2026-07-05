@@ -9,6 +9,8 @@ export type SessionRequestData = {
   to_user_id: string;
   from_user_email?: string;
   to_user_email?: string;
+  from_user_avatar_url?: string | null;
+  to_user_avatar_url?: string | null;
   start: string;
   durationMin: 25 | 50 | 75;
   message?: string | null;
@@ -46,6 +48,10 @@ export default function SessionRequestCard({
   onDecline,
   onCancel,
 }: SessionRequestCardProps) {
+  const counterpartAvatar =
+    direction === "incoming"
+      ? request.from_user_avatar_url
+      : request.to_user_avatar_url;
   const counterpartEmail =
     direction === "incoming" ? request.from_user_email : request.to_user_email;
   const counterpartId =
@@ -57,7 +63,13 @@ export default function SessionRequestCard({
   return (
     <div className={styles.reqCard}>
       <div className={styles.reqHead}>
-        <Avatar initial={initial} tint={tint} size="sm" />
+        <Avatar
+          initial={initial}
+          tint={tint}
+          size="sm"
+          src={counterpartAvatar}
+          alt={display}
+        />
         <div className={styles.reqBody}>
           {direction === "incoming" ? (
             <>

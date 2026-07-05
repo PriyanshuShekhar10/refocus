@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 type FriendRequestDoc = {
   _id: ObjectId;
@@ -120,15 +121,27 @@ export async function GET(req: NextRequest) {
     )
   ).filter(Boolean);
 
-  let usersById: Record<string, { email?: string; name?: string }> = {};
+  let usersById: Record<
+    string,
+    { email?: string; name?: string; avatarUrl?: string | null }
+  > = {};
   if (otherIds.length > 0) {
     const users = await db
-      .collection<UserDoc>("users")
+      .collection<UserDoc & { avatar_url?: string | null; image?: string | null }>(
+        "users",
+      )
       .find({ _id: { $in: otherIds.map((id: string) => new ObjectId(id)) } })
-      .project({ email: 1, name: 1 })
+      .project({ email: 1, name: 1, avatar_url: 1, image: 1 })
       .toArray();
     usersById = Object.fromEntries(
-      users.map((u) => [String(u._id), { email: u.email, name: u.name }])
+      users.map((u) => [
+        String(u._id),
+        {
+          email: u.email,
+          name: u.name,
+          avatarUrl: resolveAvatarUrl(u),
+        },
+      ]),
     );
   }
 
@@ -141,6 +154,8 @@ export async function GET(req: NextRequest) {
       to_user_id: d.to_user_id,
       from_user_email: from.email || undefined,
       to_user_email: to.email || undefined,
+      from_user_avatar_url: from.avatarUrl ?? null,
+      to_user_avatar_url: to.avatarUrl ?? null,
       status: d.status,
       created_at: d.created_at,
     };

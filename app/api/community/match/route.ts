@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -62,13 +63,19 @@ export async function GET() {
                   about: 1,
                   interests: 1,
                   image: 1,
+                  avatar_url: 1,
                   score: { $meta: "vectorSearchScore" }
               }
           }
       ];
 
       const matches = await db.collection("users").aggregate(pipeline).toArray();
-      return NextResponse.json({ matches });
+      return NextResponse.json({
+        matches: matches.map((m) => ({
+          ...m,
+          image: resolveAvatarUrl(m as { avatar_url?: string | null; image?: string | null }),
+        })),
+      });
 
   } catch (error) {
       console.error("Vector Search Error", error);

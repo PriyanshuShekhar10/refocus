@@ -4,16 +4,19 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, Send, Trash2 } from "lucide-react";
 import { VerifiedName } from "@/components/verified-tag";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "next-auth/react";
 import { getAblyClient } from "@/lib/ably-client";
 import { globalChatChannel } from "@/lib/realtimeChannels";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
+import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
 
 type GlobalMessage = {
   id: string;
   user_id: string;
   user_name?: string | null;
   username?: string | null;
+  avatar_url?: string | null;
   emailVerified?: boolean;
   content: string;
   created_at: string;
@@ -44,6 +47,7 @@ export default function GlobalChat() {
     user_id: string;
     user_name?: string | null;
     username?: string | null;
+    avatar_url?: string | null;
     emailVerified?: boolean;
   } | null>(null);
   const [profileFriendStatus, setProfileFriendStatus] = useState<
@@ -422,6 +426,7 @@ export default function GlobalChat() {
       user_id: m.user_id,
       user_name: m.user_name,
       username: m.username,
+      avatar_url: m.avatar_url ?? null,
       emailVerified: m.emailVerified,
     });
     setProfileFriendStatus("loading");
@@ -475,6 +480,45 @@ export default function GlobalChat() {
       setProfileFriendReqStatus((e as Error).message);
       setTimeout(() => setProfileFriendReqStatus(null), 3000);
     }
+  };
+
+  const currentUserAvatar = useCurrentUserAvatar();
+
+  const renderMessageAvatar = (
+    m: GlobalMessage,
+    isOwnMessage: boolean,
+    name: string,
+    className: string,
+  ) => {
+    const initial = name.charAt(0).toUpperCase();
+    const avatarSrc = isOwnMessage ? currentUserAvatar : m.avatar_url;
+    const inner = (
+      <Avatar className={className}>
+        {avatarSrc ? <AvatarImage src={avatarSrc} alt={name} /> : null}
+        <AvatarFallback
+          className={`text-sm font-medium ${
+            isOwnMessage
+              ? "bg-[#5D1C6A] text-white"
+              : "bg-gray-300 text-gray-700 dark:bg-gray-600 dark:text-gray-200"
+          }`}
+        >
+          {initial}
+        </AvatarFallback>
+      </Avatar>
+    );
+    if (!isOwnMessage && m.username) {
+      return (
+        <button
+          type="button"
+          onClick={() => openProfile(m)}
+          className="shrink-0 hover:ring-2 hover:ring-[#CA5995] rounded-full transition-shadow cursor-pointer"
+          title="View profile"
+        >
+          {inner}
+        </button>
+      );
+    }
+    return <div className="shrink-0">{inner}</div>;
   };
 
   const profileDisplayName = profileUser
@@ -566,9 +610,14 @@ export default function GlobalChat() {
               </button>
             </div>
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-2xl font-semibold text-white mb-3">
-                {profileDisplayName.charAt(0).toUpperCase() || "?"}
-              </div>
+              <Avatar className="h-16 w-16 mb-3">
+                {profileUser.avatar_url ? (
+                  <AvatarImage src={profileUser.avatar_url} alt={profileDisplayName} />
+                ) : null}
+                <AvatarFallback className="text-2xl font-semibold bg-[#5D1C6A] text-white">
+                  {profileDisplayName.charAt(0).toUpperCase() || "?"}
+                </AvatarFallback>
+              </Avatar>
               <p className="text-base font-medium text-gray-900 dark:text-gray-100">
                 <VerifiedName
                   name={profileDisplayName}
@@ -691,7 +740,6 @@ export default function GlobalChat() {
               const isOwnMessage = m.user_id === currentUserId;
               const isDeleting = deletingIds.has(m.id);
               const name = displayName(m);
-              const initial = name.charAt(0).toUpperCase();
 
               return (
                 <Fragment key={m.id}>
@@ -715,27 +763,11 @@ export default function GlobalChat() {
                   <div
                     className={`group flex gap-2 ${isOwnMessage ? "flex-row-reverse" : ""}`}
                   >
-                    {isOwnMessage ? (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-sm font-medium text-white order-2">
-                        {initial}
-                      </div>
-                    ) : m.username ? (
-                      <Link
-                        href={`/u/${m.username}`}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:ring-2 hover:ring-[#CA5995] dark:hover:ring-[#CA5995] transition-shadow cursor-pointer"
-                        title="View profile"
-                      >
-                        {initial}
-                      </Link>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => openProfile(m)}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:ring-2 hover:ring-[#CA5995] dark:hover:ring-[#CA5995] transition-shadow cursor-pointer"
-                        title="View profile"
-                      >
-                        {initial}
-                      </button>
+                    {renderMessageAvatar(
+                      m,
+                      isOwnMessage,
+                      name,
+                      `h-8 w-8 ${isOwnMessage ? "order-2" : ""}`,
                     )}
                     <div
                       className={`flex max-w-[85%] sm:max-w-[75%] flex-col ${isOwnMessage ? "items-end" : "items-start"}`}

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -42,15 +43,33 @@ export async function GET(req: NextRequest) {
     )
   ).filter(Boolean);
 
-  let usersById: Record<string, { email?: string; name?: string; username?: string }> = {};
+  let usersById: Record<
+    string,
+    { email?: string; name?: string; username?: string; avatarUrl?: string | null }
+  > = {};
   if (otherIds.length > 0) {
     const users = await db
-      .collection<{ _id: ObjectId; email?: string; name?: string; username?: string }>("users")
+      .collection<{
+        _id: ObjectId;
+        email?: string;
+        name?: string;
+        username?: string;
+        avatar_url?: string | null;
+        image?: string | null;
+      }>("users")
       .find({ _id: { $in: otherIds.map((id: string) => new ObjectId(id)) } })
-      .project({ email: 1, name: 1, username: 1 })
+      .project({ email: 1, name: 1, username: 1, avatar_url: 1, image: 1 })
       .toArray();
     usersById = Object.fromEntries(
-      users.map((u) => [String(u._id), { email: u.email, name: u.name, username: u.username }])
+      users.map((u) => [
+        String(u._id),
+        {
+          email: u.email,
+          name: u.name,
+          username: u.username,
+          avatarUrl: resolveAvatarUrl(u),
+        },
+      ]),
     );
   }
 
@@ -58,7 +77,7 @@ export async function GET(req: NextRequest) {
   // keep the earliest 'since' date (friendship start).
   const friendsMap = new Map<
     string,
-    { user_id: string; email?: string; name?: string; username?: string; since?: Date }
+    { user_id: string; email?: string; name?: string; username?: string; avatarUrl?: string | null; since?: Date }
   >();
   for (const r of requests) {
     const otherId = r.from_user_id === userId ? r.to_user_id : r.from_user_id;
@@ -74,6 +93,7 @@ export async function GET(req: NextRequest) {
         email: user.email || undefined,
         name: user.name || undefined,
         username: user.username || undefined,
+        avatarUrl: user.avatarUrl ?? null,
         since,
       });
     } else if (existing.since && since && since < existing.since) {

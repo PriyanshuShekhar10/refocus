@@ -28,7 +28,7 @@ import { BookingModal } from "../Calendar/Modals/BookingModal";
 import { Toast } from "../Calendar/Modals/Toast";
 import { ConfirmModal } from "../Calendar/Modals/ConfirmModal";
 import { SessionDetailsModal } from "../Calendar/Modals/SessionDetailsModal";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const HOUR_HEIGHT = 60;
 const STEP_MINUTES = 15;
@@ -533,6 +533,9 @@ export default function MobileCalendar() {
                 {isBooked && other ? (
                   <div className="flex items-center gap-2 h-full">
                     <Avatar className="h-8 w-8 shrink-0">
+                      {other.avatar_url ? (
+                        <AvatarImage src={other.avatar_url} alt={otherName || "Partner"} />
+                      ) : null}
                       <AvatarFallback className="text-xs bg-[#FFB090] dark:bg-[#5D1C6A]">
                         {otherInitial}
                       </AvatarFallback>

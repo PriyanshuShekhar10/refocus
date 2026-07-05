@@ -43,11 +43,17 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
   >({});
   const [openChatFriendId, setOpenChatFriendId] = useState<string | null>(null);
   const [openChatFriendLabel, setOpenChatFriendLabel] = useState<string>("");
+  const [openChatFriendAvatarUrl, setOpenChatFriendAvatarUrl] = useState<
+    string | null
+  >(null);
   const [bookSessionFriendId, setBookSessionFriendId] = useState<string | null>(
     null,
   );
   const [bookSessionFriendLabel, setBookSessionFriendLabel] =
     useState<string>("");
+  const [bookSessionFriendAvatarUrl, setBookSessionFriendAvatarUrl] = useState<
+    string | null
+  >(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [query, setQuery] = useState("");
   const [listMode, setListMode] = useState<ListMode>("all");
@@ -272,10 +278,12 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
   const handleOpenChat = (f: FriendData) => {
     setOpenChatFriendId(f.user_id);
     setOpenChatFriendLabel(f.email || f.user_id);
+    setOpenChatFriendAvatarUrl(f.avatarUrl ?? null);
   };
   const handleBookSession = (f: FriendData) => {
     setBookSessionFriendId(f.user_id);
-    setBookSessionFriendLabel(f.email || f.user_id);
+    setBookSessionFriendLabel(f.name || f.email || f.user_id);
+    setBookSessionFriendAvatarUrl(f.avatarUrl ?? null);
   };
   const handleOpenProfile = onPreviewProfile
     ? (f: FriendData) => {
@@ -283,6 +291,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
         onPreviewProfile({
           username: f.username,
           name: f.name || f.email || f.user_id,
+          avatarUrl: f.avatarUrl ?? null,
         });
       }
     : undefined;
@@ -472,6 +481,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
         <FriendChat
           friendId={openChatFriendId}
           friendLabel={openChatFriendLabel}
+          friendAvatarUrl={openChatFriendAvatarUrl}
           onClose={() => setOpenChatFriendId(null)}
         />
       )}
@@ -479,9 +489,11 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
         <BookSessionModal
           friendId={bookSessionFriendId}
           friendLabel={bookSessionFriendLabel}
+          friendAvatarUrl={bookSessionFriendAvatarUrl}
           onClose={() => {
             setBookSessionFriendId(null);
             setBookSessionFriendLabel("");
+            setBookSessionFriendAvatarUrl(null);
           }}
           onSuccess={() => load()}
         />

@@ -4,10 +4,12 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LocalDateTime } from "@/components/local-datetime";
 import ClientCall from "./ClientCall";
 import SessionCountdown from "./SessionCountdown";
 import { CALL_JOIN_GRACE_MINUTES, isWithinCallWindow } from "@/lib/sessionAccess";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 export default async function SessionJoinPage({
   params,
@@ -53,18 +55,26 @@ export default async function SessionJoinPage({
   if (isBooked && !(isOwner || isParticipant)) return notFound();
 
   // Look up the session partner's profile
-  type PartnerInfo = { name?: string; firstname?: string; lastname?: string; username?: string };
+  type PartnerInfo = {
+    name?: string;
+    firstname?: string;
+    lastname?: string;
+    username?: string;
+    avatar_url?: string | null;
+    image?: string | null;
+  };
   const partnerId = participants.find((p) => p.user_id !== currentUserId)?.user_id;
   const partner: PartnerInfo | null = partnerId && ObjectId.isValid(partnerId)
     ? (await db.collection("users").findOne(
         { _id: new ObjectId(partnerId) },
-        { projection: { name: 1, firstname: 1, lastname: 1, username: 1 } }
+        { projection: { name: 1, firstname: 1, lastname: 1, username: 1, avatar_url: 1, image: 1 } }
       ) as PartnerInfo | null)
     : null;
   const partnerName = partner
     ? [partner.firstname, partner.lastname].filter(Boolean).join(" ") || partner.name || "Partner"
     : null;
   const partnerInitial = partnerName ? partnerName.charAt(0).toUpperCase() : null;
+  const partnerAvatarUrl = resolveAvatarUrl(partner);
 
   // Join window: from 5 minutes before start until 5 minutes after end.
   const now = new Date();
@@ -80,6 +90,7 @@ export default async function SessionJoinPage({
         prejoin={{
           partnerName,
           partnerInitial,
+          partnerAvatarUrl,
           durationMin: s.duration_min,
           sessionType: s.session_type,
           sessionName: s.name ?? null,
@@ -130,9 +141,14 @@ export default async function SessionJoinPage({
       {/* Session Partner */}
       {partnerName && (
         <div className="mt-4 flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-sm font-medium text-white">
-            {partnerInitial}
-          </div>
+          <Avatar className="h-9 w-9 shrink-0">
+            {partnerAvatarUrl ? (
+              <AvatarImage src={partnerAvatarUrl} alt={partnerName} />
+            ) : null}
+            <AvatarFallback className="bg-[#5D1C6A] text-sm font-medium text-white">
+              {partnerInitial}
+            </AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
               {partnerName}

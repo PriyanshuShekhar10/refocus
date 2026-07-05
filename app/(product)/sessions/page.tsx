@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SessionsTabs } from "./SessionsTabs";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 type RawSession = {
   _id: ObjectId;
@@ -31,6 +32,8 @@ type UserDoc = {
   firstname?: string | null;
   lastname?: string | null;
   username?: string | null;
+  avatar_url?: string | null;
+  image?: string | null;
 };
 
 const PAST_SESSION_LIMIT = 100;
@@ -97,7 +100,16 @@ export default async function MySessionsPage() {
       ? ((await db
           .collection<UserDoc>("users")
           .find({ _id: { $in: objectIds } })
-          .project({ _id: 1, email: 1, name: 1, firstname: 1, lastname: 1, username: 1 })
+          .project({
+            _id: 1,
+            email: 1,
+            name: 1,
+            firstname: 1,
+            lastname: 1,
+            username: 1,
+            avatar_url: 1,
+            image: 1,
+          })
           .toArray()) as unknown as UserDoc[])
       : [];
 
@@ -110,6 +122,7 @@ export default async function MySessionsPage() {
         firstname: u.firstname ?? undefined,
         lastname: u.lastname ?? undefined,
         username: u.username ?? undefined,
+        avatarUrl: resolveAvatarUrl(u),
       },
     ]),
   );
@@ -133,6 +146,7 @@ export default async function MySessionsPage() {
         firstname: userInfo?.firstname,
         lastname: userInfo?.lastname,
         username: userInfo?.username,
+        avatarUrl: userInfo?.avatarUrl ?? null,
         quiet: p.quiet,
         attended: Boolean(p.call_joined_at),
         completed: Boolean(p.call_completed),

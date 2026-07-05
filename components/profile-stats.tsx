@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import { designStyles } from "@/components/design";
 import { formatLocalDate, formatLocalTime } from "@/lib/localTime";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type RecentSession = {
   id: string;
@@ -20,6 +21,8 @@ type RecentSession = {
   attended: boolean;
   completed: boolean;
   solo: boolean;
+  partnerName?: string | null;
+  partnerAvatarUrl?: string | null;
 };
 
 type TrendDay = { date: string; sessions: number; minutes: number };
@@ -497,7 +500,11 @@ export function ProfileStats() {
             gap: 6,
           }}
         >
-          {stats.recent.map((r) => (
+          {stats.recent.map((r) => {
+            const partnerInitial =
+              r.partnerName?.[0]?.toUpperCase() ||
+              (r.solo ? null : "P");
+            return (
             <li
               key={r.id}
               style={{
@@ -510,15 +517,26 @@ export function ProfileStats() {
                 background: "var(--card)",
               }}
             >
-              <RecentDot
-                tone={
-                  !r.attended
-                    ? "missed"
-                    : r.completed
-                      ? "completed"
-                      : "partial"
-                }
-              />
+              {!r.solo && r.partnerName ? (
+                <Avatar className="h-8 w-8 shrink-0">
+                  {r.partnerAvatarUrl ? (
+                    <AvatarImage src={r.partnerAvatarUrl} alt={r.partnerName} />
+                  ) : null}
+                  <AvatarFallback className="text-xs bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090]">
+                    {partnerInitial}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <RecentDot
+                  tone={
+                    !r.attended
+                      ? "missed"
+                      : r.completed
+                        ? "completed"
+                        : "partial"
+                  }
+                />
+              )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p
                   style={{
@@ -539,7 +557,12 @@ export function ProfileStats() {
                     color: "var(--ink-mute)",
                   }}
                 >
-                  {formatRecentTime(r.start)} · {r.solo ? "Solo" : "With partner"}
+                  {formatRecentTime(r.start)} ·{" "}
+                  {r.solo
+                    ? "Solo"
+                    : r.partnerName
+                      ? `With ${r.partnerName}`
+                      : "With partner"}
                 </p>
               </div>
               <RecentBadge
@@ -552,7 +575,8 @@ export function ProfileStats() {
                 }
               />
             </li>
-          ))}
+          );
+          })}
         </ul>
       </div>
         </div>

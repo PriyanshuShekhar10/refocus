@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, MessageSquare } from "lucide-react";
@@ -61,6 +61,9 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+  const [currentUserAvatarUrl, setCurrentUserAvatarUrl] = useState<string | null>(
+    session?.user?.image ?? null,
+  );
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +74,29 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   const [showChat, setShowChat] = useState(true);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const { canInteract, message: verifyMessage } = useEmailVerified();
+
+  useEffect(() => {
+    const fromSession = session?.user?.image?.trim();
+    if (fromSession) {
+      setCurrentUserAvatarUrl(fromSession);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/me");
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok) {
+          setCurrentUserAvatarUrl(data?.user?.avatarUrl ?? null);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.image]);
 
   const loadPosts = useCallback(async (cursor?: string) => {
     try {
@@ -217,6 +243,9 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
             <div className="border border-border rounded-lg p-4 mb-6">
               <div className="flex gap-3">
                 <Avatar className="h-10 w-10">
+                  {currentUserAvatarUrl ? (
+                    <AvatarImage src={currentUserAvatarUrl} alt={currentUserName} />
+                  ) : null}
                   <AvatarFallback className="text-sm bg-muted">
                     {currentUserInitials}
                   </AvatarFallback>

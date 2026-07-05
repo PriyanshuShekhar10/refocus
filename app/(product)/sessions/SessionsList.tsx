@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatLocalDate, formatLocalTime } from "@/lib/localTime";
 import { isCallJoinable } from "@/lib/sessionWindow";
 
@@ -13,6 +13,7 @@ interface Participant {
   firstname?: string;
   lastname?: string;
   username?: string;
+  avatarUrl?: string | null;
   quiet?: boolean;
 }
 
@@ -33,6 +34,7 @@ interface Session {
     firstname?: string;
     lastname?: string;
     username?: string;
+    avatarUrl?: string | null;
   };
 }
 
@@ -204,6 +206,9 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                         {isBooked && partner && (
                           <div className="mt-2 flex items-center gap-2">
                             <Avatar className="h-6 w-6">
+                              {partner.avatarUrl ? (
+                                <AvatarImage src={partner.avatarUrl} alt={partnerName!} />
+                              ) : null}
                               <AvatarFallback className="text-xs bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A] dark:text-[#FFB090]">
                                 {getInitials(partnerName!)}
                               </AvatarFallback>

@@ -1,10 +1,12 @@
 "use client";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { FiX } from "react-icons/fi";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type BookSessionModalProps = {
   friendId: string;
   friendLabel: string;
+  friendAvatarUrl?: string | null;
   onClose: () => void;
   onSuccess?: () => void;
 };
@@ -12,6 +14,7 @@ type BookSessionModalProps = {
 export default function BookSessionModal({
   friendId,
   friendLabel,
+  friendAvatarUrl,
   onClose,
   onSuccess,
 }: BookSessionModalProps) {
@@ -192,9 +195,19 @@ export default function BookSessionModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl bg-white dark:bg-gray-900 shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Book session with {friendLabel}
-          </h2>
+          <div className="flex items-center gap-3 min-w-0">
+            <Avatar className="h-9 w-9 shrink-0">
+              {friendAvatarUrl ? (
+                <AvatarImage src={friendAvatarUrl} alt={friendLabel} />
+              ) : null}
+              <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090]">
+                {friendLabel?.[0]?.toUpperCase?.() || "F"}
+              </AvatarFallback>
+            </Avatar>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+              Book session with {friendLabel}
+            </h2>
+          </div>
           <button
             type="button"
             onClick={onClose}

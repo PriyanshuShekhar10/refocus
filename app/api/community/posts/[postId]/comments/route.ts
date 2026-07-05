@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 // GET - Fetch comments for a post
 export async function GET(
@@ -53,6 +54,8 @@ export async function GET(
           "author.lastname": 1,
           "author.email": 1,
           "author.username": 1,
+          "author.avatar_url": 1,
+          "author.image": 1,
         },
       },
     ])
@@ -70,6 +73,7 @@ export async function GET(
         c.author?.email ||
         "User",
       authorUsername: c.author?.username || null,
+      authorAvatarUrl: resolveAvatarUrl(c.author),
       authorInitials: `${(c.author?.firstname?.[0] || c.author?.name?.[0] || c.author?.email?.[0] || "U").toUpperCase()}${(c.author?.lastname?.[0] || "").toUpperCase()}`,
     })),
   });
@@ -129,12 +133,20 @@ export async function POST(
   const result = await db.collection("community_comments").insertOne(comment);
 
   // Fetch author info
-  const author = await db
+  const author = (await db
     .collection("users")
     .findOne(
       { _id: new ObjectId(userId) },
-      { projection: { name: 1, firstname: 1, lastname: 1, email: 1, username: 1 } }
-    );
+      { projection: { name: 1, firstname: 1, lastname: 1, email: 1, username: 1, avatar_url: 1, image: 1 } }
+    )) as {
+    name?: string | null;
+    firstname?: string | null;
+    lastname?: string | null;
+    email?: string | null;
+    username?: string | null;
+    avatar_url?: string | null;
+    image?: string | null;
+  } | null;
 
   return NextResponse.json({
     comment: {
@@ -148,6 +160,7 @@ export async function POST(
         author?.email ||
         "User",
       authorUsername: author?.username || null,
+      authorAvatarUrl: resolveAvatarUrl(author),
       authorInitials: `${(author?.firstname?.[0] || author?.name?.[0] || author?.email?.[0] || "U").toUpperCase()}${(author?.lastname?.[0] || "").toUpperCase()}`,
     },
   });

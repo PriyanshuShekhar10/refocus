@@ -60,6 +60,7 @@ async function loadUsersById(
     username?: string | null;
     about?: string | null;
     image?: string | null;
+    avatar_url?: string | null;
     emailVerified?: Date | string | null;
   };
 
@@ -74,6 +75,7 @@ async function loadUsersById(
       username: 1,
       about: 1,
       image: 1,
+      avatar_url: 1,
       emailVerified: 1,
     })
     .toArray()) as unknown as DbUser[];
@@ -89,7 +91,7 @@ async function loadUsersById(
         lastname: u.lastname ?? null,
         username: u.username ?? null,
         about: u.about ?? null,
-        avatar_url: u.image ?? null,
+        avatar_url: u.avatar_url ?? u.image ?? null,
         emailVerified: isEmailVerified(u.emailVerified),
       },
     ]),

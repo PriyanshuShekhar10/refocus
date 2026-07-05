@@ -10,6 +10,8 @@ export type FriendRequestData = {
   created_at: string;
   from_user_email?: string;
   to_user_email?: string;
+  from_user_avatar_url?: string | null;
+  to_user_avatar_url?: string | null;
 };
 
 interface FriendRequestCardProps {
@@ -36,6 +38,10 @@ export default function FriendRequestCard({
   onAccept,
   onDecline,
 }: FriendRequestCardProps) {
+  const counterpartAvatar =
+    direction === "incoming"
+      ? request.from_user_avatar_url
+      : request.to_user_avatar_url;
   const counterpartEmail =
     direction === "incoming" ? request.from_user_email : request.to_user_email;
   const counterpartId =
@@ -50,7 +56,13 @@ export default function FriendRequestCard({
   return (
     <div className={styles.reqCard}>
       <div className={styles.reqHead}>
-        <Avatar initial={initial} tint={tint} size="sm" />
+        <Avatar
+          initial={initial}
+          tint={tint}
+          size="sm"
+          src={counterpartAvatar}
+          alt={display}
+        />
         <div className={styles.reqBody}>
           {direction === "incoming" ? (
             <>

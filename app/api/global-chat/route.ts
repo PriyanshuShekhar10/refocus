@@ -14,6 +14,7 @@ import {
 import { fetchEmailVerifiedMap } from "@/lib/users/emailVerifiedMap";
 import { isEmailVerified } from "@/lib/emailVerification";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { fetchAvatarUrlMap, resolveAvatarUrl } from "@/lib/userAvatar";
 
 /**
  * Default page size for pagination
@@ -127,6 +128,10 @@ export async function GET(req: NextRequest) {
     db,
     docs.map((m) => m.user_id),
   );
+  const avatarByUserId = await fetchAvatarUrlMap(
+    db,
+    docs.map((m) => m.user_id),
+  );
 
   // Determine the next cursor
   let nextCursor: string | null = null;
@@ -143,6 +148,7 @@ export async function GET(req: NextRequest) {
       user_id: m.user_id,
       user_name: m.user_name ?? null,
       username: m.username ?? null,
+      avatar_url: avatarByUserId[m.user_id] ?? null,
       emailVerified: verifiedByUserId[m.user_id] ?? false,
       content: m.content,
       created_at: m.created_at.toISOString(),
@@ -185,12 +191,18 @@ export async function POST(req: NextRequest) {
   const trimmedContent = content.trim();
 
   // Look up the sender's username for profile linking
-  const userDoc = await db.collection("users").findOne(
+  const userDoc = (await db.collection("users").findOne(
     { _id: new ObjectId(currentUserId) },
-    { projection: { username: 1, emailVerified: 1 } },
-  );
+    { projection: { username: 1, emailVerified: 1, avatar_url: 1, image: 1 } },
+  )) as {
+    username?: string | null;
+    emailVerified?: Date | string | null;
+    avatar_url?: string | null;
+    image?: string | null;
+  } | null;
   const username = userDoc?.username ?? null;
   const emailVerified = isEmailVerified(userDoc?.emailVerified);
+  const avatarUrl = resolveAvatarUrl(userDoc);
 
   const insert = await db.collection("global_messages").insertOne({
     user_id: currentUserId,
@@ -208,6 +220,7 @@ export async function POST(req: NextRequest) {
       user_id: currentUserId,
       user_name: currentUser?.name ?? null,
       username,
+      avatar_url: avatarUrl,
       emailVerified,
       content: trimmedContent,
       created_at: createdAt.toISOString(),

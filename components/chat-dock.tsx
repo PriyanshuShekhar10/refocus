@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import FriendChat from "@/app/(product)/components/FriendChat";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FiX } from "react-icons/fi";
 import { useSession } from "next-auth/react";
 import { getAblyClient } from "@/lib/ably-client";
@@ -11,6 +12,7 @@ type Friend = {
   user_id: string;
   email?: string;
   name?: string | null;
+  avatarUrl?: string | null;
   presence?: "online" | "away" | "offline";
   lastMessage?: string;
 };
@@ -18,6 +20,7 @@ type Friend = {
 type OpenChat = {
   friendId: string;
   friendLabel: string;
+  friendAvatarUrl?: string | null;
   minimized: boolean;
 };
 
@@ -127,11 +130,16 @@ export function ChatDock() {
   useEffect(() => {
     const toggle = () => setPanelOpen((v) => !v);
     const openHandler = (e: Event) => {
-      const ce = e as CustomEvent<{ friendId: string; friendLabel?: string }>;
+      const ce = e as CustomEvent<{
+        friendId: string;
+        friendLabel?: string;
+        friendAvatarUrl?: string | null;
+      }>;
       if (ce.detail?.friendId) {
         openOrFocusChat(
           ce.detail.friendId,
           ce.detail.friendLabel || ce.detail.friendId,
+          ce.detail.friendAvatarUrl ?? null,
         );
       } else {
         setPanelOpen(true);
@@ -145,15 +153,26 @@ export function ChatDock() {
     };
   }, []);
 
-  const openOrFocusChat = (friendId: string, friendLabel: string) => {
+  const openOrFocusChat = (
+    friendId: string,
+    friendLabel: string,
+    friendAvatarUrl?: string | null,
+  ) => {
     setOpenChats((prev) => {
       const idx = prev.findIndex((c) => c.friendId === friendId);
       if (idx >= 0) {
         const next = prev.slice();
-        next[idx] = { ...next[idx], minimized: false };
+        next[idx] = {
+          ...next[idx],
+          minimized: false,
+          friendAvatarUrl: friendAvatarUrl ?? next[idx].friendAvatarUrl,
+        };
         return next;
       }
-      const next = [...prev, { friendId, friendLabel, minimized: false }];
+      const next = [
+        ...prev,
+        { friendId, friendLabel, friendAvatarUrl: friendAvatarUrl ?? null, minimized: false },
+      ];
       if (next.length > 3) return next.slice(-3);
       return next;
     });
@@ -199,22 +218,30 @@ export function ChatDock() {
             ) : friends.length === 0 ? (
               <div className="p-3 text-sm text-gray-500">No friends found</div>
             ) : (
-              friends.map((f) => (
+              friends.map((f) => {
+                const label = f.name || f.email || f.user_id;
+                const initial =
+                  label?.[0]?.toUpperCase?.() || "F";
+                return (
                 <button
                   key={f.user_id}
                   onClick={() =>
-                    openOrFocusChat(f.user_id, f.email || f.user_id)
+                    openOrFocusChat(f.user_id, label, f.avatarUrl ?? null)
                   }
                   className="flex w-full items-center justify-between gap-2 px-3 py-2 hover:bg-accent text-left"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
-                      {(f.name || f.email || f.user_id)?.[0]?.toUpperCase?.() ||
-                        "F"}
-                    </div>
+                    <Avatar className="h-8 w-8">
+                      {f.avatarUrl ? (
+                        <AvatarImage src={f.avatarUrl} alt={label} />
+                      ) : null}
+                      <AvatarFallback className="bg-indigo-600 text-white text-xs font-bold">
+                        {initial}
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <div className="text-sm font-medium">
-                        {f.name || f.email || f.user_id}
+                        {label}
                       </div>
                       <div className="text-xs text-gray-500 truncate max-w-[160px]">
                         {f.lastMessage || ""}
@@ -227,7 +254,8 @@ export function ChatDock() {
                     </span>
                   )}
                 </button>
-              ))
+              );
+              })
             )}
           </div>
         </div>
@@ -242,6 +270,7 @@ export function ChatDock() {
               <FriendChat
                 friendId={c.friendId}
                 friendLabel={c.friendLabel}
+                friendAvatarUrl={c.friendAvatarUrl}
                 onClose={() => closeChat(c.friendId)}
                 onMinimizeToggle={() => toggleMinimize(c.friendId)}
                 minimized={c.minimized}

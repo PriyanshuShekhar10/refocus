@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
 import type { CalendarEvent } from "@/types/calendar";
 import { ModalWrapper } from "./ModalWrapper";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   SESSION_COLOR_PRESETS,
   getSessionColorPresetIndex,
@@ -244,7 +245,16 @@ export function SessionDetailsModal({
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                 Partner
               </p>
-              <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 px-3 py-2.5">
+              <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 px-3 py-2.5 flex items-center gap-3">
+                <Avatar className="h-10 w-10 shrink-0">
+                  {other?.avatar_url ? (
+                    <AvatarImage src={other.avatar_url} alt={otherName} />
+                  ) : null}
+                  <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
+                    {(otherName[0] || "?").toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {otherName}
                 </p>
@@ -256,6 +266,7 @@ export function SessionDetailsModal({
                 <div className="flex gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
                   <span>You: quiet {selfQuiet ? "on" : "off"}</span>
                   <span>Partner: quiet {partnerQuiet ? "on" : "off"}</span>
+                </div>
                 </div>
               </div>
             </section>

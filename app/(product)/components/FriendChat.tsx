@@ -12,6 +12,9 @@ import {
 import { getAblyClient } from "@/lib/ably-client";
 import { chatChannel } from "@/lib/realtimeChannels";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
+import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
+import { useSession } from "next-auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type SessionRequestPayload = {
   sessionRequestId: string;
@@ -42,6 +45,7 @@ type ChatMessage = {
 export type FriendChatProps = {
   friendId: string;
   friendLabel: string;
+  friendAvatarUrl?: string | null;
   onClose: () => void;
   layout?: "modal" | "docked";
   minimized?: boolean;
@@ -52,11 +56,14 @@ export type FriendChatProps = {
 export default function FriendChat({
   friendId,
   friendLabel,
+  friendAvatarUrl,
   onClose,
   layout = "modal",
   minimized = false,
   onMinimizeToggle,
 }: FriendChatProps) {
+  const { data: session } = useSession();
+  const currentUserAvatar = useCurrentUserAvatar();
   const { canInteract, message: verifyMessage } = useEmailVerified();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -751,6 +758,32 @@ export default function FriendChat({
   };
 
   const isModal = layout === "modal";
+  const friendInitial =
+    friendLabel?.[0]?.toUpperCase?.() || "F";
+
+  const renderMessageAvatar = (isOwn: boolean) => {
+    const avatarSrc = isOwn ? currentUserAvatar : friendAvatarUrl;
+    const initial = isOwn
+      ? (session?.user?.name?.[0]?.toUpperCase() ?? "Y")
+      : friendInitial;
+    const sizeClass = isModal ? "h-7 w-7" : "h-6 w-6";
+    const textClass = isModal ? "text-xs" : "text-[10px]";
+    return (
+      <Avatar className={`${sizeClass} shrink-0`}>
+        {avatarSrc ? <AvatarImage src={avatarSrc} alt="" /> : null}
+        <AvatarFallback
+          className={`${textClass} font-semibold ${
+            isOwn
+              ? "bg-[#5D1C6A] text-white"
+              : "bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/70 dark:text-[#FFB090]"
+          }`}
+        >
+          {initial}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
+
   const header = (
     <div
       className={`flex items-center justify-between border-b border-gray-200/70 dark:border-gray-800 bg-white/95 dark:bg-gray-900/80 backdrop-blur-sm ${
@@ -758,13 +791,20 @@ export default function FriendChat({
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div
-          className={`flex shrink-0 items-center justify-center rounded-full bg-[#FFF1D3] dark:bg-[#5D1C6A]/70 text-[#5D1C6A] dark:text-[#FFB090] font-semibold ${
-            isModal ? "h-10 w-10 text-sm" : "h-6 w-6 text-[10px]"
-          }`}
+        <Avatar
+          className={`shrink-0 ${isModal ? "h-10 w-10" : "h-6 w-6"}`}
         >
-          {friendLabel?.[0]?.toUpperCase?.() || "F"}
-        </div>
+          {friendAvatarUrl ? (
+            <AvatarImage src={friendAvatarUrl} alt={friendLabel} />
+          ) : null}
+          <AvatarFallback
+            className={`font-semibold bg-[#FFF1D3] dark:bg-[#5D1C6A]/70 text-[#5D1C6A] dark:text-[#FFB090] ${
+              isModal ? "text-sm" : "text-[10px]"
+            }`}
+          >
+            {friendInitial}
+          </AvatarFallback>
+        </Avatar>
         <div className="min-w-0">
           <div
             className={`font-semibold text-gray-900 dark:text-gray-100 truncate ${
@@ -825,17 +865,32 @@ export default function FriendChat({
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center px-6">
-            <div
-              className={`flex items-center justify-center rounded-full bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 ${
-                isModal ? "h-14 w-14 mb-4" : "h-10 w-10 mb-3"
-              }`}
-            >
-              <FiMessageCircle
-                className={`text-[#5D1C6A] dark:text-[#FFB090] ${
-                  isModal ? "w-6 h-6" : "w-5 h-5"
+            {friendAvatarUrl ? (
+              <Avatar
+                className={`${isModal ? "h-14 w-14 mb-4" : "h-10 w-10 mb-3"}`}
+              >
+                <AvatarImage src={friendAvatarUrl} alt={friendLabel} />
+                <AvatarFallback
+                  className={`font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090] ${
+                    isModal ? "text-lg" : "text-sm"
+                  }`}
+                >
+                  {friendInitial}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div
+                className={`flex items-center justify-center rounded-full bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 ${
+                  isModal ? "h-14 w-14 mb-4" : "h-10 w-10 mb-3"
                 }`}
-              />
-            </div>
+              >
+                <FiMessageCircle
+                  className={`text-[#5D1C6A] dark:text-[#FFB090] ${
+                    isModal ? "w-6 h-6" : "w-5 h-5"
+                  }`}
+                />
+              </div>
+            )}
             <p
               className={`font-semibold text-gray-900 dark:text-gray-100 ${
                 isModal ? "text-base" : "text-sm"
@@ -883,9 +938,10 @@ export default function FriendChat({
                   <div
                     key={m.id}
                     className={`group flex items-end gap-1.5 ${
-                      isOwn ? "justify-end" : "justify-start"
+                      isOwn ? "flex-row-reverse" : ""
                     }`}
                   >
+                    {renderMessageAvatar(isOwn)}
                     {canEditOrDelete && (
                       <div
                         className="relative order-first"
