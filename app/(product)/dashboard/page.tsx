@@ -10,7 +10,6 @@ import Friends from "../components/Friends";
 import Dashboard from "../components/dashboard";
 import Community from "../components/Community/Community";
 import Matchmaking from "../components/Matchmaking";
-import SmartScheduler from "../components/SmartScheduler";
 import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSidebar";
 import { EmailVerificationStrip } from "@/components/email-verification-strip";
 import { UserTimezoneProvider } from "@/components/user-timezone-provider";
@@ -36,7 +35,6 @@ const DASHBOARD_TABS: TabKey[] = [
   "friends",
   "community",
   "matches",
-  "scheduler",
 ];
 const TOUR_STEPS: TourStep[] = [
   {
@@ -183,11 +181,6 @@ function DashboardContent() {
             {activeTab === "matches" && (
               <div className="h-full overflow-y-auto p-6">
                 <Matchmaking />
-              </div>
-            )}
-            {activeTab === "scheduler" && (
-              <div className="h-full overflow-hidden p-6">
-                <SmartScheduler />
               </div>
             )}
           </main>

@@ -49,28 +49,6 @@ const aiFeatures = [
     ),
     visual: "match",
   },
-  {
-    badge: "Smart Scheduling",
-    title: "Book sessions with a single sentence",
-    description:
-      "Just say \"3 evening sessions this week for my History exam\" and let the AI handle the rest — finding slots, matching partners, and booking automatically.",
-    icon: (
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"
-        />
-      </svg>
-    ),
-    visual: "schedule",
-  },
 ];
 
 const containerVariants = {
@@ -199,56 +177,6 @@ function MatchVisual() {
   );
 }
 
-function ScheduleVisual() {
-  return (
-    <div className="space-y-2.5 w-full max-w-[240px] mx-auto">
-      {/* Chat bubble */}
-      <motion.div
-        className="px-3 py-2 rounded-2xl rounded-bl-sm bg-indigo-100 dark:bg-indigo-900/60 text-[11px] text-indigo-700 dark:text-indigo-300 w-fit"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        &quot;3 evening sessions for History&quot;
-      </motion.div>
-
-      {/* AI response blocks */}
-      <motion.div
-        className="space-y-1.5 pl-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.7 }}
-      >
-        {["Mon 6 PM", "Wed 6 PM", "Fri 6 PM"].map((day, i) => (
-          <motion.div
-            key={day}
-            className="flex items-center gap-2 text-[11px]"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.9 + i * 0.15 }}
-          >
-            <div className="w-4 h-4 rounded-md bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-              <svg
-                className="w-2.5 h-2.5 text-green-600 dark:text-green-400"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <span className="text-gray-600 dark:text-gray-300">{day}</span>
-            <span className="text-gray-400 dark:text-gray-500">· Booked</span>
-          </motion.div>
-        ))}
-      </motion.div>
-    </div>
-  );
-}
-
 export function AIFeatures() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -286,14 +214,14 @@ export function AIFeatures() {
             Intelligence built into every session
           </h2>
           <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-            Refocus uses AI to set better goals, find the right partners, and
-            schedule your sessions — so you can just focus.
+            Refocus uses AI to set better goals and find the right partners —
+            so you can just focus.
           </p>
         </motion.div>
 
         {/* ── Cards ── */}
         <motion.div
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -328,7 +256,6 @@ export function AIFeatures() {
                 <div className="relative bg-gray-50 dark:bg-gray-900/50 rounded-2xl h-48 overflow-hidden flex items-center justify-center">
                   {feature.visual === "goals" && <GoalVisual />}
                   {feature.visual === "match" && <MatchVisual />}
-                  {feature.visual === "schedule" && <ScheduleVisual />}
                 </div>
               </div>
             </motion.div>
