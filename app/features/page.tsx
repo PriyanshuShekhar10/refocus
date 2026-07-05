@@ -29,11 +29,6 @@ const FEATURES = [
     title: "A quiet lounge between sessions.",
     body: "Drop into the global chat between rooms. Say hi, find a partner for the next slot, or just lurk while you wait for the timer to tick down.",
   },
-  {
-    eyebrow: "Smart scheduler",
-    title: "AI that picks a time, not a meeting.",
-    body: "Tell us when you'd like to focus. We'll find a partner whose calendar matches and a slot that works for both of you.",
-  },
 ];
 
 export default function FeaturesPage() {

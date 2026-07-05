@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
-import { DarkDashboard, DarkModal, DarkScheduler, LightDashboard, LightModal, LightScheduler } from "@/assets/exports";
+import { DarkDashboard, DarkModal, LightDashboard, LightModal } from "@/assets/exports";
 
 type HeroProps = {
   /** Homepage: always use light visuals; stored theme unchanged elsewhere */
@@ -81,14 +81,6 @@ export function Hero({ marketingHome = false }: HeroProps) {
           )}
         >
           <div className="relative w-full flex justify-center items-end h-[300px] sm:h-[380px] md:h-[460px]">
-            <div className="absolute left-1/2 -translate-x-[135%] bottom-0 w-[340px] sm:w-[420px] md:w-[480px] translate-y-16 z-10">
-              <Image
-                alt="AI Scheduler"
-                src={visualTheme === "dark" ? DarkScheduler : LightScheduler}
-                className="w-full rounded-xl shadow-2xl scale-95 opacity-90"
-              />
-            </div>
-
             <div className="relative w-[380px] sm:w-[460px] md:w-[540px] z-20">
               <Image
                 alt="Dashboard"
@@ -99,7 +91,7 @@ export function Hero({ marketingHome = false }: HeroProps) {
 
             <div className="absolute left-1/2 translate-x-[35%] bottom-0 w-[340px] sm:w-[420px] md:w-[480px] translate-y-16 z-10">
               <Image
-                alt="Modal"
+                alt="Session booking"
                 src={visualTheme === "dark" ? DarkModal : LightModal}
                 className="w-full rounded-xl shadow-2xl scale-95 opacity-90"
               />

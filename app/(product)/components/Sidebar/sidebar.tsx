@@ -20,8 +20,7 @@ export type TabKey =
   | "settings"
   | "friends"
   | "community"
-  | "matches"
-  | "scheduler";
+  | "matches";
 
 interface SideBarProps {
   activeTab: TabKey;
