@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 // How close to end_time a leave needs to be for the session to count as
 // "completed". Mirrors the client-side COMPLETION_GRACE_MS in ClientCall.tsx.
@@ -35,6 +36,9 @@ export async function POST(
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const emailGate = await requireVerifiedEmail(userId);
+  if (emailGate) return emailGate;
 
   const rl = await checkRateLimit(userId, "api");
   if (!rl.success) return rateLimitedResponse(rl);

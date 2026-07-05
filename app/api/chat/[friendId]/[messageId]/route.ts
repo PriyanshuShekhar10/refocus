@@ -6,6 +6,7 @@ import { ObjectId } from "mongodb";
 import { areFriends } from "@/lib/friendship";
 import { chatChannel, publish } from "@/lib/sse";
 import { publishAbly } from "@/lib/ably-server";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 type ChatMessageDoc = {
   _id: ObjectId;
@@ -54,6 +55,9 @@ export async function PATCH(
     ],
   });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const emailGate = await requireVerifiedEmail(ctx.currentUserId);
+  if (emailGate) return emailGate;
+
   if (existing.from_user_id !== ctx.currentUserId) {
     return NextResponse.json({ error: "You can only edit your own messages" }, { status: 403 });
   }
@@ -100,6 +104,9 @@ export async function DELETE(
     ],
   });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const emailGate = await requireVerifiedEmail(ctx.currentUserId);
+  if (emailGate) return emailGate;
+
   if (existing.from_user_id !== ctx.currentUserId) {
     return NextResponse.json({ error: "You can only delete your own messages" }, { status: 403 });
   }

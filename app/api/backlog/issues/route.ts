@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { ObjectId } from "mongodb";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 type IssueStatus = "todo" | "in_progress" | "done";
 type IssuePriority = "low" | "medium" | "high";
@@ -62,6 +63,9 @@ export async function POST(req: NextRequest) {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const emailGate = await requireVerifiedEmail(userId);
+  if (emailGate) return emailGate;
 
   const body = await req.json().catch(() => ({}));
   const title = String(body?.title || "").trim();

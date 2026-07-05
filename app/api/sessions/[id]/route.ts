@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import {
   publishSessionDocUpserted,
   publishSessionRemoved,
@@ -82,6 +83,9 @@ export async function DELETE(
   const userId = (session?.user as AuthUser | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(userId);
+  if (emailGate) return emailGate;
+
 
   // Rate limit session mutations
   const rl = await checkRateLimit(userId, "api");
@@ -146,6 +150,9 @@ export async function PATCH(
   const userId = (session?.user as AuthUser | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(userId);
+  if (emailGate) return emailGate;
+
 
   // Rate limit session mutations
   const rlPatch = await checkRateLimit(userId, "api");

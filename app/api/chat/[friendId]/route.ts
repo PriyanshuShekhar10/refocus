@@ -9,6 +9,7 @@ import { areFriends } from "@/lib/friendship";
 import { publishAbly } from "@/lib/ably-server";
 import { DURATION_OPTIONS } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 type MessageDoc = {
   _id: ObjectId;
@@ -93,6 +94,9 @@ export async function POST(
   if (!currentUserId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const emailGate = await requireVerifiedEmail(currentUserId);
+  if (emailGate) return emailGate;
 
   // Apply rate limiting for chat messages
   const rateLimitResult = await checkRateLimit(currentUserId, "chat");

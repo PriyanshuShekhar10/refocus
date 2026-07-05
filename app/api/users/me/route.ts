@@ -9,6 +9,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { isEmailVerified } from "@/lib/emailVerification";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -117,6 +118,9 @@ export async function PATCH(req: NextRequest) {
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(userId);
+  if (emailGate) return emailGate;
+
 
   // Rate limit profile updates
   const rl = await checkRateLimit(userId, "api");

@@ -7,6 +7,7 @@ import { areFriends } from "@/lib/friendship";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 type SessionRequestDoc = {
   _id: ObjectId;
@@ -36,6 +37,9 @@ export async function POST(req: NextRequest) {
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   if (!currentUserId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(currentUserId);
+  if (emailGate) return emailGate;
+
 
   // Rate limit – session requests are user-facing notifications, so should be bounded.
   const rl = await checkRateLimit(currentUserId, "api");

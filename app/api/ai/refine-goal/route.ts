@@ -4,6 +4,7 @@ import { generateText } from 'ai';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { checkRateLimit, rateLimitedResponse } from '@/lib/ratelimit';
+import { requireVerifiedEmail } from '@/lib/requireVerifiedEmail';
 
 // Simple LRU cache to avoid re-calling the LLM for identical goal strings.
 // Keeps the most recent 200 entries. Entries expire after 1 hour.
@@ -39,6 +40,9 @@ export async function POST(req: Request) {
     if (!userId) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const emailGate = await requireVerifiedEmail(userId);
+    if (emailGate) return emailGate;
 
     // Rate limit AI calls
     const rl = await checkRateLimit(userId, 'ai');

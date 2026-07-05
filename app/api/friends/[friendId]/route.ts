@@ -6,6 +6,7 @@ import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { chatChannel, publish } from "@/lib/sse";
 import { publishAbly } from "@/lib/ably-server";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 // DELETE /api/friends/:friendId — remove an existing friendship.
 // Idempotent in spirit but returns 404 when no accepted relation exists so the
@@ -18,6 +19,9 @@ export async function DELETE(
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   if (!currentUserId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(currentUserId);
+  if (emailGate) return emailGate;
+
 
   const rl = await checkRateLimit(currentUserId, "api");
   if (!rl.success) return rateLimitedResponse(rl);

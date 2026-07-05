@@ -7,6 +7,7 @@ import { VerifiedName } from "@/components/verified-tag";
 import { useSession } from "next-auth/react";
 import { getAblyClient } from "@/lib/ably-client";
 import { globalChatChannel } from "@/lib/realtimeChannels";
+import { useEmailVerified } from "@/hooks/useEmailVerified";
 
 type GlobalMessage = {
   id: string;
@@ -27,16 +28,10 @@ export default function CommunityChat() {
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [myEmailVerified, setMyEmailVerified] = useState(false);
+  const { canInteract, verified: myEmailVerified, message: verifyMessage } =
+    useEmailVerified();
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    fetch("/api/users/me")
-      .then((res) => res.json())
-      .then((data) => setMyEmailVerified(!!data?.user?.emailVerified))
-      .catch(() => {});
-  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -120,7 +115,7 @@ export default function CommunityChat() {
 
   const send = async () => {
     const content = text.trim();
-    if (!content || isSending) return;
+    if (!content || isSending || !canInteract) return;
 
     const tempId = `temp-${Date.now()}`;
     const userName = (session?.user as { name?: string } | undefined)?.name ?? null;
@@ -273,7 +268,7 @@ export default function CommunityChat() {
                       ) : (
                         <VerifiedName
                           name={isOwn ? "You" : name}
-                          verified={isOwn ? (m.emailVerified ?? myEmailVerified) : m.emailVerified}
+                          verified={isOwn ? (m.emailVerified ?? myEmailVerified === true) : m.emailVerified}
                           className="text-[10px] font-medium text-muted-foreground"
                         />
                       )}
@@ -315,13 +310,13 @@ export default function CommunityChat() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message..."
-            disabled={isSending}
+            placeholder={canInteract ? "Message..." : verifyMessage}
+            disabled={isSending || !canInteract}
             className="flex-1 h-8 px-3 text-xs rounded-lg border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
           />
           <button
             onClick={send}
-            disabled={!text.trim() || isSending}
+            disabled={!text.trim() || isSending || !canInteract}
             className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg bg-[#5D1C6A] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#CA5995] transition-colors"
           >
             <Send className="h-3.5 w-3.5" />

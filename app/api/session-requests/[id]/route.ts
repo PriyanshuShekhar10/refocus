@@ -10,6 +10,7 @@ import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 // POST /api/session-requests/:id { action: 'accept'|'decline', message?: string }
 // On accept: create a session and add both users as participants
@@ -21,6 +22,9 @@ export async function POST(
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   if (!currentUserId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(currentUserId);
+  if (emailGate) return emailGate;
+
 
   const rl = await checkRateLimit(currentUserId, "api");
   if (!rl.success) return rateLimitedResponse(rl);
@@ -209,6 +213,9 @@ export async function DELETE(
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   if (!currentUserId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(currentUserId);
+  if (emailGate) return emailGate;
+
 
   const { id } = await params;
   if (!ObjectId.isValid(id)) {

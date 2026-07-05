@@ -11,6 +11,7 @@ import {
   type SessionReminderTiming,
 } from "@/lib/sessionReminderPrefs";
 import { isValidTimeZone } from "@/lib/zonedTime";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 /**
  * Read and update the current user's preferences. Stored under
@@ -68,6 +69,9 @@ export async function PATCH(req: NextRequest) {
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(userId);
+  if (emailGate) return emailGate;
+
 
   const rl = await checkRateLimit(userId, "api");
   if (!rl.success) return rateLimitedResponse(rl);

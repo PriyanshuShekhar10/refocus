@@ -56,7 +56,7 @@ export function EmailVerificationStrip() {
             ? "Verification email sent — check your inbox."
             : error
               ? error
-              : "Verify email — unlocks a trusted profile badge and other features."}
+              : "Verify your email to book sessions, chat, and post. You can browse every page until then."}
         </span>
       </div>
       <button
