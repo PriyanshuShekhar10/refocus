@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { getAblyClient } from "@/lib/ably-client";
 import { chatChannel } from "@/lib/realtimeChannels";
+import { useEmailVerified } from "@/hooks/useEmailVerified";
 
 type SessionRequestPayload = {
   sessionRequestId: string;
@@ -56,6 +57,7 @@ export default function FriendChat({
   minimized = false,
   onMinimizeToggle,
 }: FriendChatProps) {
+  const { canInteract, message: verifyMessage } = useEmailVerified();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -402,7 +404,7 @@ export default function FriendChat({
 
   const sendText = async () => {
     const value = text.trim();
-    if (!value || !currentUserId) return;
+    if (!value || !currentUserId || !canInteract) return;
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const optimisticMessage: ChatMessage = {
       id: tempId,
@@ -441,6 +443,7 @@ export default function FriendChat({
   };
 
   const sendSessionRequest = async () => {
+    if (!canInteract) return;
     try {
       if (!srDate || srHour === null) throw new Error("Pick date & time");
       const startTime = new Date(srDate);
@@ -1254,8 +1257,13 @@ export default function FriendChat({
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder={`Message ${friendLabel.split(/[@\s]/)[0] || "friend"}…`}
-            className={`flex-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:border-[#5D1C6A] focus:bg-white dark:focus:border-[#CA5995] dark:focus:bg-gray-900 transition-colors ${
+            placeholder={
+              canInteract
+                ? `Message ${friendLabel.split(/[@\s]/)[0] || "friend"}…`
+                : verifyMessage
+            }
+            disabled={!canInteract}
+            className={`flex-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:border-[#5D1C6A] focus:bg-white dark:focus:border-[#CA5995] dark:focus:bg-gray-900 transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
               isModal ? "px-4 py-2 text-sm" : "px-3 py-1.5 text-sm"
             }`}
             value={text}
@@ -1268,9 +1276,10 @@ export default function FriendChat({
             }}
           />
           <button
-            onClick={() => setSrOpen((v) => !v)}
+            onClick={() => canInteract && setSrOpen((v) => !v)}
+            disabled={!canInteract}
             aria-label={srOpen ? "Close session request" : "Send session request"}
-            title="Send session request"
+            title={canInteract ? "Send session request" : verifyMessage}
             className={`inline-flex shrink-0 items-center justify-center rounded-full border transition-colors ${
               srOpen
                 ? "border-[#5D1C6A] bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090] dark:border-[#CA5995]"
@@ -1281,7 +1290,7 @@ export default function FriendChat({
           </button>
           <button
             onClick={sendText}
-            disabled={isSending || !text.trim()}
+            disabled={!canInteract || isSending || !text.trim()}
             aria-label="Send message"
             className={`inline-flex shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-white shadow-sm hover:bg-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
               isModal ? "h-10 w-10" : "h-8 w-8"

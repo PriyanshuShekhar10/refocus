@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, UserPlus, Zap } from "lucide-react";
+import { useEmailVerified } from "@/hooks/useEmailVerified";
 
 type MatchUser = {
   _id: string;
@@ -23,6 +24,7 @@ export default function Matchmaking() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
+  const { canInteract, message: verifyMessage } = useEmailVerified();
 
   useEffect(() => {
     fetchMatches();
@@ -46,6 +48,7 @@ export default function Matchmaking() {
   };
 
   const sendFriendRequest = async (userId: string) => {
+    if (!canInteract) return;
     setSentRequests((prev) => {
       if (prev.has(userId)) return prev;
       const next = new Set(prev);
@@ -160,6 +163,8 @@ export default function Matchmaking() {
                 <Button 
                     className="w-full gap-2 bg-[#5D1C6A] hover:bg-[#CA5995] text-white"
                     onClick={() => sendFriendRequest(user._id)}
+                    disabled={!canInteract}
+                    title={!canInteract ? verifyMessage : undefined}
                 >
                     <UserPlus size={16} />
                     Connect

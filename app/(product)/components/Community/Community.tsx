@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, MessageSquare } from "lucide-react";
 import PostCard, { Post, Comment } from "./PostCard";
 import CommunityChat from "./CommunityChat";
+import { useEmailVerified } from "@/hooks/useEmailVerified";
 
 type ProfilePreviewPayload = {
   username: string;
@@ -69,6 +70,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   const [posting, setPosting] = useState(false);
   const [showChat, setShowChat] = useState(true);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const { canInteract, message: verifyMessage } = useEmailVerified();
 
   const loadPosts = useCallback(async (cursor?: string) => {
     try {
@@ -116,7 +118,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   }, [nextCursor, loadingMore, loadPosts]);
 
   const handlePost = async () => {
-    if (!newPostContent.trim() || posting) return;
+    if (!canInteract || !newPostContent.trim() || posting) return;
     setPosting(true);
 
     try {
@@ -137,6 +139,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   };
 
   const handleLike = async (postId: string) => {
+    if (!canInteract) return;
     try {
       const res = await fetch(`/api/community/posts/${postId}/like`, {
         method: "POST",
@@ -157,6 +160,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   };
 
   const handleDelete = async (postId: string) => {
+    if (!canInteract) return;
     // Optimistic delete
     setPosts((prev) => prev.filter((p) => p.id !== postId));
 
@@ -177,6 +181,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
     postId: string,
     content: string
   ): Promise<Comment | null> => {
+    if (!canInteract) return null;
     try {
       const res = await fetch(`/api/community/posts/${postId}/comments`, {
         method: "POST",
@@ -220,8 +225,13 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                   <Textarea
                     value={newPostContent}
                     onChange={(e) => setNewPostContent(e.target.value)}
-                    placeholder="What's on your mind?"
-                    className="min-h-[80px] resize-none border-0 p-0 focus-visible:ring-0 shadow-none"
+                    placeholder={
+                      canInteract
+                        ? "What's on your mind?"
+                        : verifyMessage
+                    }
+                    disabled={!canInteract}
+                    className="min-h-[80px] resize-none border-0 p-0 focus-visible:ring-0 shadow-none disabled:opacity-60"
                   />
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                     {/* <div className="flex gap-2">
@@ -233,7 +243,8 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                     <Button
                       size="sm"
                       onClick={handlePost}
-                      disabled={!newPostContent.trim() || posting}
+                      disabled={!canInteract || !newPostContent.trim() || posting}
+                      title={!canInteract ? verifyMessage : undefined}
                       className="bg-[#5D1C6A] hover:bg-[#CA5995]"
                     >
                       {posting ? (

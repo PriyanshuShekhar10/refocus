@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 // DELETE - Delete a post (soft delete)
 export async function DELETE(
@@ -13,6 +14,9 @@ export async function DELETE(
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(userId);
+  if (emailGate) return emailGate;
+
 
   const { postId } = await params;
 

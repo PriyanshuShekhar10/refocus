@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 type FriendRequestDoc = {
   _id: ObjectId;
@@ -25,6 +26,9 @@ export async function POST(req: NextRequest) {
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   if (!currentUserId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(currentUserId);
+  if (emailGate) return emailGate;
+
 
   // Rate limit friend request creation
   const rl = await checkRateLimit(currentUserId, "api");

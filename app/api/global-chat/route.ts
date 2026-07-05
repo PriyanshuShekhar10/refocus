@@ -13,6 +13,7 @@ import {
 } from "@/lib/ratelimit";
 import { fetchEmailVerifiedMap } from "@/lib/users/emailVerifiedMap";
 import { isEmailVerified } from "@/lib/emailVerification";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 /**
  * Default page size for pagination
@@ -163,6 +164,9 @@ export async function POST(req: NextRequest) {
   if (!currentUserId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const emailGate = await requireVerifiedEmail(currentUserId);
+  if (emailGate) return emailGate;
 
   // Apply rate limiting for chat messages
   const rateLimitResult = await checkRateLimit(currentUserId, "chat");

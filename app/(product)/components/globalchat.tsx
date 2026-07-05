@@ -7,6 +7,7 @@ import { VerifiedName } from "@/components/verified-tag";
 import { useSession } from "next-auth/react";
 import { getAblyClient } from "@/lib/ably-client";
 import { globalChatChannel } from "@/lib/realtimeChannels";
+import { useEmailVerified } from "@/hooks/useEmailVerified";
 
 type GlobalMessage = {
   id: string;
@@ -49,7 +50,8 @@ export default function GlobalChat() {
     "loading" | "friend" | "request_sent" | "none"
   >("none");
   const [profileFriendReqStatus, setProfileFriendReqStatus] = useState<string | null>(null);
-  const [myEmailVerified, setMyEmailVerified] = useState(false);
+  const { canInteract, verified: myEmailVerified, message: verifyMessage } =
+    useEmailVerified();
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const topRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -175,13 +177,6 @@ export default function GlobalChat() {
   }, [loadMore, pagination.hasMore, pagination.isLoadingMore]);
 
   useEffect(() => {
-    fetch("/api/users/me")
-      .then((res) => res.json())
-      .then((data) => setMyEmailVerified(!!data?.user?.emailVerified))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
     load();
     const client = getAblyClient();
     const channel = client.channels.get(globalChatChannel());
@@ -267,7 +262,7 @@ export default function GlobalChat() {
    */
   const send = async () => {
     const content = text.trim();
-    if (!content || isSending) return;
+    if (!content || isSending || !canInteract) return;
 
     // Generate a temporary ID for the optimistic message
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -279,7 +274,7 @@ export default function GlobalChat() {
       id: tempId,
       user_id: currentUserId!,
       user_name: userName,
-      emailVerified: myEmailVerified,
+      emailVerified: myEmailVerified === true,
       content: content,
       created_at: new Date().toISOString(),
       deleted: false,
@@ -749,7 +744,7 @@ export default function GlobalChat() {
                         {isOwnMessage ? (
                           <VerifiedName
                             name="You"
-                            verified={m.emailVerified ?? myEmailVerified}
+                            verified={m.emailVerified ?? myEmailVerified === true}
                             className="text-xs font-medium text-gray-600 dark:text-gray-400"
                           />
                         ) : m.username ? (
@@ -862,14 +857,14 @@ export default function GlobalChat() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            disabled={isSending}
+            placeholder={canInteract ? "Type a message..." : verifyMessage}
+            disabled={isSending || !canInteract}
             className="flex-1 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#CA5995] dark:focus:ring-[#CA5995] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           />
           <button
             type="button"
             onClick={send}
-            disabled={!text.trim() || isSending}
+            disabled={!text.trim() || isSending || !canInteract}
             className="shrink-0 rounded-xl bg-[#5D1C6A] px-4 py-3 text-white shadow-sm hover:bg-[#CA5995] disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             <Send className="h-4 w-4" />

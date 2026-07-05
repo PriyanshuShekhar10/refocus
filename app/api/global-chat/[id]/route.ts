@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { globalChatChannel, publish } from "@/lib/sse";
 import { publishAbly } from "@/lib/ably-server";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 export async function PATCH(
   req: NextRequest,
@@ -16,6 +17,9 @@ export async function PATCH(
   if (!currentUserId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const emailGate = await requireVerifiedEmail(currentUserId);
+  if (emailGate) return emailGate;
 
   const { id: messageId } = await params;
   if (!messageId) {
@@ -86,6 +90,9 @@ export async function DELETE(
   if (!currentUserId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const emailGate = await requireVerifiedEmail(currentUserId);
+  if (emailGate) return emailGate;
 
   const { id: messageId } = await params;
 

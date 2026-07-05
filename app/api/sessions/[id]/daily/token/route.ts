@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { createOrGetDailyRoom, createDailyMeetingToken } from "@/lib/daily";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import {
   CALL_JOIN_GRACE_MINUTES,
   isOwnerOrParticipant,
@@ -28,6 +29,9 @@ export async function POST(
   const userId = user?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(userId);
+  if (emailGate) return emailGate;
+
 
   const rl = await checkRateLimit(userId, "api");
   if (!rl.success) return rateLimitedResponse(rl);

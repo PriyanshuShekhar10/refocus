@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 type SessionDoc = {
   _id: ObjectId;
@@ -33,6 +34,9 @@ export async function POST(
   const userId = (session?.user as AuthUser | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(userId);
+  if (emailGate) return emailGate;
+
 
   // Rate limit (prevent thrashing)
   const rl = await checkRateLimit(userId, "api");
