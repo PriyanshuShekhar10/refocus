@@ -11,6 +11,7 @@ import Dashboard from "../components/dashboard";
 import Community from "../components/Community/Community";
 import Matchmaking from "../components/Matchmaking";
 import AdminPanel from "../components/Admin/AdminPanel";
+import SessionHistory from "../components/SessionHistory";
 import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSidebar";
 import { EmailVerificationStrip } from "@/components/email-verification-strip";
 import { UserTimezoneProvider } from "@/components/user-timezone-provider";
@@ -32,6 +33,7 @@ const TOUR_STORAGE_KEY = "refocus-dashboard-tour-v1";
 const DASHBOARD_TABS: TabKey[] = [
   "profile",
   "dashboard",
+  "sessions",
   "settings",
   "friends",
   "community",
@@ -187,6 +189,11 @@ function DashboardContent() {
             {activeTab === "dashboard" && (
               <div className="h-full p-6">
                 <Dashboard />
+              </div>
+            )}
+            {activeTab === "sessions" && (
+              <div className="h-full overflow-y-auto p-6">
+                <SessionHistory />
               </div>
             )}
             {activeTab === "profile" && (

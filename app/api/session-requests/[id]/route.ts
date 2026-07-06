@@ -11,6 +11,7 @@ import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { areUsersBlocked } from "@/lib/blocking";
 
 // POST /api/session-requests/:id { action: 'accept'|'decline', message?: string }
 // On accept: create a session and add both users as participants
@@ -85,6 +86,23 @@ export async function POST(
 
   let createdSessionId: string | null = null;
   if (action === "accept") {
+    if (await areUsersBlocked(reqDoc.from_user_id, reqDoc.to_user_id)) {
+      await db.collection("session_requests").updateOne(
+        { _id: reqDoc._id },
+        {
+          $set: {
+            status: "declined",
+            response_message: "Session request cannot be accepted",
+            responded_at: new Date(),
+          },
+        },
+      );
+      return NextResponse.json(
+        { error: "You cannot accept session requests from this user" },
+        { status: 403 },
+      );
+    }
+
     const start = new Date(reqDoc.start_time);
     const duration =
       DURATION_OPTIONS.includes(reqDoc.duration_min as DurationMin)

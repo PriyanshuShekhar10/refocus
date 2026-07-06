@@ -22,6 +22,23 @@ type PrejoinInfo = {
   endIso: string;
 };
 
+type SessionPartner = {
+  userId: string;
+  name: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+};
+
+function partnerFromPrejoin(prejoin: PrejoinInfo): SessionPartner | null {
+  if (!prejoin.partnerUserId) return null;
+  return {
+    userId: prejoin.partnerUserId,
+    name: prejoin.partnerName,
+    username: null,
+    avatarUrl: prejoin.partnerAvatarUrl ?? null,
+  };
+}
+
 const ACCENT = "5D1C6A"; // shared plum accent
 const CONFETTI_COLORS = [
   "#5D1C6A",
@@ -65,6 +82,17 @@ export default function ClientCall({
   const [videoOff, setVideoOff] = useState<boolean>(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState<boolean>(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [partner, setPartner] = useState<SessionPartner | null>(() =>
+    partnerFromPrejoin(prejoin),
+  );
+
+  const partnerDisplayName =
+    partner?.name ?? prejoin.partnerName ?? "session partner";
+  const partnerInitial =
+    partnerDisplayName.charAt(0).toUpperCase() ||
+    prejoin.partnerInitial ||
+    "P";
+  const partnerAvatarUrl = partner?.avatarUrl ?? prejoin.partnerAvatarUrl ?? null;
 
   const endMs = useMemo(() => new Date(prejoin.endIso).getTime(), [prejoin.endIso]);
   const startMs = useMemo(() => new Date(prejoin.startIso).getTime(), [prejoin.startIso]);
@@ -77,7 +105,6 @@ export default function ClientCall({
   const [showTimesUp, setShowTimesUp] = useState<boolean>(false);
   const timesUpAcknowledgedRef = useRef<boolean>(false);
   const attendanceReportedRef = useRef<boolean>(false);
-
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const reportAttendance = useCallback(() => {
@@ -113,6 +140,9 @@ export default function ClientCall({
         const resInfo = await fetch(`/api/sessions/${sessionId}`);
         const info = await resInfo.json().catch(() => ({}));
         const youQuiet: boolean = Boolean(info?.youQuiet);
+        if (info?.partner) {
+          setPartner(info.partner as SessionPartner);
+        }
         if (cancelled) return;
         if (youQuiet) {
           setMuted(true);
@@ -163,6 +193,32 @@ export default function ClientCall({
       cancelled = true;
     };
   }, [sessionId, isDark]);
+
+  // Keep partner info in sync when the other participant joins mid-wait.
+  useEffect(() => {
+    if (phase !== "ready" && phase !== "in-call") return;
+    let cancelled = false;
+
+    const syncPartner = async () => {
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}`);
+        if (!res.ok || cancelled) return;
+        const info = await res.json();
+        if (info?.partner) {
+          setPartner(info.partner as SessionPartner);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    syncPartner();
+    const interval = setInterval(syncPartner, 15_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [phase, sessionId]);
 
   // Listen for events emitted by the Daily prebuilt iframe so we can react
   // to a graceful exit and show our own end-screen instead of leaving the
@@ -353,11 +409,11 @@ export default function ClientCall({
           transition={{ delay: 0.18, duration: 0.3 }}
         >
           {completedNaturally
-            ? prejoin.partnerName
-              ? `${prejoin.durationMin} focused minutes with ${prejoin.partnerName}. Nicely done.`
+            ? partnerDisplayName && partner
+              ? `${prejoin.durationMin} focused minutes with ${partnerDisplayName}. Nicely done.`
               : `${prejoin.durationMin} focused minutes done. Take a breath.`
-            : prejoin.partnerName
-              ? `Hope your time with ${prejoin.partnerName} was productive.`
+            : partnerDisplayName && partner
+              ? `Hope your time with ${partnerDisplayName} was productive.`
               : "Hope you got some focused work done."}
         </motion.p>
         <motion.div
@@ -378,7 +434,7 @@ export default function ClientCall({
           >
             My sessions
           </Link>
-          {prejoin.partnerUserId ? (
+          {partner ? (
             <button
               type="button"
               onClick={() => setShowReportDialog(true)}
@@ -388,15 +444,15 @@ export default function ClientCall({
             </button>
           ) : null}
         </motion.div>
-        {prejoin.partnerUserId ? (
+        {partner ? (
           <ReportDialog
             open={showReportDialog}
             onClose={() => setShowReportDialog(false)}
             targetType="session_call"
             targetId={sessionId}
-            reportedUserId={prejoin.partnerUserId}
-            reportedLabel={prejoin.partnerName ?? "session partner"}
-            contentPreview={`Session with ${prejoin.partnerName ?? "partner"}`}
+            reportedUserId={partner.userId}
+            reportedLabel={partnerDisplayName}
+            contentPreview={`Session with ${partnerDisplayName}`}
           />
         ) : null}
       </CenteredCard>
@@ -441,29 +497,40 @@ export default function ClientCall({
               </p>
             </div>
 
-            {prejoin.partnerName && (
+            {partner ? (
               <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#5D1C6A] text-sm font-semibold text-white">
-                  {prejoin.partnerAvatarUrl ? (
+                  {partnerAvatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={prejoin.partnerAvatarUrl}
+                      src={partnerAvatarUrl}
                       alt=""
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    prejoin.partnerInitial ?? prejoin.partnerName.charAt(0).toUpperCase()
+                    partnerInitial
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
-                    {prejoin.partnerName}
+                    {partnerDisplayName}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     Your session partner
                   </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowReportDialog(true)}
+                  className="shrink-0 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-950/30"
+                >
+                  Report
+                </button>
               </div>
+            ) : (
+              <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+                Waiting for your session partner to join…
+              </p>
             )}
 
             <div className="mt-4 flex gap-2">
@@ -531,6 +598,17 @@ export default function ClientCall({
             </motion.button>
           </div>
         </motion.div>
+        {partner ? (
+          <ReportDialog
+            open={showReportDialog}
+            onClose={() => setShowReportDialog(false)}
+            targetType="session_call"
+            targetId={sessionId}
+            reportedUserId={partner.userId}
+            reportedLabel={partnerDisplayName}
+            contentPreview={`Session with ${partnerDisplayName}`}
+          />
+        ) : null}
       </div>
     );
   }
@@ -569,7 +647,7 @@ export default function ClientCall({
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">
               {prejoin.sessionName || `${prejoin.sessionType} session`}
-              {prejoin.partnerName ? ` · with ${prejoin.partnerName}` : ""}
+              {partner ? ` · with ${partnerDisplayName}` : ""}
             </p>
             <p className="text-[11px] text-slate-300">
               Refocus · {prejoin.durationMin} min
@@ -581,7 +659,7 @@ export default function ClientCall({
           urgency={urgency}
           reducedMotion={prefersReducedMotion}
         />
-        {prejoin.partnerUserId ? (
+        {partner ? (
           <button
             type="button"
             onClick={() => setShowReportDialog(true)}
@@ -642,8 +720,8 @@ export default function ClientCall({
                 Session complete!
               </h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                {prejoin.partnerName
-                  ? `Nice work with ${prejoin.partnerName}. That was ${prejoin.durationMin} focused minutes.`
+                {partner
+                  ? `Nice work with ${partnerDisplayName}. That was ${prejoin.durationMin} focused minutes.`
                   : `That was ${prejoin.durationMin} focused minutes. Nicely done.`}
               </p>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
@@ -658,6 +736,19 @@ export default function ClientCall({
                 >
                   Wrap up
                 </button>
+                {partner ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      timesUpAcknowledgedRef.current = true;
+                      setShowTimesUp(false);
+                      setShowReportDialog(true);
+                    }}
+                    className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/30"
+                  >
+                    Report user
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => {
@@ -696,7 +787,19 @@ export default function ClientCall({
                 You can rejoin from your dashboard while the session is still in
                 progress.
               </p>
-              <div className="mt-5 flex justify-end gap-2">
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                {partner ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowLeaveConfirm(false);
+                      setShowReportDialog(true);
+                    }}
+                    className="rounded-md border border-red-400/40 px-3 py-2 text-sm font-medium text-red-200 transition-colors hover:bg-red-500/10 sm:mr-auto"
+                  >
+                    Report user
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => setShowLeaveConfirm(false)}
@@ -722,15 +825,15 @@ export default function ClientCall({
 
       {/* helper hooks for the parent to wire up if ever needed */}
       <span hidden onClick={toggleMute} onContextMenu={toggleVideo} />
-      {prejoin.partnerUserId ? (
+      {partner ? (
         <ReportDialog
           open={showReportDialog}
           onClose={() => setShowReportDialog(false)}
           targetType="session_call"
           targetId={sessionId}
-          reportedUserId={prejoin.partnerUserId}
-          reportedLabel={prejoin.partnerName ?? "session partner"}
-          contentPreview={`Session with ${prejoin.partnerName ?? "partner"}`}
+          reportedUserId={partner.userId}
+          reportedLabel={partnerDisplayName}
+          contentPreview={`Session with ${partnerDisplayName}`}
         />
       ) : null}
     </div>

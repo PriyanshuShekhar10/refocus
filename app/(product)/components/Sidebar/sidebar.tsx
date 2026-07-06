@@ -11,12 +11,13 @@ import { CgProfile } from "react-icons/cg";
 import { RiMessage3Line } from "react-icons/ri";
 import { HiOutlineUserGroup } from "react-icons/hi";
 import { LuListTodo } from "react-icons/lu";
-import { HiOutlineShieldCheck } from "react-icons/hi";
+import { HiOutlineClock, HiOutlineShieldCheck } from "react-icons/hi";
 import Link from "next/link";
 
 export type TabKey =
   | "profile"
   | "dashboard"
+  | "sessions"
   | "backlog"
   | "settings"
   | "friends"
@@ -86,6 +87,12 @@ const SideBar: FC<SideBarProps> = ({
         text="Dashboard"
         onClick={() => onSelect("dashboard")}
         active={activeTab === "dashboard"}
+      />
+      <SideBarIcon
+        icon={<HiOutlineClock size={18} />}
+        text="Sessions"
+        onClick={() => onSelect("sessions")}
+        active={activeTab === "sessions"}
       />
       {showBacklogTab && (
         <SideBarIcon

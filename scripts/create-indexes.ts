@@ -208,6 +208,20 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
     ],
   },
   {
+    collection: "user_blocks",
+    indexes: [
+      {
+        name: "user_blocks_pair",
+        keys: { blocker_id: 1, blocked_id: 1 },
+        options: { unique: true },
+      },
+      {
+        name: "user_blocks_blocked_lookup",
+        keys: { blocked_id: 1, blocker_id: 1 },
+      },
+    ],
+  },
+  {
     collection: "friend_requests",
     indexes: [
       {

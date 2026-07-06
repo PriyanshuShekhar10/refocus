@@ -558,7 +558,7 @@ export function ProfileView({ embedded = false }: Props) {
         </div>
       </header>
 
-      {/* Session stats dashboard */}
+      {/* Session stats (compact) */}
       {!isEditing && <ProfileStats />}
 
       {/* Basic info */}

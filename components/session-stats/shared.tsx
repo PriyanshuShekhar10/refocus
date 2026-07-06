@@ -1,0 +1,746 @@
+"use client";
+
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { designStyles } from "@/components/design";
+import { formatLocalDate, formatLocalTime } from "@/lib/localTime";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { RecentSession, SessionStats, TrendDay } from "@/hooks/useSessionStats";
+
+export function formatTotalMinutes(total: number): string {
+  if (total < 60) return `${total} min`;
+  const hours = Math.floor(total / 60);
+  const mins = total % 60;
+  if (mins === 0) return `${hours} hr`;
+  return `${hours}h ${mins}m`;
+}
+
+export function formatPercent(value: number): string {
+  if (!Number.isFinite(value)) return "—";
+  return `${Math.round(value * 100)}%`;
+}
+
+export const HEAT_CELL_PX = 11;
+export const HEAT_GAP_PX = 3;
+
+export function formatRecentTime(iso: string): string {
+  const date = new Date(iso);
+  const now = new Date();
+  const startOfDay = (d: Date) => {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+  const diffDays = Math.round(
+    (startOfDay(now).getTime() - startOfDay(date).getTime()) /
+      (1000 * 60 * 60 * 24),
+  );
+  const time = formatLocalTime(date, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+  if (diffDays === 0) return `Today · ${time}`;
+  if (diffDays === 1) return `Yesterday · ${time}`;
+  if (diffDays < 7) return `${diffDays}d ago · ${time}`;
+  return (
+    formatLocalDate(date, {
+      month: "short",
+      day: "numeric",
+    }) + ` · ${time}`
+  );
+}
+
+export function weeksFromTrend(trend: TrendDay[]): TrendDay[][] {
+  const out: TrendDay[][] = [];
+  for (let i = 0; i < trend.length; i += 7) {
+    out.push(trend.slice(i, i + 7));
+  }
+  return out;
+}
+
+export function maxSessionsPerDay(trend: TrendDay[]): number {
+  return trend.reduce((m, d) => (d.sessions > m ? d.sessions : m), 0);
+}
+
+export function StatsSummaryLine({ stats }: { stats: SessionStats }) {
+  const items: ReactNode[] = [
+    <>
+      <strong style={{ color: "var(--ink)", fontWeight: 600 }}>
+        {stats.completed}
+      </strong>{" "}
+      completed
+    </>,
+    <>{formatTotalMinutes(stats.totalMinutes)} focused</>,
+    <>{formatPercent(stats.attendanceRate)} attendance</>,
+    <>
+      {stats.currentStreak}d streak
+      {stats.longestStreak > stats.currentStreak
+        ? ` (best ${stats.longestStreak}d)`
+        : ""}
+    </>,
+  ];
+  if (stats.missed > 0) {
+    items.push(
+      <span style={{ color: "var(--danger)" }}>{stats.missed} missed</span>,
+    );
+  }
+
+  return (
+    <p
+      style={{
+        margin: "8px 0 0",
+        fontSize: 13,
+        color: "var(--ink-soft)",
+        lineHeight: 1.5,
+      }}
+    >
+      {items.map((item, i) => (
+        <span key={i}>
+          {i > 0 && (
+            <span aria-hidden style={{ margin: "0 8px", color: "var(--ink-mute)" }}>
+              ·
+            </span>
+          )}
+          {item}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+export function ActivityHeatmap({ stats }: { stats: SessionStats }) {
+  const weeks = weeksFromTrend(stats.trend);
+  const maxPerDay = maxSessionsPerDay(stats.trend);
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          marginBottom: 10,
+        }}
+      >
+        <h3
+          style={{
+            margin: 0,
+            fontSize: 13,
+            fontWeight: 500,
+            color: "var(--ink-soft)",
+            letterSpacing: 0.005,
+            textTransform: "uppercase",
+          }}
+        >
+          Last 8 weeks
+        </h3>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: HEAT_GAP_PX,
+            fontSize: 11,
+            color: "var(--ink-mute)",
+          }}
+        >
+          <span>Less</span>
+          {([0, 1, 2, 3, 4] as const).map((level) => (
+            <span
+              key={level}
+              aria-hidden
+              style={{
+                width: HEAT_CELL_PX,
+                height: HEAT_CELL_PX,
+                borderRadius: 2,
+                background: heatColor(level),
+              }}
+            />
+          ))}
+          <span>More</span>
+        </div>
+      </div>
+      <div
+        role="img"
+        aria-label={`Activity over the past 8 weeks. ${stats.completed} completed sessions.`}
+        style={{ overflowX: "auto", paddingBottom: 2 }}
+      >
+        <div
+          style={{
+            display: "inline-flex",
+            gap: HEAT_GAP_PX,
+            alignItems: "flex-start",
+          }}
+        >
+          {weeks.map((week, wIdx) => (
+            <div
+              key={wIdx}
+              style={{
+                display: "grid",
+                gridTemplateRows: `repeat(7, ${HEAT_CELL_PX}px)`,
+                gap: HEAT_GAP_PX,
+              }}
+            >
+              {week.map((day) => {
+                const level = heatLevel(day.sessions, maxPerDay);
+                return (
+                  <div
+                    key={day.date}
+                    title={`${day.date}: ${day.sessions} session${day.sessions === 1 ? "" : "s"}, ${formatTotalMinutes(day.minutes)}`}
+                    style={{
+                      width: HEAT_CELL_PX,
+                      height: HEAT_CELL_PX,
+                      borderRadius: 2,
+                      background: heatColor(level),
+                      flexShrink: 0,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SessionStatsDetails({ stats }: { stats: SessionStats }) {
+  return (
+    <>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+          gap: 12,
+          marginBottom: 24,
+        }}
+      >
+        <StatTile
+          label="Completed"
+          value={stats.completed.toString()}
+          hint={`of ${stats.attended} attended`}
+        />
+        <StatTile
+          label="Focused time"
+          value={formatTotalMinutes(stats.totalMinutes)}
+          hint={
+            stats.completed > 0
+              ? `${Math.round(stats.totalMinutes / stats.completed)} min avg`
+              : undefined
+          }
+        />
+        <StatTile
+          label="Attendance"
+          value={formatPercent(stats.attendanceRate)}
+          hint={`${stats.attended}/${stats.booked} booked`}
+          tone={
+            stats.attendanceRate >= 0.85
+              ? "good"
+              : stats.attendanceRate >= 0.6
+                ? "neutral"
+                : "warn"
+          }
+        />
+        <StatTile
+          label="Completion"
+          value={formatPercent(stats.completionRate)}
+          hint={
+            stats.attended > 0
+              ? `${stats.completed}/${stats.attended} finished`
+              : "Join your first session"
+          }
+          tone={
+            stats.attended === 0
+              ? "neutral"
+              : stats.completionRate >= 0.85
+                ? "good"
+                : stats.completionRate >= 0.6
+                  ? "neutral"
+                  : "warn"
+          }
+        />
+      </div>
+
+      {stats.missed > 0 && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "var(--danger-soft)",
+            border: "1px solid color-mix(in oklab, var(--danger) 18%, var(--line))",
+            marginBottom: 24,
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: "color-mix(in oklab, var(--danger) 22%, transparent)",
+              color: "var(--danger)",
+              fontWeight: 600,
+              fontSize: 14,
+            }}
+          >
+            {stats.missed}
+          </span>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: 14, color: "var(--ink)" }}>
+              {stats.missed === 1
+                ? "1 booked session you didn’t join"
+                : `${stats.missed} booked sessions you didn’t join`}
+            </p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--ink-mute)" }}>
+              Showing up keeps your partners’ time intact and your streak alive.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: 12,
+          marginBottom: 24,
+        }}
+      >
+        <FactCard
+          label="Current streak"
+          value={`${stats.currentStreak} day${stats.currentStreak === 1 ? "" : "s"}`}
+          hint={
+            stats.longestStreak > stats.currentStreak
+              ? `Best: ${stats.longestStreak} days`
+              : "That’s your record"
+          }
+        />
+        <FactCard
+          label="With a partner"
+          value={`${stats.withPartner}`}
+          hint={stats.solo > 0 ? `${stats.solo} solo` : "No solo sessions"}
+        />
+        <FactCard
+          label="You hosted"
+          value={`${stats.asOwner}`}
+          hint={
+            stats.booked - stats.asOwner > 0
+              ? `${stats.booked - stats.asOwner} joined`
+              : "All hosted by you"
+          }
+        />
+      </div>
+
+      {Object.keys(stats.typeBreakdown).length > 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <h3
+            style={{
+              margin: "0 0 10px",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--ink-soft)",
+              letterSpacing: 0.005,
+              textTransform: "uppercase",
+            }}
+          >
+            By session type
+          </h3>
+          <TypeBars typeBreakdown={stats.typeBreakdown} />
+        </div>
+      )}
+
+      <RecentActivityList recent={stats.recent} />
+    </>
+  );
+}
+
+export function RecentActivityList({ recent }: { recent: RecentSession[] }) {
+  return (
+    <div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          marginBottom: 10,
+        }}
+      >
+        <h3
+          style={{
+            margin: 0,
+            fontSize: 13,
+            fontWeight: 500,
+            color: "var(--ink-soft)",
+            letterSpacing: 0.005,
+            textTransform: "uppercase",
+          }}
+        >
+          Recent activity
+        </h3>
+        <Link
+          href="/sessions"
+          style={{
+            fontSize: 12,
+            color: "var(--ink-mute)",
+            textDecoration: "none",
+          }}
+        >
+          See all →
+        </Link>
+      </div>
+      <ul
+        style={{
+          margin: 0,
+          padding: 0,
+          listStyle: "none",
+          display: "flex",
+          flexDirection: "column",
+          gap: 6,
+        }}
+      >
+        {recent.map((r) => {
+          const partnerInitial =
+            r.partnerName?.[0]?.toUpperCase() || (r.solo ? null : "P");
+          return (
+            <li
+              key={r.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid var(--line-soft)",
+                background: "var(--card)",
+              }}
+            >
+              {!r.solo && r.partnerName ? (
+                <Avatar className="h-8 w-8 shrink-0">
+                  {r.partnerAvatarUrl ? (
+                    <AvatarImage src={r.partnerAvatarUrl} alt={r.partnerName} />
+                  ) : null}
+                  <AvatarFallback className="text-xs bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090]">
+                    {partnerInitial}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <RecentDot
+                  tone={
+                    !r.attended
+                      ? "missed"
+                      : r.completed
+                        ? "completed"
+                        : "partial"
+                  }
+                />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 14,
+                    color: "var(--ink)",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {r.name || `${r.sessionType} · ${r.durationMin} min`}
+                </p>
+                <p
+                  style={{
+                    margin: "2px 0 0",
+                    fontSize: 12,
+                    color: "var(--ink-mute)",
+                  }}
+                >
+                  {formatRecentTime(r.start)} ·{" "}
+                  {r.solo
+                    ? "Solo"
+                    : r.partnerName
+                      ? `With ${r.partnerName}`
+                      : "With partner"}
+                </p>
+              </div>
+              <RecentBadge
+                tone={
+                  !r.attended
+                    ? "missed"
+                    : r.completed
+                      ? "completed"
+                      : "partial"
+                }
+              />
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function StatTile({
+  label,
+  value,
+  hint,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: "good" | "neutral" | "warn";
+}) {
+  const accent =
+    tone === "good"
+      ? "var(--success)"
+      : tone === "warn"
+        ? "var(--danger)"
+        : "var(--ink-soft)";
+  return (
+    <div
+      style={{
+        padding: "14px 16px",
+        borderRadius: 12,
+        border: "1px solid var(--line)",
+        background: "var(--card)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 11,
+          color: "var(--ink-mute)",
+          letterSpacing: 0.04,
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </span>
+      <span
+        className={designStyles.mono}
+        style={{
+          fontSize: 26,
+          fontWeight: 500,
+          color: "var(--ink)",
+          letterSpacing: "-0.02em",
+          lineHeight: 1.1,
+        }}
+      >
+        {value}
+      </span>
+      {hint && (
+        <span style={{ fontSize: 12, color: accent }}>{hint}</span>
+      )}
+    </div>
+  );
+}
+
+function FactCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+}) {
+  return (
+    <div
+      style={{
+        padding: "12px 14px",
+        borderRadius: 12,
+        border: "1px solid var(--line-soft)",
+        background: "color-mix(in oklab, var(--card) 60%, var(--bg))",
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 11,
+          color: "var(--ink-mute)",
+          letterSpacing: 0.04,
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontSize: 18,
+          fontWeight: 500,
+          color: "var(--ink)",
+          letterSpacing: "-0.01em",
+        }}
+      >
+        {value}
+      </span>
+      {hint && (
+        <span style={{ fontSize: 12, color: "var(--ink-mute)" }}>{hint}</span>
+      )}
+    </div>
+  );
+}
+
+function TypeBars({
+  typeBreakdown,
+}: {
+  typeBreakdown: Record<string, number>;
+}) {
+  const entries = Object.entries(typeBreakdown).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((sum, [, v]) => sum + v, 0);
+  if (total === 0) return null;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {entries.map(([type, count]) => {
+        const pct = count / total;
+        return (
+          <div key={type} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                fontSize: 13,
+              }}
+            >
+              <span style={{ color: "var(--ink)", textTransform: "capitalize" }}>
+                {type.replace("-", " ")}
+              </span>
+              <span style={{ color: "var(--ink-mute)" }}>
+                {count} · {Math.round(pct * 100)}%
+              </span>
+            </div>
+            <div
+              style={{
+                height: 6,
+                borderRadius: 3,
+                background: "var(--line-soft)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${pct * 100}%`,
+                  height: "100%",
+                  background:
+                    "linear-gradient(90deg, var(--accent) 0%, color-mix(in oklab, var(--accent) 70%, var(--ink)) 100%)",
+                  borderRadius: 3,
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RecentDot({
+  tone,
+}: {
+  tone: "completed" | "partial" | "missed";
+}) {
+  const color =
+    tone === "completed"
+      ? "var(--success)"
+      : tone === "missed"
+        ? "var(--danger)"
+        : "var(--ink-mute)";
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: "inline-flex",
+        width: 8,
+        height: 8,
+        borderRadius: "50%",
+        background: color,
+        flexShrink: 0,
+      }}
+    />
+  );
+}
+
+function RecentBadge({
+  tone,
+}: {
+  tone: "completed" | "partial" | "missed";
+}) {
+  const map = {
+    completed: { label: "Completed", bg: "var(--success-soft)", fg: "var(--success)" },
+    partial: { label: "Left early", bg: "var(--line-soft)", fg: "var(--ink-soft)" },
+    missed: { label: "Missed", bg: "var(--danger-soft)", fg: "var(--danger)" },
+  } as const;
+  const t = map[tone];
+  return (
+    <span
+      style={{
+        padding: "3px 8px",
+        borderRadius: 999,
+        fontSize: 11,
+        fontWeight: 500,
+        background: t.bg,
+        color: t.fg,
+        flexShrink: 0,
+      }}
+    >
+      {t.label}
+    </span>
+  );
+}
+
+function heatLevel(sessions: number, maxPerDay: number): 0 | 1 | 2 | 3 | 4 {
+  if (sessions <= 0) return 0;
+  if (maxPerDay <= 1) return 4;
+  const ratio = sessions / maxPerDay;
+  if (ratio <= 0.25) return 1;
+  if (ratio <= 0.5) return 2;
+  if (ratio <= 0.75) return 3;
+  return 4;
+}
+
+function heatColor(level: 0 | 1 | 2 | 3 | 4): string {
+  const mix = [0, 28, 48, 68, 88][level];
+  if (level === 0) {
+    return "color-mix(in oklab, var(--line) 55%, var(--bg))";
+  }
+  return `color-mix(in oklab, var(--accent) ${mix}%, var(--bg))`;
+}
+
+export function StatsLoadingCard({ subtitle }: { subtitle: string }) {
+  return (
+    <section className={designStyles.card}>
+      <h2 className={designStyles.cardTitle} style={{ margin: 0 }}>
+        Session stats
+      </h2>
+      <p className={designStyles.cardSub} style={{ margin: "6px 0 0" }}>
+        {subtitle}
+      </p>
+      <div className={designStyles.shimmer} style={{ height: 20, marginTop: 12 }} />
+    </section>
+  );
+}
+
+export function StatsErrorCard({ message }: { message: string }) {
+  return (
+    <section className={designStyles.card}>
+      <h2 className={designStyles.cardTitle} style={{ margin: 0 }}>
+        Session stats
+      </h2>
+      <p className={designStyles.cardSub} style={{ margin: "6px 0 0" }}>
+        {message}
+      </p>
+    </section>
+  );
+}

@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { getBlockedUserIds } from "@/lib/blocking";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -40,6 +41,21 @@ export async function GET() {
   }
 
   try {
+      const blockedIds = await getBlockedUserIds(userId);
+      const blockedObjectIds = Array.from(blockedIds)
+        .filter((id) => ObjectId.isValid(id))
+        .map((id) => new ObjectId(id));
+
+      const matchFilter: Record<string, unknown> = {
+        _id: { $ne: new ObjectId(userId) },
+      };
+      if (blockedObjectIds.length > 0) {
+        matchFilter._id = {
+          $ne: new ObjectId(userId),
+          $nin: blockedObjectIds,
+        };
+      }
+
       const pipeline = [
           {
               $vectorSearch: {
@@ -51,9 +67,7 @@ export async function GET() {
               }
           },
           {
-            $match: {
-                _id: { $ne: new ObjectId(userId) }
-            } 
+            $match: matchFilter
           },
           {
               $project: {

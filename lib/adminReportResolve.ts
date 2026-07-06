@@ -259,8 +259,8 @@ export async function resolveContentReport(
   }
 
   if (resolution === "delete_content") {
-    if (targetType === "session_call") {
-      throw new Error("Cannot delete content for a call report");
+    if (targetType === "session_call" || targetType === "user") {
+      throw new Error("Cannot delete content for this report type");
     }
     await deleteReportedContent(
       db,

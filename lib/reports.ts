@@ -162,6 +162,48 @@ export async function resolveReportTarget(
     };
   }
 
+  if (targetType === "user") {
+    const reportedUserId = targetId;
+    if (reportedUserId === reporterId) {
+      throw new ReportValidationError("You cannot report yourself");
+    }
+    if (!ObjectId.isValid(reportedUserId)) {
+      throw new ReportValidationError("Invalid user id");
+    }
+    const targetUser = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(reportedUserId) }, { projection: { _id: 1 } });
+    if (!targetUser) {
+      throw new ReportValidationError("User not found", 404);
+    }
+    if (await isUserAdmin(reportedUserId)) {
+      throw new ReportValidationError("Cannot report an admin");
+    }
+
+    const sharedSession = await db.collection("sessions").findOne({
+      end_time: { $lt: new Date() },
+      "session_participants.user_id": { $all: [reporterId, reportedUserId] },
+    });
+    if (!sharedSession) {
+      throw new ReportValidationError(
+        "You can only report users you have completed a session with",
+        403,
+      );
+    }
+
+    const label = await getUserAuditLabel(reportedUserId);
+    return {
+      reportedUserId,
+      reportedUserEmail: label.email,
+      reportedUserLabel: label.label,
+      contentSnapshot: `Profile report — shared session partner`,
+    };
+  }
+
+  if (targetType !== "session_call") {
+    throw new ReportValidationError("Invalid target type");
+  }
+
   const session = (await db.collection("sessions").findOne({
     _id: new ObjectId(targetId),
   })) as {
@@ -195,10 +237,26 @@ export async function resolveReportTarget(
     .map((p) => String(p.user_id))
     .filter((id) => id !== reporterId);
 
+  const now = new Date();
+  const sessionStarted = now >= new Date(session.start_time as Date);
+  const sessionEnded = now > new Date(session.end_time as Date);
+
   let reportedUserId = reportedUserIdHint;
   if (reportedUserId) {
     if (!otherParticipants.includes(reportedUserId)) {
-      throw new ReportValidationError("Invalid reported user for this session");
+      // During a live session the partner may be the owner before both
+      // participants are fully synced — allow owner as report target when
+      // the reporter is a participant and the session is in progress.
+      const ownerId = String(session.owner_id);
+      const inProgress = sessionStarted && !sessionEnded;
+      const canReportOwner =
+        inProgress &&
+        reportedUserId === ownerId &&
+        isOwnerOrParticipant(session, reporterId) &&
+        reporterId !== ownerId;
+      if (!canReportOwner) {
+        throw new ReportValidationError("Invalid reported user for this session");
+      }
     }
   } else if (otherParticipants.length === 1) {
     reportedUserId = otherParticipants[0];
@@ -214,7 +272,8 @@ export async function resolveReportTarget(
   }
 
   const label = await getUserAuditLabel(reportedUserId);
-  const sessionLabel = `Session ${new Date(session.start_time as Date).toLocaleString()} (${session.duration_min ?? "?"} min)`;
+  const inProgressLabel = sessionStarted && !sessionEnded ? " (in progress)" : "";
+  const sessionLabel = `Session ${new Date(session.start_time as Date).toLocaleString()} (${session.duration_min ?? "?"} min)${inProgressLabel}`;
   return {
     reportedUserId,
     reportedUserEmail: label.email,

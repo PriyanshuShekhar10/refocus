@@ -661,7 +661,9 @@ export default function AdminPanel() {
                     reports.map((r) => {
                       const busy = actionId === r.id;
                       const canDelete =
-                        r.targetType !== "session_call" && r.status === "pending";
+                        r.targetType !== "session_call" &&
+                        r.targetType !== "user" &&
+                        r.status === "pending";
                       return (
                         <tr key={r.id}>
                           <td className="px-4 py-3 whitespace-nowrap text-gray-500">

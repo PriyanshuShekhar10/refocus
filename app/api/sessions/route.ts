@@ -10,6 +10,7 @@ import { DURATION_OPTIONS, SESSION_TYPES, type DurationMin, type SessionType } f
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { requireNotCommunityBanned } from "@/lib/communityModeration";
+import { getBlockedUserIds } from "@/lib/blocking";
 
 // GET /api/sessions?from=ISO&to=ISO
 /** Soft cap on open (bookable) slots returned per range request. */
@@ -107,10 +108,25 @@ export async function GET(req: NextRequest) {
   const byId = new Map<string, DbSession>();
   for (const s of openSlots) byId.set(String(s._id), s);
   for (const s of mySessions) byId.set(String(s._id), s);
-  const sessions = Array.from(byId.values()).sort(
+  let sessions = Array.from(byId.values()).sort(
     (a, b) =>
       new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
   );
+
+  const blockedIds = await getBlockedUserIds(userId);
+  if (blockedIds.size > 0) {
+    sessions = sessions.filter((s) => {
+      if (s.owner_id === userId) return true;
+      if (
+        (s.session_participants ?? []).some(
+          (p) => String(p.user_id) === userId,
+        )
+      ) {
+        return true;
+      }
+      return !blockedIds.has(String(s.owner_id));
+    });
+  }
 
   // Collect unique user IDs (owner + participants) to hydrate with user profile info
   const userIdSet = new Set<string>();

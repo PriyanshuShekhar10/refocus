@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 import {
   publishSessionDocUpserted,
   publishSessionRemoved,
@@ -64,6 +65,45 @@ export async function GET(
   }
 
   const you = participants.find((p) => p.user_id === userId);
+  const partnerParticipant = participants.find((p) => p.user_id !== userId);
+
+  let partner: {
+    userId: string;
+    name: string | null;
+    username: string | null;
+    avatarUrl: string | null;
+  } | null = null;
+
+  if (partnerParticipant && ObjectId.isValid(partnerParticipant.user_id)) {
+    const partnerUser = await db.collection("users").findOne(
+      { _id: new ObjectId(partnerParticipant.user_id) },
+      {
+        projection: {
+          name: 1,
+          firstname: 1,
+          lastname: 1,
+          username: 1,
+          avatar_url: 1,
+          image: 1,
+        },
+      },
+    );
+    if (partnerUser) {
+      const name =
+        [partnerUser.firstname, partnerUser.lastname].filter(Boolean).join(" ") ||
+        (partnerUser.name as string | null) ||
+        null;
+      partner = {
+        userId: partnerParticipant.user_id,
+        name,
+        username: (partnerUser.username as string | null) ?? null,
+        avatarUrl: resolveAvatarUrl(
+          partnerUser as { avatar_url?: string | null; image?: string | null },
+        ),
+      };
+    }
+  }
+
   return NextResponse.json({
     id: String(s._id),
     owner_id: String(s.owner_id),
@@ -71,6 +111,7 @@ export async function GET(
     end: new Date(s.end_time).toISOString(),
     participants,
     youQuiet: you ? Boolean(you.quiet) : undefined,
+    partner,
   });
 }
 

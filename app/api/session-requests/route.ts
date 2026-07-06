@@ -9,6 +9,7 @@ import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { requireNotCommunityBanned } from "@/lib/communityModeration";
+import { areUsersBlocked } from "@/lib/blocking";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 type SessionRequestDoc = {
@@ -110,6 +111,13 @@ export async function POST(req: NextRequest) {
   if (!(await areFriends(currentUserId, to_user_id))) {
     return NextResponse.json(
       { error: "You can only send session requests to friends" },
+      { status: 403 },
+    );
+  }
+
+  if (await areUsersBlocked(currentUserId, to_user_id)) {
+    return NextResponse.json(
+      { error: "You cannot send session requests to this user" },
       { status: 403 },
     );
   }

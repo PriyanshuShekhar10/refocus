@@ -7,6 +7,7 @@ import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { areUsersBlocked } from "@/lib/blocking";
 
 export async function POST(
   req: NextRequest,
@@ -70,6 +71,13 @@ export async function POST(
     return NextResponse.json(
       { error: "This session has already ended" },
       { status: 400 },
+    );
+  }
+
+  if (await areUsersBlocked(userId, String(existing.owner_id))) {
+    return NextResponse.json(
+      { error: "You cannot join this session" },
+      { status: 403 },
     );
   }
 

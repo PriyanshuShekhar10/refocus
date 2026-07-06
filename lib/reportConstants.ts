@@ -3,7 +3,8 @@ export type ReportTargetType =
   | "global_message"
   | "community_post"
   | "community_comment"
-  | "session_call";
+  | "session_call"
+  | "user";
 
 export type ReportReason =
   | "harassment"
@@ -42,6 +43,7 @@ export const REPORT_TARGET_LABELS: Record<ReportTargetType, string> = {
   community_post: "Community post",
   community_comment: "Comment",
   session_call: "Video call",
+  user: "User",
 };
 
 export const REPORT_DETAILS_MAX_LENGTH = 500;
@@ -64,6 +66,7 @@ export function isValidReportTargetType(
     "community_post",
     "community_comment",
     "session_call",
+    "user",
   ];
   return typeof value === "string" && types.includes(value as ReportTargetType);
 }
