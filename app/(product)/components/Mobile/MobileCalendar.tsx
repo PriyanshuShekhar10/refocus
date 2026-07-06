@@ -32,6 +32,19 @@ import { SessionDetailsModal } from "../Calendar/Modals/SessionDetailsModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const HOUR_HEIGHT = 60;
+const BOOK_TIME_STEP_MINUTES = 15;
+
+function formatBookTime(totalMinutes: number): string {
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function snapBookTimeMinutes(totalMinutes: number): number {
+  const rounded =
+    Math.round(totalMinutes / BOOK_TIME_STEP_MINUTES) * BOOK_TIME_STEP_MINUTES;
+  return Math.min(Math.max(0, rounded), 23 * 60 + 45);
+}
 
 function getDefaultBookTime(date: Date, timeZone: string): string {
   const now = new Date();
@@ -40,10 +53,8 @@ function getDefaultBookTime(date: Date, timeZone: string): string {
   if (!isToday) return "09:00";
 
   const minutes = minutesOfDayInTimeZone(now, timeZone);
-  const rounded = Math.min(Math.ceil(minutes / 15) * 15, 23 * 60 + 45);
-  const h = Math.floor(rounded / 60);
-  const m = rounded % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  const rounded = snapBookTimeMinutes(Math.ceil(minutes / BOOK_TIME_STEP_MINUTES) * BOOK_TIME_STEP_MINUTES);
+  return formatBookTime(rounded);
 }
 
 function parseBookTime(value: string): { hours: number; minutes: number } | null {
@@ -52,7 +63,17 @@ function parseBookTime(value: string): { hours: number; minutes: number } | null
   const hours = Number(match[1]);
   const minutes = Number(match[2]);
   if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+  if (minutes % BOOK_TIME_STEP_MINUTES !== 0) return null;
   return { hours, minutes };
+}
+
+function normalizeBookTime(value: string): string | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+  return formatBookTime(snapBookTimeMinutes(hours * 60 + minutes));
 }
 
 // ============================================
@@ -374,7 +395,10 @@ export default function MobileCalendar() {
 
     const parsed = parseBookTime(bookTime);
     if (!parsed) {
-      dispatch({ type: "SHOW_TOAST", message: "Choose a valid time" });
+      dispatch({
+        type: "SHOW_TOAST",
+        message: `Choose a valid time in ${BOOK_TIME_STEP_MINUTES}-minute intervals`,
+      });
       return;
     }
 
@@ -683,12 +707,17 @@ export default function MobileCalendar() {
               <input
                 id="mobile-book-time"
                 type="time"
+                step={BOOK_TIME_STEP_MINUTES * 60}
                 value={bookTime}
-                onChange={(e) => setBookTime(e.target.value)}
+                onChange={(e) => {
+                  const normalized = normalizeBookTime(e.target.value);
+                  if (normalized) setBookTime(normalized);
+                }}
                 className="w-full rounded-lg border border-gray-200 bg-white px-3 py-3 text-base dark:border-gray-700 dark:bg-gray-800"
               />
               <p className="text-xs text-gray-500">
-                For {dateInfo.day} in {timeZone.replace(/_/g, " ")}
+                Times are in {BOOK_TIME_STEP_MINUTES}-minute intervals for{" "}
+                {dateInfo.day} in {timeZone.replace(/_/g, " ")}
               </p>
             </div>
 
