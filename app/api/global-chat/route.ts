@@ -174,6 +174,10 @@ export async function POST(req: NextRequest) {
   const emailGate = await requireVerifiedEmail(currentUserId);
   if (emailGate) return emailGate;
 
+  const { requireCommunityAccess } = await import("@/lib/communityModeration");
+  const moderationGate = await requireCommunityAccess(currentUserId);
+  if (moderationGate) return moderationGate;
+
   // Apply rate limiting for chat messages
   const rateLimitResult = await checkRateLimit(currentUserId, "chat");
   if (!rateLimitResult.success) {

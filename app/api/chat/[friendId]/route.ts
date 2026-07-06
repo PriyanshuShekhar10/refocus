@@ -10,6 +10,7 @@ import { publishAbly } from "@/lib/ably-server";
 import { DURATION_OPTIONS } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { requireNotCommunityBanned } from "@/lib/communityModeration";
 
 type MessageDoc = {
   _id: ObjectId;
@@ -172,6 +173,9 @@ export async function POST(
   }
 
   if (type === "session-request") {
+    const banGate = await requireNotCommunityBanned(currentUserId);
+    if (banGate) return banGate;
+
     const { start, durationMin, message, goal } = body as {
       start?: string;
       durationMin?: number;

@@ -24,6 +24,7 @@ import {
 } from "@/lib/zonedTime";
 import { useUserTimezone } from "@/components/user-timezone-provider";
 import { useCalendarSessions } from "@/hooks/useCalendarSessions";
+import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 import { BookingModal } from "../Calendar/Modals/BookingModal";
 import { Toast } from "../Calendar/Modals/Toast";
 import { ConfirmModal } from "../Calendar/Modals/ConfirmModal";
@@ -169,6 +170,7 @@ export default function MobileCalendar() {
   const [ui, dispatch] = useReducer(uiReducer, undefined, createInitialState);
   const [now, setNow] = useState(new Date());
   const { timeZone } = useUserTimezone();
+  const { canBookSessions, bannedMessage } = useCommunityModeration();
 
   useEffect(() => {
     dispatch({ type: "GO_TODAY", timeZone });
@@ -336,6 +338,11 @@ export default function MobileCalendar() {
 
   // Grid click handler
   const handleGridClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!canBookSessions) {
+      dispatch({ type: "SHOW_TOAST", message: bannedMessage });
+      return;
+    }
+
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top + (scrollRef.current?.scrollTop || 0);
     const totalMinutes = (y / HOUR_HEIGHT) * 60;

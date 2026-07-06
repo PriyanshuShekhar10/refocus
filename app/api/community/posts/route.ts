@@ -141,6 +141,9 @@ export async function POST(req: NextRequest) {
   const emailGate = await requireVerifiedEmail(userId);
   if (emailGate) return emailGate;
 
+  const { requireCommunityAccess } = await import("@/lib/communityModeration");
+  const moderationGate = await requireCommunityAccess(userId);
+  if (moderationGate) return moderationGate;
 
   const body = await req.json().catch(() => ({}));
   const { content } = body as { content?: string };

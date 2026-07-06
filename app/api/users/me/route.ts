@@ -11,6 +11,10 @@ import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { isEmailVerified } from "@/lib/emailVerification";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import {
+  isCommunityBanned,
+  isCommunityMuted,
+} from "@/lib/communityModeration";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -36,6 +40,8 @@ export async function GET() {
         avatar_url: 1,
         image: 1,
         emailVerified: 1,
+        communityBannedAt: 1,
+        communityMutedUntil: 1,
       },
     }
   )) as null | {
@@ -52,9 +58,13 @@ export async function GET() {
     avatar_url?: string | null;
     image?: string | null;
     emailVerified?: Date | string | null;
+    communityBannedAt?: Date | null;
+    communityMutedUntil?: Date | null;
   };
 
   const verified = user ? isEmailVerified(user.emailVerified) : false;
+  const communityBanned = user ? isCommunityBanned(user) : false;
+  const communityMuted = user ? isCommunityMuted(user) : false;
 
   return NextResponse.json({
     user: user
@@ -71,6 +81,9 @@ export async function GET() {
           website: user.website ?? null,
           avatarUrl: resolveAvatarUrl(user),
           emailVerified: verified,
+          communityBanned,
+          communityMuted,
+          communityMutedUntil: user.communityMutedUntil ?? null,
         }
       : null,
   });

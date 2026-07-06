@@ -23,6 +23,7 @@ import {
 } from "@/constants/calendar";
 import { useCalendarSessions } from "@/hooks/useCalendarSessions";
 import { useCalendarGrid } from "@/hooks/useCalendarGrid";
+import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 import { BookingModal } from "./Calendar/Modals/BookingModal";
 import { Toast } from "./Calendar/Modals/Toast";
 import { ConfirmModal } from "./Calendar/Modals/ConfirmModal";
@@ -232,6 +233,7 @@ export default function Calendar({
 }: CalendarProps) {
   const { hourBlockHeight, minorLinePositions } = CALENDAR_LAYOUT;
   const { timeZone } = useUserTimezone();
+  const { canBookSessions, bannedMessage } = useCommunityModeration();
 
   // UI state machine
   const [ui, dispatch] = useReducer(
@@ -443,6 +445,11 @@ export default function Calendar({
   const handleGridClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
     const clickInfo = getGridClickInfo(e);
     if (!clickInfo) return;
+
+    if (!canBookSessions) {
+      dispatch({ type: "SHOW_TOAST", message: bannedMessage });
+      return;
+    }
 
     const { dayDate, start, minutesOfDay } = clickInfo;
     const nowMinutes = minutesOfDayInTimeZone(now, timeZone);

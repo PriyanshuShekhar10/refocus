@@ -14,6 +14,7 @@ import {
   ChevronUp,
   Pin,
 } from "lucide-react";
+import CommunityModerationMenu from "./CommunityModerationMenu";
 
 export type Post = {
   id: string;
@@ -71,9 +72,17 @@ function AuthorAvatar({
 interface PostCardProps {
   post: Post;
   currentUserId: string;
+  isAdmin?: boolean;
   onLike: (postId: string) => void;
   onDelete: (postId: string) => void;
   onComment: (postId: string, content: string) => Promise<Comment | null>;
+  onAdminDeletePost?: (postId: string) => Promise<void>;
+  onAdminDeleteComment?: (commentId: string) => Promise<void>;
+  onModerateUser?: (
+    userId: string,
+    action: "ban" | "unban" | "mute" | "unmute",
+    muteDays?: number,
+  ) => Promise<void>;
   onPreviewProfile?: (profile: {
     username: string;
     name: string;
@@ -85,9 +94,13 @@ interface PostCardProps {
 export default function PostCard({
   post,
   currentUserId,
+  isAdmin = false,
   onLike,
   onDelete,
   onComment,
+  onAdminDeletePost,
+  onAdminDeleteComment,
+  onModerateUser,
   onPreviewProfile,
 }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
@@ -102,6 +115,12 @@ export default function PostCard({
 
   const isOwn = post.authorId === currentUserId;
   const isPinned = post.isPinned === true;
+  const showAdminMenu =
+    isAdmin &&
+    !isPinned &&
+    !isOwn &&
+    post.authorId !== "admin" &&
+    onModerateUser;
   const pinnedPreview = post.content.split("\n\n").slice(0, 2).join("\n\n");
   const pinnedHasMore = pinnedPreview.length < post.content.length;
   const displayContent =
@@ -258,6 +277,19 @@ export default function PostCard({
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
+            {showAdminMenu ? (
+              <CommunityModerationMenu
+                targetUserId={post.authorId}
+                targetLabel={post.authorName}
+                deleteLabel="Delete post"
+                onDeleteContent={
+                  onAdminDeletePost
+                    ? () => onAdminDeletePost(post.id)
+                    : undefined
+                }
+                onModerate={onModerateUser!}
+              />
+            ) : null}
           </div>
 
           {/* Post Content */}
@@ -314,7 +346,15 @@ export default function PostCard({
                 <p className="text-xs text-muted-foreground">No comments yet</p>
               ) : (
                 <div className="space-y-3">
-                  {comments.map((comment) => (
+                  {comments.map((comment) => {
+                    const commentIsOwn = comment.authorId === currentUserId;
+                    const showCommentAdminMenu =
+                      isAdmin &&
+                      !commentIsOwn &&
+                      onModerateUser &&
+                      onAdminDeleteComment;
+
+                    return (
                     <div key={comment.id} className="flex gap-2">
                       {comment.authorUsername && onPreviewProfile ? (
                         <button
@@ -349,7 +389,8 @@ export default function PostCard({
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
                           {comment.authorUsername && onPreviewProfile ? (
                             <button
                               type="button"
@@ -376,13 +417,32 @@ export default function PostCard({
                           <span className="text-[10px] text-muted-foreground">
                             {formatTime(comment.createdAt)}
                           </span>
+                          </div>
+                          {showCommentAdminMenu ? (
+                            <CommunityModerationMenu
+                              targetUserId={comment.authorId}
+                              targetLabel={comment.authorName}
+                              deleteLabel="Delete comment"
+                              onDeleteContent={async () => {
+                                await onAdminDeleteComment!(comment.id);
+                                setComments((prev) =>
+                                  prev.filter((c) => c.id !== comment.id),
+                                );
+                                setLocalCommentsCount((prev) =>
+                                  Math.max(0, prev - 1),
+                                );
+                              }}
+                              onModerate={onModerateUser!}
+                            />
+                          ) : null}
                         </div>
                         <p className="text-sm text-muted-foreground mt-0.5">
                           {comment.content}
                         </p>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 

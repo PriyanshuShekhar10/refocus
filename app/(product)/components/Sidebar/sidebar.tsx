@@ -11,6 +11,7 @@ import { CgProfile } from "react-icons/cg";
 import { RiMessage3Line } from "react-icons/ri";
 import { HiOutlineUserGroup } from "react-icons/hi";
 import { LuListTodo } from "react-icons/lu";
+import { HiOutlineShieldCheck } from "react-icons/hi";
 import Link from "next/link";
 
 export type TabKey =
@@ -20,15 +21,22 @@ export type TabKey =
   | "settings"
   | "friends"
   | "community"
-  | "matches";
+  | "matches"
+  | "admin";
 
 interface SideBarProps {
   activeTab: TabKey;
   onSelect: (t: TabKey) => void;
   showBacklogTab?: boolean;
+  showAdminTab?: boolean;
 }
 
-const SideBar: FC<SideBarProps> = ({ activeTab, onSelect, showBacklogTab = false }) => {
+const SideBar: FC<SideBarProps> = ({
+  activeTab,
+  onSelect,
+  showBacklogTab = false,
+  showAdminTab = false,
+}) => {
   const [friendsUnread, setFriendsUnread] = useState(0);
   const [pendingSessionRequests, setPendingSessionRequests] = useState(0);
 
@@ -135,6 +143,15 @@ const SideBar: FC<SideBarProps> = ({ activeTab, onSelect, showBacklogTab = false
         active={activeTab === "matches"}
       /> */}
       <Divider />
+
+      {showAdminTab ? (
+        <SideBarIcon
+          icon={<HiOutlineShieldCheck size={18} />}
+          text="Admin"
+          onClick={() => onSelect("admin")}
+          active={activeTab === "admin"}
+        />
+      ) : null}
 
       <SideBarIcon
         icon={<BsGearFill size={18} />}

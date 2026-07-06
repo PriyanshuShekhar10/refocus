@@ -11,7 +11,8 @@
     "db:backfill-usernames": "npx ts-node --project tsconfig.json scripts/backfill-usernames.ts",
     "graphify:update": "$HOME/.local/bin/graphify update .",
     "db:backfill-attendance": "npx ts-node --project tsconfig.json scripts/backfill-attendance.ts",
-    "db:backfill-participant-count": "npx ts-node --project tsconfig.json scripts/backfill-participant-count.ts"
+    "db:backfill-participant-count": "npx ts-node --project tsconfig.json scripts/backfill-participant-count.ts",
+    "db:set-admin": "npx ts-node --project tsconfig.json scripts/set-admin.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.26",

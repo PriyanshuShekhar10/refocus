@@ -72,22 +72,45 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   const [newPostContent, setNewPostContent] = useState("");
   const [posting, setPosting] = useState(false);
   const [showChat, setShowChat] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [communityBanned, setCommunityBanned] = useState(false);
+  const [communityMuted, setCommunityMuted] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const { canInteract, message: verifyMessage } = useEmailVerified();
+
+  const canParticipate =
+    canInteract && !communityBanned && !communityMuted;
+  const participationMessage = communityBanned
+    ? "You are banned from the community."
+    : communityMuted
+      ? "You are muted in the community."
+      : verifyMessage;
 
   useEffect(() => {
     const fromSession = session?.user?.image?.trim();
     if (fromSession) {
       setCurrentUserAvatarUrl(fromSession);
-      return;
     }
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/users/me");
-        const data = await res.json().catch(() => ({}));
-        if (!cancelled && res.ok) {
-          setCurrentUserAvatarUrl(data?.user?.avatarUrl ?? null);
+        const [meRes, adminRes] = await Promise.all([
+          fetch("/api/users/me"),
+          fetch("/api/admin/me"),
+        ]);
+        const meData = await meRes.json().catch(() => ({}));
+        const adminData = await adminRes.json().catch(() => ({}));
+        if (!cancelled) {
+          if (meRes.ok) {
+            if (!fromSession) {
+              setCurrentUserAvatarUrl(meData?.user?.avatarUrl ?? null);
+            }
+            setCommunityBanned(meData?.user?.communityBanned === true);
+            setCommunityMuted(meData?.user?.communityMuted === true);
+          }
+          if (adminRes.ok) {
+            setIsAdmin(adminData?.isAdmin === true);
+          }
         }
       } catch {
         // ignore
@@ -144,7 +167,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   }, [nextCursor, loadingMore, loadPosts]);
 
   const handlePost = async () => {
-    if (!canInteract || !newPostContent.trim() || posting) return;
+    if (!canParticipate || !newPostContent.trim() || posting) return;
     setPosting(true);
 
     try {
@@ -165,7 +188,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   };
 
   const handleLike = async (postId: string) => {
-    if (!canInteract) return;
+    if (!canParticipate) return;
     try {
       const res = await fetch(`/api/community/posts/${postId}/like`, {
         method: "POST",
@@ -207,7 +230,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
     postId: string,
     content: string
   ): Promise<Comment | null> => {
-    if (!canInteract) return null;
+    if (!canParticipate) return null;
     try {
       const res = await fetch(`/api/community/posts/${postId}/comments`, {
         method: "POST",
@@ -222,6 +245,44 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
       // ignore
     }
     return null;
+  };
+
+  const moderateUser = async (
+    userId: string,
+    action: "ban" | "unban" | "mute" | "unmute",
+    muteDays?: number,
+  ) => {
+    const res = await fetch(`/api/admin/community/users/${userId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, muteDays }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data.error || "Moderation action failed");
+      throw new Error(data.error || "Moderation action failed");
+    }
+  };
+
+  const handleAdminDeletePost = async (postId: string) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    const res = await fetch(`/api/admin/posts/${postId}`, { method: "DELETE" });
+    if (!res.ok) {
+      loadPosts();
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Failed to delete post");
+    }
+  };
+
+  const handleAdminDeleteComment = async (commentId: string) => {
+    const res = await fetch(`/api/admin/community/comments/${commentId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Failed to delete comment");
+      throw new Error(data.error || "Failed to delete comment");
+    }
   };
 
   return (
@@ -255,11 +316,11 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                     value={newPostContent}
                     onChange={(e) => setNewPostContent(e.target.value)}
                     placeholder={
-                      canInteract
+                      canParticipate
                         ? "What's on your mind?"
-                        : verifyMessage
+                        : participationMessage
                     }
-                    disabled={!canInteract}
+                    disabled={!canParticipate}
                     className="min-h-[80px] resize-none border-0 p-0 focus-visible:ring-0 shadow-none disabled:opacity-60"
                   />
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
@@ -272,8 +333,8 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                     <Button
                       size="sm"
                       onClick={handlePost}
-                      disabled={!canInteract || !newPostContent.trim() || posting}
-                      title={!canInteract ? verifyMessage : undefined}
+                      disabled={!canParticipate || !newPostContent.trim() || posting}
+                      title={!canParticipate ? participationMessage : undefined}
                       className="bg-[#5D1C6A] hover:bg-[#CA5995]"
                     >
                       {posting ? (
@@ -302,9 +363,15 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                     <PostCard
                       post={PINNED_ADMIN_POST}
                       currentUserId={currentUserId || ""}
+                      isAdmin={isAdmin}
                       onLike={handleLike}
                       onDelete={handleDelete}
                       onComment={handleComment}
+                      onAdminDeletePost={isAdmin ? handleAdminDeletePost : undefined}
+                      onAdminDeleteComment={
+                        isAdmin ? handleAdminDeleteComment : undefined
+                      }
+                      onModerateUser={isAdmin ? moderateUser : undefined}
                       onPreviewProfile={onPreviewProfile}
                     />
                   </div>
@@ -313,9 +380,17 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                       <PostCard
                         post={post}
                         currentUserId={currentUserId || ""}
+                        isAdmin={isAdmin}
                         onLike={handleLike}
                         onDelete={handleDelete}
                         onComment={handleComment}
+                        onAdminDeletePost={
+                          isAdmin ? handleAdminDeletePost : undefined
+                        }
+                        onAdminDeleteComment={
+                          isAdmin ? handleAdminDeleteComment : undefined
+                        }
+                        onModerateUser={isAdmin ? moderateUser : undefined}
                         onPreviewProfile={onPreviewProfile}
                       />
                     </div>
@@ -350,7 +425,12 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
           showChat ? "" : "w-0 overflow-hidden"
         }`}
       >
-        <CommunityChat />
+        <CommunityChat
+          isAdmin={isAdmin}
+          canParticipate={canParticipate}
+          participationMessage={participationMessage}
+          onModerateUser={isAdmin ? moderateUser : undefined}
+        />
       </div>
 
       {/* Mobile Chat Toggle */}

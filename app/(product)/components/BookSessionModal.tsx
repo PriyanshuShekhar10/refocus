@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { FiX } from "react-icons/fi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 
 type BookSessionModalProps = {
   friendId: string;
@@ -18,6 +19,7 @@ export default function BookSessionModal({
   onClose,
   onSuccess,
 }: BookSessionModalProps) {
+  const { canBookSessions, bannedMessage } = useCommunityModeration();
   const [srDate, setSrDate] = useState<Date | null>(null);
   const [srHour, setSrHour] = useState<number | null>(null);
   const [srMinute, setSrMinute] = useState<number>(0);
@@ -139,6 +141,10 @@ export default function BookSessionModal({
 
   const sendRequest = async () => {
     setError(null);
+    if (!canBookSessions) {
+      setError(bannedMessage);
+      return;
+    }
     if (!srDate || srHour === null) {
       setError("Pick date & time");
       return;
@@ -182,6 +188,7 @@ export default function BookSessionModal({
       ? getSlotConflict(srDate, srHour, srMinute, srDuration)
       : null;
   const canSend =
+    canBookSessions &&
     srDate &&
     srHour !== null &&
     !finalConflict?.hasConflict &&

@@ -91,6 +91,9 @@ export async function POST(
   const emailGate = await requireVerifiedEmail(userId);
   if (emailGate) return emailGate;
 
+  const { requireCommunityAccess } = await import("@/lib/communityModeration");
+  const moderationGate = await requireCommunityAccess(userId);
+  if (moderationGate) return moderationGate;
 
   const { postId } = await params;
 

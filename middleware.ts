@@ -31,6 +31,7 @@ const PROTECTED_PREFIXES = [
   "/api/chat",
   "/api/events",
   "/api/session-requests",
+  "/api/admin",
 ];
 
 function pathIsProtected(pathname: string): boolean {

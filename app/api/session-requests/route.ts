@@ -8,6 +8,7 @@ import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { requireNotCommunityBanned } from "@/lib/communityModeration";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 type SessionRequestDoc = {
@@ -41,6 +42,8 @@ export async function POST(req: NextRequest) {
   const emailGate = await requireVerifiedEmail(currentUserId);
   if (emailGate) return emailGate;
 
+  const banGate = await requireNotCommunityBanned(currentUserId);
+  if (banGate) return banGate;
 
   // Rate limit – session requests are user-facing notifications, so should be bounded.
   const rl = await checkRateLimit(currentUserId, "api");

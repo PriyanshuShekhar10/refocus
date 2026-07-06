@@ -9,6 +9,7 @@ import { isEmailVerified } from "@/lib/emailVerification";
 import { DURATION_OPTIONS, SESSION_TYPES, type DurationMin, type SessionType } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { requireNotCommunityBanned } from "@/lib/communityModeration";
 
 // GET /api/sessions?from=ISO&to=ISO
 /** Soft cap on open (bookable) slots returned per range request. */
@@ -248,6 +249,8 @@ export async function POST(req: NextRequest) {
   const emailGate = await requireVerifiedEmail(userId);
   if (emailGate) return emailGate;
 
+  const banGate = await requireNotCommunityBanned(userId);
+  if (banGate) return banGate;
 
   // Rate limit session creation
   const rl = await checkRateLimit(userId, "api");

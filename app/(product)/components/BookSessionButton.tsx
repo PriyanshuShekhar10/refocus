@@ -6,6 +6,7 @@ import {
   type DurationMin,
 } from "@/constants/calendar";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
+import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 
 export type CreatedSession = {
   id: string;
@@ -32,6 +33,9 @@ export default function BookSessionButton({
   onCreated,
 }: Props) {
   const { canInteract, message: verifyMessage } = useEmailVerified();
+  const { canBookSessions, bannedMessage } = useCommunityModeration();
+  const canBook = canInteract && canBookSessions;
+  const blockMessage = !canBookSessions ? bannedMessage : verifyMessage;
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -222,9 +226,9 @@ export default function BookSessionButton({
       <button
         data-book-session-trigger
         className={`w-full rounded-md bg-[#5D1C6A] px-3 py-2 text-sm font-medium text-white hover:bg-[#CA5995] disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-        onClick={() => canInteract && setOpen(true)}
-        disabled={!canInteract}
-        title={!canInteract ? verifyMessage : undefined}
+        onClick={() => canBook && setOpen(true)}
+        disabled={!canBook}
+        title={!canBook ? blockMessage : undefined}
       >
         {label}
       </button>

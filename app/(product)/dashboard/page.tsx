@@ -10,6 +10,7 @@ import Friends from "../components/Friends";
 import Dashboard from "../components/dashboard";
 import Community from "../components/Community/Community";
 import Matchmaking from "../components/Matchmaking";
+import AdminPanel from "../components/Admin/AdminPanel";
 import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSidebar";
 import { EmailVerificationStrip } from "@/components/email-verification-strip";
 import { UserTimezoneProvider } from "@/components/user-timezone-provider";
@@ -71,6 +72,7 @@ const TOUR_STEPS: TourStep[] = [
 
 function DashboardContent() {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [profilePreview, setProfilePreview] = useState<ProfilePreviewPayload | null>(
     null,
   );
@@ -82,10 +84,33 @@ function DashboardContent() {
   const router = useRouter();
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/me");
+        const data = await res.json();
+        if (!cancelled && res.ok) setIsAdmin(Boolean(data.isAdmin));
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const requestedTab = searchParams.get("tab");
-    if (!requestedTab || !DASHBOARD_TABS.includes(requestedTab as TabKey)) return;
-    setActiveTab(requestedTab as TabKey);
-  }, [searchParams]);
+    if (!requestedTab) return;
+    if (requestedTab === "admin") {
+      if (isAdmin) setActiveTab("admin");
+      else setActiveTab("dashboard");
+      return;
+    }
+    if (DASHBOARD_TABS.includes(requestedTab as TabKey)) {
+      setActiveTab(requestedTab as TabKey);
+    }
+  }, [searchParams, isAdmin]);
 
   useEffect(() => {
     if (searchParams.get("new") === "true") {
@@ -148,7 +173,11 @@ function DashboardContent() {
   return (
     <UserTimezoneProvider>
     <div className="flex h-screen overflow-hidden">
-      <SideBar activeTab={activeTab} onSelect={setActiveTab} />
+      <SideBar
+        activeTab={activeTab}
+        onSelect={setActiveTab}
+        showAdminTab={isAdmin}
+      />
       <div className="ml-16 flex min-w-0 flex-1 flex-col overflow-hidden">
         <EmailVerificationStrip />
         <div className="flex min-h-0 flex-1 overflow-hidden">
@@ -183,6 +212,7 @@ function DashboardContent() {
                 <Matchmaking />
               </div>
             )}
+            {activeTab === "admin" && isAdmin && <AdminPanel />}
           </main>
           {(activeTab === "friends" || activeTab === "community") && (
             <div

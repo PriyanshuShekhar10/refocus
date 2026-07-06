@@ -10,6 +10,7 @@ import { getAblyClient } from "@/lib/ably-client";
 import { globalChatChannel } from "@/lib/realtimeChannels";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
+import CommunityModerationMenu from "./CommunityModerationMenu";
 
 type GlobalMessage = {
   id: string;
@@ -24,7 +25,23 @@ type GlobalMessage = {
   edited_at?: string | null;
 };
 
-export default function CommunityChat() {
+type CommunityChatProps = {
+  isAdmin?: boolean;
+  canParticipate?: boolean;
+  participationMessage?: string;
+  onModerateUser?: (
+    userId: string,
+    action: "ban" | "unban" | "mute" | "unmute",
+    muteDays?: number,
+  ) => Promise<void>;
+};
+
+export default function CommunityChat({
+  isAdmin = false,
+  canParticipate,
+  participationMessage,
+  onModerateUser,
+}: CommunityChatProps) {
   const { data: session } = useSession();
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   const [messages, setMessages] = useState<GlobalMessage[]>([]);
@@ -33,6 +50,10 @@ export default function CommunityChat() {
   const [isLoading, setIsLoading] = useState(true);
   const { canInteract, verified: myEmailVerified, message: verifyMessage } =
     useEmailVerified();
+  const canSend =
+    (canParticipate !== undefined ? canParticipate : canInteract);
+  const inputPlaceholder =
+    participationMessage ?? (canInteract ? "Message..." : verifyMessage);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -118,7 +139,7 @@ export default function CommunityChat() {
 
   const send = async () => {
     const content = text.trim();
-    if (!content || isSending || !canInteract) return;
+    if (!content || isSending || !canSend) return;
 
     const tempId = `temp-${Date.now()}`;
     const userName = (session?.user as { name?: string } | undefined)?.name ?? null;
@@ -236,6 +257,28 @@ export default function CommunityChat() {
     return avatar;
   };
 
+  const handleAdminDeleteMessage = async (messageId: string) => {
+    const res = await fetch(`/api/admin/global-chat/${messageId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Failed to delete message");
+      throw new Error(data.error || "Failed to delete message");
+    }
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId
+          ? {
+              ...m,
+              deleted: true,
+              content: "[This message was removed by a moderator]",
+            }
+          : m,
+      ),
+    );
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -278,7 +321,11 @@ export default function CommunityChat() {
                   <div
                     className={`max-w-[80%] ${isOwn ? "text-right" : "text-left"}`}
                   >
-                    <div className="flex items-baseline gap-1.5 mb-0.5">
+                    <div
+                      className={`flex items-baseline gap-1.5 mb-0.5 ${
+                        isOwn ? "justify-end" : ""
+                      }`}
+                    >
                       {!isOwn && m.username ? (
                         <Link
                           href={`/u/${m.username}`}
@@ -296,6 +343,21 @@ export default function CommunityChat() {
                       <span className="text-[9px] text-muted-foreground/70">
                         {formatTime(m.created_at)}
                       </span>
+                      {isAdmin &&
+                      !isOwn &&
+                      !m.deleted &&
+                      onModerateUser &&
+                      m.user_id ? (
+                        <CommunityModerationMenu
+                          targetUserId={m.user_id}
+                          targetLabel={name}
+                          deleteLabel="Delete message"
+                          onDeleteContent={() =>
+                            handleAdminDeleteMessage(m.id)
+                          }
+                          onModerate={onModerateUser}
+                        />
+                      ) : null}
                     </div>
                     <div
                       className={`inline-block px-2.5 py-1.5 rounded-xl text-xs ${
@@ -331,13 +393,13 @@ export default function CommunityChat() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={canInteract ? "Message..." : verifyMessage}
-            disabled={isSending || !canInteract}
+            placeholder={inputPlaceholder}
+            disabled={isSending || !canSend}
             className="flex-1 h-8 px-3 text-xs rounded-lg border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
           />
           <button
             onClick={send}
-            disabled={!text.trim() || isSending || !canInteract}
+            disabled={!text.trim() || isSending || !canSend}
             className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg bg-[#5D1C6A] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#CA5995] transition-colors"
           >
             <Send className="h-3.5 w-3.5" />
