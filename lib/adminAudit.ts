@@ -10,7 +10,10 @@ export type AdminAuditAction =
   | "user.revoke_admin"
   | "post.delete"
   | "comment.delete"
-  | "chat.delete";
+  | "chat.delete"
+  | "friend_message.delete"
+  | "report.dismiss"
+  | "report.resolve";
 
 export type AdminAuditEntry = {
   _id?: ObjectId;

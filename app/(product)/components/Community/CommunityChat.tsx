@@ -11,6 +11,9 @@ import { globalChatChannel } from "@/lib/realtimeChannels";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
 import CommunityModerationMenu from "./CommunityModerationMenu";
+import ReportDialog from "@/app/(product)/components/ReportDialog";
+import { Button } from "@/components/ui/button";
+import { Flag } from "lucide-react";
 
 type GlobalMessage = {
   id: string;
@@ -48,6 +51,7 @@ export default function CommunityChat({
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [reportMessage, setReportMessage] = useState<GlobalMessage | null>(null);
   const { canInteract, verified: myEmailVerified, message: verifyMessage } =
     useEmailVerified();
   const canSend =
@@ -358,6 +362,17 @@ export default function CommunityChat({
                           onModerate={onModerateUser}
                         />
                       ) : null}
+                      {!isOwn && !m.deleted && m.user_id ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setReportMessage(m)}
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                          aria-label="Report message"
+                        >
+                          <Flag className="h-3 w-3" />
+                        </Button>
+                      ) : null}
                     </div>
                     <div
                       className={`inline-block px-2.5 py-1.5 rounded-xl text-xs ${
@@ -406,6 +421,17 @@ export default function CommunityChat({
           </button>
         </div>
       </div>
+      {reportMessage ? (
+        <ReportDialog
+          open
+          onClose={() => setReportMessage(null)}
+          targetType="global_message"
+          targetId={reportMessage.id}
+          reportedUserId={reportMessage.user_id}
+          reportedLabel={displayName(reportMessage)}
+          contentPreview={reportMessage.content}
+        />
+      ) : null}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTheme } from "next-themes";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { formatLocalDateTime } from "@/lib/localTime";
+import ReportDialog from "@/app/(product)/components/ReportDialog";
 
 type Phase = "loading" | "ready" | "in-call" | "ended" | "error";
 
@@ -13,6 +14,7 @@ type PrejoinInfo = {
   partnerName: string | null;
   partnerInitial: string | null;
   partnerAvatarUrl?: string | null;
+  partnerUserId?: string | null;
   durationMin: number;
   sessionType: string;
   sessionName: string | null;
@@ -62,6 +64,7 @@ export default function ClientCall({
   const [muted, setMuted] = useState<boolean>(false);
   const [videoOff, setVideoOff] = useState<boolean>(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState<boolean>(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   const endMs = useMemo(() => new Date(prejoin.endIso).getTime(), [prejoin.endIso]);
   const startMs = useMemo(() => new Date(prejoin.startIso).getTime(), [prejoin.startIso]);
@@ -358,7 +361,7 @@ export default function ClientCall({
               : "Hope you got some focused work done."}
         </motion.p>
         <motion.div
-          className="mt-5 flex justify-center gap-3"
+          className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row"
           initial={prefersReducedMotion ? false : { y: 6, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.26, duration: 0.3 }}
@@ -375,7 +378,27 @@ export default function ClientCall({
           >
             My sessions
           </Link>
+          {prejoin.partnerUserId ? (
+            <button
+              type="button"
+              onClick={() => setShowReportDialog(true)}
+              className="rounded-md border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/30"
+            >
+              Report user
+            </button>
+          ) : null}
         </motion.div>
+        {prejoin.partnerUserId ? (
+          <ReportDialog
+            open={showReportDialog}
+            onClose={() => setShowReportDialog(false)}
+            targetType="session_call"
+            targetId={sessionId}
+            reportedUserId={prejoin.partnerUserId}
+            reportedLabel={prejoin.partnerName ?? "session partner"}
+            contentPreview={`Session with ${prejoin.partnerName ?? "partner"}`}
+          />
+        ) : null}
       </CenteredCard>
     );
   }
@@ -558,6 +581,15 @@ export default function ClientCall({
           urgency={urgency}
           reducedMotion={prefersReducedMotion}
         />
+        {prejoin.partnerUserId ? (
+          <button
+            type="button"
+            onClick={() => setShowReportDialog(true)}
+            className="rounded-md border border-white/20 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/10"
+          >
+            Report
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => setShowLeaveConfirm(true)}
@@ -690,6 +722,17 @@ export default function ClientCall({
 
       {/* helper hooks for the parent to wire up if ever needed */}
       <span hidden onClick={toggleMute} onContextMenu={toggleVideo} />
+      {prejoin.partnerUserId ? (
+        <ReportDialog
+          open={showReportDialog}
+          onClose={() => setShowReportDialog(false)}
+          targetType="session_call"
+          targetId={sessionId}
+          reportedUserId={prejoin.partnerUserId}
+          reportedLabel={prejoin.partnerName ?? "session partner"}
+          contentPreview={`Session with ${prejoin.partnerName ?? "partner"}`}
+        />
+      ) : null}
     </div>
   );
 }

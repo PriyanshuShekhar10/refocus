@@ -4,12 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Ban,
+  Flag,
   History,
   LayoutDashboard,
   MoreHorizontal,
   RefreshCw,
   Shield,
   ShieldOff,
+  Trash2,
   Users,
   Volume2,
   VolumeX,
@@ -22,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type AdminSection = "overview" | "users" | "history";
+type AdminSection = "overview" | "users" | "reports" | "history";
 
 type Stats = {
   users: { total: number; newThisWeek: number; verified: number };
@@ -32,6 +34,7 @@ type Stats = {
   moderation: {
     pendingFriendRequests: number;
     pendingSessionRequests: number;
+    pendingReports: number;
   };
 };
 
@@ -61,6 +64,23 @@ type AuditEntry = {
   createdAt: string | null;
 };
 
+type ReportEntry = {
+  id: string;
+  reporterEmail: string | null;
+  reportedUserLabel: string | null;
+  reportedUserEmail: string | null;
+  targetType: string;
+  targetTypeLabel: string;
+  targetId: string;
+  reasonLabel: string;
+  details: string | null;
+  contentSnapshot: string | null;
+  status: string;
+  clusterReportCount: number;
+  clusterReporterEmails: string[];
+  createdAt: string | null;
+};
+
 const SECTIONS: {
   id: AdminSection;
   label: string;
@@ -68,6 +88,7 @@ const SECTIONS: {
 }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "users", label: "Users", icon: Users },
+  { id: "reports", label: "Reports", icon: Flag },
   { id: "history", label: "History", icon: History },
 ];
 
@@ -81,6 +102,9 @@ const ACTION_LABELS: Record<string, string> = {
   "post.delete": "Deleted community post",
   "comment.delete": "Deleted comment",
   "chat.delete": "Deleted chat message",
+  "friend_message.delete": "Deleted friend message",
+  "report.dismiss": "Dismissed report",
+  "report.resolve": "Resolved report",
 };
 
 function StatCard({
@@ -123,6 +147,9 @@ export default function AdminPanel() {
   const [userQuery, setUserQuery] = useState("");
   const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([]);
   const [auditTotal, setAuditTotal] = useState(0);
+  const [reports, setReports] = useState<ReportEntry[]>([]);
+  const [reportsTotal, setReportsTotal] = useState(0);
+  const [reportFilter, setReportFilter] = useState<"pending" | "all">("pending");
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,19 +192,29 @@ export default function AdminPanel() {
     setAuditTotal(data.total ?? 0);
   }, []);
 
+  const loadReports = useCallback(async (status = reportFilter) => {
+    const params = new URLSearchParams({ limit: "50", status });
+    const res = await fetch(`/api/admin/reports?${params}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to load reports");
+    setReports(data.reports || []);
+    setReportsTotal(data.total ?? 0);
+  }, [reportFilter]);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       if (section === "overview") await loadStats();
       else if (section === "users") await loadUsers();
+      else if (section === "reports") await loadReports();
       else if (section === "history") await loadAuditLog();
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setLoading(false);
     }
-  }, [section, loadStats, loadUsers, loadAuditLog]);
+  }, [section, loadStats, loadUsers, loadReports, loadAuditLog]);
 
   useEffect(() => {
     refresh();
@@ -192,10 +229,15 @@ export default function AdminPanel() {
       const res = await fn();
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Action failed");
-      await loadUsers();
-      await loadAuditLog();
+      await Promise.all([
+        loadUsers(),
+        loadAuditLog(),
+        loadReports(),
+        loadStats().catch(() => {}),
+      ]);
     } catch (e) {
-      alert((e as Error).message);
+      const message = (e as Error).message;
+      if (message !== "cancelled") alert(message);
     } finally {
       setActionId(null);
     }
@@ -218,6 +260,24 @@ export default function AdminPanel() {
         body: JSON.stringify({ action }),
       }),
     );
+
+  const resolveReport = (
+    reportId: string,
+    resolution: "dismiss" | "delete_content" | "mute" | "ban",
+    confirmMessage: string,
+  ) => {
+    if (!confirm(confirmMessage)) return;
+    runUserAction(reportId, () =>
+      fetch(`/api/admin/reports/${reportId}/resolve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resolution,
+          muteDays: resolution === "mute" ? 7 : undefined,
+        }),
+      }),
+    );
+  };
 
   return (
     <div className="h-full overflow-y-auto p-6">
@@ -290,7 +350,7 @@ export default function AdminPanel() {
                 hint={`${stats.community.postsDeleted} removed`}
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 label="Chat messages"
                 value={stats.globalChat.messagesActive}
@@ -304,6 +364,17 @@ export default function AdminPanel() {
                 label="Pending session requests"
                 value={stats.moderation.pendingSessionRequests}
               />
+              <button
+                type="button"
+                onClick={() => setSection("reports")}
+                className="text-left"
+              >
+                <StatCard
+                  label="Pending reports"
+                  value={stats.moderation.pendingReports}
+                  hint="Open reports queue"
+                />
+              </button>
             </div>
           </div>
         ) : null}
@@ -530,6 +601,188 @@ export default function AdminPanel() {
           </div>
         ) : null}
 
+        {section === "reports" ? (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setReportFilter("pending");
+                  loadReports("pending");
+                }}
+                className={`rounded-full px-3 py-1 text-sm ${
+                  reportFilter === "pending"
+                    ? "bg-[#5D1C6A] text-white"
+                    : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                }`}
+              >
+                Pending
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setReportFilter("all");
+                  loadReports("all");
+                }}
+                className={`rounded-full px-3 py-1 text-sm ${
+                  reportFilter === "all"
+                    ? "bg-[#5D1C6A] text-white"
+                    : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                }`}
+              >
+                All
+              </button>
+            </div>
+            <p className="text-xs text-gray-500">{reportsTotal} reports</p>
+            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                  <tr>
+                    <th className="px-4 py-3">When</th>
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Reported</th>
+                    <th className="px-4 py-3">Preview</th>
+                    <th className="px-4 py-3">Reason</th>
+                    <th className="px-4 py-3">Reporters</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                  {reports.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="px-4 py-8 text-center text-gray-500"
+                      >
+                        No reports in this view.
+                      </td>
+                    </tr>
+                  ) : (
+                    reports.map((r) => {
+                      const busy = actionId === r.id;
+                      const canDelete =
+                        r.targetType !== "session_call" && r.status === "pending";
+                      return (
+                        <tr key={r.id}>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-500">
+                            {r.createdAt
+                              ? new Date(r.createdAt).toLocaleString()
+                              : "—"}
+                          </td>
+                          <td className="px-4 py-3">{r.targetTypeLabel}</td>
+                          <td className="px-4 py-3">
+                            <div className="font-medium text-gray-900 dark:text-white">
+                              {r.reportedUserLabel || r.reportedUserEmail || "—"}
+                            </div>
+                            {r.reportedUserEmail ? (
+                              <div className="text-xs text-gray-500">
+                                {r.reportedUserEmail}
+                              </div>
+                            ) : null}
+                          </td>
+                          <td className="px-4 py-3 max-w-xs">
+                            <p className="line-clamp-2 text-gray-600 dark:text-gray-300">
+                              {r.contentSnapshot || "—"}
+                            </p>
+                            {r.details ? (
+                              <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+                                {r.details}
+                              </p>
+                            ) : null}
+                          </td>
+                          <td className="px-4 py-3">{r.reasonLabel}</td>
+                          <td className="px-4 py-3">
+                            <div className="text-xs text-gray-600 dark:text-gray-300">
+                              {r.clusterReportCount} report
+                              {r.clusterReportCount === 1 ? "" : "s"}
+                            </div>
+                            <div className="text-[10px] text-gray-500 line-clamp-2">
+                              {r.clusterReporterEmails.join(", ")}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {r.status === "pending" ? (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                                    aria-label="Report actions"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-52">
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      resolveReport(
+                                        r.id,
+                                        "dismiss",
+                                        "Dismiss this report?",
+                                      )
+                                    }
+                                  >
+                                    Dismiss
+                                  </DropdownMenuItem>
+                                  {canDelete ? (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        resolveReport(
+                                          r.id,
+                                          "delete_content",
+                                          "Delete the reported content?",
+                                        )
+                                      }
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      Delete content
+                                    </DropdownMenuItem>
+                                  ) : null}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      resolveReport(
+                                        r.id,
+                                        "mute",
+                                        `Mute ${r.reportedUserLabel || "user"} for 7 days?`,
+                                      )
+                                    }
+                                  >
+                                    <VolumeX className="h-4 w-4" />
+                                    Mute 7 days
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() =>
+                                      resolveReport(
+                                        r.id,
+                                        "ban",
+                                        `Ban ${r.reportedUserLabel || "user"} from community?`,
+                                      )
+                                    }
+                                  >
+                                    <Ban className="h-4 w-4" />
+                                    Ban from community
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            ) : (
+                              <span className="text-xs capitalize text-gray-500">
+                                {r.status.replace("_", " ")}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : null}
+
         {section === "history" ? (
           <div className="space-y-4">
             <p className="text-xs text-gray-500">
@@ -602,7 +855,8 @@ export default function AdminPanel() {
         {loading &&
         !stats &&
         users.length === 0 &&
-        auditEntries.length === 0 ? (
+        auditEntries.length === 0 &&
+        reports.length === 0 ? (
           <p className="text-sm text-gray-500">Loading…</p>
         ) : null}
       </div>

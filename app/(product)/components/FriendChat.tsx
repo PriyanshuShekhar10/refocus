@@ -13,6 +13,7 @@ import { getAblyClient } from "@/lib/ably-client";
 import { chatChannel } from "@/lib/realtimeChannels";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
+import ReportDialog from "@/app/(product)/components/ReportDialog";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -90,6 +91,7 @@ export default function FriendChat({
     new Set(),
   );
   const [menuOpenMessageId, setMenuOpenMessageId] = useState<string | null>(null);
+  const [reportMessage, setReportMessage] = useState<ChatMessage | null>(null);
 
   useEffect(() => {
     if (!menuOpenMessageId) return;
@@ -933,6 +935,9 @@ export default function FriendChat({
                 const isEditingThisMessage = editingMessageId === m.id;
                 const canEditOrDelete =
                   isOwn && m.type === "text" && !m.deleted && !isEditingThisMessage;
+                const canReport =
+                  !isOwn && m.type === "text" && !m.deleted && !isEditingThisMessage;
+                const showMessageMenu = canEditOrDelete || canReport;
                 const isMenuOpen = menuOpenMessageId === m.id;
                 nodes.push(
                   <div
@@ -942,9 +947,9 @@ export default function FriendChat({
                     }`}
                   >
                     {renderMessageAvatar(isOwn)}
-                    {canEditOrDelete && (
+                    {showMessageMenu && (
                       <div
-                        className="relative order-first"
+                        className={`relative ${isOwn ? "order-first" : ""}`}
                         data-chat-message-menu
                       >
                         <button
@@ -964,7 +969,13 @@ export default function FriendChat({
                           <FiMoreHorizontal size={14} />
                         </button>
                         {isMenuOpen && (
-                          <div className="absolute right-full top-1/2 -translate-y-1/2 mr-1 z-10 min-w-[112px] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1">
+                          <div
+                            className={`absolute top-1/2 z-10 min-w-[112px] -translate-y-1/2 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900 ${
+                              isOwn ? "right-full mr-1" : "left-full ml-1"
+                            }`}
+                          >
+                            {canEditOrDelete ? (
+                              <>
                             <button
                               type="button"
                               onClick={() => {
@@ -987,6 +998,20 @@ export default function FriendChat({
                             >
                               Delete
                             </button>
+                              </>
+                            ) : null}
+                            {canReport ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMenuOpenMessageId(null);
+                                setReportMessage(m);
+                              }}
+                              className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                            >
+                              Report
+                            </button>
+                            ) : null}
                           </div>
                         )}
                       </div>
@@ -1361,6 +1386,7 @@ export default function FriendChat({
 
   if (layout === "docked") {
     return (
+      <>
       <div
         className={`flex w-[320px] h-[380px] min-w-[300px] min-h-[320px] flex-col overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 animate-[slide-up_180ms_ease-out] ${
           minimized ? "h-10" : ""
@@ -1370,10 +1396,23 @@ export default function FriendChat({
         {header}
         {minimized ? <div className="hidden" /> : body}
       </div>
+      {reportMessage ? (
+        <ReportDialog
+          open
+          onClose={() => setReportMessage(null)}
+          targetType="friend_message"
+          targetId={reportMessage.id}
+          reportedUserId={reportMessage.from_user_id}
+          reportedLabel={friendLabel}
+          contentPreview={reportMessage.content ?? undefined}
+        />
+      ) : null}
+      </>
     );
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div
         className="flex w-full max-w-lg h-[600px] max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl ring-1 ring-gray-200/70 dark:ring-gray-800 animate-[scale-in_180ms_ease-out]"
@@ -1383,5 +1422,17 @@ export default function FriendChat({
         {body}
       </div>
     </div>
+    {reportMessage ? (
+      <ReportDialog
+        open
+        onClose={() => setReportMessage(null)}
+        targetType="friend_message"
+        targetId={reportMessage.id}
+        reportedUserId={reportMessage.from_user_id}
+        reportedLabel={friendLabel}
+        contentPreview={reportMessage.content ?? undefined}
+      />
+    ) : null}
+    </>
   );
 }

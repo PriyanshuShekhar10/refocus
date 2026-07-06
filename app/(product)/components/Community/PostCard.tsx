@@ -13,8 +13,11 @@ import {
   ChevronDown,
   ChevronUp,
   Pin,
+  Flag,
 } from "lucide-react";
 import CommunityModerationMenu from "./CommunityModerationMenu";
+import ReportDialog from "@/app/(product)/components/ReportDialog";
+import type { ReportTargetType } from "@/lib/reportConstants";
 
 export type Post = {
   id: string;
@@ -112,9 +115,17 @@ export default function PostCard({
   const [localIsLiked, setLocalIsLiked] = useState(post.isLiked);
   const [localCommentsCount, setLocalCommentsCount] = useState(post.commentsCount);
   const [isPinnedExpanded, setIsPinnedExpanded] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{
+    targetType: ReportTargetType;
+    targetId: string;
+    reportedUserId: string;
+    reportedLabel: string;
+    contentPreview?: string;
+  } | null>(null);
 
   const isOwn = post.authorId === currentUserId;
   const isPinned = post.isPinned === true;
+  const showReportPost = !isPinned && !isOwn && post.authorId !== "admin";
   const showAdminMenu =
     isAdmin &&
     !isPinned &&
@@ -194,6 +205,7 @@ export default function PostCard({
   };
 
   return (
+    <>
     <div
       className={`border-b border-border py-4 last:border-b-0 ${
         isPinned ? "bg-[#FFF1D3]/80 dark:bg-[#5D1C6A]/30 rounded-md px-3" : ""
@@ -289,6 +301,25 @@ export default function PostCard({
                 }
                 onModerate={onModerateUser!}
               />
+            ) : null}
+            {showReportPost ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  setReportTarget({
+                    targetType: "community_post",
+                    targetId: post.id,
+                    reportedUserId: post.authorId,
+                    reportedLabel: post.authorName,
+                    contentPreview: post.content,
+                  })
+                }
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                aria-label="Report post"
+              >
+                <Flag className="h-4 w-4" />
+              </Button>
             ) : null}
           </div>
 
@@ -435,6 +466,25 @@ export default function PostCard({
                               onModerate={onModerateUser!}
                             />
                           ) : null}
+                          {commentIsOwn ? null : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                setReportTarget({
+                                  targetType: "community_comment",
+                                  targetId: comment.id,
+                                  reportedUserId: comment.authorId,
+                                  reportedLabel: comment.authorName,
+                                  contentPreview: comment.content,
+                                })
+                              }
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                              aria-label="Report comment"
+                            >
+                              <Flag className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground mt-0.5">
                           {comment.content}
@@ -471,5 +521,17 @@ export default function PostCard({
         </div>
       </div>
     </div>
+    {reportTarget ? (
+      <ReportDialog
+        open
+        onClose={() => setReportTarget(null)}
+        targetType={reportTarget.targetType}
+        targetId={reportTarget.targetId}
+        reportedUserId={reportTarget.reportedUserId}
+        reportedLabel={reportTarget.reportedLabel}
+        contentPreview={reportTarget.contentPreview}
+      />
+    ) : null}
+    </>
   );
 }

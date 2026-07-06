@@ -32,6 +32,9 @@ export async function POST(
   const emailGate = await requireVerifiedEmail(userId);
   if (emailGate) return emailGate;
 
+  const { requireNotCommunityBanned } = await import("@/lib/communityModeration");
+  const banGate = await requireNotCommunityBanned(userId);
+  if (banGate) return banGate;
 
   const rl = await checkRateLimit(userId, "api");
   if (!rl.success) return rateLimitedResponse(rl);

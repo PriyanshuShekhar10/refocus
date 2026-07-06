@@ -38,6 +38,7 @@ interface IndexDefinition {
     sparse?: boolean;
     expireAfterSeconds?: number;
     background?: boolean;
+    partialFilterExpression?: Record<string, unknown>;
   };
 }
 
@@ -182,6 +183,27 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
         // Reverse lookup
         name: "friends_reverse_lookup",
         keys: { friend_id: 1, user_id: 1 },
+      },
+    ],
+  },
+  {
+    collection: "content_reports",
+    indexes: [
+      {
+        name: "content_reports_queue",
+        keys: { status: 1, createdAt: -1 },
+      },
+      {
+        name: "content_reports_target",
+        keys: { targetType: 1, targetId: 1, status: 1 },
+      },
+      {
+        name: "content_reports_reporter_pending",
+        keys: { reporterId: 1, targetType: 1, targetId: 1 },
+        options: {
+          unique: true,
+          partialFilterExpression: { status: "pending" },
+        },
       },
     ],
   },

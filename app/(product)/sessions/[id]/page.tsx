@@ -91,6 +91,7 @@ export default async function SessionJoinPage({
           partnerName,
           partnerInitial,
           partnerAvatarUrl,
+          partnerUserId: partnerId ?? null,
           durationMin: s.duration_min,
           sessionType: s.session_type,
           sessionName: s.name ?? null,

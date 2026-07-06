@@ -22,6 +22,7 @@ export async function GET() {
     chatDeleted,
     pendingFriendRequests,
     pendingSessionRequests,
+    pendingReports,
   ] = await Promise.all([
     db.collection("users").countDocuments(),
     db.collection("users").countDocuments({ createdAt: { $gte: weekAgo } }),
@@ -40,6 +41,7 @@ export async function GET() {
     db.collection("global_messages").countDocuments({ deleted: true }),
     db.collection("friend_requests").countDocuments({ status: "pending" }),
     db.collection("session_requests").countDocuments({ status: "pending" }),
+    db.collection("content_reports").countDocuments({ status: "pending" }),
   ]);
 
   return NextResponse.json({
@@ -63,6 +65,7 @@ export async function GET() {
     moderation: {
       pendingFriendRequests,
       pendingSessionRequests,
+      pendingReports,
     },
   });
 }
