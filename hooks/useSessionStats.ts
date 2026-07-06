@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import useSWR from "swr";
+import { swrKeys } from "@/lib/swr/keys";
 
 export type RecentSession = {
   id: string;
@@ -36,29 +37,17 @@ export type SessionStats = {
   recent: RecentSession[];
 };
 
+type StatsResponse = { stats?: SessionStats };
+
 export function useSessionStats() {
-  const [stats, setStats] = useState<SessionStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error, isLoading, isValidating, mutate } =
+    useSWR<StatsResponse>(swrKeys.userStats);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/users/me/stats");
-        if (!res.ok) throw new Error("Could not load stats");
-        const data = await res.json();
-        if (!cancelled) setStats(data.stats as SessionStats);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return { stats, loading, error };
+  return {
+    stats: data?.stats ?? null,
+    loading: isLoading && !data,
+    isValidating,
+    error: error ? (error as Error).message : null,
+    refresh: mutate,
+  };
 }

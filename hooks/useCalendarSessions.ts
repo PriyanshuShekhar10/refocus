@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import useSWR from "swr";
 import type { CalendarEvent, FetchedSession } from "@/types/calendar";
 import { toISO, addDays, addMinutes } from "@/lib/utils";
 import { type DurationMin } from "@/constants/calendar";
@@ -8,6 +9,7 @@ import * as sessionsApi from "@/lib/api/sessionsApi";
 import { getAblyClient } from "@/lib/ably-client";
 import { sessionsChannel } from "@/lib/realtimeChannels";
 import type { SessionRealtimeEvent } from "@/types/sessionRealtime";
+import { swrKeys } from "@/lib/swr/keys";
 
 // ============================================
 // Types
@@ -114,13 +116,31 @@ export function useCalendarSessions({
     () => eventsProp ?? [],
   );
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const daysRef = useRef(days);
   const currentUserIdRef = useRef<string | null>(null);
   const ablyConnectedRef = useRef(false);
+
+  const fromIso = days.length > 0 ? toISO(days[0]) : null;
+  const toIso =
+    days.length > 0 ? toISO(addDays(days[days.length - 1], 1)) : null;
+  const sessionsKey =
+    fromIso && toIso ? swrKeys.sessions(fromIso, toIso) : null;
+
+  const {
+    data: sessionsData,
+    error: sessionsError,
+    isLoading: sessionsLoading,
+    mutate: mutateSessions,
+  } = useSWR(
+    sessionsKey,
+    () =>
+      sessionsApi.list(fromIso!, toIso!).then((result) => {
+        if (!result.ok) throw new Error(result.error);
+        return result.data;
+      }),
+    { keepPreviousData: true },
+  );
 
   daysRef.current = days;
 
@@ -140,42 +160,25 @@ export function useCalendarSessions({
     [onEventsChange, eventsProp],
   );
 
-  // Fetch sessions when visible date range changes
+  // Sync SWR cache into local event state (instant on revisit when cached).
   useEffect(() => {
-    let cancelled = false;
+    if (!sessionsData) return;
+    const uid = sessionsData.currentUserId ?? null;
+    setCurrentUserId(uid);
+    currentUserIdRef.current = uid;
+    setEvents(sessionsData.sessions.map(mapFetchedToEvent));
+    setError(null);
+  }, [sessionsData, setEvents]);
 
-    async function loadSessions() {
-      if (days.length === 0) return;
-
-      setIsLoading(true);
-      setError(null);
-
-      const from = toISO(days[0]);
-      const to = toISO(addDays(days[days.length - 1], 1));
-
-      const result = await sessionsApi.list(from, to);
-
-      if (cancelled) return;
-
-      if (!result.ok) {
-        console.error("/api/sessions failed", result.error);
-        setError("Could not load sessions");
-        setIsLoading(false);
-        return;
-      }
-
-      const uid = result.data.currentUserId ?? null;
-      setCurrentUserId(uid);
-      currentUserIdRef.current = uid;
-      setEvents(result.data.sessions.map(mapFetchedToEvent));
-      setIsLoading(false);
+  useEffect(() => {
+    if (!sessionsError) return;
+    console.error("/api/sessions failed", sessionsError);
+    if (!sessionsData) {
+      setError("Could not load sessions");
     }
+  }, [sessionsError, sessionsData]);
 
-    loadSessions();
-    return () => {
-      cancelled = true;
-    };
-  }, [days, refreshTrigger, setEvents]);
+  const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Real-time: Ably session deltas (no full-list refetch on every write)
   useEffect(() => {
@@ -186,7 +189,7 @@ export function useCalendarSessions({
         clearTimeout(refreshDebounceRef.current);
       }
       refreshDebounceRef.current = setTimeout(() => {
-        setRefreshTrigger((t) => t + 1);
+        void mutateSessions();
       }, 200);
     };
 
@@ -292,7 +295,9 @@ export function useCalendarSessions({
         }
       };
     }
-  }, [days.length, setEvents]);
+  }, [days.length, setEvents, mutateSessions]);
+
+  const isLoading = sessionsLoading && !sessionsData;
 
   const createSession = useCallback(
     async (

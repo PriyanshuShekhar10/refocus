@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,10 @@ import PostCard, { Post, Comment } from "./PostCard";
 import CommunityChat from "./CommunityChat";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
+import { useCommunityPosts } from "@/hooks/useCommunityPosts";
+import { useAdminMe } from "@/hooks/useAdminMe";
+import useSWR from "swr";
+import { swrKeys } from "@/lib/swr/keys";
 
 type MobileCommunityView = "feed" | "chat";
 
@@ -69,18 +73,27 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
     session?.user?.image ?? null,
   );
 
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    posts,
+    nextCursor,
+    loading,
+    loadMore,
+    prependPost,
+    updatePosts,
+    refresh: refreshPosts,
+  } = useCommunityPosts();
   const [loadingMore, setLoadingMore] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [newPostContent, setNewPostContent] = useState("");
   const [posting, setPosting] = useState(false);
   const showChat = true;
   const [mobileView, setMobileView] = useState<MobileCommunityView>("feed");
   const { isMobile } = useIsMobileShell();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [communityBanned, setCommunityBanned] = useState(false);
-  const [communityMuted, setCommunityMuted] = useState(false);
+  const { isAdmin } = useAdminMe();
+  const { data: meData } = useSWR<{ user?: { communityBanned?: boolean; communityMuted?: boolean; avatarUrl?: string | null } }>(
+    swrKeys.userMe,
+  );
+  const communityBanned = meData?.user?.communityBanned === true;
+  const communityMuted = meData?.user?.communityMuted === true;
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const { canInteract, message: verifyMessage } = useEmailVerified();
 
@@ -98,61 +111,12 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
     const fromSession = session?.user?.image?.trim();
     if (fromSession) {
       setCurrentUserAvatarUrl(fromSession);
+      return;
     }
-    let cancelled = false;
-    (async () => {
-      try {
-        const [meRes, adminRes] = await Promise.all([
-          fetch("/api/users/me"),
-          fetch("/api/admin/me"),
-        ]);
-        const meData = await meRes.json().catch(() => ({}));
-        const adminData = await adminRes.json().catch(() => ({}));
-        if (!cancelled) {
-          if (meRes.ok) {
-            if (!fromSession) {
-              setCurrentUserAvatarUrl(meData?.user?.avatarUrl ?? null);
-            }
-            setCommunityBanned(meData?.user?.communityBanned === true);
-            setCommunityMuted(meData?.user?.communityMuted === true);
-          }
-          if (adminRes.ok) {
-            setIsAdmin(adminData?.isAdmin === true);
-          }
-        }
-      } catch {
-        // ignore
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [session?.user?.image]);
-
-  const loadPosts = useCallback(async (cursor?: string) => {
-    try {
-      const url = cursor
-        ? `/api/community/posts?cursor=${cursor}&limit=20`
-        : "/api/community/posts?limit=20";
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        if (cursor) {
-          setPosts((prev) => [...prev, ...data.posts]);
-        } else {
-          setPosts(data.posts || []);
-        }
-        setNextCursor(data.nextCursor);
-      }
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
+    if (meData?.user?.avatarUrl) {
+      setCurrentUserAvatarUrl(meData.user.avatarUrl);
     }
-  }, []);
-
-  useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
+  }, [session?.user?.image, meData?.user?.avatarUrl]);
 
   // Infinite scroll
   useEffect(() => {
@@ -160,7 +124,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
       (entries) => {
         if (entries[0].isIntersecting && nextCursor && !loadingMore) {
           setLoadingMore(true);
-          loadPosts(nextCursor);
+          void loadMore(nextCursor).finally(() => setLoadingMore(false));
         }
       },
       { rootMargin: "100px" }
@@ -172,7 +136,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
     return () => {
       if (ref) observer.unobserve(ref);
     };
-  }, [nextCursor, loadingMore, loadPosts]);
+  }, [nextCursor, loadingMore, loadMore]);
 
   const handlePost = async () => {
     if (!canParticipate || !newPostContent.trim() || posting) return;
@@ -187,7 +151,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
 
       if (res.ok) {
         const data = await res.json();
-        setPosts((prev) => [data.post, ...prev]);
+        prependPost(data.post);
         setNewPostContent("");
       }
     } finally {
@@ -203,12 +167,12 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
       });
       if (res.ok) {
         const data = await res.json();
-        setPosts((prev) =>
+        updatePosts((prev) =>
           prev.map((p) =>
             p.id === postId
               ? { ...p, isLiked: data.liked, likesCount: data.likesCount }
-              : p
-          )
+              : p,
+          ),
         );
       }
     } catch {
@@ -219,18 +183,17 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   const handleDelete = async (postId: string) => {
     if (!canInteract) return;
     // Optimistic delete
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    updatePosts((prev) => prev.filter((p) => p.id !== postId));
 
     try {
       const res = await fetch(`/api/community/posts/${postId}`, {
         method: "DELETE",
       });
       if (!res.ok) {
-        // Revert on failure - would need to store the deleted post
-        loadPosts();
+        void refreshPosts();
       }
     } catch {
-      loadPosts();
+      void refreshPosts();
     }
   };
 
@@ -273,10 +236,10 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   };
 
   const handleAdminDeletePost = async (postId: string) => {
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    updatePosts((prev) => prev.filter((p) => p.id !== postId));
     const res = await fetch(`/api/admin/posts/${postId}`, { method: "DELETE" });
     if (!res.ok) {
-      loadPosts();
+      void refreshPosts();
       const data = await res.json().catch(() => ({}));
       alert(data.error || "Failed to delete post");
     }

@@ -1,15 +1,18 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Flag, Loader2, Send, Trash2 } from "lucide-react";
 import { VerifiedName } from "@/components/verified-tag";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "next-auth/react";
+import useSWR from "swr";
 import { getAblyClient } from "@/lib/ably-client";
 import { globalChatChannel } from "@/lib/realtimeChannels";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
+import { useAdminMe } from "@/hooks/useAdminMe";
+import { swrKeys } from "@/lib/swr/keys";
 import CommunityModerationMenu from "./CommunityModerationMenu";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
 import { Button } from "@/components/ui/button";
@@ -50,10 +53,13 @@ export default function CommunityChat({
   const [messages, setMessages] = useState<GlobalMessage[]>([]);
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [reportMessage, setReportMessage] = useState<GlobalMessage | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [myIsAdmin, setMyIsAdmin] = useState(false);
+  const { isAdmin: myIsAdmin } = useAdminMe();
+  const { data: chatData, isLoading: chatLoading } = useSWR<{
+    messages?: GlobalMessage[];
+  }>(swrKeys.globalChat());
+  const isLoading = chatLoading && messages.length === 0;
   const { canInteract, verified: myEmailVerified, message: verifyMessage } =
     useEmailVerified();
   const canSend =
@@ -64,36 +70,13 @@ export default function CommunityChat({
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/global-chat?limit=30", { cache: "no-store" });
-      const data = await res.json();
-      if (res.ok) {
-        setMessages(data.messages as GlobalMessage[]);
-      }
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (chatData?.messages) {
+      setMessages(chatData.messages);
     }
-  }, []);
+  }, [chatData]);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/admin/me");
-        const data = await res.json();
-        if (!cancelled && res.ok) setMyIsAdmin(Boolean(data.isAdmin));
-      } catch {
-        // ignore
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    load();
     const client = getAblyClient();
     const channel = client.channels.get(globalChatChannel());
     const onEvent = (message: { data?: unknown }) => {
@@ -165,7 +148,7 @@ export default function CommunityChat({
     return () => {
       channel.unsubscribe("event", onEvent);
     };
-  }, [load]);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

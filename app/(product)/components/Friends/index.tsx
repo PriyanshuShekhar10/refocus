@@ -7,13 +7,14 @@ import PageHeader from "./PageHeader";
 import StatStrip from "./StatStrip";
 import SectionHead from "./SectionHead";
 import FriendRow, { FriendData } from "./FriendRow";
-import FriendRequestCard, { FriendRequestData } from "./FriendRequestCard";
-import SessionRequestCard, { SessionRequestData } from "./SessionRequestCard";
+import FriendRequestCard from "./FriendRequestCard";
+import SessionRequestCard from "./SessionRequestCard";
 import EmptyCard from "./EmptyCard";
 import Reveal from "./Reveal";
 import { getAblyClient } from "@/lib/ably-client";
 import { userChannel } from "@/lib/realtimeChannels";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
+import { useFriendsData } from "@/hooks/useFriendsData";
 import { Shell } from "@/components/design";
 import { Users } from "lucide-react";
 
@@ -34,13 +35,19 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
   const { data: session } = useSession();
   const { isMobile } = useIsMobileShell();
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
-  const [incoming, setIncoming] = useState<FriendRequestData[]>([]);
-  const [outgoing, setOutgoing] = useState<FriendRequestData[]>([]);
-  const [friends, setFriends] = useState<FriendData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [sessIncoming, setSessIncoming] = useState<SessionRequestData[]>([]);
-  const [sessOutgoing, setSessOutgoing] = useState<SessionRequestData[]>([]);
+  const {
+    incoming,
+    outgoing,
+    friends,
+    sessIncoming,
+    sessOutgoing,
+    unreadCounts,
+    setUnreadCounts,
+    loading,
+    error,
+    refresh,
+    mutateFriends,
+  } = useFriendsData();
   const [respondNoteById, setRespondNoteById] = useState<
     Record<string, string>
   >({});
@@ -57,74 +64,11 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
   const [bookSessionFriendAvatarUrl, setBookSessionFriendAvatarUrl] = useState<
     string | null
   >(null);
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
-  const [query, setQuery] = useState("");
-  const [listMode, setListMode] = useState<ListMode>("all");
   const [unfriendingIds, setUnfriendingIds] = useState<Record<string, boolean>>(
     {},
   );
-
-  const load = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [resIncoming, resOutgoing, resFriends, resSessIn, resSessOut] =
-        await Promise.all([
-          fetch("/api/friends/requests?type=incoming&status=pending"),
-          fetch("/api/friends/requests?type=outgoing&status=pending"),
-          fetch("/api/friends"),
-          fetch("/api/session-requests?type=incoming&status=pending"),
-          fetch("/api/session-requests?type=outgoing&status=pending"),
-        ]);
-      const [dataIncoming, dataOutgoing, dataFriends, dataSessIn, dataSessOut] =
-        await Promise.all([
-          resIncoming.json(),
-          resOutgoing.json(),
-          resFriends.json(),
-          resSessIn.json(),
-          resSessOut.json(),
-        ]);
-      if (!resIncoming.ok)
-        throw new Error(dataIncoming.error || "Failed to load incoming");
-      if (!resOutgoing.ok)
-        throw new Error(dataOutgoing.error || "Failed to load outgoing");
-      if (!resFriends.ok)
-        throw new Error(dataFriends.error || "Failed to load friends");
-      if (!resSessIn.ok)
-        throw new Error(
-          dataSessIn.error || "Failed to load incoming session requests",
-        );
-      if (!resSessOut.ok)
-        throw new Error(
-          dataSessOut.error || "Failed to load outgoing session requests",
-        );
-      setIncoming(dataIncoming.requests || []);
-      setOutgoing(dataOutgoing.requests || []);
-      setFriends(dataFriends.friends || []);
-      setSessIncoming(dataSessIn.requests || []);
-      setSessOutgoing(dataSessOut.requests || []);
-      try {
-        window.dispatchEvent(
-          new CustomEvent("friends:session-requests-updated"),
-        );
-      } catch {}
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load();
-    (async () => {
-      try {
-        const res = await fetch("/api/chat/unread-counts");
-        const data = await res.json();
-        if (res.ok) setUnreadCounts(data.counts || {});
-      } catch {}
-    })();
-  }, []);
+  const [query, setQuery] = useState("");
+  const [listMode, setListMode] = useState<ListMode>("all");
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -173,7 +117,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      await load();
+      await refresh();
     } catch (e) {
       alert((e as Error).message);
     }
@@ -193,7 +137,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Failed to respond");
       setRespondNoteById((prev) => ({ ...prev, [id]: "" }));
-      await load();
+      await refresh();
     } catch (e) {
       alert((e as Error).message);
     }
@@ -206,7 +150,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Failed to delete request");
-      await load();
+      await refresh();
     } catch (e) {
       alert((e as Error).message);
     }
@@ -245,7 +189,12 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
     if (unfriendingIds[f.user_id]) return;
     setUnfriendingIds((prev) => ({ ...prev, [f.user_id]: true }));
     const snapshot = friends;
-    setFriends((prev) => prev.filter((x) => x.user_id !== f.user_id));
+    void mutateFriends(
+      (current) => ({
+        friends: (current?.friends ?? []).filter((x) => x.user_id !== f.user_id),
+      }),
+      { revalidate: false },
+    );
     try {
       const res = await fetch(
         `/api/friends/${encodeURIComponent(f.user_id)}`,
@@ -265,9 +214,9 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
         delete next[f.user_id];
         return next;
       });
-      await load();
+      await refresh();
     } catch (e) {
-      setFriends(snapshot);
+      void mutateFriends({ friends: snapshot }, { revalidate: false });
       alert((e as Error).message);
     } finally {
       setUnfriendingIds((prev) => {
@@ -512,7 +461,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
             setBookSessionFriendLabel("");
             setBookSessionFriendAvatarUrl(null);
           }}
-          onSuccess={() => load()}
+          onSuccess={() => refresh()}
         />
       )}
     </Shell>

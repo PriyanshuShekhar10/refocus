@@ -5,15 +5,7 @@ import { MobileCalendar } from "./Mobile";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 
 export default function Dashboard() {
-  const { isMobile, mounted } = useIsMobileShell();
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-gray-400">Loading...</div>
-      </div>
-    );
-  }
+  const { isMobile } = useIsMobileShell();
 
   if (isMobile) {
     return (
