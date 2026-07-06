@@ -11,7 +11,6 @@ import {
 import {
   DEFAULT_DURATION,
   DEFAULT_DURATION_FILTER,
-  DEFAULT_SESSION_HOUR,
   isValidDuration,
   type DurationMin,
 } from "@/constants/calendar";
@@ -33,7 +32,28 @@ import { SessionDetailsModal } from "../Calendar/Modals/SessionDetailsModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const HOUR_HEIGHT = 60;
-const STEP_MINUTES = 15;
+
+function getDefaultBookTime(date: Date, timeZone: string): string {
+  const now = new Date();
+  const isToday =
+    ymdInTimeZone(date, timeZone) === ymdInTimeZone(now, timeZone);
+  if (!isToday) return "09:00";
+
+  const minutes = minutesOfDayInTimeZone(now, timeZone);
+  const rounded = Math.min(Math.ceil(minutes / 15) * 15, 23 * 60 + 45);
+  const h = Math.floor(rounded / 60);
+  const m = rounded % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function parseBookTime(value: string): { hours: number; minutes: number } | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+  return { hours, minutes };
+}
 
 // ============================================
 // Types & State Management (same as desktop)
@@ -170,12 +190,17 @@ export default function MobileCalendar() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [ui, dispatch] = useReducer(uiReducer, undefined, createInitialState);
   const [now, setNow] = useState(new Date());
+  const [bookTime, setBookTime] = useState("09:00");
   const { timeZone } = useUserTimezone();
   const { canBookSessions, bannedMessage } = useCommunityModeration();
 
   useEffect(() => {
     dispatch({ type: "GO_TODAY", timeZone });
   }, [timeZone]);
+
+  useEffect(() => {
+    setBookTime(getDefaultBookTime(ui.startDate, timeZone));
+  }, [ui.startDate, timeZone]);
 
   useEffect(() => {
     let cancelled = false;
@@ -215,15 +240,17 @@ export default function MobileCalendar() {
     return () => clearInterval(interval);
   }, []);
 
-  // Scroll to default session time (5 PM) on mount
+  // Scroll timeline to a useful position when the day changes
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = Math.max(
-        0,
-        (DEFAULT_SESSION_HOUR - 1) * HOUR_HEIGHT,
-      );
-    }
-  }, []);
+    if (!scrollRef.current) return;
+    const today = new Date();
+    const isToday =
+      ymdInTimeZone(ui.startDate, timeZone) === ymdInTimeZone(today, timeZone);
+    const scrollHour = isToday
+      ? Math.max(0, Math.floor(minutesOfDayInTimeZone(today, timeZone) / 60) - 1)
+      : 8;
+    scrollRef.current.scrollTop = scrollHour * HOUR_HEIGHT;
+  }, [ui.startDate, timeZone]);
 
   // Sessions hook
   const {
@@ -339,78 +366,29 @@ export default function MobileCalendar() {
     }
   }, [ui.modal, createSession]);
 
-  // Grid click handler
-  const handleGridClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleBookFromPicker = useCallback(() => {
     if (!canBookSessions) {
       dispatch({ type: "SHOW_TOAST", message: bannedMessage });
       return;
     }
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const y = e.clientY - rect.top + (scrollRef.current?.scrollTop || 0);
-    const totalMinutes = (y / HOUR_HEIGHT) * 60;
-    const snappedMinutes = Math.floor(totalMinutes / STEP_MINUTES) * STEP_MINUTES;
+    const parsed = parseBookTime(bookTime);
+    if (!parsed) {
+      dispatch({ type: "SHOW_TOAST", message: "Choose a valid time" });
+      return;
+    }
 
+    const snappedMinutes = parsed.hours * 60 + parsed.minutes;
     const start = wallMinutesOnDayToUtc(ui.startDate, snappedMinutes, timeZone);
-
     const nowDate = new Date();
     const nowMinutes = minutesOfDayInTimeZone(nowDate, timeZone);
 
-    // Prevent creating sessions in the past
     if (
       ymdInTimeZone(ui.startDate, timeZone) < ymdInTimeZone(nowDate, timeZone) ||
       (ymdInTimeZone(ui.startDate, timeZone) === ymdInTimeZone(nowDate, timeZone) &&
         snappedMinutes < nowMinutes)
     ) {
       dispatch({ type: "SHOW_TOAST", message: "Cannot create a session in the past" });
-      return;
-    }
-
-    // Check for overlaps with my sessions
-    const dayKey = ymdInTimeZone(ui.startDate, timeZone);
-    const startMs = start.getTime();
-    const newEndMs = addMinutes(start, ui.createDuration).getTime();
-    const mySessions = (eventsByDay[dayKey] ?? []).filter(
-      (ev) =>
-        (ev.owner_id && currentUserId && ev.owner_id === currentUserId) ||
-        (ev.participants ?? []).some((p) => p.user_id === currentUserId)
-    );
-    const overlaps = mySessions.some((ev) => startMs < ev.endMs && newEndMs > ev.startMs);
-
-    if (overlaps) {
-      dispatch({ type: "SHOW_TOAST", message: "You already have a session at this time" });
-      return;
-    }
-
-    const whenLabel = formatLocalDateTime(start, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    dispatch({ type: "OPEN_CREATE_CONFIRM", start, preferred: ui.createDuration, whenLabel });
-  };
-
-  const openCreateAtDefaultTime = useCallback(() => {
-    if (!canBookSessions) {
-      dispatch({ type: "SHOW_TOAST", message: bannedMessage });
-      return;
-    }
-
-    const defaultMinutes = DEFAULT_SESSION_HOUR * 60;
-    const start = wallMinutesOnDayToUtc(ui.startDate, defaultMinutes, timeZone);
-    const nowDate = new Date();
-    const nowMinutes = minutesOfDayInTimeZone(nowDate, timeZone);
-
-    if (
-      ymdInTimeZone(ui.startDate, timeZone) < ymdInTimeZone(nowDate, timeZone) ||
-      (ymdInTimeZone(ui.startDate, timeZone) === ymdInTimeZone(nowDate, timeZone) &&
-        defaultMinutes < nowMinutes)
-    ) {
-      dispatch({
-        type: "SHOW_TOAST",
-        message: "5 PM has already passed today — pick another time on the timeline",
-      });
       return;
     }
 
@@ -427,7 +405,7 @@ export default function MobileCalendar() {
     );
 
     if (overlaps) {
-      dispatch({ type: "SHOW_TOAST", message: "You already have a session at 5 PM" });
+      dispatch({ type: "SHOW_TOAST", message: "You already have a session at this time" });
       return;
     }
 
@@ -448,6 +426,7 @@ export default function MobileCalendar() {
   }, [
     canBookSessions,
     bannedMessage,
+    bookTime,
     ui.startDate,
     ui.createDuration,
     timeZone,
@@ -530,7 +509,7 @@ export default function MobileCalendar() {
         className="flex-1 overflow-y-auto"
         style={{ paddingBottom: ui.sheetExpanded ? 380 : 200 }}
       >
-        <div className="relative" style={{ height: 24 * HOUR_HEIGHT }} onClick={handleGridClick}>
+        <div className="relative" style={{ height: 24 * HOUR_HEIGHT }}>
           {/* Hour lines */}
           {Array.from({ length: 24 }).map((_, hour) => (
             <div
@@ -666,9 +645,9 @@ export default function MobileCalendar() {
               className="flex flex-1 items-center gap-3 text-left"
             >
               <span className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium dark:bg-gray-800">
-                {ui.createDuration}m
+                {bookTime}
               </span>
-              <span className="text-sm text-gray-500">5:00 PM default</span>
+              <span className="text-sm text-gray-500">{ui.createDuration} min</span>
             </button>
             <button
               type="button"
@@ -685,7 +664,7 @@ export default function MobileCalendar() {
         {ui.sheetExpanded && (
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Session Settings</h3>
+              <h3 className="text-lg font-semibold">Book a session</h3>
               <button
                 onClick={() => dispatch({ type: "TOGGLE_SHEET" })}
                 className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -694,15 +673,34 @@ export default function MobileCalendar() {
               </button>
             </div>
 
-            {/* Create Duration */}
+            <div className="space-y-2">
+              <label
+                htmlFor="mobile-book-time"
+                className="text-sm font-medium text-gray-600 dark:text-gray-400"
+              >
+                Start time
+              </label>
+              <input
+                id="mobile-book-time"
+                type="time"
+                value={bookTime}
+                onChange={(e) => setBookTime(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-3 text-base dark:border-gray-700 dark:bg-gray-800"
+              />
+              <p className="text-xs text-gray-500">
+                For {dateInfo.day} in {timeZone.replace(/_/g, " ")}
+              </p>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Session Duration
+                Duration
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {([25, 50, 75] as DurationMin[]).map((d) => (
                   <button
                     key={d}
+                    type="button"
                     onClick={() => dispatch({ type: "SET_CREATE_DURATION", duration: d })}
                     className={`py-3 rounded-lg text-center transition-all ${
                       ui.createDuration === d
@@ -716,26 +714,16 @@ export default function MobileCalendar() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Default time
-              </label>
-              <div className="flex items-center justify-between rounded-lg bg-gray-100 px-3 py-2.5 dark:bg-gray-800">
-                <span className="text-sm font-medium">5:00 PM</span>
-                <span className="text-xs text-gray-500">Tap timeline to pick another time</span>
-              </div>
-            </div>
-
             <button
               type="button"
-              onClick={openCreateAtDefaultTime}
+              onClick={handleBookFromPicker}
               className="w-full rounded-xl bg-[#5D1C6A] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#CA5995]"
             >
-              Book at 5:00 PM
+              Book session
             </button>
 
             <p className="text-center text-xs text-gray-500">
-              Or tap on the timeline to choose a different time
+              Tap sessions on the timeline to join or manage them
             </p>
           </div>
         )}
