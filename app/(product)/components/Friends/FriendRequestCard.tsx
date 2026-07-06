@@ -1,6 +1,7 @@
 "use client";
-import Avatar, { tintForKey } from "./Avatar";
-import styles from "./friends.module.css";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 export type FriendRequestData = {
   id: string;
@@ -48,62 +49,57 @@ export default function FriendRequestCard({
     direction === "incoming" ? request.from_user_id : request.to_user_id;
   const display = counterpartEmail || counterpartId;
   const initial = (display[0] ?? "?").toUpperCase();
-  const tint = tintForKey(counterpartId || display);
-  const handle = counterpartEmail
-    ? `@${counterpartEmail.split("@")[0]}`
-    : null;
 
   return (
-    <div className={styles.reqCard}>
-      <div className={styles.reqHead}>
-        <Avatar
-          initial={initial}
-          tint={tint}
-          size="sm"
-          src={counterpartAvatar}
-          alt={display}
-        />
-        <div className={styles.reqBody}>
-          {direction === "incoming" ? (
-            <>
-              <span className="who" style={{ fontWeight: 500 }}>
-                {display}
-              </span>{" "}
-              sent you a friend request
-            </>
-          ) : (
-            <>
-              You sent a request to{" "}
-              <span className="who" style={{ fontWeight: 500 }}>
-                {display}
-              </span>
-            </>
-          )}
-          <div className={styles.reqMeta}>
-            {handle ? <span>{handle}</span> : null}
-            {handle ? <span>·</span> : null}
-            <span>{timeAgo(request.created_at)}</span>
-          </div>
+    <div className="mb-3 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-start gap-3">
+        <Avatar className="h-9 w-9 shrink-0">
+          {counterpartAvatar ? (
+            <AvatarImage src={counterpartAvatar} alt={display} />
+          ) : null}
+          <AvatarFallback className="bg-muted text-xs">{initial}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-foreground">
+            {direction === "incoming" ? (
+              <>
+                <span className="font-medium">{display}</span> sent you a friend
+                request
+              </>
+            ) : (
+              <>
+                You sent a request to{" "}
+                <span className="font-medium">{display}</span>
+              </>
+            )}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {timeAgo(request.created_at)}
+          </p>
         </div>
       </div>
-      <div className={styles.reqActions}>
-        <span className={`${styles.chip} ${styles.chipPending}`}>Pending</span>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+          Pending
+        </span>
         {direction === "incoming" ? (
-          <div className={styles.reqActionsRight}>
-            <button
+          <div className="ml-auto flex gap-2">
+            <Button
               type="button"
-              className={`${styles.rowBtn} ${styles.rowBtnDanger}`}
+              variant="outline"
+              size="sm"
               onClick={() => onDecline?.(request.id)}
             >
               Decline
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className={`${styles.rowBtn} ${styles.rowBtnPrimary}`}
+              size="sm"
               onClick={() => onAccept?.(request.id)}
+              className="bg-[#5D1C6A] hover:bg-[#CA5995]"
             >
               Accept
-            </button>
+            </Button>
           </div>
         ) : null}
       </div>

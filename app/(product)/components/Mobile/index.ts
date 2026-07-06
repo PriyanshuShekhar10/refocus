@@ -1,4 +1,5 @@
 export { default as MobileCalendar } from "./MobileCalendar";
 export { MobileBottomSheet } from "./MobileBottomSheet";
-export { MobileBottomNav } from "./MobileBottomNav";
-export type { MobileTab } from "./MobileBottomNav";
+export { MobileBottomNav, MOBILE_MORE_TABS, getMobileNavTab } from "./MobileBottomNav";
+export type { MobileNavTab } from "./MobileBottomNav";
+export { MobileMoreMenu } from "./MobileMoreMenu";

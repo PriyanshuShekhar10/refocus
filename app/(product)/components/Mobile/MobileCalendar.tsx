@@ -11,6 +11,7 @@ import {
 import {
   DEFAULT_DURATION,
   DEFAULT_DURATION_FILTER,
+  DEFAULT_SESSION_HOUR,
   isValidDuration,
   type DurationMin,
 } from "@/constants/calendar";
@@ -157,7 +158,7 @@ function createInitialState(): UIState {
     createDuration: DEFAULT_DURATION,
     modal: { type: "none" },
     toast: null,
-    sheetExpanded: false,
+    sheetExpanded: true,
   };
 }
 
@@ -214,11 +215,13 @@ export default function MobileCalendar() {
     return () => clearInterval(interval);
   }, []);
 
-  // Scroll to current time on mount
+  // Scroll to default session time (5 PM) on mount
   useEffect(() => {
     if (scrollRef.current) {
-      const currentHour = new Date().getHours();
-      scrollRef.current.scrollTop = Math.max(0, (currentHour - 1) * HOUR_HEIGHT);
+      scrollRef.current.scrollTop = Math.max(
+        0,
+        (DEFAULT_SESSION_HOUR - 1) * HOUR_HEIGHT,
+      );
     }
   }, []);
 
@@ -388,6 +391,70 @@ export default function MobileCalendar() {
     dispatch({ type: "OPEN_CREATE_CONFIRM", start, preferred: ui.createDuration, whenLabel });
   };
 
+  const openCreateAtDefaultTime = useCallback(() => {
+    if (!canBookSessions) {
+      dispatch({ type: "SHOW_TOAST", message: bannedMessage });
+      return;
+    }
+
+    const defaultMinutes = DEFAULT_SESSION_HOUR * 60;
+    const start = wallMinutesOnDayToUtc(ui.startDate, defaultMinutes, timeZone);
+    const nowDate = new Date();
+    const nowMinutes = minutesOfDayInTimeZone(nowDate, timeZone);
+
+    if (
+      ymdInTimeZone(ui.startDate, timeZone) < ymdInTimeZone(nowDate, timeZone) ||
+      (ymdInTimeZone(ui.startDate, timeZone) === ymdInTimeZone(nowDate, timeZone) &&
+        defaultMinutes < nowMinutes)
+    ) {
+      dispatch({
+        type: "SHOW_TOAST",
+        message: "5 PM has already passed today — pick another time on the timeline",
+      });
+      return;
+    }
+
+    const dayKey = ymdInTimeZone(ui.startDate, timeZone);
+    const startMs = start.getTime();
+    const newEndMs = addMinutes(start, ui.createDuration).getTime();
+    const mySessions = (eventsByDay[dayKey] ?? []).filter(
+      (ev) =>
+        (ev.owner_id && currentUserId && ev.owner_id === currentUserId) ||
+        (ev.participants ?? []).some((p) => p.user_id === currentUserId),
+    );
+    const overlaps = mySessions.some(
+      (ev) => startMs < ev.endMs && newEndMs > ev.startMs,
+    );
+
+    if (overlaps) {
+      dispatch({ type: "SHOW_TOAST", message: "You already have a session at 5 PM" });
+      return;
+    }
+
+    const whenLabel = formatLocalDateTime(start, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    dispatch({
+      type: "OPEN_CREATE_CONFIRM",
+      start,
+      preferred: ui.createDuration,
+      whenLabel,
+    });
+  }, [
+    canBookSessions,
+    bannedMessage,
+    ui.startDate,
+    ui.createDuration,
+    timeZone,
+    eventsByDay,
+    currentUserId,
+  ]);
+
   // Format date
   const formatDate = (date: Date) => {
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -416,7 +483,7 @@ export default function MobileCalendar() {
   const dayEvents = eventsByDay[dayKey] ?? [];
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-gray-900">
       {/* Header */}
       <header className="shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
@@ -461,7 +528,7 @@ export default function MobileCalendar() {
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto"
-        style={{ paddingBottom: ui.sheetExpanded ? 340 : 140 }}
+        style={{ paddingBottom: ui.sheetExpanded ? 380 : 200 }}
       >
         <div className="relative" style={{ height: 24 * HOUR_HEIGHT }} onClick={handleGridClick}>
           {/* Hour lines */}
@@ -584,34 +651,30 @@ export default function MobileCalendar() {
         </div>
       </div>
 
-      {/* Bottom Sheet */}
+      {/* Bottom Sheet - sits above mobile bottom nav */}
       <div
-        className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-2xl transition-all duration-300 z-40 ${
+        className={`fixed bottom-16 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-2xl transition-all duration-300 z-50 lg:bottom-0 ${
           ui.sheetExpanded ? "pb-4" : ""
         }`}
       >
         {/* Collapsed */}
         {!ui.sheetExpanded && (
           <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <span className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-medium">
+            <button
+              type="button"
+              onClick={() => dispatch({ type: "TOGGLE_SHEET" })}
+              className="flex flex-1 items-center gap-3 text-left"
+            >
+              <span className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium dark:bg-gray-800">
                 {ui.createDuration}m
               </span>
-              <div className="flex gap-1">
-                {([25, 50, 75] as DurationMin[]).map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => dispatch({ type: "SET_CREATE_DURATION", duration: d })}
-                    className={`w-2 h-2 rounded-full ${
-                      ui.createDuration === d ? "bg-[#CA5995]" : "bg-gray-300 dark:bg-gray-600"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+              <span className="text-sm text-gray-500">5:00 PM default</span>
+            </button>
             <button
+              type="button"
               onClick={() => dispatch({ type: "TOGGLE_SHEET" })}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Expand session settings"
             >
               <ChevronUp className="h-5 w-5 text-gray-500" />
             </button>
@@ -653,8 +716,26 @@ export default function MobileCalendar() {
               </div>
             </div>
 
-            <p className="text-xs text-gray-500 text-center">
-              Tap on the timeline to create a session
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Default time
+              </label>
+              <div className="flex items-center justify-between rounded-lg bg-gray-100 px-3 py-2.5 dark:bg-gray-800">
+                <span className="text-sm font-medium">5:00 PM</span>
+                <span className="text-xs text-gray-500">Tap timeline to pick another time</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={openCreateAtDefaultTime}
+              className="w-full rounded-xl bg-[#5D1C6A] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#CA5995]"
+            >
+              Book at 5:00 PM
+            </button>
+
+            <p className="text-center text-xs text-gray-500">
+              Or tap on the timeline to choose a different time
             </p>
           </div>
         )}

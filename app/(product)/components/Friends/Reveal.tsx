@@ -1,6 +1,6 @@
 "use client";
+
 import { useEffect, useRef, useState, ReactNode } from "react";
-import styles from "./friends.module.css";
 
 interface RevealProps {
   children: ReactNode;
@@ -40,7 +40,9 @@ export default function Reveal({
   return (
     <Tag
       ref={ref as React.RefObject<HTMLDivElement & HTMLElement>}
-      className={`${styles.reveal} ${visible ? styles.revealIn : ""} ${className ?? ""}`}
+      className={`transition-all duration-500 ${
+        visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+      } ${className ?? ""}`}
       style={{ transitionDelay: `${Math.min(index, 6) * 40}ms` }}
     >
       {children}

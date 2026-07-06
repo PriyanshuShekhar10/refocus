@@ -12,8 +12,10 @@ import {
   addRateLimitHeaders,
 } from "@/lib/ratelimit";
 import { fetchEmailVerifiedMap } from "@/lib/users/emailVerifiedMap";
+import { fetchAdminMap } from "@/lib/users/adminMap";
 import { isEmailVerified } from "@/lib/emailVerification";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { ADMIN_ROLE } from "@/lib/admin";
 import { fetchAvatarUrlMap, resolveAvatarUrl } from "@/lib/userAvatar";
 
 /**
@@ -128,6 +130,10 @@ export async function GET(req: NextRequest) {
     db,
     docs.map((m) => m.user_id),
   );
+  const adminByUserId = await fetchAdminMap(
+    db,
+    docs.map((m) => m.user_id),
+  );
   const avatarByUserId = await fetchAvatarUrlMap(
     db,
     docs.map((m) => m.user_id),
@@ -150,6 +156,7 @@ export async function GET(req: NextRequest) {
       username: m.username ?? null,
       avatar_url: avatarByUserId[m.user_id] ?? null,
       emailVerified: verifiedByUserId[m.user_id] ?? false,
+      isAdmin: adminByUserId[m.user_id] ?? false,
       content: m.content,
       created_at: m.created_at.toISOString(),
       deleted: m.deleted ?? false,
@@ -197,15 +204,17 @@ export async function POST(req: NextRequest) {
   // Look up the sender's username for profile linking
   const userDoc = (await db.collection("users").findOne(
     { _id: new ObjectId(currentUserId) },
-    { projection: { username: 1, emailVerified: 1, avatar_url: 1, image: 1 } },
+    { projection: { username: 1, emailVerified: 1, avatar_url: 1, image: 1, role: 1 } },
   )) as {
     username?: string | null;
     emailVerified?: Date | string | null;
     avatar_url?: string | null;
     image?: string | null;
+    role?: string | null;
   } | null;
   const username = userDoc?.username ?? null;
   const emailVerified = isEmailVerified(userDoc?.emailVerified);
+  const isAdmin = userDoc?.role === ADMIN_ROLE;
   const avatarUrl = resolveAvatarUrl(userDoc);
 
   const insert = await db.collection("global_messages").insertOne({
@@ -226,6 +235,7 @@ export async function POST(req: NextRequest) {
       username,
       avatar_url: avatarUrl,
       emailVerified,
+      isAdmin,
       content: trimmedContent,
       created_at: createdAt.toISOString(),
       deleted: false,

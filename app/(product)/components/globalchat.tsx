@@ -18,6 +18,7 @@ type GlobalMessage = {
   username?: string | null;
   avatar_url?: string | null;
   emailVerified?: boolean;
+  isAdmin?: boolean;
   content: string;
   created_at: string;
   deleted?: boolean;
@@ -49,7 +50,9 @@ export default function GlobalChat() {
     username?: string | null;
     avatar_url?: string | null;
     emailVerified?: boolean;
+    isAdmin?: boolean;
   } | null>(null);
+  const [myIsAdmin, setMyIsAdmin] = useState(false);
   const [profileFriendStatus, setProfileFriendStatus] = useState<
     "loading" | "friend" | "request_sent" | "none"
   >("none");
@@ -60,6 +63,22 @@ export default function GlobalChat() {
   const topRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/me");
+        const data = await res.json();
+        if (!cancelled && res.ok) setMyIsAdmin(Boolean(data.isAdmin));
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Pagination state
   const [pagination, setPagination] = useState<PaginationState>({
@@ -208,7 +227,18 @@ export default function GlobalChat() {
               updated[optimisticIndex] = newMessage;
               return updated;
             }
-            return [...prev, newMessage];
+            const withoutStaleOptimistic = prev.filter(
+              (m) =>
+                !(
+                  m.id.startsWith("temp-") &&
+                  m.user_id === newMessage.user_id &&
+                  m.content === newMessage.content
+                ),
+            );
+            if (withoutStaleOptimistic.some((m) => m.id === newMessage.id)) {
+              return withoutStaleOptimistic;
+            }
+            return [...withoutStaleOptimistic, newMessage];
           });
           return;
         }
@@ -279,6 +309,7 @@ export default function GlobalChat() {
       user_id: currentUserId!,
       user_name: userName,
       emailVerified: myEmailVerified === true,
+      isAdmin: myIsAdmin,
       content: content,
       created_at: new Date().toISOString(),
       deleted: false,
@@ -428,6 +459,7 @@ export default function GlobalChat() {
       username: m.username,
       avatar_url: m.avatar_url ?? null,
       emailVerified: m.emailVerified,
+      isAdmin: m.isAdmin,
     });
     setProfileFriendStatus("loading");
     setProfileFriendReqStatus(null);
@@ -622,6 +654,7 @@ export default function GlobalChat() {
                 <VerifiedName
                   name={profileDisplayName}
                   verified={profileUser.emailVerified}
+                  isAdmin={profileUser.isAdmin}
                   className="justify-center"
                 />
               </p>
@@ -777,6 +810,7 @@ export default function GlobalChat() {
                           <VerifiedName
                             name="You"
                             verified={m.emailVerified ?? myEmailVerified === true}
+                            isAdmin={myIsAdmin}
                             className="text-xs font-medium text-gray-600 dark:text-gray-400"
                           />
                         ) : m.username ? (
@@ -785,7 +819,7 @@ export default function GlobalChat() {
                             className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline cursor-pointer text-left max-w-full"
                             title="View profile"
                           >
-                            <VerifiedName name={name} verified={m.emailVerified} />
+                            <VerifiedName name={name} verified={m.emailVerified} isAdmin={m.isAdmin} />
                           </Link>
                         ) : (
                           <button
@@ -794,7 +828,7 @@ export default function GlobalChat() {
                             className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline cursor-pointer text-left max-w-full"
                             title="View profile"
                           >
-                            <VerifiedName name={name} verified={m.emailVerified} />
+                            <VerifiedName name={name} verified={m.emailVerified} isAdmin={m.isAdmin} />
                           </button>
                         )}
                         <span className="text-[10px] text-gray-400 dark:text-gray-500">
@@ -850,7 +884,7 @@ export default function GlobalChat() {
                           </>
                         )}
                         {!m.deleted && isOwnMessage && editingId !== m.id && (
-                          <div className="absolute -left-1 -top-1 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                          <div className="absolute -left-1 -top-1 flex items-center gap-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
                             <button
                               onClick={() => beginEditMessage(m)}
                               className="rounded-full border border-gray-200 bg-white p-1 text-[#5D1C6A] shadow-sm hover:bg-[#FFF1D3]"

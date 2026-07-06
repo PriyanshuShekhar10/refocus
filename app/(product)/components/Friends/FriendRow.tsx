@@ -1,6 +1,9 @@
 "use client";
-import Avatar, { tintForKey } from "./Avatar";
-import styles from "./friends.module.css";
+
+import { Calendar, MessageCircle, UserMinus } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { AdminTag } from "@/components/admin-tag";
 
 export type FriendData = {
   user_id: string;
@@ -8,6 +11,7 @@ export type FriendData = {
   name?: string | null;
   username?: string | null;
   avatarUrl?: string | null;
+  isAdmin?: boolean;
   since?: string;
 };
 
@@ -26,14 +30,14 @@ function formatSince(iso?: string): string | null {
   const since = new Date(iso);
   const now = new Date();
   const days = Math.floor((now.getTime() - since.getTime()) / 86400000);
-  if (days <= 0) return "FRIENDS · TODAY";
-  if (days === 1) return "FRIENDS · 1 DAY";
-  if (days < 30) return `FRIENDS · ${days} DAYS`;
+  if (days <= 0) return "Friends since today";
+  if (days === 1) return "Friends · 1 day";
+  if (days < 30) return `Friends · ${days} days`;
   const months = Math.floor(days / 30);
-  if (months === 1) return "FRIENDS · 1 MONTH";
-  if (months < 12) return `FRIENDS · ${months} MONTHS`;
+  if (months === 1) return "Friends · 1 month";
+  if (months < 12) return `Friends · ${months} months`;
   const years = Math.floor(months / 12);
-  return years === 1 ? "FRIENDS · 1 YEAR" : `FRIENDS · ${years} YEARS`;
+  return years === 1 ? "Friends · 1 year" : `Friends · ${years} years`;
 }
 
 export default function FriendRow({
@@ -48,110 +52,80 @@ export default function FriendRow({
   const label = friend.email || friend.user_id;
   const displayName = friend.name || label;
   const initial = (displayName[0] ?? "?").toUpperCase();
-  const tint = tintForKey(friend.user_id || displayName);
   const sinceText = formatSince(friend.since);
-  const handleHeadline = friend.username
+  const handleLine = friend.username
     ? `@${friend.username}`
     : friend.email
-      ? friend.email.split("@")[0]
+      ? friend.email
       : null;
-  const handleTrail = friend.username && friend.email ? ` · ${friend.email}` : "";
 
   return (
-    <div className={styles.friendRow}>
-      <Avatar
-        initial={initial}
-        tint={tint}
-        src={friend.avatarUrl}
-        alt={displayName}
-      />
+    <div className="flex flex-col gap-3 border-b border-border py-4 last:border-b-0 sm:flex-row sm:items-center">
       <button
         type="button"
         onClick={() => onOpenProfile?.(friend)}
         disabled={!onOpenProfile}
-        className={styles.friendMeta}
-        style={{
-          background: "none",
-          border: "none",
-          padding: 0,
-          textAlign: "left",
-          cursor: onOpenProfile ? "pointer" : "default",
-          minWidth: 0,
-        }}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-default"
       >
-        <div className={styles.friendName}>
-          <span>{displayName}</span>
-          {sinceText ? (
-            <span className={styles.statusText}>{sinceText}</span>
+        <Avatar className="h-10 w-10 shrink-0">
+          {friend.avatarUrl ? (
+            <AvatarImage src={friend.avatarUrl} alt={displayName} />
           ) : null}
-          {unread > 0 ? <span className={styles.unread}>{unread}</span> : null}
-        </div>
-        {handleHeadline ? (
-          <div className={styles.handle}>
-            {handleHeadline}
-            {handleTrail}
+          <AvatarFallback className="bg-muted text-sm font-medium">
+            {initial}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-medium text-foreground">{displayName}</span>
+            {friend.isAdmin ? <AdminTag /> : null}
+            {unread > 0 ? (
+              <span className="rounded-full bg-[#5D1C6A] px-2 py-0.5 text-[10px] font-semibold text-white">
+                {unread}
+              </span>
+            ) : null}
           </div>
-        ) : null}
+          {sinceText ? (
+            <p className="text-xs text-muted-foreground">{sinceText}</p>
+          ) : null}
+          {handleLine ? (
+            <p className="truncate text-xs text-muted-foreground">{handleLine}</p>
+          ) : null}
+        </div>
       </button>
-      <div className={styles.rowActions}>
-        <button
+      <div className="flex flex-wrap gap-2 sm:shrink-0">
+        <Button
           type="button"
-          className={styles.rowBtn}
+          variant="outline"
+          size="sm"
           onClick={() => onOpenChat(friend)}
+          className="gap-1.5"
         >
-          <svg
-            className="ico"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            style={{ width: 13, height: 13 }}
-          >
-            <path d="M2.5 7.5C2.5 4.7 5 2.5 8 2.5s5.5 2.2 5.5 5-2.5 5-5.5 5c-.7 0-1.4-.1-2-.3l-2.5 1 .8-2.4c-1.1-.9-1.8-2-1.8-3.3z" />
-          </svg>
+          <MessageCircle className="h-3.5 w-3.5" />
           Chat
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={`${styles.rowBtn} ${styles.rowBtnPrimary}`}
+          size="sm"
           onClick={() => onBookSession(friend)}
+          className="gap-1.5 bg-[#5D1C6A] hover:bg-[#CA5995]"
         >
-          <svg
-            className="ico"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            style={{ width: 13, height: 13 }}
-          >
-            <rect x="2" y="3" width="12" height="11" rx="1.5" />
-            <path d="M2 6h12M5 2v3M11 2v3" />
-          </svg>
+          <Calendar className="h-3.5 w-3.5" />
           Book session
-        </button>
+        </Button>
         {onUnfriend ? (
-          <button
+          <Button
             type="button"
-            className={`${styles.rowBtn} ${styles.rowBtnDanger}`}
+            variant="outline"
+            size="sm"
             onClick={() => onUnfriend(friend)}
             disabled={unfriending}
+            className="gap-1.5 text-red-600 hover:text-red-700 dark:text-red-400"
             aria-label={`Unfriend ${displayName}`}
-            title="Unfriend"
           >
-            <svg
-              className="ico"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              style={{ width: 13, height: 13 }}
-            >
-              <circle cx="6" cy="5" r="2.4" />
-              <path d="M2 13c.4-2.2 2-3.3 4-3.3s3.6 1.1 4 3.3" />
-              <path d="M10.5 5.5l4 4M14.5 5.5l-4 4" />
-            </svg>
+            <UserMinus className="h-3.5 w-3.5" />
             {unfriending ? "Removing…" : "Unfriend"}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>

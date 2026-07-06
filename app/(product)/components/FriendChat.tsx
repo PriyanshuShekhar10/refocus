@@ -14,6 +14,7 @@ import { chatChannel } from "@/lib/realtimeChannels";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
+import { AdminTag } from "@/components/admin-tag";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -47,8 +48,9 @@ export type FriendChatProps = {
   friendId: string;
   friendLabel: string;
   friendAvatarUrl?: string | null;
+  friendIsAdmin?: boolean;
   onClose: () => void;
-  layout?: "modal" | "docked";
+  layout?: "modal" | "docked" | "fullscreen";
   minimized?: boolean;
   onMinimizeToggle?: () => void;
   className?: string;
@@ -58,6 +60,7 @@ export default function FriendChat({
   friendId,
   friendLabel,
   friendAvatarUrl,
+  friendIsAdmin = false,
   onClose,
   layout = "modal",
   minimized = false,
@@ -339,7 +342,18 @@ export default function FriendChat({
               updated[optIdx] = incoming;
               return updated;
             }
-            return [...prev, incoming];
+            const withoutStaleOptimistic = prev.filter(
+              (m) =>
+                !(
+                  m.id.startsWith("temp-") &&
+                  m.from_user_id === incoming.from_user_id &&
+                  m.content === incoming.content
+                ),
+            );
+            if (withoutStaleOptimistic.some((m) => m.id === incoming.id)) {
+              return withoutStaleOptimistic;
+            }
+            return [...withoutStaleOptimistic, incoming];
           });
           try {
             fetch(`/api/chat/${friendId}/read`, { method: "POST" });
@@ -437,9 +451,19 @@ export default function FriendChat({
       });
       const data = await post.json();
       if (!post.ok) throw new Error(data.error || "Failed to send");
-      setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? { ...m, id: data.id } : m))
-      );
+      setMessages((prev) => {
+        const realMessageExists = prev.some(
+          (m) =>
+            m.id === data.id ||
+            (m.id !== tempId &&
+              m.content === value &&
+              m.from_user_id === currentUserId),
+        );
+        if (realMessageExists) {
+          return prev.filter((m) => m.id !== tempId);
+        }
+        return prev.map((m) => (m.id === tempId ? { ...m, id: data.id } : m));
+      });
       shouldAutoScrollRef.current = true;
       requestAnimationFrame(() => scrollToBottom("smooth"));
     } catch (e) {
@@ -809,11 +833,12 @@ export default function FriendChat({
         </Avatar>
         <div className="min-w-0">
           <div
-            className={`font-semibold text-gray-900 dark:text-gray-100 truncate ${
+            className={`inline-flex max-w-full min-w-0 items-center gap-1.5 font-semibold text-gray-900 dark:text-gray-100 truncate ${
               isModal ? "text-base max-w-[260px]" : "text-sm max-w-[200px]"
             }`}
           >
-            {friendLabel}
+            <span className="truncate">{friendLabel}</span>
+            {friendIsAdmin ? <AdminTag size="xs" /> : null}
           </div>
           {isModal && (
             <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -960,10 +985,10 @@ export default function FriendChat({
                               prev === m.id ? null : m.id,
                             )
                           }
-                          className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200 transition-opacity ${
+                          className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200 transition-opacity opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 ${
                             isMenuOpen
                               ? "opacity-100"
-                              : "opacity-0 group-hover:opacity-100 focus:opacity-100"
+                              : ""
                           }`}
                         >
                           <FiMoreHorizontal size={14} />
@@ -1407,6 +1432,28 @@ export default function FriendChat({
           contentPreview={reportMessage.content ?? undefined}
         />
       ) : null}
+      </>
+    );
+  }
+
+  if (layout === "fullscreen") {
+    return (
+      <>
+        <div className="flex h-full w-full flex-col overflow-hidden bg-white dark:bg-gray-900">
+          {header}
+          {body}
+        </div>
+        {reportMessage ? (
+          <ReportDialog
+            open
+            onClose={() => setReportMessage(null)}
+            targetType="friend_message"
+            targetId={reportMessage.id}
+            reportedUserId={reportMessage.from_user_id}
+            reportedLabel={friendLabel}
+            contentPreview={reportMessage.content ?? undefined}
+          />
+        ) : null}
       </>
     );
   }

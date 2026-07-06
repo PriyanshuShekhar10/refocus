@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { ADMIN_ROLE } from "@/lib/admin";
 
 // GET - Fetch posts with pagination
 export async function GET(req: NextRequest) {
@@ -98,6 +99,7 @@ export async function GET(req: NextRequest) {
           "author.username": 1,
           "author.avatar_url": 1,
           "author.image": 1,
+          "author.role": 1,
           likesCount: { $ifNull: [{ $arrayElemAt: ["$likesCount.count", 0] }, 0] },
           commentsCount: { $ifNull: [{ $arrayElemAt: ["$commentsCount.count", 0] }, 0] },
           isLiked: { $gt: [{ $size: "$userLike" }, 0] },
@@ -124,6 +126,7 @@ export async function GET(req: NextRequest) {
       authorUsername: p.author?.username || null,
       authorAvatarUrl: resolveAvatarUrl(p.author),
       authorInitials: `${(p.author?.firstname?.[0] || p.author?.name?.[0] || p.author?.email?.[0] || "U").toUpperCase()}${(p.author?.lastname?.[0] || "").toUpperCase()}`,
+      authorIsAdmin: p.author?.role === ADMIN_ROLE,
       likesCount: p.likesCount,
       commentsCount: p.commentsCount,
       isLiked: p.isLiked,
@@ -188,7 +191,7 @@ export async function POST(req: NextRequest) {
     .collection("users")
     .findOne(
       { _id: new ObjectId(userId) },
-      { projection: { name: 1, firstname: 1, lastname: 1, email: 1, username: 1, avatar_url: 1, image: 1 } }
+      { projection: { name: 1, firstname: 1, lastname: 1, email: 1, username: 1, avatar_url: 1, image: 1, role: 1 } }
     )) as {
     name?: string | null;
     firstname?: string | null;
@@ -197,6 +200,7 @@ export async function POST(req: NextRequest) {
     username?: string | null;
     avatar_url?: string | null;
     image?: string | null;
+    role?: string | null;
   } | null;
 
   return NextResponse.json({
@@ -213,6 +217,7 @@ export async function POST(req: NextRequest) {
       authorUsername: author?.username || null,
       authorAvatarUrl: resolveAvatarUrl(author),
       authorInitials: `${(author?.firstname?.[0] || author?.name?.[0] || author?.email?.[0] || "U").toUpperCase()}${(author?.lastname?.[0] || "").toUpperCase()}`,
+      authorIsAdmin: author?.role === ADMIN_ROLE,
       likesCount: 0,
       commentsCount: 0,
       isLiked: false,

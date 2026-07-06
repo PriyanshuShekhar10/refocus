@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import styles from "./friends.module.css";
 
 interface EmptyCardProps {
   label: string;
@@ -8,9 +7,11 @@ interface EmptyCardProps {
 
 export default function EmptyCard({ label, sub }: EmptyCardProps) {
   return (
-    <div className={styles.reqEmpty}>
-      <div className={styles.label}>{label}</div>
-      {sub ? <div className={styles.sub}>{sub}</div> : null}
+    <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
+      <p className="text-sm font-medium text-foreground">{label}</p>
+      {sub ? (
+        <p className="mt-1 text-sm text-muted-foreground">{sub}</p>
+      ) : null}
     </div>
   );
 }

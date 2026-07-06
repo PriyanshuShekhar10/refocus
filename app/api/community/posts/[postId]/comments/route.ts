@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { ADMIN_ROLE } from "@/lib/admin";
 
 // GET - Fetch comments for a post
 export async function GET(
@@ -56,6 +57,7 @@ export async function GET(
           "author.username": 1,
           "author.avatar_url": 1,
           "author.image": 1,
+          "author.role": 1,
         },
       },
     ])
@@ -75,6 +77,7 @@ export async function GET(
       authorUsername: c.author?.username || null,
       authorAvatarUrl: resolveAvatarUrl(c.author),
       authorInitials: `${(c.author?.firstname?.[0] || c.author?.name?.[0] || c.author?.email?.[0] || "U").toUpperCase()}${(c.author?.lastname?.[0] || "").toUpperCase()}`,
+      authorIsAdmin: c.author?.role === ADMIN_ROLE,
     })),
   });
 }
@@ -140,7 +143,7 @@ export async function POST(
     .collection("users")
     .findOne(
       { _id: new ObjectId(userId) },
-      { projection: { name: 1, firstname: 1, lastname: 1, email: 1, username: 1, avatar_url: 1, image: 1 } }
+      { projection: { name: 1, firstname: 1, lastname: 1, email: 1, username: 1, avatar_url: 1, image: 1, role: 1 } }
     )) as {
     name?: string | null;
     firstname?: string | null;
@@ -149,6 +152,7 @@ export async function POST(
     username?: string | null;
     avatar_url?: string | null;
     image?: string | null;
+    role?: string | null;
   } | null;
 
   return NextResponse.json({
@@ -165,6 +169,7 @@ export async function POST(
       authorUsername: author?.username || null,
       authorAvatarUrl: resolveAvatarUrl(author),
       authorInitials: `${(author?.firstname?.[0] || author?.name?.[0] || author?.email?.[0] || "U").toUpperCase()}${(author?.lastname?.[0] || "").toUpperCase()}`,
+      authorIsAdmin: author?.role === ADMIN_ROLE,
     },
   });
 }

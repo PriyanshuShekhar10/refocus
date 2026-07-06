@@ -9,6 +9,9 @@ import { Loader2, MessageSquare } from "lucide-react";
 import PostCard, { Post, Comment } from "./PostCard";
 import CommunityChat from "./CommunityChat";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
+import { useIsMobileShell } from "@/hooks/useIsMobileShell";
+
+type MobileCommunityView = "feed" | "chat";
 
 type ProfilePreviewPayload = {
   username: string;
@@ -44,6 +47,7 @@ We're glad you're here. Let's build a friendly, focused community together.`,
   authorName: "Admin",
   authorUsername: null,
   authorInitials: "AD",
+  authorIsAdmin: true,
   likesCount: 0,
   commentsCount: 0,
   isLiked: false,
@@ -71,7 +75,9 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [newPostContent, setNewPostContent] = useState("");
   const [posting, setPosting] = useState(false);
-  const [showChat, setShowChat] = useState(true);
+  const showChat = true;
+  const [mobileView, setMobileView] = useState<MobileCommunityView>("feed");
+  const { isMobile } = useIsMobileShell();
   const [isAdmin, setIsAdmin] = useState(false);
   const [communityBanned, setCommunityBanned] = useState(false);
   const [communityMuted, setCommunityMuted] = useState(false);
@@ -84,7 +90,9 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
     ? "You are banned from the community."
     : communityMuted
       ? "You are muted in the community."
-      : verifyMessage;
+      : !canInteract
+        ? verifyMessage
+        : undefined;
 
   useEffect(() => {
     const fromSession = session?.user?.image?.trim();
@@ -286,16 +294,55 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   };
 
   return (
-    <div className="flex h-[calc(100vh-3rem)] bg-background">
-      {/* Main Feed */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <div className="shrink-0 px-6 py-4 border-b border-border">
+    <div className="flex h-full flex-col bg-background lg:h-[calc(100vh-3rem)] lg:flex-row">
+      {isMobile && (
+        <div className="shrink-0 border-b border-border px-4 py-3">
           <h1 className="text-xl font-semibold">Community</h1>
           <p className="text-sm text-muted-foreground">
             Share updates and connect with others
           </p>
+          <div className="mt-3 flex rounded-lg bg-muted p-1">
+            <button
+              type="button"
+              onClick={() => setMobileView("feed")}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                mobileView === "feed"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              }`}
+            >
+              Feed
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileView("chat")}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                mobileView === "chat"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              }`}
+            >
+              Chat
+            </button>
+          </div>
         </div>
+      )}
+
+      {/* Main Feed */}
+      <div
+        className={`flex min-h-0 flex-1 flex-col ${
+          isMobile && mobileView === "chat" ? "hidden" : ""
+        }`}
+      >
+        {/* Header - desktop only */}
+        {!isMobile && (
+          <div className="shrink-0 border-b border-border px-6 py-4">
+            <h1 className="text-xl font-semibold">Community</h1>
+            <p className="text-sm text-muted-foreground">
+              Share updates and connect with others
+            </p>
+          </div>
+        )}
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
@@ -419,7 +466,8 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
         </div>
       </div>
 
-      {/* Chat Sidebar */}
+      {/* Chat Sidebar - desktop only (avoid duplicate Ably listeners on mobile) */}
+      {!isMobile && (
       <div
         className={`hidden lg:flex flex-col w-80 border-l border-border bg-card transition-all ${
           showChat ? "" : "w-0 overflow-hidden"
@@ -432,14 +480,19 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
           onModerateUser={isAdmin ? moderateUser : undefined}
         />
       </div>
+      )}
 
-      {/* Mobile Chat Toggle */}
-      <button
-        onClick={() => setShowChat(!showChat)}
-        className="lg:hidden fixed bottom-4 right-4 h-12 w-12 rounded-full bg-[#5D1C6A] text-white shadow-lg flex items-center justify-center hover:bg-[#CA5995] transition-colors"
-      >
-        <MessageSquare className="h-5 w-5" />
-      </button>
+      {/* Chat - mobile full panel */}
+      {isMobile && mobileView === "chat" && (
+        <div className="flex min-h-0 flex-1 flex-col lg:hidden">
+          <CommunityChat
+            isAdmin={isAdmin}
+            canParticipate={canParticipate}
+            participationMessage={participationMessage}
+            onModerateUser={isAdmin ? moderateUser : undefined}
+          />
+        </div>
+      )}
     </div>
   );
 }

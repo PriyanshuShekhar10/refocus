@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, Send } from "lucide-react";
+import { Flag, Loader2, Send, Trash2 } from "lucide-react";
 import { VerifiedName } from "@/components/verified-tag";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "next-auth/react";
@@ -13,7 +13,6 @@ import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
 import CommunityModerationMenu from "./CommunityModerationMenu";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
 import { Button } from "@/components/ui/button";
-import { Flag } from "lucide-react";
 
 type GlobalMessage = {
   id: string;
@@ -22,6 +21,7 @@ type GlobalMessage = {
   username?: string | null;
   avatar_url?: string | null;
   emailVerified?: boolean;
+  isAdmin?: boolean;
   content: string;
   created_at: string;
   deleted?: boolean;
@@ -52,12 +52,15 @@ export default function CommunityChat({
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [reportMessage, setReportMessage] = useState<GlobalMessage | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [myIsAdmin, setMyIsAdmin] = useState(false);
   const { canInteract, verified: myEmailVerified, message: verifyMessage } =
     useEmailVerified();
   const canSend =
-    (canParticipate !== undefined ? canParticipate : canInteract);
-  const inputPlaceholder =
-    participationMessage ?? (canInteract ? "Message..." : verifyMessage);
+    canParticipate !== undefined ? canParticipate : canInteract;
+  const inputPlaceholder = !canSend
+    ? participationMessage ?? verifyMessage
+    : "Message...";
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -71,6 +74,22 @@ export default function CommunityChat({
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/me");
+        const data = await res.json();
+        if (!cancelled && res.ok) setMyIsAdmin(Boolean(data.isAdmin));
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -99,7 +118,18 @@ export default function CommunityChat({
               updated[optimisticIndex] = newMessage;
               return updated;
             }
-            return [...prev, newMessage];
+            const withoutStaleOptimistic = prev.filter(
+              (m) =>
+                !(
+                  m.id.startsWith("temp-") &&
+                  m.user_id === newMessage.user_id &&
+                  m.content === newMessage.content
+                ),
+            );
+            if (withoutStaleOptimistic.some((m) => m.id === newMessage.id)) {
+              return withoutStaleOptimistic;
+            }
+            return [...withoutStaleOptimistic, newMessage];
           });
         }
         return;
@@ -145,7 +175,7 @@ export default function CommunityChat({
     const content = text.trim();
     if (!content || isSending || !canSend) return;
 
-    const tempId = `temp-${Date.now()}`;
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const userName = (session?.user as { name?: string } | undefined)?.name ?? null;
 
     const optimisticMessage: GlobalMessage = {
@@ -154,6 +184,8 @@ export default function CommunityChat({
       user_name: userName,
       content: content,
       created_at: new Date().toISOString(),
+      isAdmin: myIsAdmin,
+      emailVerified: myEmailVerified === true,
     };
 
     setMessages((prev) => [...prev, optimisticMessage]);
@@ -168,9 +200,21 @@ export default function CommunityChat({
       });
       const data = await res.json();
       if (res.ok) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === tempId ? { ...m, id: data.id } : m))
-        );
+        setMessages((prev) => {
+          const realMessageExists = prev.some(
+            (m) =>
+              m.id === data.id ||
+              (m.id !== tempId &&
+                m.content === content &&
+                m.user_id === currentUserId),
+          );
+          if (realMessageExists) {
+            return prev.filter((m) => m.id !== tempId);
+          }
+          return prev.map((m) =>
+            m.id === tempId ? { ...m, id: data.id } : m,
+          );
+        });
       } else {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
         setText(content);
@@ -283,6 +327,38 @@ export default function CommunityChat({
     );
   };
 
+  const deleteOwnMessage = async (messageId: string) => {
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Delete this message?")
+    ) {
+      return;
+    }
+    setDeletingId(messageId);
+    try {
+      const res = await fetch(`/api/global-chat/${messageId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to delete message");
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? {
+                ...m,
+                deleted: true,
+                content: "[This message was deleted]",
+              }
+            : m,
+        ),
+      );
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -335,12 +411,13 @@ export default function CommunityChat({
                           href={`/u/${m.username}`}
                           className="text-[10px] font-medium text-muted-foreground hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline max-w-full"
                         >
-                          <VerifiedName name={name} verified={m.emailVerified} />
+                          <VerifiedName name={name} verified={m.emailVerified} isAdmin={m.isAdmin} />
                         </Link>
                       ) : (
                         <VerifiedName
                           name={isOwn ? "You" : name}
                           verified={isOwn ? (m.emailVerified ?? myEmailVerified === true) : m.emailVerified}
+                          isAdmin={isOwn ? myIsAdmin : m.isAdmin}
                           className="text-[10px] font-medium text-muted-foreground"
                         />
                       )}
@@ -361,6 +438,18 @@ export default function CommunityChat({
                           }
                           onModerate={onModerateUser}
                         />
+                      ) : null}
+                      {isOwn && !m.deleted ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteOwnMessage(m.id)}
+                          disabled={deletingId === m.id}
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
+                          aria-label="Delete message"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       ) : null}
                       {!isOwn && !m.deleted && m.user_id ? (
                         <Button

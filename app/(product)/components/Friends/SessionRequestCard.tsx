@@ -1,7 +1,8 @@
 "use client";
+
 import { ChangeEvent } from "react";
-import Avatar, { tintForKey } from "./Avatar";
-import styles from "./friends.module.css";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 export type SessionRequestData = {
   id: string;
@@ -58,93 +59,88 @@ export default function SessionRequestCard({
     direction === "incoming" ? request.from_user_id : request.to_user_id;
   const display = counterpartEmail || counterpartId;
   const initial = (display[0] ?? "?").toUpperCase();
-  const tint = tintForKey(counterpartId || display);
 
   return (
-    <div className={styles.reqCard}>
-      <div className={styles.reqHead}>
-        <Avatar
-          initial={initial}
-          tint={tint}
-          size="sm"
-          src={counterpartAvatar}
-          alt={display}
-        />
-        <div className={styles.reqBody}>
-          {direction === "incoming" ? (
-            <>
-              <span className="who" style={{ fontWeight: 500 }}>
-                {display}
-              </span>{" "}
-              wants to focus with you
-            </>
-          ) : (
-            <>
-              You invited{" "}
-              <span className="who" style={{ fontWeight: 500 }}>
-                {display}
-              </span>
-            </>
-          )}
-          <div className={styles.reqMeta}>
-            <span>{formatStart(request.start)}</span>
-            <span>·</span>
-            <span>{request.durationMin} min</span>
-          </div>
+    <div className="mb-3 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-start gap-3">
+        <Avatar className="h-9 w-9 shrink-0">
+          {counterpartAvatar ? (
+            <AvatarImage src={counterpartAvatar} alt={display} />
+          ) : null}
+          <AvatarFallback className="bg-muted text-xs">{initial}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-foreground">
+            {direction === "incoming" ? (
+              <>
+                <span className="font-medium">{display}</span> wants to focus with
+                you
+              </>
+            ) : (
+              <>
+                You invited <span className="font-medium">{display}</span>
+              </>
+            )}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {formatStart(request.start)} · {request.durationMin} min
+          </p>
         </div>
       </div>
 
       {request.message ? (
-        <div className={styles.reqQuote}>“{request.message}”</div>
+        <p className="mt-3 border-l-2 border-border pl-3 text-sm italic text-muted-foreground">
+          “{request.message}”
+        </p>
       ) : null}
       {request.responseMessage ? (
-        <div className={styles.reqQuote}>
+        <p className="mt-2 border-l-2 border-border pl-3 text-sm italic text-muted-foreground">
           Reply: “{request.responseMessage}”
-        </div>
+        </p>
       ) : null}
 
-      <div className={styles.reqActions}>
-        <span className={`${styles.chip} ${styles.chipPending}`}>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
           {direction === "incoming" ? "Pending" : "Awaiting reply"}
         </span>
         {direction === "incoming" ? (
-          <div
-            className={styles.reqActionsRight}
-            style={{ flexWrap: "wrap", gap: 8 }}
-          >
+          <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
             <input
               type="text"
               placeholder="Optional note"
-              className={styles.noteInput}
               value={note}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 onNoteChange?.(e.target.value)
               }
+              className="h-8 min-w-[140px] flex-1 rounded-lg border border-input bg-background px-3 text-xs outline-none focus:ring-1 focus:ring-ring sm:flex-none"
             />
-            <button
+            <Button
               type="button"
-              className={`${styles.rowBtn} ${styles.rowBtnDanger}`}
+              variant="outline"
+              size="sm"
               onClick={() => onDecline?.(request.id)}
             >
               Decline
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className={`${styles.rowBtn} ${styles.rowBtnPrimary}`}
+              size="sm"
               onClick={() => onAccept?.(request.id)}
+              className="bg-[#5D1C6A] hover:bg-[#CA5995]"
             >
               Accept
-            </button>
+            </Button>
           </div>
         ) : (
-          <button
+          <Button
             type="button"
-            className={`${styles.rowBtn} ${styles.rowBtnDanger}`}
-            style={{ marginLeft: "auto" }}
+            variant="outline"
+            size="sm"
             onClick={() => onCancel?.(request.id)}
+            className="ml-auto text-red-600 hover:text-red-700 dark:text-red-400"
           >
             Cancel
-          </button>
+          </Button>
         )}
       </div>
     </div>

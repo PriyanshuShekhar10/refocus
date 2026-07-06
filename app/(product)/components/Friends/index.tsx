@@ -11,9 +11,11 @@ import FriendRequestCard, { FriendRequestData } from "./FriendRequestCard";
 import SessionRequestCard, { SessionRequestData } from "./SessionRequestCard";
 import EmptyCard from "./EmptyCard";
 import Reveal from "./Reveal";
-import styles from "./friends.module.css";
 import { getAblyClient } from "@/lib/ably-client";
 import { userChannel } from "@/lib/realtimeChannels";
+import { useIsMobileShell } from "@/hooks/useIsMobileShell";
+import { Shell } from "@/components/design";
+import { Users } from "lucide-react";
 
 type ProfilePreviewPayload = {
   username: string;
@@ -30,6 +32,7 @@ type ListMode = "all" | "recent";
 
 export default function Friends({ onPreviewProfile }: FriendsProps) {
   const { data: session } = useSession();
+  const { isMobile } = useIsMobileShell();
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   const [incoming, setIncoming] = useState<FriendRequestData[]>([]);
   const [outgoing, setOutgoing] = useState<FriendRequestData[]>([]);
@@ -301,8 +304,14 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
   const pendingOutCount = outgoing.length + sessOutgoing.length;
 
   return (
-    <div className={styles.root}>
-      <main className={styles.main}>
+    <Shell>
+      <div
+        style={{
+          padding: "8px 4px",
+          maxWidth: 980,
+          margin: "0 auto",
+        }}
+      >
         <PageHeader query={query} onQueryChange={setQuery} />
 
         <StatStrip
@@ -313,11 +322,14 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
           ]}
         />
 
-        {error ? <div className={styles.errorBanner}>{error}</div> : null}
+        {error ? (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+            {error}
+          </div>
+        ) : null}
 
-        <div className={styles.layout}>
-          {/* LEFT: Friends list */}
-          <section>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.6fr_1fr] lg:gap-10">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
             <SectionHead
               title="Your circle"
               count={friendsCount}
@@ -336,39 +348,25 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
             />
 
             {loading && friends.length === 0 ? (
-              <div className={styles.empty}>
-                <h4>Loading your circle…</h4>
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                Loading your circle…
               </div>
             ) : filteredFriends.length === 0 ? (
-              <div className={styles.empty}>
-                <div className={styles.emptyIco}>
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  >
-                    <circle cx="5.5" cy="5" r="2" />
-                    <circle cx="11" cy="6" r="1.6" />
-                    <path d="M2 13c.4-2 1.8-3 3.5-3s3.1 1 3.5 3" />
-                    <path d="M10 12c.3-1.4 1.2-2 2.2-2s1.8.6 2.1 2" />
-                  </svg>
+              <div className="flex flex-col items-center py-12 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <Users className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <h4>
-                  {query
-                    ? "No friends match that search"
-                    : "No friends yet"}
+                <h4 className="text-sm font-medium text-foreground">
+                  {query ? "No friends match that search" : "No friends yet"}
                 </h4>
-                <p>
+                <p className="mt-1 max-w-xs text-sm text-muted-foreground">
                   {query
                     ? "Try a different name or handle."
                     : "Send a friend request from a profile to start your circle."}
                 </p>
               </div>
             ) : (
-              <div className={styles.friendsList}>
+              <div>
                 {filteredFriends.map((f, i) => (
                   <Reveal key={f.user_id} index={i}>
                     <FriendRow
@@ -386,16 +384,17 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
             )}
           </section>
 
-          {/* RIGHT: Requests */}
-          <aside className={styles.panelStack}>
-            <div className={styles.panel}>
-              <h3>
+          <aside className="flex flex-col gap-6">
+            <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Friend requests
                 {incoming.length > 0 ? (
-                  <span className={styles.countPill}>{incoming.length} in</span>
+                  <span className="ml-2 rounded-full bg-[#5D1C6A]/10 px-2 py-0.5 text-[10px] font-medium normal-case text-[#5D1C6A] dark:text-[#CA5995]">
+                    {incoming.length} in
+                  </span>
                 ) : null}
                 {outgoing.length > 0 ? (
-                  <span className={`${styles.countPill} ${styles.countPillWarn}`}>
+                  <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium normal-case text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
                     {outgoing.length} out
                   </span>
                 ) : null}
@@ -426,16 +425,16 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
               )}
             </div>
 
-            <div className={styles.panel}>
-              <h3>
+            <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Session requests
                 {sessIncoming.length > 0 ? (
-                  <span className={styles.countPill}>
+                  <span className="ml-2 rounded-full bg-[#5D1C6A]/10 px-2 py-0.5 text-[10px] font-medium normal-case text-[#5D1C6A] dark:text-[#CA5995]">
                     {sessIncoming.length} in
                   </span>
                 ) : null}
                 {sessOutgoing.length > 0 ? (
-                  <span className={`${styles.countPill} ${styles.countPillWarn}`}>
+                  <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium normal-case text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
                     {sessOutgoing.length} out
                   </span>
                 ) : null}
@@ -475,15 +474,33 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
             </div>
           </aside>
         </div>
-      </main>
+      </div>
 
       {openChatFriendId && (
-        <FriendChat
-          friendId={openChatFriendId}
-          friendLabel={openChatFriendLabel}
-          friendAvatarUrl={openChatFriendAvatarUrl}
-          onClose={() => setOpenChatFriendId(null)}
-        />
+        isMobile ? (
+          <div className="fixed inset-0 z-[55] flex flex-col bg-white pb-16 dark:bg-gray-900 lg:static lg:pb-0">
+            <FriendChat
+              friendId={openChatFriendId}
+              friendLabel={openChatFriendLabel}
+              friendAvatarUrl={openChatFriendAvatarUrl}
+              friendIsAdmin={
+                friends.find((f) => f.user_id === openChatFriendId)?.isAdmin
+              }
+              onClose={() => setOpenChatFriendId(null)}
+              layout="fullscreen"
+            />
+          </div>
+        ) : (
+          <FriendChat
+            friendId={openChatFriendId}
+            friendLabel={openChatFriendLabel}
+            friendAvatarUrl={openChatFriendAvatarUrl}
+            friendIsAdmin={
+              friends.find((f) => f.user_id === openChatFriendId)?.isAdmin
+            }
+            onClose={() => setOpenChatFriendId(null)}
+          />
+        )
       )}
       {bookSessionFriendId && (
         <BookSessionModal
@@ -498,6 +515,6 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
           onSuccess={() => load()}
         />
       )}
-    </div>
+    </Shell>
   );
 }

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import CommunityModerationMenu from "./CommunityModerationMenu";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
+import { AdminTag } from "@/components/admin-tag";
 import type { ReportTargetType } from "@/lib/reportConstants";
 
 export type Post = {
@@ -28,6 +29,7 @@ export type Post = {
   authorUsername?: string | null;
   authorAvatarUrl?: string | null;
   authorInitials: string;
+  authorIsAdmin?: boolean;
   likesCount: number;
   commentsCount: number;
   isLiked: boolean;
@@ -43,6 +45,7 @@ export type Comment = {
   authorUsername?: string | null;
   authorAvatarUrl?: string | null;
   authorInitials: string;
+  authorIsAdmin?: boolean;
 };
 
 type AuthorLike = {
@@ -92,6 +95,23 @@ interface PostCardProps {
     about?: string | null;
     avatarUrl?: string | null;
   }) => void;
+}
+
+function AuthorName({
+  name,
+  isAdmin,
+  className = "font-medium text-sm",
+}: {
+  name: string;
+  isAdmin?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 max-w-full min-w-0 ${className}`}>
+      <span className="truncate">{name}</span>
+      {isAdmin ? <AdminTag size="xs" /> : null}
+    </span>
+  );
 }
 
 export default function PostCard({
@@ -260,14 +280,14 @@ export default function PostCard({
                   }
                   className="font-medium text-sm hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors"
                 >
-                  {post.authorName}
+                  <AuthorName name={post.authorName} isAdmin={post.authorIsAdmin} />
                 </button>
               ) : post.authorUsername ? (
-                <Link href={`/u/${post.authorUsername}`} className="font-medium text-sm hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors">
-                  {post.authorName}
+                <Link href={`/u/${post.authorUsername}`} className="hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors">
+                  <AuthorName name={post.authorName} isAdmin={post.authorIsAdmin} />
                 </Link>
               ) : (
-                <span className="font-medium text-sm">{post.authorName}</span>
+                <AuthorName name={post.authorName} isAdmin={post.authorIsAdmin} />
               )}
               <span className="text-xs text-muted-foreground">
                 {formatTime(post.createdAt)}
@@ -432,18 +452,28 @@ export default function PostCard({
                                   avatarUrl: comment.authorAvatarUrl ?? null,
                                 })
                               }
-                              className="text-xs font-medium hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors"
+                              className="text-xs hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors"
                             >
-                              {comment.authorName}
+                              <AuthorName
+                                name={comment.authorName}
+                                isAdmin={comment.authorIsAdmin}
+                                className="text-xs font-medium"
+                              />
                             </button>
                           ) : comment.authorUsername ? (
-                            <Link href={`/u/${comment.authorUsername}`} className="text-xs font-medium hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors">
-                              {comment.authorName}
+                            <Link href={`/u/${comment.authorUsername}`} className="hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline transition-colors">
+                              <AuthorName
+                                name={comment.authorName}
+                                isAdmin={comment.authorIsAdmin}
+                                className="text-xs font-medium"
+                              />
                             </Link>
                           ) : (
-                            <span className="text-xs font-medium">
-                              {comment.authorName}
-                            </span>
+                            <AuthorName
+                              name={comment.authorName}
+                              isAdmin={comment.authorIsAdmin}
+                              className="text-xs font-medium"
+                            />
                           )}
                           <span className="text-[10px] text-muted-foreground">
                             {formatTime(comment.createdAt)}

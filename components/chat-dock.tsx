@@ -7,12 +7,14 @@ import { FiX } from "react-icons/fi";
 import { useSession } from "next-auth/react";
 import { getAblyClient } from "@/lib/ably-client";
 import { userChannel } from "@/lib/realtimeChannels";
+import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 
 type Friend = {
   user_id: string;
   email?: string;
   name?: string | null;
   avatarUrl?: string | null;
+  isAdmin?: boolean;
   presence?: "online" | "away" | "offline";
   lastMessage?: string;
 };
@@ -26,6 +28,7 @@ type OpenChat = {
 
 export function ChatDock() {
   const { data: session } = useSession();
+  const { isMobile, mounted } = useIsMobileShell();
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   const [panelOpen, setPanelOpen] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -194,6 +197,10 @@ export function ChatDock() {
   const overflowCount = Math.max(0, openChats.length - 3);
   const visibleChats = openChats.slice(-3);
 
+  if (mounted && isMobile) {
+    return null;
+  }
+
   return (
     <div className="pointer-events-none fixed bottom-4 right-4 z-40">
       {/* Friends panel shows when toggled from sidebar */}
@@ -271,6 +278,9 @@ export function ChatDock() {
                 friendId={c.friendId}
                 friendLabel={c.friendLabel}
                 friendAvatarUrl={c.friendAvatarUrl}
+                friendIsAdmin={
+                  friends.find((f) => f.user_id === c.friendId)?.isAdmin
+                }
                 onClose={() => closeChat(c.friendId)}
                 onMinimizeToggle={() => toggleMinimize(c.friendId)}
                 minimized={c.minimized}

@@ -15,6 +15,8 @@ import SessionHistory from "../components/SessionHistory";
 import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSidebar";
 import { EmailVerificationStrip } from "@/components/email-verification-strip";
 import { UserTimezoneProvider } from "@/components/user-timezone-provider";
+import { useIsMobileShell } from "@/hooks/useIsMobileShell";
+import { MobileBottomNav, MobileMoreMenu } from "../components/Mobile";
 
 type TourStep = {
   title: string;
@@ -39,7 +41,7 @@ const DASHBOARD_TABS: TabKey[] = [
   "community",
   "matches",
 ];
-const TOUR_STEPS: TourStep[] = [
+const TOUR_STEPS_DESKTOP: TourStep[] = [
   {
     title: "Profile",
     description:
@@ -72,9 +74,46 @@ const TOUR_STEPS: TourStep[] = [
   },
 ];
 
+const TOUR_STEPS_MOBILE: TourStep[] = [
+  {
+    title: "Profile",
+    description:
+      "Open More at the bottom, then Profile to add your focus style and working hours.",
+    tab: "profile",
+  },
+  {
+    title: "Home",
+    description:
+      "Your calendar lives on Home. Book, join, and manage focus sessions from here.",
+    tab: "dashboard",
+  },
+  {
+    title: "Friends",
+    description:
+      "Tap Friends in the bottom bar to send session requests and chat with partners.",
+    tab: "friends",
+  },
+  {
+    title: "Community",
+    description:
+      "Share wins and connect with others from the Community tab.",
+    tab: "community",
+  },
+  {
+    title: "Settings",
+    description:
+      "Open More for Settings, Sessions history, theme, and account preferences.",
+    tab: "settings",
+  },
+];
+
 function DashboardContent() {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [pendingSessionRequests, setPendingSessionRequests] = useState(0);
+  const { isMobile, mounted: mobileMounted } = useIsMobileShell();
+  const tourSteps = isMobile ? TOUR_STEPS_MOBILE : TOUR_STEPS_DESKTOP;
   const [profilePreview, setProfilePreview] = useState<ProfilePreviewPayload | null>(
     null,
   );
@@ -100,6 +139,41 @@ function DashboardContent() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const fetchPending = () => {
+      fetch("/api/session-requests?type=incoming&status=pending")
+        .then((res) => (res.ok ? res.json() : { requests: [] }))
+        .then((data) =>
+          setPendingSessionRequests((data.requests || []).length),
+        )
+        .catch(() => setPendingSessionRequests(0));
+    };
+    fetchPending();
+    window.addEventListener("focus", fetchPending);
+    window.addEventListener(
+      "friends:session-requests-updated",
+      fetchPending,
+    );
+    return () => {
+      window.removeEventListener("focus", fetchPending);
+      window.removeEventListener(
+        "friends:session-requests-updated",
+        fetchPending,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "friends") {
+      fetch("/api/session-requests?type=incoming&status=pending")
+        .then((res) => (res.ok ? res.json() : { requests: [] }))
+        .then((data) =>
+          setPendingSessionRequests((data.requests || []).length),
+        )
+        .catch(() => setPendingSessionRequests(0));
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     const requestedTab = searchParams.get("tab");
@@ -130,8 +204,8 @@ function DashboardContent() {
 
   useEffect(() => {
     if (!isTourOpen) return;
-    setActiveTab(TOUR_STEPS[tourStepIndex].tab);
-  }, [isTourOpen, tourStepIndex]);
+    setActiveTab(tourSteps[tourStepIndex].tab);
+  }, [isTourOpen, tourStepIndex, tourSteps]);
 
   useEffect(() => {
     if (searchParams.get("new") !== "true") return;
@@ -161,7 +235,7 @@ function DashboardContent() {
   };
 
   const goNext = () => {
-    if (tourStepIndex === TOUR_STEPS.length - 1) {
+    if (tourStepIndex === tourSteps.length - 1) {
       closeTour();
       return;
     }
@@ -172,42 +246,66 @@ function DashboardContent() {
     setTourStepIndex((prev) => Math.max(0, prev - 1));
   };
 
+  const handleSelectTab = (tab: TabKey) => {
+    setMoreMenuOpen(false);
+    setActiveTab(tab);
+  };
+
+  const mainPadding =
+    activeTab === "dashboard"
+      ? isMobile
+        ? "h-full"
+        : "h-full p-6"
+      : activeTab === "friends" || activeTab === "community"
+        ? "h-full overflow-y-auto no-scrollbar"
+        : isMobile
+          ? "h-full overflow-y-auto p-4 pb-20"
+          : "h-full overflow-y-auto p-6";
+
   return (
     <UserTimezoneProvider>
     <div className="flex h-screen overflow-hidden">
-      <SideBar
-        activeTab={activeTab}
-        onSelect={setActiveTab}
-        showAdminTab={isAdmin}
-      />
-      <div className="ml-16 flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="hidden lg:block">
+        <SideBar
+          activeTab={activeTab}
+          onSelect={handleSelectTab}
+          showAdminTab={isAdmin}
+        />
+      </div>
+      <div className="ml-0 flex min-w-0 flex-1 flex-col overflow-hidden lg:ml-16">
         <EmailVerificationStrip />
-        <div className="flex min-h-0 flex-1 overflow-hidden">
+        {mobileMounted && isMobile && (
+          <p className="shrink-0 border-b border-amber-200/80 bg-amber-50 px-3 py-1.5 text-center text-[11px] leading-snug text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+            Refocus works best on desktop — mobile is great for quick sessions and
+            chat.
+          </p>
+        )}
+        <div className="flex min-h-0 flex-1 overflow-hidden pb-16 lg:pb-0">
           <main
             className={`min-h-0 flex-1 overflow-hidden ${activeTab === "dashboard" ? "bg-dotted-grid" : ""}`}
           >
             {activeTab === "dashboard" && (
-              <div className="h-full p-6">
+              <div className={mainPadding}>
                 <Dashboard />
               </div>
             )}
             {activeTab === "sessions" && (
-              <div className="h-full overflow-y-auto p-6">
-                <SessionHistory />
+              <div className={mainPadding}>
+                <SessionHistory compact={isMobile} />
               </div>
             )}
             {activeTab === "profile" && (
-              <div className="h-full overflow-y-auto p-6">
+              <div className={mainPadding}>
                 <Profile />
               </div>
             )}
             {activeTab === "settings" && (
-              <div className="h-full overflow-y-auto p-6">
+              <div className={mainPadding}>
                 <Settings />
               </div>
             )}
             {activeTab === "friends" && (
-              <div className="h-full overflow-y-auto no-scrollbar">
+              <div className={mainPadding}>
                 <Friends onPreviewProfile={setProfilePreview} />
               </div>
             )}
@@ -215,15 +313,24 @@ function DashboardContent() {
               <Community onPreviewProfile={setProfilePreview} />
             )}
             {activeTab === "matches" && (
-              <div className="h-full overflow-y-auto p-6">
+              <div className={mainPadding}>
                 <Matchmaking />
               </div>
             )}
-            {activeTab === "admin" && isAdmin && <AdminPanel />}
+            {activeTab === "admin" && isAdmin && (
+              <div className={isMobile ? "h-full overflow-y-auto pb-20" : "h-full"}>
+                {isMobile && (
+                  <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
+                    Moderation tools work best on desktop, but all actions are available here.
+                  </div>
+                )}
+                <AdminPanel />
+              </div>
+            )}
           </main>
           {(activeTab === "friends" || activeTab === "community") && (
             <div
-              className={`overflow-hidden transition-all duration-300 ease-out ${
+              className={`hidden overflow-hidden transition-all duration-300 ease-out lg:block ${
                 profilePreview
                   ? isPreviewSidebarCollapsed
                     ? "w-[4.5rem] translate-x-0 opacity-100 p-4 pl-0"
@@ -246,6 +353,24 @@ function DashboardContent() {
         </div>
       </div>
 
+      {mobileMounted && isMobile && (
+        <>
+          <MobileBottomNav
+            activeTab={activeTab}
+            onSelect={handleSelectTab}
+            onMoreOpen={() => setMoreMenuOpen(true)}
+            pendingSessionRequests={pendingSessionRequests}
+          />
+          <MobileMoreMenu
+            open={moreMenuOpen}
+            onClose={() => setMoreMenuOpen(false)}
+            activeTab={activeTab}
+            onSelect={handleSelectTab}
+            isAdmin={isAdmin}
+          />
+        </>
+      )}
+
       {isTourOpen && (
         <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/45 p-4 sm:items-center">
           <div
@@ -256,7 +381,7 @@ function DashboardContent() {
           >
             <div className="flex items-center justify-between gap-4">
               <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-                Step {tourStepIndex + 1} of {TOUR_STEPS.length}
+                Step {tourStepIndex + 1} of {tourSteps.length}
               </p>
               <button
                 type="button"
@@ -268,18 +393,18 @@ function DashboardContent() {
             </div>
 
             <h2 className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
-              {TOUR_STEPS[tourStepIndex].title}
+              {tourSteps[tourStepIndex].title}
             </h2>
             <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
-              {TOUR_STEPS[tourStepIndex].description}
+              {tourSteps[tourStepIndex].description}
             </p>
 
             <div className="mt-4 flex items-center gap-2">
-              {TOUR_STEPS.map((step) => (
+              {tourSteps.map((step) => (
                 <span
                   key={step.title}
                   className={`h-1.5 rounded-full transition-all ${
-                    TOUR_STEPS[tourStepIndex].title === step.title
+                    tourSteps[tourStepIndex].title === step.title
                       ? "w-8 bg-[#CA5995]"
                       : "w-3 bg-gray-300 dark:bg-gray-600"
                   }`}
@@ -301,7 +426,7 @@ function DashboardContent() {
                 onClick={goNext}
                 className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#CA5995]"
               >
-                {tourStepIndex === TOUR_STEPS.length - 1 ? "Finish" : "Next"}
+                {tourStepIndex === tourSteps.length - 1 ? "Finish" : "Next"}
               </button>
             </div>
           </div>

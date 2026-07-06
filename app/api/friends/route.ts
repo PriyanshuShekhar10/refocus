@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { ADMIN_ROLE } from "@/lib/admin";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -45,7 +46,13 @@ export async function GET(req: NextRequest) {
 
   let usersById: Record<
     string,
-    { email?: string; name?: string; username?: string; avatarUrl?: string | null }
+    {
+      email?: string;
+      name?: string;
+      username?: string;
+      avatarUrl?: string | null;
+      isAdmin?: boolean;
+    }
   > = {};
   if (otherIds.length > 0) {
     const users = await db
@@ -56,9 +63,10 @@ export async function GET(req: NextRequest) {
         username?: string;
         avatar_url?: string | null;
         image?: string | null;
+        role?: string | null;
       }>("users")
       .find({ _id: { $in: otherIds.map((id: string) => new ObjectId(id)) } })
-      .project({ email: 1, name: 1, username: 1, avatar_url: 1, image: 1 })
+      .project({ email: 1, name: 1, username: 1, avatar_url: 1, image: 1, role: 1 })
       .toArray();
     usersById = Object.fromEntries(
       users.map((u) => [
@@ -68,6 +76,7 @@ export async function GET(req: NextRequest) {
           name: u.name,
           username: u.username,
           avatarUrl: resolveAvatarUrl(u),
+          isAdmin: u.role === ADMIN_ROLE,
         },
       ]),
     );
@@ -77,7 +86,15 @@ export async function GET(req: NextRequest) {
   // keep the earliest 'since' date (friendship start).
   const friendsMap = new Map<
     string,
-    { user_id: string; email?: string; name?: string; username?: string; avatarUrl?: string | null; since?: Date }
+    {
+      user_id: string;
+      email?: string;
+      name?: string;
+      username?: string;
+      avatarUrl?: string | null;
+      isAdmin?: boolean;
+      since?: Date;
+    }
   >();
   for (const r of requests) {
     const otherId = r.from_user_id === userId ? r.to_user_id : r.from_user_id;
@@ -94,6 +111,7 @@ export async function GET(req: NextRequest) {
         name: user.name || undefined,
         username: user.username || undefined,
         avatarUrl: user.avatarUrl ?? null,
+        isAdmin: user.isAdmin ?? false,
         since,
       });
     } else if (existing.since && since && since < existing.since) {

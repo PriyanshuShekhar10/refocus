@@ -31,6 +31,11 @@ export type DurationMin = (typeof DURATION_OPTIONS)[number];
 export const DEFAULT_DURATION: DurationMin = 50;
 
 /**
+ * Default session start hour (24h) for mobile quick-book and initial scroll.
+ */
+export const DEFAULT_SESSION_HOUR = 17;
+
+/**
  * Default filter state (all durations selected)
  */
 export const DEFAULT_DURATION_FILTER: DurationMin[] = [...DURATION_OPTIONS];

@@ -1,20 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Calendar from "./Calendar";
 import { MobileCalendar } from "./Mobile";
+import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 
 export default function Dashboard() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const { isMobile, mounted } = useIsMobileShell();
 
   if (!mounted) {
     return (
@@ -25,7 +16,11 @@ export default function Dashboard() {
   }
 
   if (isMobile) {
-    return <MobileCalendar />;
+    return (
+      <div className="h-full min-h-0">
+        <MobileCalendar />
+      </div>
+    );
   }
 
   return (

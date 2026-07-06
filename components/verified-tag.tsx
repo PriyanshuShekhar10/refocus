@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { ShieldCheck } from "lucide-react";
+import { AdminTag } from "@/components/admin-tag";
 
 type Props = {
   /** Extra-small for chat; small for calendar lists */
@@ -30,6 +31,7 @@ export function VerifiedTag({ size = "sm", className = "" }: Props) {
 type VerifiedNameProps = {
   name: ReactNode;
   verified?: boolean;
+  isAdmin?: boolean;
   className?: string;
   nameClassName?: string;
 };
@@ -37,6 +39,7 @@ type VerifiedNameProps = {
 export function VerifiedName({
   name,
   verified,
+  isAdmin,
   className = "",
   nameClassName = "",
 }: VerifiedNameProps) {
@@ -45,6 +48,7 @@ export function VerifiedName({
       className={`inline-flex max-w-full min-w-0 items-center gap-1 ${className}`}
     >
       <span className={`truncate ${nameClassName}`}>{name}</span>
+      {isAdmin ? <AdminTag size="xs" /> : null}
       {verified ? <VerifiedTag size="xs" /> : null}
     </span>
   );

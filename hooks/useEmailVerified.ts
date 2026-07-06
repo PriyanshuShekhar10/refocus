@@ -27,7 +27,8 @@ export function useEmailVerified() {
   return {
     verified,
     loading: verified === null,
-    canInteract: verified === true,
+    /** Block only when we know the address is unverified (not while loading). */
+    canInteract: verified !== false,
     message: EMAIL_VERIFICATION_REQUIRED_MESSAGE,
     refresh,
   };
