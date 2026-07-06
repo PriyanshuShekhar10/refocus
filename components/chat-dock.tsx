@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type SetStateAction } from "react";
 import FriendChat from "@/app/(product)/components/FriendChat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FiX } from "react-icons/fi";
@@ -8,16 +8,9 @@ import { useSession } from "next-auth/react";
 import { getAblyClient } from "@/lib/ably-client";
 import { userChannel } from "@/lib/realtimeChannels";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
-
-type Friend = {
-  user_id: string;
-  email?: string;
-  name?: string | null;
-  avatarUrl?: string | null;
-  isAdmin?: boolean;
-  presence?: "online" | "away" | "offline";
-  lastMessage?: string;
-};
+import { useFriendsList } from "@/hooks/useFriendsData";
+import useSWR from "swr";
+import { swrKeys } from "@/lib/swr/keys";
 
 type OpenChat = {
   friendId: string;
@@ -31,27 +24,33 @@ export function ChatDock() {
   const { isMobile, mounted } = useIsMobileShell();
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   const [panelOpen, setPanelOpen] = useState(false);
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [friendsLoading, setFriendsLoading] = useState(false);
-  const [friendsLoaded, setFriendsLoaded] = useState(false);
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const {
+    friends,
+    loading: friendsLoading,
+    loaded: friendsLoaded,
+    refresh: refreshFriends,
+  } = useFriendsList();
+  const { data: unreadData, mutate: mutateUnread } = useSWR<{
+    counts?: Record<string, number>;
+  }>(swrKeys.chatUnreadCounts);
+  const unreadCounts = unreadData?.counts ?? {};
+  const setUnreadCounts = (
+    updater: SetStateAction<Record<string, number>>,
+  ) => {
+    void mutateUnread(
+      (current) => {
+        const prev = current?.counts ?? {};
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        return { counts: next };
+      },
+      { revalidate: false },
+    );
+  };
   const [openChats, setOpenChats] = useState<OpenChat[]>([]);
 
   const loadFriends = useCallback(async () => {
-    setFriendsLoading(true);
-    try {
-      const res = await fetch("/api/friends", { cache: "no-store" });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setFriends((data.friends || []) as Friend[]);
-        setFriendsLoaded(true);
-      }
-    } catch {
-      // Keep existing list on transient failures.
-    } finally {
-      setFriendsLoading(false);
-    }
-  }, []);
+    await refreshFriends();
+  }, [refreshFriends]);
 
   useEffect(() => {
     loadFriends();
@@ -73,13 +72,6 @@ export function ChatDock() {
   }, [panelOpen, loadFriends]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/chat/unread-counts");
-        const data = await res.json();
-        if (res.ok) setUnreadCounts(data.counts || {});
-      } catch {}
-    })();
     if (!currentUserId) return;
     const client = getAblyClient();
     const channel = client.channels.get(userChannel(currentUserId));
@@ -251,7 +243,7 @@ export function ChatDock() {
                         {label}
                       </div>
                       <div className="text-xs text-gray-500 truncate max-w-[160px]">
-                        {f.lastMessage || ""}
+                        {f.username || f.email || ""}
                       </div>
                     </div>
                   </div>

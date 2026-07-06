@@ -16,6 +16,8 @@ import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSideba
 import { EmailVerificationStrip } from "@/components/email-verification-strip";
 import { UserTimezoneProvider } from "@/components/user-timezone-provider";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
+import { useAdminMe } from "@/hooks/useAdminMe";
+import { usePendingSessionRequestsCount } from "@/hooks/useFriendsData";
 import { MobileBottomNav, MobileMoreMenu } from "../components/Mobile";
 
 type TourStep = {
@@ -107,11 +109,34 @@ const TOUR_STEPS_MOBILE: TourStep[] = [
   },
 ];
 
+function TabPanel({
+  tab,
+  activeTab,
+  className,
+  children,
+}: {
+  tab: TabKey;
+  activeTab: TabKey;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const isActive = activeTab === tab;
+  return (
+    <div
+      className={`${className ?? ""}${isActive ? "" : " hidden"}`}
+      aria-hidden={!isActive}
+    >
+      {children}
+    </div>
+  );
+}
+
 function DashboardContent() {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin } = useAdminMe();
+  const { count: pendingSessionRequests, refresh: refreshPendingRequests } =
+    usePendingSessionRequestsCount();
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-  const [pendingSessionRequests, setPendingSessionRequests] = useState(0);
   const { isMobile, mounted: mobileMounted } = useIsMobileShell();
   const tourSteps = isMobile ? TOUR_STEPS_MOBILE : TOUR_STEPS_DESKTOP;
   const [profilePreview, setProfilePreview] = useState<ProfilePreviewPayload | null>(
@@ -125,55 +150,14 @@ function DashboardContent() {
   const router = useRouter();
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/admin/me");
-        const data = await res.json();
-        if (!cancelled && res.ok) setIsAdmin(Boolean(data.isAdmin));
-      } catch {
-        // ignore
-      }
-    })();
+    const onUpdated = () => {
+      void refreshPendingRequests();
+    };
+    window.addEventListener("friends:session-requests-updated", onUpdated);
     return () => {
-      cancelled = true;
+      window.removeEventListener("friends:session-requests-updated", onUpdated);
     };
-  }, []);
-
-  useEffect(() => {
-    const fetchPending = () => {
-      fetch("/api/session-requests?type=incoming&status=pending")
-        .then((res) => (res.ok ? res.json() : { requests: [] }))
-        .then((data) =>
-          setPendingSessionRequests((data.requests || []).length),
-        )
-        .catch(() => setPendingSessionRequests(0));
-    };
-    fetchPending();
-    window.addEventListener("focus", fetchPending);
-    window.addEventListener(
-      "friends:session-requests-updated",
-      fetchPending,
-    );
-    return () => {
-      window.removeEventListener("focus", fetchPending);
-      window.removeEventListener(
-        "friends:session-requests-updated",
-        fetchPending,
-      );
-    };
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === "friends") {
-      fetch("/api/session-requests?type=incoming&status=pending")
-        .then((res) => (res.ok ? res.json() : { requests: [] }))
-        .then((data) =>
-          setPendingSessionRequests((data.requests || []).length),
-        )
-        .catch(() => setPendingSessionRequests(0));
-    }
-  }, [activeTab]);
+  }, [refreshPendingRequests]);
 
   useEffect(() => {
     const requestedTab = searchParams.get("tab");
@@ -284,49 +268,51 @@ function DashboardContent() {
           <main
             className={`min-h-0 flex-1 overflow-hidden ${activeTab === "dashboard" ? "bg-dotted-grid" : ""}`}
           >
-            {activeTab === "dashboard" && (
+            <TabPanel tab="dashboard" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
                 <Dashboard />
               </div>
-            )}
-            {activeTab === "sessions" && (
+            </TabPanel>
+            <TabPanel tab="sessions" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
                 <SessionHistory compact={isMobile} />
               </div>
-            )}
-            {activeTab === "profile" && (
+            </TabPanel>
+            <TabPanel tab="profile" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
                 <Profile />
               </div>
-            )}
-            {activeTab === "settings" && (
+            </TabPanel>
+            <TabPanel tab="settings" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
                 <Settings />
               </div>
-            )}
-            {activeTab === "friends" && (
+            </TabPanel>
+            <TabPanel tab="friends" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
                 <Friends onPreviewProfile={setProfilePreview} />
               </div>
-            )}
-            {activeTab === "community" && (
+            </TabPanel>
+            <TabPanel tab="community" activeTab={activeTab} className="h-full">
               <Community onPreviewProfile={setProfilePreview} />
-            )}
-            {activeTab === "matches" && (
+            </TabPanel>
+            <TabPanel tab="matches" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
                 <Matchmaking />
               </div>
-            )}
-            {activeTab === "admin" && isAdmin && (
-              <div className={isMobile ? "h-full overflow-y-auto pb-20" : "h-full"}>
-                {isMobile && (
-                  <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
-                    Moderation tools work best on desktop, but all actions are available here.
-                  </div>
-                )}
-                <AdminPanel />
-              </div>
-            )}
+            </TabPanel>
+            {isAdmin ? (
+              <TabPanel tab="admin" activeTab={activeTab} className="h-full">
+                <div className={isMobile ? "h-full overflow-y-auto pb-20" : "h-full"}>
+                  {isMobile && (
+                    <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
+                      Moderation tools work best on desktop, but all actions are available here.
+                    </div>
+                  )}
+                  <AdminPanel />
+                </div>
+              </TabPanel>
+            ) : null}
           </main>
           {(activeTab === "friends" || activeTab === "community") && (
             <div

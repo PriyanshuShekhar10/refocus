@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, UserPlus, Zap } from "lucide-react";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
+import { swrKeys } from "@/lib/swr/keys";
 
 type MatchUser = {
   _id: string;
@@ -20,31 +22,16 @@ type MatchUser = {
 };
 
 export default function Matchmaking() {
-  const [matches, setMatches] = useState<MatchUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error, isLoading, mutate } = useSWR<{ matches?: MatchUser[] }>(
+    swrKeys.communityMatch,
+  );
+  const matches = data?.matches ?? [];
+  const loading = isLoading && !data;
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
   const { canInteract, message: verifyMessage } = useEmailVerified();
 
-  useEffect(() => {
-    fetchMatches();
-  }, []);
-
   const fetchMatches = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/community/match");
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to fetch matches");
-      }
-      const data = await res.json();
-      setMatches(data.matches || []);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
+    await mutate();
   };
 
   const sendFriendRequest = async (userId: string) => {
@@ -88,7 +75,7 @@ export default function Matchmaking() {
   if (error) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-        <p className="text-red-500">Error: {error}</p>
+        <p className="text-red-500">Error: {(error as Error).message}</p>
         <Button onClick={fetchMatches}>Try Again</Button>
       </div>
     );
