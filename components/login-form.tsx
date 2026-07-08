@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { DButton, Field, DInput, DPasswordInput, designStyles } from "@/components/design";
+import {
+  AuthDivider,
+  FirebaseOAuthButtons,
+} from "@/components/firebase-oauth-buttons";
 
 export function LoginForm({
   className,
@@ -15,6 +19,7 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -68,6 +73,15 @@ export function LoginForm({
         </p>
       </div>
 
+      <FirebaseOAuthButtons
+        disabled={isLoading}
+        onError={setError}
+        onLoadingChange={setIsOAuthLoading}
+        onSuccess={() => router.push("/dashboard")}
+      />
+
+      <AuthDivider />
+
       <form
         onSubmit={handleLogin}
         style={{ display: "flex", flexDirection: "column", gap: 16 }}
@@ -118,7 +132,7 @@ export function LoginForm({
           variant="primary"
           size="lg"
           full
-          disabled={isLoading}
+          disabled={isLoading || isOAuthLoading}
         >
           {isLoading ? (
             <>Signing in…</>

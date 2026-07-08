@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Shell } from "@/components/design";
+import { useWallpaperActive } from "@/components/wallpaper-context";
 import { RecentSessionPartners } from "@/components/recent-session-partners";
 import { SessionStatsDashboard } from "@/components/session-stats/dashboard";
 
@@ -12,9 +13,10 @@ interface SessionHistoryProps {
 
 export default function SessionHistory({ compact = false }: SessionHistoryProps) {
   const [statsExpanded, setStatsExpanded] = useState(!compact);
+  const wallpaperActive = useWallpaperActive();
 
   return (
-    <Shell>
+    <Shell transparent={wallpaperActive}>
       <div
         style={{
           padding: compact ? "4px 0" : "8px 4px",

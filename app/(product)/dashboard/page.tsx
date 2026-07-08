@@ -16,9 +16,11 @@ import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSideba
 import { EmailVerificationStrip } from "@/components/email-verification-strip";
 import { UserTimezoneProvider } from "@/components/user-timezone-provider";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
+import { useDashboardWallpaper } from "@/hooks/useDashboardWallpaper";
 import { useAdminMe } from "@/hooks/useAdminMe";
 import { usePendingSessionRequestsCount } from "@/hooks/useFriendsData";
 import { MobileBottomNav, MobileMoreMenu } from "../components/Mobile";
+import { WallpaperProvider } from "@/components/wallpaper-context";
 
 type TourStep = {
   title: string;
@@ -43,6 +45,7 @@ const DASHBOARD_TABS: TabKey[] = [
   "community",
   "matches",
 ];
+
 const TOUR_STEPS_DESKTOP: TourStep[] = [
   {
     title: "Profile",
@@ -235,6 +238,15 @@ function DashboardContent() {
     setActiveTab(tab);
   };
 
+  const { wallpaperUrl } = useDashboardWallpaper();
+
+  const showWallpaper = !!wallpaperUrl;
+  const mainBgClass = showWallpaper
+    ? "bg-dashboard-wallpaper"
+    : activeTab === "dashboard"
+      ? "bg-dotted-grid"
+      : "";
+
   const mainPadding =
     activeTab === "dashboard"
       ? isMobile
@@ -265,8 +277,12 @@ function DashboardContent() {
           </p>
         )}
         <div className="flex min-h-0 flex-1 overflow-hidden pb-16 lg:pb-0">
+          <WallpaperProvider active={!!showWallpaper}>
           <main
-            className={`min-h-0 flex-1 overflow-hidden ${activeTab === "dashboard" ? "bg-dotted-grid" : ""}`}
+            className={`min-h-0 flex-1 overflow-hidden ${mainBgClass}`}
+            style={
+              showWallpaper ? { backgroundImage: `url(${wallpaperUrl})` } : undefined
+            }
           >
             <TabPanel tab="dashboard" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
@@ -314,6 +330,7 @@ function DashboardContent() {
               </TabPanel>
             ) : null}
           </main>
+          </WallpaperProvider>
           {(activeTab === "friends" || activeTab === "community") && (
             <div
               className={`hidden overflow-hidden transition-all duration-300 ease-out lg:block ${

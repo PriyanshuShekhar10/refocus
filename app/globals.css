@@ -217,6 +217,15 @@ html {
   );
 }
 
+/* Custom dashboard wallpaper — image only; calendar cards keep their own surfaces */
+.bg-dashboard-wallpaper {
+  background-color: transparent;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 /* Optional: transparent scrollbar background (if you want visible scrollbar) */
 ::-webkit-scrollbar {
   background-color: transparent;

@@ -4,6 +4,8 @@ import styles from "./design.module.css";
 type ShellProps = {
   children: ReactNode;
   className?: string;
+  /** Let a parent dashboard wallpaper show through (Sessions, Settings, etc.). */
+  transparent?: boolean;
 };
 
 /**
@@ -12,9 +14,13 @@ type ShellProps = {
  * the top of a page or section. Inside the Shell, design-module classes
  * (.btn, .input, .card, .eyebrow, etc.) pick up the right variables.
  */
-export function Shell({ children, className }: ShellProps) {
+export function Shell({ children, className, transparent }: ShellProps) {
   return (
-    <div className={[styles.shell, className].filter(Boolean).join(" ")}>
+    <div
+      className={[styles.shell, transparent ? styles.shellTransparent : "", className]
+        .filter(Boolean)
+        .join(" ")}
+    >
       {children}
     </div>
   );

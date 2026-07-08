@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import SideBar, { type TabKey } from "../components/Sidebar/sidebar";
 import BacklogBoard from "../components/BacklogBoard";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
+import { useDashboardWallpaper } from "@/hooks/useDashboardWallpaper";
+import { WallpaperProvider } from "@/components/wallpaper-context";
 import { MobileBottomNav, MobileMoreMenu } from "../components/Mobile";
 
 export default function BacklogPage() {
@@ -12,6 +14,8 @@ export default function BacklogPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const { isMobile, mounted } = useIsMobileShell();
+  const { wallpaperUrl } = useDashboardWallpaper();
+  const showWallpaper = !!wallpaperUrl;
 
   useEffect(() => {
     let cancelled = false;
@@ -79,8 +83,17 @@ export default function BacklogPage() {
         showBacklogTab
         showAdminTab={isAdmin}
       />
-      <main className="ml-16 flex-1 bg-gray-50 dark:bg-gray-950">
-        <BacklogBoard />
+      <main
+        className={`ml-16 flex-1 ${
+          showWallpaper ? "bg-dashboard-wallpaper" : "bg-gray-50 dark:bg-gray-950"
+        }`}
+        style={
+          showWallpaper ? { backgroundImage: `url(${wallpaperUrl})` } : undefined
+        }
+      >
+        <WallpaperProvider active={showWallpaper}>
+          <BacklogBoard />
+        </WallpaperProvider>
       </main>
     </div>
   );

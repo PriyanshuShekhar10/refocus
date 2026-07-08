@@ -11,7 +11,7 @@ interface PageHeaderProps {
 
 export default function PageHeader({ query, onQueryChange }: PageHeaderProps) {
   return (
-    <header className="mb-6">
+    <header className={`${designStyles.card} mb-6`}>
       <span className={designStyles.eyebrow}>People</span>
       <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -30,10 +30,17 @@ export default function PageHeader({ query, onQueryChange }: PageHeaderProps) {
           </p>
         </div>
         <label
-          className="flex h-10 w-full max-w-xs items-center gap-2 rounded-lg border border-border bg-background px-3"
+          className="flex h-10 w-full max-w-xs items-center gap-2 rounded-lg px-3"
+          style={{
+            border: "1px solid var(--line)",
+            background: "var(--card)",
+          }}
           role="search"
         >
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <Search
+            className="h-4 w-4 shrink-0"
+            style={{ color: "var(--ink-mute)" }}
+          />
           <input
             type="text"
             placeholder="Search friends"
@@ -42,7 +49,8 @@ export default function PageHeader({ query, onQueryChange }: PageHeaderProps) {
               onQueryChange(e.target.value)
             }
             aria-label="Search friends"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="flex-1 bg-transparent text-sm outline-none"
+            style={{ color: "var(--ink)" }}
           />
         </label>
       </div>

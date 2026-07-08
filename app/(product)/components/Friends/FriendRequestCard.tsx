@@ -51,7 +51,13 @@ export default function FriendRequestCard({
   const initial = (display[0] ?? "?").toUpperCase();
 
   return (
-    <div className="mb-3 rounded-xl border border-border bg-card p-4">
+    <div
+      className="mb-3 rounded-xl border p-4"
+      style={{
+        borderColor: "var(--line)",
+        background: "var(--line-soft)",
+      }}
+    >
       <div className="flex items-start gap-3">
         <Avatar className="h-9 w-9 shrink-0">
           {counterpartAvatar ? (
@@ -60,7 +66,7 @@ export default function FriendRequestCard({
           <AvatarFallback className="bg-muted text-xs">{initial}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-foreground">
+          <p className="text-sm" style={{ color: "var(--ink)" }}>
             {direction === "incoming" ? (
               <>
                 <span className="font-medium">{display}</span> sent you a friend
@@ -73,7 +79,7 @@ export default function FriendRequestCard({
               </>
             )}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs" style={{ color: "var(--ink-mute)" }}>
             {timeAgo(request.created_at)}
           </p>
         </div>

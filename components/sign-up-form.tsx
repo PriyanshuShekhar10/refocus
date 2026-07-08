@@ -14,6 +14,10 @@ import {
   DPasswordInput,
   designStyles,
 } from "@/components/design";
+import {
+  AuthDivider,
+  FirebaseOAuthButtons,
+} from "@/components/firebase-oauth-buttons";
 
 export function SignUpForm({
   className,
@@ -26,6 +30,7 @@ export function SignUpForm({
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [passwordValidation, setPasswordValidation] = useState<
     ReturnType<typeof validatePassword>
   >(validatePassword(""));
@@ -97,6 +102,15 @@ export function SignUpForm({
           Free to start. No card required. One room, one ritual.
         </p>
       </div>
+
+      <FirebaseOAuthButtons
+        disabled={isLoading}
+        onError={setError}
+        onLoadingChange={setIsOAuthLoading}
+        onSuccess={() => router.push("/dashboard?new=true")}
+      />
+
+      <AuthDivider />
 
       <form
         onSubmit={handleSignUp}
@@ -175,7 +189,7 @@ export function SignUpForm({
           variant="primary"
           size="lg"
           full
-          disabled={isLoading || isPasswordWeak}
+          disabled={isLoading || isOAuthLoading || isPasswordWeak}
         >
           {isLoading ? (
             <>Creating account…</>

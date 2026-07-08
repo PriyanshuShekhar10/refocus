@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/ratelimit";
 import { validatePassword } from "@/lib/validatePassword";
 import { sendWelcomeVerificationEmail } from "@/lib/email/sendWelcomeEmail";
+import { generateUsername } from "@/lib/users/generateUsername";
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -56,15 +57,7 @@ export async function POST(req: NextRequest) {
     [firstname || undefined, lastname || undefined].filter(Boolean).join(" ") ||
     null;
 
-  // Auto-generate username from email prefix (e.g. "kanishk" from "kanishk@email.com")
-  const baseUsername = email.split("@")[0].toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 20) || "user";
-  let username = baseUsername;
-  // If taken, append random digits until unique
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const taken = await usersCol.findOne({ username }, { projection: { _id: 1 } });
-    if (!taken) break;
-    username = `${baseUsername}${Math.floor(Math.random() * 10000)}`;
-  }
+  const username = await generateUsername(usersCol, email);
 
   const doc = {
     email: email.toLowerCase(),

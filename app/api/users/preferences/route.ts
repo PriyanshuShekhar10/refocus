@@ -31,6 +31,8 @@ type Prefs = {
   emailWeeklyDigest: boolean;
   /** "auto" = device timezone; otherwise an IANA timezone id */
   timezone: string;
+  /** Custom dashboard background image URL, or null for default grid */
+  dashboardWallpaperUrl: string | null;
 };
 
 const DEFAULTS: Prefs = {
@@ -44,6 +46,7 @@ const DEFAULTS: Prefs = {
   emailFriendRequests: true,
   emailWeeklyDigest: false,
   timezone: "auto",
+  dashboardWallpaperUrl: null,
 };
 
 export async function GET() {

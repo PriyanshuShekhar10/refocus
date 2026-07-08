@@ -32,6 +32,7 @@ type GlobalMessage = {
 };
 
 type CommunityChatProps = {
+  embedded?: boolean;
   isAdmin?: boolean;
   canParticipate?: boolean;
   participationMessage?: string;
@@ -43,6 +44,7 @@ type CommunityChatProps = {
 };
 
 export default function CommunityChat({
+  embedded = false,
   isAdmin = false,
   canParticipate,
   participationMessage,
@@ -343,25 +345,26 @@ export default function CommunityChat({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="shrink-0 px-4 py-3 border-b border-border">
-        <h3 className="text-sm font-medium">Chat</h3>
-        <p className="text-xs text-muted-foreground">Community chat</p>
-      </div>
+    <div className="flex h-full min-h-0 flex-col">
+      {!embedded ? (
+        <div className="shrink-0 border-b border-border px-4 py-3">
+          <h3 className="text-sm font-medium">Chat</h3>
+          <p className="text-xs text-muted-foreground">Community chat</p>
+        </div>
+      ) : null}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         {isLoading ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex h-full items-center justify-center">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex h-full items-center justify-center">
             <p className="text-xs text-muted-foreground">No messages yet</p>
           </div>
         ) : (
-          <>
+          <div className="space-y-3">
             {messages.map((m, idx) => {
               const isOwn = m.user_id === currentUserId;
               const name = displayName(m);
@@ -371,110 +374,126 @@ export default function CommunityChat({
               return (
                 <Fragment key={m.id}>
                   {showDate && (
-                    <div className="flex items-center justify-center py-1.5">
-                      <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    <div className="flex items-center justify-center py-1">
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
                         {formatDateLabel(m.created_at)}
                       </span>
                     </div>
                   )}
-                <div
-                  className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""}`}
-                >
-                  {renderMessageAvatar(m, isOwn, name)}
                   <div
-                    className={`max-w-[80%] ${isOwn ? "text-right" : "text-left"}`}
+                    className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""} items-end`}
                   >
+                    {renderMessageAvatar(m, isOwn, name)}
                     <div
-                      className={`flex items-baseline gap-1.5 mb-0.5 ${
-                        isOwn ? "justify-end" : ""
+                      className={`flex max-w-[78%] flex-col gap-0.5 ${
+                        isOwn ? "items-end" : "items-start"
                       }`}
                     >
-                      {!isOwn && m.username ? (
-                        <Link
-                          href={`/u/${m.username}`}
-                          className="text-[10px] font-medium text-muted-foreground hover:text-[#5D1C6A] dark:hover:text-[#CA5995] hover:underline max-w-full"
-                        >
-                          <VerifiedName name={name} verified={m.emailVerified} isAdmin={m.isAdmin} />
-                        </Link>
-                      ) : (
-                        <VerifiedName
-                          name={isOwn ? "You" : name}
-                          verified={isOwn ? (m.emailVerified ?? myEmailVerified === true) : m.emailVerified}
-                          isAdmin={isOwn ? myIsAdmin : m.isAdmin}
-                          className="text-[10px] font-medium text-muted-foreground"
-                        />
-                      )}
-                      <span className="text-[9px] text-muted-foreground/70">
-                        {formatTime(m.created_at)}
-                      </span>
-                      {isAdmin &&
-                      !isOwn &&
-                      !m.deleted &&
-                      onModerateUser &&
-                      m.user_id ? (
-                        <CommunityModerationMenu
-                          targetUserId={m.user_id}
-                          targetLabel={name}
-                          deleteLabel="Delete message"
-                          onDeleteContent={() =>
-                            handleAdminDeleteMessage(m.id)
-                          }
-                          onModerate={onModerateUser}
-                        />
-                      ) : null}
-                      {isOwn && !m.deleted ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteOwnMessage(m.id)}
-                          disabled={deletingId === m.id}
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
-                          aria-label="Delete message"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      ) : null}
-                      {!isOwn && !m.deleted && m.user_id ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setReportMessage(m)}
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                          aria-label="Report message"
-                        >
-                          <Flag className="h-3 w-3" />
-                        </Button>
-                      ) : null}
-                    </div>
-                    <div
-                      className={`inline-block px-2.5 py-1.5 rounded-xl text-xs ${
-                        m.deleted
-                          ? "bg-muted text-muted-foreground italic"
-                          : isOwn
-                          ? "bg-[#5D1C6A] text-white"
-                          : "bg-muted"
-                      }`}
-                    >
-                      {m.content}
-                    </div>
-                    {m.edited_at && !m.deleted ? (
-                      <div className="mt-0.5 text-[9px] text-muted-foreground/70">
-                        (edited)
+                      <div
+                        className={`flex min-w-0 items-center gap-1.5 ${
+                          isOwn ? "flex-row-reverse" : ""
+                        }`}
+                      >
+                        {!isOwn && m.username ? (
+                          <Link
+                            href={`/u/${m.username}`}
+                            className="max-w-full text-[10px] font-medium text-muted-foreground hover:text-[#5D1C6A] hover:underline dark:hover:text-[#CA5995]"
+                          >
+                            <VerifiedName
+                              name={name}
+                              verified={m.emailVerified}
+                              isAdmin={m.isAdmin}
+                            />
+                          </Link>
+                        ) : (
+                          <VerifiedName
+                            name={isOwn ? "You" : name}
+                            verified={
+                              isOwn
+                                ? m.emailVerified ?? myEmailVerified === true
+                                : m.emailVerified
+                            }
+                            isAdmin={isOwn ? myIsAdmin : m.isAdmin}
+                            className="text-[10px] font-medium text-muted-foreground"
+                          />
+                        )}
+                        <span className="shrink-0 text-[9px] text-muted-foreground/70">
+                          {formatTime(m.created_at)}
+                        </span>
                       </div>
-                    ) : null}
+                      <div
+                        className={`flex items-end gap-1 ${
+                          isOwn ? "flex-row-reverse" : ""
+                        }`}
+                      >
+                        <div
+                          className={`rounded-2xl px-2.5 py-1.5 text-xs leading-snug ${
+                            m.deleted
+                              ? "bg-muted italic text-muted-foreground"
+                              : isOwn
+                                ? "bg-[#5D1C6A] text-white"
+                                : "bg-muted text-foreground"
+                          } ${isOwn ? "rounded-br-md" : "rounded-bl-md"}`}
+                        >
+                          {m.content}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          {isAdmin &&
+                          !isOwn &&
+                          !m.deleted &&
+                          onModerateUser &&
+                          m.user_id ? (
+                            <CommunityModerationMenu
+                              targetUserId={m.user_id}
+                              targetLabel={name}
+                              deleteLabel="Delete message"
+                              onDeleteContent={() => handleAdminDeleteMessage(m.id)}
+                              onModerate={onModerateUser}
+                            />
+                          ) : null}
+                          {isOwn && !m.deleted ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteOwnMessage(m.id)}
+                              disabled={deletingId === m.id}
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
+                              aria-label="Delete message"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          ) : null}
+                          {!isOwn && !m.deleted && m.user_id ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setReportMessage(m)}
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                              aria-label="Report message"
+                            >
+                              <Flag className="h-3 w-3" />
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                      {m.edited_at && !m.deleted ? (
+                        <div className="text-[9px] text-muted-foreground/70">
+                          (edited)
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
                 </Fragment>
               );
             })}
             <div ref={bottomRef} />
-          </>
+          </div>
         )}
       </div>
 
       {/* Input */}
-      <div className="shrink-0 px-3 py-2 border-t border-border">
-        <div className="flex gap-2">
+      <div className="shrink-0 border-t border-border px-4 py-2.5">
+        <div className="flex items-center gap-2">
           <input
             ref={inputRef}
             value={text}
@@ -482,12 +501,13 @@ export default function CommunityChat({
             onKeyDown={handleKeyDown}
             placeholder={inputPlaceholder}
             disabled={isSending || !canSend}
-            className="flex-1 h-8 px-3 text-xs rounded-lg border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+            className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
           />
           <button
+            type="button"
             onClick={send}
             disabled={!text.trim() || isSending || !canSend}
-            className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg bg-[#5D1C6A] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#CA5995] transition-colors"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#5D1C6A] text-white transition-colors hover:bg-[#CA5995] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Send className="h-3.5 w-3.5" />
           </button>

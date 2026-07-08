@@ -5,6 +5,23 @@ const dailyOrigin = DAILY_DOMAIN ? `https://${DAILY_DOMAIN}` : "";
 const dailyWildcard = "https://*.daily.co";
 const isProd = process.env.NODE_ENV === "production";
 
+/** Firebase Auth (Google sign-in popups and token exchange). */
+const firebaseAuthConnectSrc = [
+  "https://identitytoolkit.googleapis.com",
+  "https://securetoken.googleapis.com",
+  "https://www.googleapis.com",
+  "https://*.googleapis.com",
+  "https://accounts.google.com",
+];
+const firebaseAuthFrameSrc = [
+  "https://accounts.google.com",
+  "https://*.firebaseapp.com",
+];
+const firebaseAuthScriptSrc = [
+  "https://apis.google.com",
+  "https://www.gstatic.com",
+];
+
 /**
  * Content Security Policy.
  *
@@ -24,6 +41,7 @@ const cspDirectives: Record<string, string[]> = {
     ...(isProd ? [] : ["'unsafe-eval'"]),
     "https://va.vercel-scripts.com",
     "https://vercel.live",
+    ...firebaseAuthScriptSrc,
   ],
   "style-src": ["'self'", "'unsafe-inline'"],
   "img-src": ["'self'", "data:", "blob:", "https:"],
@@ -37,8 +55,13 @@ const cspDirectives: Record<string, string[]> = {
     "https://*.ably-realtime.com",
     "wss://*.ably.io",
     "wss://*.ably-realtime.com",
+    ...firebaseAuthConnectSrc,
   ].filter(Boolean),
-  "frame-src": [dailyOrigin, dailyWildcard].filter(Boolean),
+  "frame-src": [
+    dailyOrigin,
+    dailyWildcard,
+    ...firebaseAuthFrameSrc,
+  ].filter(Boolean),
   "media-src": ["'self'", dailyOrigin, dailyWildcard].filter(Boolean),
   "worker-src": ["'self'", "blob:"],
   "object-src": ["'none'"],

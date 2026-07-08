@@ -60,7 +60,10 @@ export default function FriendRow({
       : null;
 
   return (
-    <div className="flex flex-col gap-3 border-b border-border py-4 last:border-b-0 sm:flex-row sm:items-center">
+    <div
+      className="flex flex-col gap-3 border-b py-4 last:border-b-0 sm:flex-row sm:items-center"
+      style={{ borderColor: "var(--line-soft)" }}
+    >
       <button
         type="button"
         onClick={() => onOpenProfile?.(friend)}
@@ -77,7 +80,9 @@ export default function FriendRow({
         </Avatar>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium text-foreground">{displayName}</span>
+            <span className="font-medium" style={{ color: "var(--ink)" }}>
+              {displayName}
+            </span>
             {friend.isAdmin ? <AdminTag /> : null}
             {unread > 0 ? (
               <span className="rounded-full bg-[#5D1C6A] px-2 py-0.5 text-[10px] font-semibold text-white">
@@ -86,10 +91,14 @@ export default function FriendRow({
             ) : null}
           </div>
           {sinceText ? (
-            <p className="text-xs text-muted-foreground">{sinceText}</p>
+            <p className="text-xs" style={{ color: "var(--ink-mute)" }}>
+              {sinceText}
+            </p>
           ) : null}
           {handleLine ? (
-            <p className="truncate text-xs text-muted-foreground">{handleLine}</p>
+            <p className="truncate text-xs" style={{ color: "var(--ink-mute)" }}>
+              {handleLine}
+            </p>
           ) : null}
         </div>
       </button>

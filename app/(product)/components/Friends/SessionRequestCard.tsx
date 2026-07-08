@@ -61,7 +61,13 @@ export default function SessionRequestCard({
   const initial = (display[0] ?? "?").toUpperCase();
 
   return (
-    <div className="mb-3 rounded-xl border border-border bg-card p-4">
+    <div
+      className="mb-3 rounded-xl border p-4"
+      style={{
+        borderColor: "var(--line)",
+        background: "var(--line-soft)",
+      }}
+    >
       <div className="flex items-start gap-3">
         <Avatar className="h-9 w-9 shrink-0">
           {counterpartAvatar ? (
@@ -70,7 +76,7 @@ export default function SessionRequestCard({
           <AvatarFallback className="bg-muted text-xs">{initial}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-foreground">
+          <p className="text-sm" style={{ color: "var(--ink)" }}>
             {direction === "incoming" ? (
               <>
                 <span className="font-medium">{display}</span> wants to focus with
@@ -82,19 +88,25 @@ export default function SessionRequestCard({
               </>
             )}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs" style={{ color: "var(--ink-mute)" }}>
             {formatStart(request.start)} · {request.durationMin} min
           </p>
         </div>
       </div>
 
       {request.message ? (
-        <p className="mt-3 border-l-2 border-border pl-3 text-sm italic text-muted-foreground">
+        <p
+          className="mt-3 border-l-2 pl-3 text-sm italic"
+          style={{ borderColor: "var(--line)", color: "var(--ink-soft)" }}
+        >
           “{request.message}”
         </p>
       ) : null}
       {request.responseMessage ? (
-        <p className="mt-2 border-l-2 border-border pl-3 text-sm italic text-muted-foreground">
+        <p
+          className="mt-2 border-l-2 pl-3 text-sm italic"
+          style={{ borderColor: "var(--line)", color: "var(--ink-soft)" }}
+        >
           Reply: “{request.responseMessage}”
         </p>
       ) : null}
@@ -112,7 +124,12 @@ export default function SessionRequestCard({
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 onNoteChange?.(e.target.value)
               }
-              className="h-8 min-w-[140px] flex-1 rounded-lg border border-input bg-background px-3 text-xs outline-none focus:ring-1 focus:ring-ring sm:flex-none"
+              className="h-8 min-w-[140px] flex-1 rounded-lg border px-3 text-xs outline-none sm:flex-none"
+              style={{
+                borderColor: "var(--line)",
+                background: "var(--card)",
+                color: "var(--ink)",
+              }}
             />
             <Button
               type="button"

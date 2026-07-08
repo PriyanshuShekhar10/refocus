@@ -16,8 +16,46 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
+        firebaseIdToken: { label: "Firebase ID Token", type: "text" },
+        displayName: { label: "Display Name", type: "text" },
       },
       async authorize(credentials, req) {
+        const firebaseIdToken = credentials?.firebaseIdToken?.trim();
+        if (firebaseIdToken) {
+          const ip = getClientIp(req);
+          const ipLimit = await checkRateLimit(ip, "auth");
+          if (!ipLimit.success) {
+            throw new Error(
+              "Too many authentication attempts. Please try again later.",
+            );
+          }
+
+          try {
+            const { verifyFirebaseIdToken } = await import(
+              "@/lib/firebase/admin"
+            );
+            const decoded = await verifyFirebaseIdToken(firebaseIdToken);
+            const { upsertFirebaseUser } = await import(
+              "@/lib/users/upsertFirebaseUser"
+            );
+            const displayName = credentials.displayName?.trim() || null;
+            const user = await upsertFirebaseUser(decoded, displayName);
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              image: user.image,
+            };
+          } catch (err) {
+            console.error("[auth] Firebase sign-in failed:", err);
+            throw new Error(
+              err instanceof Error && err.message
+                ? err.message
+                : "Firebase sign-in failed. Please try again.",
+            );
+          }
+        }
+
         if (!credentials?.email || !credentials?.password) return null;
 
         // Rate limit by IP AND Email to prevent credential stuffing or locking out accounts via proxy

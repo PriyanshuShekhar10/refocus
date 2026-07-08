@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  ImageIcon,
 } from "lucide-react";
 import { EmailVerificationBanner } from "@/components/email-verification-banner";
 import {
@@ -34,6 +35,8 @@ import {
 import { getBrowserTimeZone } from "@/lib/localTime";
 import { listTimeZones } from "@/lib/zonedTime";
 import { TIMEZONE_PREF_EVENT } from "@/components/user-timezone-provider";
+import { notifyWallpaperPref } from "@/hooks/useDashboardWallpaper";
+import { useWallpaperActive } from "@/components/wallpaper-context";
 
 type Prefs = {
   defaultSessionLength: 25 | 50 | 75;
@@ -62,8 +65,10 @@ const DEFAULT_PREFS: Prefs = {
 };
 
 export default function Settings() {
+  const wallpaperActive = useWallpaperActive();
+
   return (
-    <Shell>
+    <Shell transparent={wallpaperActive}>
       <div style={{ padding: "8px 4px", maxWidth: 720, margin: "0 auto" }}>
         <header style={{ marginBottom: 32 }}>
           <span className={designStyles.eyebrow}>Account</span>
@@ -350,14 +355,92 @@ function PrivacySection() {
 function AppearanceSection() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [wallpaperUrl, setWallpaperUrl] = useState<string | null>(null);
+  const [wallpaperBusy, setWallpaperBusy] = useState(false);
+  const [wallpaperError, setWallpaperError] = useState<string | null>(null);
+  const wallpaperInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/preferences");
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        const url = data?.preferences?.dashboardWallpaperUrl;
+        setWallpaperUrl(typeof url === "string" && url.trim() ? url.trim() : null);
+      } catch {
+        // keep default
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const active = mounted ? theme ?? resolvedTheme ?? "system" : "system";
+
+  const handleWallpaperPick = () => {
+    setWallpaperError(null);
+    wallpaperInputRef.current?.click();
+  };
+
+  const handleWallpaperChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setWallpaperBusy(true);
+    setWallpaperError(null);
+    try {
+      const form = new FormData();
+      form.append("wallpaper", file);
+      const res = await fetch("/api/users/me/wallpaper", {
+        method: "POST",
+        body: form,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setWallpaperError(data.error || "Upload failed");
+        return;
+      }
+      const url = data.wallpaperUrl ?? null;
+      setWallpaperUrl(url);
+      notifyWallpaperPref(url);
+    } catch {
+      setWallpaperError("Upload failed");
+    } finally {
+      setWallpaperBusy(false);
+    }
+  };
+
+  const handleWallpaperRemove = async () => {
+    setWallpaperBusy(true);
+    setWallpaperError(null);
+    try {
+      const res = await fetch("/api/users/me/wallpaper", { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setWallpaperError(data.error || "Could not remove wallpaper");
+        return;
+      }
+      setWallpaperUrl(null);
+      notifyWallpaperPref(null);
+    } catch {
+      setWallpaperError("Could not remove wallpaper");
+    } finally {
+      setWallpaperBusy(false);
+    }
+  };
 
   return (
     <SectionCard
       icon={<Monitor size={16} />}
       title="Appearance"
-      subtitle="Theme for the dashboard. The marketing pages stay light."
+      subtitle="Theme and dashboard background. Marketing pages stay light."
     >
       <RowGroup>
         <Row label="Theme">
@@ -380,6 +463,75 @@ function AppearanceSection() {
                 {opt.label}
               </button>
             ))}
+          </div>
+        </Row>
+        <Row
+          label="Dashboard wallpaper"
+          hint="Shown across the dashboard (Home, Friends, Community, Profile, Sessions, Settings, and more). JPEG, PNG, WebP, or GIF up to 10 MB."
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: 10,
+            }}
+          >
+            <div
+              style={{
+                width: 120,
+                height: 72,
+                borderRadius: 10,
+                border: "1px solid var(--line)",
+                overflow: "hidden",
+                background: wallpaperUrl
+                  ? `url(${wallpaperUrl}) center/cover no-repeat`
+                  : "hsl(var(--muted))",
+                position: "relative",
+              }}
+              aria-hidden
+            >
+              {!wallpaperUrl && (
+                <div
+                  className="bg-dotted-grid"
+                  style={{ width: "100%", height: "100%" }}
+                />
+              )}
+            </div>
+            <input
+              ref={wallpaperInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              onChange={handleWallpaperChange}
+            />
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <DButton
+                type="button"
+                variant="quiet"
+                onClick={handleWallpaperPick}
+                disabled={wallpaperBusy}
+                style={{ display: "inline-flex", gap: 6, alignItems: "center" }}
+              >
+                <ImageIcon size={14} />
+                {wallpaperBusy ? "Uploading…" : wallpaperUrl ? "Replace" : "Upload"}
+              </DButton>
+              {wallpaperUrl ? (
+                <DButton
+                  type="button"
+                  variant="quiet"
+                  onClick={handleWallpaperRemove}
+                  disabled={wallpaperBusy}
+                >
+                  Remove
+                </DButton>
+              ) : null}
+            </div>
+            {wallpaperError ? (
+              <p style={{ fontSize: 12, color: "var(--danger)", margin: 0 }}>
+                {wallpaperError}
+              </p>
+            ) : null}
           </div>
         </Row>
       </RowGroup>

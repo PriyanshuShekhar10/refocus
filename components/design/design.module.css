@@ -36,6 +36,11 @@
   min-height: 100vh;
 }
 
+.shellTransparent {
+  background: transparent;
+  min-height: 0;
+}
+
 :global(.dark) .shell {
   --bg: #09090b;
   --ink: #f4f4f5;

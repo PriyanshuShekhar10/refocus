@@ -16,6 +16,7 @@ import { userChannel } from "@/lib/realtimeChannels";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 import { useFriendsData } from "@/hooks/useFriendsData";
 import { Shell } from "@/components/design";
+import { useWallpaperSurface } from "@/hooks/useWallpaperSurface";
 import { Users } from "lucide-react";
 
 type ProfilePreviewPayload = {
@@ -34,6 +35,7 @@ type ListMode = "all" | "recent";
 export default function Friends({ onPreviewProfile }: FriendsProps) {
   const { data: session } = useSession();
   const { isMobile } = useIsMobileShell();
+  const { wallpaperActive, card } = useWallpaperSurface();
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   const {
     incoming,
@@ -253,7 +255,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
   const pendingOutCount = outgoing.length + sessOutgoing.length;
 
   return (
-    <Shell>
+    <Shell transparent={wallpaperActive}>
       <div
         style={{
           padding: "8px 4px",
@@ -272,13 +274,22 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
         />
 
         {error ? (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+          <div
+            className={`${card} mb-6`}
+            style={{
+              padding: "12px 16px",
+              borderColor: "color-mix(in oklab, var(--danger) 35%, var(--line))",
+              background: "var(--danger-soft)",
+              color: "var(--danger)",
+              fontSize: 14,
+            }}
+          >
             {error}
           </div>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.6fr_1fr] lg:gap-10">
-          <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]">
+          <section className={card}>
             <SectionHead
               title="Your circle"
               count={friendsCount}
@@ -297,18 +308,27 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
             />
 
             {loading && friends.length === 0 ? (
-              <div className="py-12 text-center text-sm text-muted-foreground">
+              <div
+                className="py-12 text-center text-sm"
+                style={{ color: "var(--ink-mute)" }}
+              >
                 Loading your circle…
               </div>
             ) : filteredFriends.length === 0 ? (
               <div className="flex flex-col items-center py-12 text-center">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                  <Users className="h-5 w-5 text-muted-foreground" />
+                <div
+                  className="mb-3 flex h-12 w-12 items-center justify-center rounded-full"
+                  style={{ background: "var(--line-soft)" }}
+                >
+                  <Users className="h-5 w-5" style={{ color: "var(--ink-mute)" }} />
                 </div>
-                <h4 className="text-sm font-medium text-foreground">
+                <h4 className="text-sm font-medium" style={{ color: "var(--ink)" }}>
                   {query ? "No friends match that search" : "No friends yet"}
                 </h4>
-                <p className="mt-1 max-w-xs text-sm text-muted-foreground">
+                <p
+                  className="mt-1 max-w-xs text-sm"
+                  style={{ color: "var(--ink-mute)" }}
+                >
                   {query
                     ? "Try a different name or handle."
                     : "Send a friend request from a profile to start your circle."}
@@ -334,8 +354,11 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
           </section>
 
           <aside className="flex flex-col gap-6">
-            <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className={card}>
+              <h3
+                className="mb-3 text-xs font-semibold uppercase tracking-wide"
+                style={{ color: "var(--ink-mute)" }}
+              >
                 Friend requests
                 {incoming.length > 0 ? (
                   <span className="ml-2 rounded-full bg-[#5D1C6A]/10 px-2 py-0.5 text-[10px] font-medium normal-case text-[#5D1C6A] dark:text-[#CA5995]">
@@ -374,8 +397,11 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
               )}
             </div>
 
-            <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className={card}>
+              <h3
+                className="mb-3 text-xs font-semibold uppercase tracking-wide"
+                style={{ color: "var(--ink-mute)" }}
+              >
                 Session requests
                 {sessIncoming.length > 0 ? (
                   <span className="ml-2 rounded-full bg-[#5D1C6A]/10 px-2 py-0.5 text-[10px] font-medium normal-case text-[#5D1C6A] dark:text-[#CA5995]">
