@@ -23,21 +23,7 @@ type FirebaseOAuthButtonsProps = {
 };
 
 function extractDisplayName(credential: UserCredential): string | null {
-  const fromUser = credential.user.displayName?.trim();
-  if (fromUser) return fromUser;
-
-  const profile = credential.additionalUserInfo?.profile as
-    | { name?: string; firstName?: string; lastName?: string }
-    | undefined;
-  if (profile?.name?.trim()) return profile.name.trim();
-
-  const first = profile?.firstName?.trim();
-  const last = profile?.lastName?.trim();
-  if (first || last) {
-    return [first, last].filter(Boolean).join(" ");
-  }
-
-  return null;
+  return credential.user.displayName?.trim() || null;
 }
 
 async function completeFirebaseSignIn(

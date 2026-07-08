@@ -1,10 +1,10 @@
-import type { Collection, Document } from "mongodb";
+import type { Collection } from "mongodb";
 
 /**
  * Derive a unique username from an email local-part (e.g. kanishk@x.com → kanishk).
  */
 export async function generateUsername(
-  usersCol: Collection<Document>,
+  usersCol: Pick<Collection, "findOne">,
   email: string,
 ): Promise<string> {
   const baseUsername =

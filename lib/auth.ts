@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
             const { upsertFirebaseUser } = await import(
               "@/lib/users/upsertFirebaseUser"
             );
-            const displayName = credentials.displayName?.trim() || null;
+            const displayName = credentials?.displayName?.trim() || null;
             const user = await upsertFirebaseUser(decoded, displayName);
             return {
               id: user.id,
