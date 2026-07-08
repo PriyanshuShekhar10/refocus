@@ -4,7 +4,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { validatePassword } from "@/lib/validatePassword";
 import { PasswordStrengthMeter } from "./PasswordStrengthMeter";
 import {
@@ -14,6 +14,7 @@ import {
   DPasswordInput,
   designStyles,
 } from "@/components/design";
+import { AuthLoadingOverlay } from "@/components/auth-loading-overlay";
 import {
   AuthDivider,
   FirebaseOAuthButtons,
@@ -43,6 +44,9 @@ export function SignUpForm({
     return () => clearTimeout(timeout);
   }, [password]);
 
+  const busy = isLoading || isOAuthLoading;
+  const isPasswordWeak = passwordValidation.strength === "weak";
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -69,22 +73,34 @@ export function SignUpForm({
       });
       if (login?.error) throw new Error(login.error);
 
+      // Keep loader up while navigating to the dashboard.
       router.push("/dashboard?new=true");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
       setIsLoading(false);
     }
   };
 
-  const isPasswordWeak = passwordValidation.strength === "weak";
-
   return (
     <div
       className={className}
-      style={{ display: "flex", flexDirection: "column", gap: 24 }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 24,
+        position: "relative",
+      }}
       {...props}
     >
+      <AuthLoadingOverlay
+        active={busy}
+        label={
+          isOAuthLoading
+            ? "Continuing with Google…"
+            : "Creating your account…"
+        }
+      />
+
       <div>
         <span className={designStyles.eyebrow}>Create account</span>
         <h1
@@ -104,8 +120,11 @@ export function SignUpForm({
       </div>
 
       <FirebaseOAuthButtons
-        disabled={isLoading}
-        onError={setError}
+        disabled={busy}
+        onError={(message) => {
+          setError(message);
+          setIsOAuthLoading(false);
+        }}
         onLoadingChange={setIsOAuthLoading}
         onSuccess={() => router.push("/dashboard?new=true")}
       />
@@ -115,6 +134,7 @@ export function SignUpForm({
       <form
         onSubmit={handleSignUp}
         style={{ display: "flex", flexDirection: "column", gap: 16 }}
+        aria-busy={busy}
       >
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="First name" htmlFor="firstName">
@@ -126,6 +146,7 @@ export function SignUpForm({
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="Ada"
+              disabled={busy}
             />
           </Field>
           <Field label="Last name" htmlFor="lastName">
@@ -137,6 +158,7 @@ export function SignUpForm({
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="Lovelace"
+              disabled={busy}
             />
           </Field>
         </div>
@@ -150,6 +172,7 @@ export function SignUpForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            disabled={busy}
           />
         </Field>
 
@@ -161,6 +184,7 @@ export function SignUpForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 8 characters"
+            disabled={busy}
           />
           {password.length > 0 && (
             <PasswordStrengthMeter validation={passwordValidation} />
@@ -175,6 +199,7 @@ export function SignUpForm({
             value={repeatPassword}
             onChange={(e) => setRepeatPassword(e.target.value)}
             placeholder="Same as above"
+            disabled={busy}
           />
         </Field>
 
@@ -189,10 +214,13 @@ export function SignUpForm({
           variant="primary"
           size="lg"
           full
-          disabled={isLoading || isOAuthLoading || isPasswordWeak}
+          disabled={busy || isPasswordWeak}
         >
           {isLoading ? (
-            <>Creating account…</>
+            <>
+              <Loader2 size={16} className="animate-spin" aria-hidden />
+              Creating account…
+            </>
           ) : (
             <>
               Sign up

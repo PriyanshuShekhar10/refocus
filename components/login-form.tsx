@@ -4,8 +4,9 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { DButton, Field, DInput, DPasswordInput, designStyles } from "@/components/design";
+import { AuthLoadingOverlay } from "@/components/auth-loading-overlay";
 import {
   AuthDivider,
   FirebaseOAuthButtons,
@@ -21,6 +22,8 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false);
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const router = useRouter();
+
+  const busy = isLoading || isOAuthLoading;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,12 +44,13 @@ export function LoginForm({
         } else {
           setError(res.error);
         }
-      } else {
-        router.push("/dashboard");
+        setIsLoading(false);
+        return;
       }
+      // Keep loader up while navigating to the dashboard.
+      router.push("/dashboard");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -54,9 +58,21 @@ export function LoginForm({
   return (
     <div
       className={className}
-      style={{ display: "flex", flexDirection: "column", gap: 24 }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 24,
+        position: "relative",
+      }}
       {...props}
     >
+      <AuthLoadingOverlay
+        active={busy}
+        label={
+          isOAuthLoading ? "Continuing with Google…" : "Signing you in…"
+        }
+      />
+
       <div>
         <span className={designStyles.eyebrow}>Welcome back</span>
         <h1
@@ -74,8 +90,11 @@ export function LoginForm({
       </div>
 
       <FirebaseOAuthButtons
-        disabled={isLoading}
-        onError={setError}
+        disabled={busy}
+        onError={(message) => {
+          setError(message);
+          setIsOAuthLoading(false);
+        }}
         onLoadingChange={setIsOAuthLoading}
         onSuccess={() => router.push("/dashboard")}
       />
@@ -85,6 +104,7 @@ export function LoginForm({
       <form
         onSubmit={handleLogin}
         style={{ display: "flex", flexDirection: "column", gap: 16 }}
+        aria-busy={busy}
       >
         <Field label="Email" htmlFor="email">
           <DInput
@@ -95,6 +115,7 @@ export function LoginForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            disabled={busy}
           />
         </Field>
 
@@ -118,6 +139,7 @@ export function LoginForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            disabled={busy}
           />
         </Field>
 
@@ -132,10 +154,13 @@ export function LoginForm({
           variant="primary"
           size="lg"
           full
-          disabled={isLoading || isOAuthLoading}
+          disabled={busy}
         >
           {isLoading ? (
-            <>Signing in…</>
+            <>
+              <Loader2 size={16} className="animate-spin" aria-hidden />
+              Signing in…
+            </>
           ) : (
             <>
               Continue

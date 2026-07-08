@@ -13,6 +13,7 @@ import {
   googleAuthProvider,
   isFirebaseClientConfigured,
 } from "@/lib/firebase/client";
+import { Loader2 } from "lucide-react";
 import { DButton } from "@/components/design";
 
 type FirebaseOAuthButtonsProps = {
@@ -114,13 +115,12 @@ export function FirebaseOAuthButtons({
         if (!result) return;
         setGoogleLoading(true);
         await completeFirebaseSignIn(result);
+        // Keep loader up while parent navigates after onSuccess.
         onSuccess?.();
       })
       .catch((err) => {
         console.error("[firebase-oauth] redirect result failed:", err);
         onError?.(formatFirebaseAuthError(err));
-      })
-      .finally(() => {
         setGoogleLoading(false);
       });
   }, [onError, onSuccess]);
@@ -140,6 +140,7 @@ export function FirebaseOAuthButtons({
       try {
         const credential = await signInWithPopup(auth, googleAuthProvider);
         await completeFirebaseSignIn(credential);
+        // Keep loader up while parent navigates after onSuccess.
         onSuccess?.();
       } catch (popupErr: unknown) {
         const code =
@@ -158,7 +159,6 @@ export function FirebaseOAuthButtons({
     } catch (err) {
       console.error("[firebase-oauth] google sign-in failed:", err);
       onError?.(formatFirebaseAuthError(err));
-    } finally {
       setGoogleLoading(false);
     }
   };
@@ -173,7 +173,11 @@ export function FirebaseOAuthButtons({
       onClick={handleGoogleSignIn}
       style={{ display: "flex", alignItems: "center", gap: 10 }}
     >
-      <GoogleIcon />
+      {isLoading ? (
+        <Loader2 size={18} className="animate-spin" aria-hidden />
+      ) : (
+        <GoogleIcon />
+      )}
       {isLoading ? "Signing in…" : "Continue with Google"}
     </DButton>
   );
