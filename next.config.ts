@@ -105,6 +105,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Keep firebase-admin outside the serverless bundle so its native deps load
+  // from node_modules at runtime (avoids ESM/CJS packaging issues on Vercel).
+  serverExternalPackages: ["firebase-admin"],
   images: {
     remotePatterns: [
       {
