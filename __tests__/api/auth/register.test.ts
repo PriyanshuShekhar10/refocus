@@ -112,10 +112,6 @@ describe("POST /api/auth/register", () => {
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(200);
     expect(json.id).toBe(String(insertedId));
-    expect(usersCol.createIndex).toHaveBeenCalledWith(
-      { email: 1 },
-      { unique: true }
-    );
   });
 
   it("returns 409 on duplicate email (MongoDB error 11000)", async () => {

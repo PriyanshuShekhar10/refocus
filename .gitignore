@@ -44,3 +44,6 @@ next-env.d.ts
 # graphify (commit graphify-out/ for team; ignore local-only artifacts)
 graphify-out/manifest.json
 graphify-out/cost.json
+
+.venv
+.claude

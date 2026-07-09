@@ -11,12 +11,11 @@ import {
   rateLimitedResponse,
   addRateLimitHeaders,
 } from "@/lib/ratelimit";
-import { fetchEmailVerifiedMap } from "@/lib/users/emailVerifiedMap";
-import { fetchAdminMap } from "@/lib/users/adminMap";
+
 import { isEmailVerified } from "@/lib/emailVerification";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { ADMIN_ROLE } from "@/lib/admin";
-import { fetchAvatarUrlMap, resolveAvatarUrl } from "@/lib/userAvatar";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 /**
  * Default page size for pagination
@@ -126,18 +125,30 @@ export async function GET(req: NextRequest) {
     docs.reverse();
   }
 
-  const verifiedByUserId = await fetchEmailVerifiedMap(
-    db,
-    docs.map((m) => m.user_id),
+  const userIds = [...new Set(docs.map((m) => m.user_id))].filter((id) =>
+    ObjectId.isValid(id)
   );
-  const adminByUserId = await fetchAdminMap(
-    db,
-    docs.map((m) => m.user_id),
-  );
-  const avatarByUserId = await fetchAvatarUrlMap(
-    db,
-    docs.map((m) => m.user_id),
-  );
+
+  const verifiedByUserId: Record<string, boolean> = {};
+  const adminByUserId: Record<string, boolean> = {};
+  const avatarByUserId: Record<string, string | null> = {};
+
+  if (userIds.length > 0) {
+    const users = await db
+      .collection("users")
+      .find(
+        { _id: { $in: userIds.map((id) => new ObjectId(id)) } },
+        { projection: { emailVerified: 1, role: 1, avatar_url: 1, image: 1 } }
+      )
+      .toArray();
+
+    for (const u of users) {
+      const idStr = String(u._id);
+      verifiedByUserId[idStr] = isEmailVerified(u.emailVerified);
+      adminByUserId[idStr] = u.role === ADMIN_ROLE;
+      avatarByUserId[idStr] = resolveAvatarUrl(u as { avatar_url?: string | null; image?: string | null });
+    }
+  }
 
   // Determine the next cursor
   let nextCursor: string | null = null;
@@ -195,6 +206,14 @@ export async function POST(req: NextRequest) {
   const { content } = body as { content?: string };
   if (!content || !content.trim()) {
     return NextResponse.json({ error: "Empty content" }, { status: 400 });
+  }
+
+  const MAX_CHAT_TEXT_LENGTH = 2000;
+  if (content.trim().length > MAX_CHAT_TEXT_LENGTH) {
+    return NextResponse.json(
+      { error: `Content must be ${MAX_CHAT_TEXT_LENGTH} characters or fewer` },
+      { status: 400 },
+    );
   }
 
   const db = await getDb();

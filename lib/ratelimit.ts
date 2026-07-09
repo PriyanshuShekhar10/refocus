@@ -29,8 +29,44 @@ const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
 
 type BucketState = Map<string, number[]>;
 const getBucketState = (): BucketState => {
-  const g = globalThis as unknown as { __RATE_LIMIT_BUCKETS__?: BucketState };
-  if (!g.__RATE_LIMIT_BUCKETS__) g.__RATE_LIMIT_BUCKETS__ = new Map<string, number[]>();
+  const g = globalThis as unknown as {
+    __RATE_LIMIT_BUCKETS__?: BucketState;
+    __RATE_LIMIT_SWEEP__?: ReturnType<typeof setInterval>;
+  };
+  if (!g.__RATE_LIMIT_BUCKETS__) {
+    g.__RATE_LIMIT_BUCKETS__ = new Map<string, number[]>();
+
+    // Sweep stale entries every 60 seconds to prevent unbounded memory growth
+    // from IPs/identifiers that are never checked again.
+    if (!g.__RATE_LIMIT_SWEEP__) {
+      const MAX_BUCKET_ENTRIES = 50_000;
+      // Longest configured window — entries older than this are definitely stale.
+      const MAX_WINDOW_MS = 86_400_000; // 1 day (matches "1 d" config)
+      g.__RATE_LIMIT_SWEEP__ = setInterval(() => {
+        const buckets = g.__RATE_LIMIT_BUCKETS__;
+        if (!buckets) return;
+        const now = Date.now();
+        for (const [key, timestamps] of buckets) {
+          // If the newest timestamp in the bucket is older than the max window,
+          // this key is completely expired.
+          const newest = timestamps[timestamps.length - 1] ?? 0;
+          if (now - newest > MAX_WINDOW_MS) {
+            buckets.delete(key);
+          }
+        }
+        // Hard cap: if the map is still too large, drop the oldest entries.
+        if (buckets.size > MAX_BUCKET_ENTRIES) {
+          const excess = buckets.size - MAX_BUCKET_ENTRIES;
+          const iter = buckets.keys();
+          for (let i = 0; i < excess; i++) {
+            const next = iter.next();
+            if (next.done) break;
+            buckets.delete(next.value);
+          }
+        }
+      }, 60_000).unref();
+    }
+  }
   return g.__RATE_LIMIT_BUCKETS__;
 };
 

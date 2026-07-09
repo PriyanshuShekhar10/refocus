@@ -25,24 +25,60 @@ export async function GET(req: NextRequest) {
   const cursor = searchParams.get("cursor"); // user_id to start after
 
   const db = await getDb();
-  // Friends are accepted friend_requests where current user is either side
-  const requests = await db
-    .collection<{ _id: ObjectId; from_user_id: string; to_user_id: string; status: string; created_at: Date; responded_at?: Date; updated_at?: Date }>(
-      "friend_requests"
-    )
-    .find({
-      status: "accepted",
-      $or: [{ from_user_id: userId }, { to_user_id: userId }],
-    })
-    .toArray();
 
-  const otherIds = Array.from(
-    new Set(
-      requests.map((r) =>
-        r.from_user_id === userId ? r.to_user_id : r.from_user_id
-      )
-    )
-  ).filter((id): id is string => Boolean(id) && ObjectId.isValid(id));
+  // Use aggregation to extract & deduplicate friend IDs at the DB level
+  // instead of loading all accepted friend_requests into memory.
+  type FriendAggResult = { _id: string; since: Date };
+  const pipeline: Record<string, unknown>[] = [
+    {
+      $match: {
+        status: "accepted",
+        $or: [{ from_user_id: userId }, { to_user_id: userId }],
+      },
+    },
+    {
+      $project: {
+        friendId: {
+          $cond: {
+            if: { $eq: ["$from_user_id", userId] },
+            then: "$to_user_id",
+            else: "$from_user_id",
+          },
+        },
+        since: {
+          $ifNull: ["$responded_at", { $ifNull: ["$updated_at", "$created_at"] }],
+        },
+      },
+    },
+    // Deduplicate: keep earliest friendship date per friend
+    {
+      $group: {
+        _id: "$friendId",
+        since: { $min: "$since" },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ];
+
+  // Apply cursor: skip everything up to and including the cursor value
+  if (cursor) {
+    pipeline.push({ $match: { _id: { $gt: cursor } } });
+  }
+
+  // Fetch one extra to determine hasMore
+  pipeline.push({ $limit: limit + 1 });
+
+  const aggResult = (await db
+    .collection("friend_requests")
+    .aggregate(pipeline)
+    .toArray()) as FriendAggResult[];
+
+  const hasMore = aggResult.length > limit;
+  const pageItems = hasMore ? aggResult.slice(0, limit) : aggResult;
+
+  const otherIds = pageItems
+    .map((r) => r._id)
+    .filter((id): id is string => Boolean(id) && ObjectId.isValid(id));
 
   let usersById: Record<
     string,
@@ -82,65 +118,49 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Deduplicate friendships: if there are multiple accepted requests for the same pair,
-  // keep the earliest 'since' date (friendship start).
-  const friendsMap = new Map<
-    string,
-    {
-      user_id: string;
-      email?: string;
-      name?: string;
-      username?: string;
-      avatarUrl?: string | null;
-      isAdmin?: boolean;
-      since?: Date;
-    }
-  >();
-  for (const r of requests) {
-    const otherId = r.from_user_id === userId ? r.to_user_id : r.from_user_id;
-    if (!otherId) continue;
-    const user = usersById[otherId] || {};
-    const since: Date = (r.responded_at ||
-      r.updated_at ||
-      r.created_at) as Date;
-    const existing = friendsMap.get(otherId);
-    if (!existing) {
-      friendsMap.set(otherId, {
-        user_id: otherId,
-        email: user.email || undefined,
-        name: user.name || undefined,
-        username: user.username || undefined,
-        avatarUrl: user.avatarUrl ?? null,
-        isAdmin: user.isAdmin ?? false,
-        since,
-      });
-    } else if (existing.since && since && since < existing.since) {
-      // Keep the earliest since date
-      existing.since = since;
-      friendsMap.set(otherId, existing);
-    }
-  }
+  const friends = pageItems.map((r) => {
+    const user = usersById[r._id] || {};
+    return {
+      user_id: r._id,
+      email: user.email || undefined,
+      name: user.name || undefined,
+      username: user.username || undefined,
+      avatarUrl: user.avatarUrl ?? null,
+      isAdmin: user.isAdmin ?? false,
+      since: r.since ? new Date(r.since).toISOString() : undefined,
+    };
+  });
 
-  // Sort by user_id for stable cursor-based pagination
-  const allFriends = Array.from(friendsMap.values())
-    .map((f) => ({
-      ...f,
-      since: f.since ? new Date(f.since).toISOString() : undefined,
-    }))
-    .sort((a, b) => a.user_id.localeCompare(b.user_id));
+  const nextCursor = hasMore
+    ? pageItems[pageItems.length - 1]?._id ?? null
+    : null;
 
-  // Apply cursor: skip everything up to and including the cursor value
-  let startIdx = 0;
-  if (cursor) {
-    const idx = allFriends.findIndex((f) => f.user_id === cursor);
-    if (idx !== -1) startIdx = idx + 1;
-  }
+  // Count total friends (lightweight — just count docs, not load them)
+  const totalResult = (await db
+    .collection("friend_requests")
+    .aggregate([
+      {
+        $match: {
+          status: "accepted",
+          $or: [{ from_user_id: userId }, { to_user_id: userId }],
+        },
+      },
+      {
+        $project: {
+          friendId: {
+            $cond: {
+              if: { $eq: ["$from_user_id", userId] },
+              then: "$to_user_id",
+              else: "$from_user_id",
+            },
+          },
+        },
+      },
+      { $group: { _id: "$friendId" } },
+      { $count: "total" },
+    ])
+    .toArray()) as { total: number }[];
+  const total = totalResult[0]?.total ?? 0;
 
-  const page = allFriends.slice(startIdx, startIdx + limit);
-  const nextCursor =
-    startIdx + limit < allFriends.length
-      ? page[page.length - 1]?.user_id ?? null
-      : null;
-
-  return NextResponse.json({ friends: page, nextCursor, total: allFriends.length });
+  return NextResponse.json({ friends, nextCursor, total });
 }

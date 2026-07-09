@@ -44,12 +44,6 @@ export async function POST(req: NextRequest) {
   const db = await getDb();
   const usersCol = db.collection("users");
 
-  // Ensure unique indexes exist (idempotent)
-  await Promise.all([
-    usersCol.createIndex({ email: 1 }, { unique: true }),
-    usersCol.createIndex({ username: 1 }, { unique: true, sparse: true }),
-  ]);
-
   const hashedPassword = await bcrypt.hash(password, 10);
   const firstname = (firstName ?? name ?? "").trim() || null;
   const lastname = (lastName ?? "").trim() || null;

@@ -69,9 +69,13 @@ export async function GET(
         { from_user_id: friendId, to_user_id: currentUserId },
       ],
     })
-    .sort({ created_at: 1 })
+    .sort({ created_at: -1 })
     .limit(200)
     .toArray()) as unknown as MessageDoc[];
+
+  // Reverse so the client receives messages in chronological order
+  // (oldest-to-newest) while we fetched the newest 200 first.
+  messages.reverse();
 
   return NextResponse.json({
     currentUserId,

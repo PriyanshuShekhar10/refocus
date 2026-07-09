@@ -237,8 +237,7 @@ export async function PATCH(req: NextRequest) {
 
   await db.collection("users").updateOne(
     { _id: new ObjectId(userId) },
-    { $set: updateFields },
-    { upsert: true }
+    { $set: updateFields }
   );
 
   // Kick off embedding generation after the response is sent so the user
