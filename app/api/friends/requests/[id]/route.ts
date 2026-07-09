@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { areUsersBlocked } from "@/lib/blocking";
 
 export async function POST(
   req: NextRequest,
@@ -27,9 +28,33 @@ export async function POST(
   const { action } = body as { action?: "accept" | "decline" };
   if (!action)
     return NextResponse.json({ error: "Missing action" }, { status: 400 });
+  if (action !== "accept" && action !== "decline")
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  if (!ObjectId.isValid(id)) {
+    return NextResponse.json({ error: "Invalid request id" }, { status: 400 });
+  }
 
   const db = await getDb();
   const nextStatus = action === "accept" ? "accepted" : "declined";
+
+  if (action === "accept") {
+    const pending = await db.collection("friend_requests").findOne(
+      { _id: new ObjectId(id), to_user_id: userId, status: "pending" },
+      { projection: { from_user_id: 1, to_user_id: 1 } },
+    );
+    if (
+      pending &&
+      (await areUsersBlocked(
+        String(pending.from_user_id),
+        String(pending.to_user_id),
+      ))
+    ) {
+      return NextResponse.json(
+        { error: "You cannot accept a friend request from this user" },
+        { status: 403 },
+      );
+    }
+  }
 
   // Atomic: only update if the request is still pending and belongs to this user
   const result = await db

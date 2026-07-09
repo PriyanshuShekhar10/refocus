@@ -36,7 +36,7 @@ async function main() {
 
   let scanned = 0;
   let updated = 0;
-  let cursor = col.find(
+  const cursor = col.find(
     {},
     { projection: { session_participants: 1, participant_count: 1 } },
   ).batchSize(BATCH);

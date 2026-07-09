@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import {
   getRedirectResult,
@@ -101,10 +101,10 @@ export function FirebaseOAuthButtons({
 }: FirebaseOAuthButtonsProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const setGoogleLoading = (loading: boolean) => {
+  const setGoogleLoading = useCallback((loading: boolean) => {
     setIsLoading(loading);
     onLoadingChange?.(loading);
-  };
+  }, [onLoadingChange]);
 
   useEffect(() => {
     if (!isFirebaseClientConfigured()) return;
@@ -123,7 +123,7 @@ export function FirebaseOAuthButtons({
         onError?.(formatFirebaseAuthError(err));
         setGoogleLoading(false);
       });
-  }, [onError, onSuccess]);
+  }, [onError, onSuccess, setGoogleLoading]);
 
   if (!isFirebaseClientConfigured()) {
     return null;

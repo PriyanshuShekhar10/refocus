@@ -9,7 +9,12 @@ vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
 }));
 
+vi.mock("@/lib/blocking", () => ({
+  areUsersBlocked: vi.fn().mockResolvedValue(false),
+}));
+
 import { POST } from "@/app/api/friends/requests/[id]/route";
+import { areUsersBlocked } from "@/lib/blocking";
 
 const USER_ID = "user123";
 const REQUEST_ID = new ObjectId();
@@ -22,6 +27,9 @@ describe("POST /api/friends/requests/:id", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSession(USER_ID);
+    vi.mocked(areUsersBlocked).mockResolvedValue(false);
+    friendRequestsCol.findOne.mockResolvedValue(null);
+    friendRequestsCol.findOneAndUpdate.mockResolvedValue(null);
   });
 
   it("returns 401 when not authenticated", async () => {
@@ -45,6 +53,28 @@ describe("POST /api/friends/requests/:id", () => {
     );
     expect(status).toBe(400);
     expect(json.error).toBe("Missing action");
+  });
+
+  it("returns 400 when action is invalid", async () => {
+    const req = mockRequest(`/api/friends/requests/${REQUEST_ID}`, {
+      body: { action: "archive" },
+    });
+    const { status, json } = await parseResponse(
+      await POST(req, makeParams(String(REQUEST_ID)))
+    );
+    expect(status).toBe(400);
+    expect(json.error).toBe("Invalid action");
+  });
+
+  it("returns 400 when request id is invalid", async () => {
+    const req = mockRequest("/api/friends/requests/not-an-id", {
+      body: { action: "accept" },
+    });
+    const { status, json } = await parseResponse(
+      await POST(req, makeParams("not-an-id"))
+    );
+    expect(status).toBe(400);
+    expect(json.error).toBe("Invalid request id");
   });
 
   it("returns 404 when request does not exist", async () => {
@@ -98,6 +128,7 @@ describe("POST /api/friends/requests/:id", () => {
   });
 
   it("successfully accepts a pending request atomically", async () => {
+    friendRequestsCol.findOne.mockResolvedValue(null);
     friendRequestsCol.findOneAndUpdate.mockResolvedValue({
       _id: REQUEST_ID,
       to_user_id: USER_ID,
@@ -119,6 +150,26 @@ describe("POST /api/friends/requests/:id", () => {
     expect(filter.status).toBe("pending");
     expect(filter.to_user_id).toBe(USER_ID);
     expect(update.$set.status).toBe("accepted");
+  });
+
+  it("blocks accepting a request when either user has blocked the other", async () => {
+    friendRequestsCol.findOne.mockResolvedValue({
+      _id: REQUEST_ID,
+      from_user_id: "other_user",
+      to_user_id: USER_ID,
+      status: "pending",
+    });
+    vi.mocked(areUsersBlocked).mockResolvedValue(true);
+
+    const req = mockRequest(`/api/friends/requests/${REQUEST_ID}`, {
+      body: { action: "accept" },
+    });
+    const { status, json } = await parseResponse(
+      await POST(req, makeParams(String(REQUEST_ID)))
+    );
+    expect(status).toBe(403);
+    expect(json.error).toBe("You cannot accept a friend request from this user");
+    expect(friendRequestsCol.findOneAndUpdate).not.toHaveBeenCalled();
   });
 
   it("successfully declines a pending request", async () => {

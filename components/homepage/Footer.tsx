@@ -24,10 +24,13 @@ export function Footer() {
           rel="noopener noreferrer"
           tabIndex={-1}
         >
-          <img
+          <Image
             src="https://www.betterlaunch.co/badge-light.svg"
             alt="Featured on Better Launch"
+            width={1}
+            height={1}
             className={styles.footBadge}
+            unoptimized
           />
         </a>
       </div>

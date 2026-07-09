@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
         r.from_user_id === userId ? r.to_user_id : r.from_user_id
       )
     )
-  ).filter(Boolean);
+  ).filter((id): id is string => Boolean(id) && ObjectId.isValid(id));
 
   let usersById: Record<
     string,

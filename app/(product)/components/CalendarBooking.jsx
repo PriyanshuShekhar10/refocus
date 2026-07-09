@@ -148,14 +148,14 @@ export default function CalendarBooking({
   const visibleEndMin = endHour * 60;
   const visibleMinutes = visibleEndMin - visibleStartMin;
 
-  const checkCollision = (newBooking) => {
+  const checkCollision = useCallback((newBooking) => {
     return bookings.some(
       (b) =>
         b.dayIndex === newBooking.dayIndex &&
         b.startMinOfDay < newBooking.startMinOfDay + newBooking.duration &&
         b.startMinOfDay + b.duration > newBooking.startMinOfDay
     );
-  };
+  }, [bookings]);
 
   const handleMouseMove = useCallback(
     (e) => {
@@ -200,9 +200,10 @@ export default function CalendarBooking({
     [
       daysToShow,
       visibleStartMin,
+      visibleEndMin,
       visibleMinutes,
       selectedDuration,
-      bookings,
+      checkCollision,
       snapMinutes,
     ]
   );
@@ -330,5 +331,4 @@ export default function CalendarBooking({
     </div>
   );
 }
-
 

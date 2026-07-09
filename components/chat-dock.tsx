@@ -33,8 +33,8 @@ export function ChatDock() {
   const { data: unreadData, mutate: mutateUnread } = useSWR<{
     counts?: Record<string, number>;
   }>(swrKeys.chatUnreadCounts);
-  const unreadCounts = unreadData?.counts ?? {};
-  const setUnreadCounts = (
+  const unreadCounts = useMemo(() => unreadData?.counts ?? {}, [unreadData?.counts]);
+  const setUnreadCounts = useCallback((
     updater: SetStateAction<Record<string, number>>,
   ) => {
     void mutateUnread(
@@ -45,7 +45,7 @@ export function ChatDock() {
       },
       { revalidate: false },
     );
-  };
+  }, [mutateUnread]);
   const [openChats, setOpenChats] = useState<OpenChat[]>([]);
 
   const loadFriends = useCallback(async () => {
@@ -70,6 +70,37 @@ export function ChatDock() {
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [panelOpen, loadFriends]);
+
+  const openOrFocusChat = useCallback((
+    friendId: string,
+    friendLabel: string,
+    friendAvatarUrl?: string | null,
+  ) => {
+    setOpenChats((prev) => {
+      const idx = prev.findIndex((c) => c.friendId === friendId);
+      if (idx >= 0) {
+        const next = prev.slice();
+        next[idx] = {
+          ...next[idx],
+          minimized: false,
+          friendAvatarUrl: friendAvatarUrl ?? next[idx].friendAvatarUrl,
+        };
+        return next;
+      }
+      const next = [
+        ...prev,
+        {
+          friendId,
+          friendLabel,
+          friendAvatarUrl: friendAvatarUrl ?? null,
+          minimized: false,
+        },
+      ];
+      if (next.length > 3) return next.slice(-3);
+      return next;
+    });
+    setPanelOpen(false);
+  }, []);
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -104,7 +135,7 @@ export function ChatDock() {
     return () => {
       channel.unsubscribe("event", onEvent);
     };
-  }, [currentUserId]);
+  }, [currentUserId, setUnreadCounts]);
 
   const totalUnread = useMemo(
     () => Object.values(unreadCounts).reduce((a, b) => a + (b || 0), 0),
@@ -146,33 +177,7 @@ export function ChatDock() {
       window.removeEventListener("chatdock:toggle", toggle as EventListener);
       window.removeEventListener("chatdock:open", openHandler as EventListener);
     };
-  }, []);
-
-  const openOrFocusChat = (
-    friendId: string,
-    friendLabel: string,
-    friendAvatarUrl?: string | null,
-  ) => {
-    setOpenChats((prev) => {
-      const idx = prev.findIndex((c) => c.friendId === friendId);
-      if (idx >= 0) {
-        const next = prev.slice();
-        next[idx] = {
-          ...next[idx],
-          minimized: false,
-          friendAvatarUrl: friendAvatarUrl ?? next[idx].friendAvatarUrl,
-        };
-        return next;
-      }
-      const next = [
-        ...prev,
-        { friendId, friendLabel, friendAvatarUrl: friendAvatarUrl ?? null, minimized: false },
-      ];
-      if (next.length > 3) return next.slice(-3);
-      return next;
-    });
-    setPanelOpen(false);
-  };
+  }, [openOrFocusChat]);
 
   const closeChat = (friendId: string) => {
     setOpenChats((prev) => prev.filter((c) => c.friendId !== friendId));

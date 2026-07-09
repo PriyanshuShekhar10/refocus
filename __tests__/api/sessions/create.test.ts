@@ -20,6 +20,10 @@ vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
 }));
 
+vi.mock("@/lib/ably-server", () => ({
+  publishAbly: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/sse", () => ({
   publish: vi.fn().mockResolvedValue(undefined),
   sessionsChannel: () => "sessions:updates",

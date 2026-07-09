@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from "swr";
-import { useCallback, type SetStateAction } from "react";
+import { useCallback, useMemo, type SetStateAction } from "react";
 import { swrKeys } from "@/lib/swr/keys";
 import type { FriendData } from "@/app/(product)/components/Friends/FriendRow";
 import type { FriendRequestData } from "@/app/(product)/components/Friends/FriendRequestCard";
@@ -23,6 +23,26 @@ export function useFriendsData() {
     swrKeys.sessionRequestsOutgoing,
   );
   const unread = useSWR<UnreadCountsResponse>(swrKeys.chatUnreadCounts);
+  const { mutate: mutateUnread } = unread;
+  const unreadCounts = useMemo(
+    () => unread.data?.counts ?? {},
+    [unread.data?.counts],
+  );
+
+  const setUnreadCounts = useCallback(
+    (updater: SetStateAction<Record<string, number>>) => {
+      void mutateUnread(
+        (current) => {
+          const prev = current?.counts ?? {};
+          const next =
+            typeof updater === "function" ? updater(prev) : updater;
+          return { counts: next };
+        },
+        { revalidate: false },
+      );
+    },
+    [mutateUnread],
+  );
 
   const refresh = useCallback(async () => {
     await Promise.all([
@@ -68,18 +88,8 @@ export function useFriendsData() {
     friends: friends.data?.friends ?? [],
     sessIncoming: sessIncoming.data?.requests ?? [],
     sessOutgoing: sessOutgoing.data?.requests ?? [],
-    unreadCounts: unread.data?.counts ?? {},
-    setUnreadCounts: (updater: SetStateAction<Record<string, number>>) => {
-      unread.mutate(
-        (current) => {
-          const prev = current?.counts ?? {};
-          const next =
-            typeof updater === "function" ? updater(prev) : updater;
-          return { counts: next };
-        },
-        { revalidate: false },
-      );
-    },
+    unreadCounts,
+    setUnreadCounts,
     loading: isInitialLoading,
     isValidating:
       friends.isValidating ||

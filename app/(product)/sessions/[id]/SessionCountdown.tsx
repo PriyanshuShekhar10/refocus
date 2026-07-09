@@ -10,7 +10,7 @@ interface SessionCountdownProps {
   sessionId: string;
 }
 
-export default function SessionCountdown({ startTime, sessionId: _sessionId }: SessionCountdownProps) {
+export default function SessionCountdown({ startTime }: SessionCountdownProps) {
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState<{
     hours: number;

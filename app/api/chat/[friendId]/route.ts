@@ -37,6 +37,9 @@ type MessageDoc = {
   deleted_at?: Date;
 };
 
+const MAX_BOOKING_HORIZON_DAYS = 90;
+const MAX_CHAT_TEXT_LENGTH = 2_000;
+
 // GET /api/chat/:friendId
 export async function GET(
   _req: NextRequest,
@@ -48,6 +51,10 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { friendId } = await params;
+
+  if (!ObjectId.isValid(friendId)) {
+    return NextResponse.json({ error: "Invalid friend id" }, { status: 400 });
+  }
 
   if (!(await areFriends(currentUserId, friendId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -108,6 +115,10 @@ export async function POST(
 
   const { friendId } = await params;
 
+  if (!ObjectId.isValid(friendId)) {
+    return NextResponse.json({ error: "Invalid friend id" }, { status: 400 });
+  }
+
   if (!(await areFriends(currentUserId, friendId))) {
     return NextResponse.json(
       { error: "You can only message friends" },
@@ -125,15 +136,23 @@ export async function POST(
 
   if (type === "text") {
     const { content } = body as { content?: string };
-    if (!content || !content.trim()) {
+    const trimmedContent = content?.trim() ?? "";
+    if (!trimmedContent) {
       return NextResponse.json({ error: "Empty content" }, { status: 400 });
     }
+    if (trimmedContent.length > MAX_CHAT_TEXT_LENGTH) {
+      return NextResponse.json(
+        { error: `Content must be ${MAX_CHAT_TEXT_LENGTH} characters or fewer` },
+        { status: 400 },
+      );
+    }
+    const createdAt = new Date();
     const insert = await db.collection("messages").insertOne({
       from_user_id: currentUserId,
       to_user_id: friendId,
       type: "text",
-      content,
-      created_at: new Date(),
+      content: trimmedContent,
+      created_at: createdAt,
       read_at: null,
       deleted: false,
     });
@@ -147,9 +166,9 @@ export async function POST(
       from_user_id: currentUserId,
       to_user_id: friendId,
       type: "text" as const,
-      content,
+      content: trimmedContent,
       payload: null,
-      created_at: new Date().toISOString(),
+      created_at: createdAt.toISOString(),
     };
     await Promise.all([
       publish(channel, {
@@ -211,6 +230,17 @@ export async function POST(
         { status: 400 },
       );
     }
+    const maxFuture = new Date(
+      now.getTime() + MAX_BOOKING_HORIZON_DAYS * 24 * 60 * 60 * 1000,
+    );
+    if (s.getTime() > maxFuture.getTime()) {
+      return NextResponse.json(
+        {
+          error: `Cannot request a session more than ${MAX_BOOKING_HORIZON_DAYS} days in advance`,
+        },
+        { status: 400 },
+      );
+    }
     const end = new Date(s.getTime() + durationMin * 60_000);
     if (await hasSessionOverlap(db, currentUserId, s, end)) {
       return NextResponse.json(
@@ -224,6 +254,27 @@ export async function POST(
         { status: 409 },
       );
     }
+    const normalizedMessage =
+      typeof message === "string" ? message.trim() : "";
+    const normalizedGoal = typeof goal === "string" ? goal.trim() : "";
+    const trimmedMessage = normalizedMessage
+      ? normalizedMessage.slice(0, 500)
+      : null;
+    const trimmedGoal = normalizedGoal ? normalizedGoal.slice(0, 500) : null;
+
+    const existingRequest = await db.collection("session_requests").findOne({
+      from_user_id: currentUserId,
+      to_user_id: friendId,
+      start_time: s,
+      duration_min: durationMin,
+      status: "pending",
+    });
+    if (existingRequest) {
+      return NextResponse.json(
+        { error: "A pending request for this slot already exists" },
+        { status: 409 },
+      );
+    }
 
     // Create session request
     const sr = await db.collection("session_requests").insertOne({
@@ -231,8 +282,8 @@ export async function POST(
       to_user_id: friendId,
       start_time: s,
       duration_min: durationMin,
-      message: message ?? null,
-      goal: goal ?? null,
+      message: trimmedMessage,
+      goal: trimmedGoal,
       response_message: null,
       status: "pending",
       created_at: new Date(),
@@ -249,8 +300,8 @@ export async function POST(
         sessionRequestId: String(sr.insertedId),
         start: s.toISOString(),
         durationMin,
-        message: message ?? null,
-        goal: goal ?? null,
+        message: trimmedMessage,
+        goal: trimmedGoal,
         status: "pending",
         from_user_id: currentUserId,
         to_user_id: friendId,
@@ -272,8 +323,8 @@ export async function POST(
         sessionRequestId: String(sr.insertedId),
         start: s.toISOString(),
         durationMin,
-        message: message ?? null,
-        goal: goal ?? null,
+        message: trimmedMessage,
+        goal: trimmedGoal,
         status: "pending" as const,
         from_user_id: currentUserId,
         to_user_id: friendId,

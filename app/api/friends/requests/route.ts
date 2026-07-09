@@ -6,6 +6,7 @@ import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { areUsersBlocked } from "@/lib/blocking";
 
 type FriendRequestDoc = {
   _id: ObjectId;
@@ -39,12 +40,28 @@ export async function POST(req: NextRequest) {
   const { to_user_id } = body as { to_user_id?: string };
   if (!to_user_id)
     return NextResponse.json({ error: "Missing to_user_id" }, { status: 400 });
+  if (!ObjectId.isValid(to_user_id))
+    return NextResponse.json({ error: "Invalid to_user_id" }, { status: 400 });
   if (to_user_id === currentUserId)
     return NextResponse.json(
       { error: "Cannot friend yourself" },
       { status: 400 }
     );
   const db = await getDb();
+
+  const recipient = await db
+    .collection("users")
+    .findOne({ _id: new ObjectId(to_user_id) }, { projection: { _id: 1 } });
+  if (!recipient) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  if (await areUsersBlocked(currentUserId, to_user_id)) {
+    return NextResponse.json(
+      { error: "You cannot send a friend request to this user" },
+      { status: 403 },
+    );
+  }
 
   const accepted = await db.collection("friend_requests").findOne({
     $or: [
@@ -119,7 +136,7 @@ export async function GET(req: NextRequest) {
     new Set(
       data.map((d) => (type === "outgoing" ? d.to_user_id : d.from_user_id))
     )
-  ).filter(Boolean);
+  ).filter((id): id is string => Boolean(id) && ObjectId.isValid(id));
 
   let usersById: Record<
     string,

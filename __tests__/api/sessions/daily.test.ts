@@ -5,6 +5,7 @@ import { mockRequest, mockSession, parseResponse } from "../../helpers";
 const mocks = vi.hoisted(() => ({
   sessionsCol: {
     findOne: vi.fn(),
+    updateOne: vi.fn().mockResolvedValue({ modifiedCount: 1 }),
   },
   checkRateLimit: vi.fn(),
   rateLimitedResponse: vi.fn(),

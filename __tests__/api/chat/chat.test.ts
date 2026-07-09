@@ -17,19 +17,28 @@ vi.mock("@/lib/ratelimit", () => ({
 
 const messagesCol = mockCollection();
 const friendRequestsCol = mockCollection();
+const sessionRequestsCol = mockCollection();
+const sessionsCol = mockCollection();
 const db = mockDb({
   messages: messagesCol,
   friend_requests: friendRequestsCol,
+  session_requests: sessionRequestsCol,
+  sessions: sessionsCol,
 });
 
 vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
 }));
 
+vi.mock("@/lib/ably-server", () => ({
+  publishAbly: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { POST } from "@/app/api/chat/[friendId]/route";
 
-const CURRENT_USER = "user123";
-const FRIEND_ID = "friend456";
+const CURRENT_USER = new ObjectId().toString();
+const FRIEND_ID = new ObjectId().toString();
+const STRANGER_ID = new ObjectId().toString();
 
 function makeParams(friendId: string) {
   return { params: Promise.resolve({ friendId }) };
@@ -47,11 +56,14 @@ describe("POST /api/chat/:friendId", () => {
       status: "accepted",
     });
     messagesCol.insertOne.mockResolvedValue({ insertedId: new ObjectId() });
+    sessionRequestsCol.findOne.mockResolvedValue(null);
+    sessionRequestsCol.insertOne.mockResolvedValue({ insertedId: new ObjectId() });
+    sessionsCol.findOne.mockResolvedValue(null);
   });
 
   it("returns 401 when not authenticated", async () => {
     mockSession(null);
-    const req = mockRequest("/api/chat/friend456", {
+    const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
       body: { type: "text", content: "hello" },
     });
     const { status, json } = await parseResponse(
@@ -64,18 +76,29 @@ describe("POST /api/chat/:friendId", () => {
   it("returns 403 when users are not friends", async () => {
     friendRequestsCol.findOne.mockResolvedValue(null);
 
-    const req = mockRequest("/api/chat/stranger789", {
+    const req = mockRequest(`/api/chat/${STRANGER_ID}`, {
       body: { type: "text", content: "hello" },
     });
     const { status, json } = await parseResponse(
-      await POST(req, makeParams("stranger789"))
+      await POST(req, makeParams(STRANGER_ID))
     );
     expect(status).toBe(403);
     expect(json.error).toBe("You can only message friends");
   });
 
+  it("returns 400 when friend id is malformed", async () => {
+    const req = mockRequest("/api/chat/not-an-id", {
+      body: { type: "text", content: "hello" },
+    });
+    const { status, json } = await parseResponse(
+      await POST(req, makeParams("not-an-id"))
+    );
+    expect(status).toBe(400);
+    expect(json.error).toBe("Invalid friend id");
+  });
+
   it("returns 400 when type is missing", async () => {
-    const req = mockRequest("/api/chat/friend456", {
+    const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
       body: { content: "hello" },
     });
     const { status, json } = await parseResponse(
@@ -86,7 +109,7 @@ describe("POST /api/chat/:friendId", () => {
   });
 
   it("returns 400 for empty text content", async () => {
-    const req = mockRequest("/api/chat/friend456", {
+    const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
       body: { type: "text", content: "   " },
     });
     const { status, json } = await parseResponse(
@@ -100,7 +123,7 @@ describe("POST /api/chat/:friendId", () => {
     const insertedId = new ObjectId();
     messagesCol.insertOne.mockResolvedValue({ insertedId });
 
-    const req = mockRequest("/api/chat/friend456", {
+    const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
       body: { type: "text", content: "Hello friend!" },
     });
     const { status, json } = await parseResponse(
@@ -118,7 +141,7 @@ describe("POST /api/chat/:friendId", () => {
   });
 
   it("verifies friendship check queries both directions", async () => {
-    const req = mockRequest("/api/chat/friend456", {
+    const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
       body: { type: "text", content: "hi" },
     });
     await POST(req, makeParams(FRIEND_ID));
@@ -132,7 +155,7 @@ describe("POST /api/chat/:friendId", () => {
   });
 
   it("returns 400 for session-request with missing start", async () => {
-    const req = mockRequest("/api/chat/friend456", {
+    const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
       body: { type: "session-request", durationMin: 25 },
     });
     const { status, json } = await parseResponse(
@@ -142,8 +165,29 @@ describe("POST /api/chat/:friendId", () => {
     expect(json.error).toBe("Missing start or durationMin");
   });
 
+  it("returns 409 for duplicate pending session request slots", async () => {
+    sessionRequestsCol.findOne.mockResolvedValue({
+      _id: new ObjectId(),
+      from_user_id: CURRENT_USER,
+      to_user_id: FRIEND_ID,
+      status: "pending",
+    });
+    const start = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+    const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
+      body: { type: "session-request", start, durationMin: 25 },
+    });
+    const { status, json } = await parseResponse(
+      await POST(req, makeParams(FRIEND_ID))
+    );
+    expect(status).toBe(409);
+    expect(json.error).toBe("A pending request for this slot already exists");
+    expect(sessionRequestsCol.insertOne).not.toHaveBeenCalled();
+    expect(messagesCol.insertOne).not.toHaveBeenCalled();
+  });
+
   it("returns 400 for unsupported message type", async () => {
-    const req = mockRequest("/api/chat/friend456", {
+    const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
       body: { type: "video" },
     });
     const { status, json } = await parseResponse(

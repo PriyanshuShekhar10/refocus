@@ -105,7 +105,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
     return () => {
       channel.unsubscribe("event", onEvent);
     };
-  }, [currentUserId]);
+  }, [currentUserId, setUnreadCounts]);
 
   const respondFriendRequest = async (
     id: string,

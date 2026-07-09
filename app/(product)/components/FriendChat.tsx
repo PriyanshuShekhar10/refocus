@@ -306,7 +306,7 @@ export default function FriendChat({
     } finally {
       setLoading(false);
     }
-  }, [friendId]);
+  }, [friendId, scrollToBottom]);
 
   useEffect(() => {
     load();

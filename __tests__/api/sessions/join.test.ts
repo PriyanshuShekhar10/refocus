@@ -9,6 +9,10 @@ vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
 }));
 
+vi.mock("@/lib/ably-server", () => ({
+  publishAbly: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { POST } from "@/app/api/sessions/[id]/join/route";
 
 const USER_ID = "user123";

@@ -79,7 +79,13 @@ describe("POST /api/auth/reset-password", () => {
     vi.mocked(resetPasswordWithToken).mockResolvedValue({
       ok: false,
       error: "Password is too weak",
-      requirements: [],
+      requirements: {
+        length: false,
+        uppercase: false,
+        lowercase: true,
+        number: false,
+        specialChar: false,
+      },
     });
 
     const req = mockRequest("/api/auth/reset-password", {
