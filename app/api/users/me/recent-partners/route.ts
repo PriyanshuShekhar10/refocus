@@ -3,8 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { areFriends } from "@/lib/friendship";
-import { isBlockedByMe } from "@/lib/blocking";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 import { SESSION_REPORT_MAX_AGE_DAYS } from "@/lib/reportConstants";
 

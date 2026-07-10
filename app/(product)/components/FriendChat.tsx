@@ -4,8 +4,6 @@ import {
   FiMinus,
   FiMaximize2,
   FiX,
-  FiSend,
-  FiCalendar,
   FiMessageCircle,
   FiMoreHorizontal,
 } from "react-icons/fi";
@@ -17,6 +15,7 @@ import ReportDialog from "@/app/(product)/components/ReportDialog";
 import { AdminTag } from "@/components/admin-tag";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import FriendChatInput from "./chat/FriendChatInput";
 
 type SessionRequestPayload = {
   sessionRequestId: string;
@@ -73,8 +72,6 @@ export default function FriendChat({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [text, setText] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const [srOpen, setSrOpen] = useState(false);
   const [srDate, setSrDate] = useState<Date | null>(null);
   const [srHour, setSrHour] = useState<number | null>(null);
@@ -425,8 +422,7 @@ export default function FriendChat({
     requestAnimationFrame(() => scrollToBottom());
   }, [messages, scrollToBottom]);
 
-  const sendText = async () => {
-    const value = text.trim();
+  const sendText = async (value: string) => {
     if (!value || !currentUserId || !canInteract) return;
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const optimisticMessage: ChatMessage = {
@@ -438,9 +434,7 @@ export default function FriendChat({
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimisticMessage]);
-    setText("");
     setError(null);
-    setIsSending(true);
     try {
       const res = await fetch(`/api/chat/${friendId}`);
       if (!res.ok) throw new Error("auth check failed");
@@ -468,10 +462,8 @@ export default function FriendChat({
       requestAnimationFrame(() => scrollToBottom("smooth"));
     } catch (e) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      setText(value);
       setError((e as Error).message);
-    } finally {
-      setIsSending(false);
+      throw e;
     }
   };
 
@@ -1355,57 +1347,15 @@ export default function FriendChat({
             </button>
         </div>
       )}
-      <div
-        className={`shrink-0 border-t border-gray-200/70 dark:border-gray-800 bg-white dark:bg-gray-900 ${
-          isModal ? "px-5 py-4" : "p-3"
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            placeholder={
-              canInteract
-                ? `Message ${friendLabel.split(/[@\s]/)[0] || "friend"}…`
-                : verifyMessage
-            }
-            disabled={!canInteract}
-            className={`flex-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:border-[#5D1C6A] focus:bg-white dark:focus:border-[#CA5995] dark:focus:bg-gray-900 transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-              isModal ? "px-4 py-2 text-sm" : "px-3 py-1.5 text-sm"
-            }`}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendText();
-              }
-            }}
-          />
-          <button
-            onClick={() => canInteract && setSrOpen((v) => !v)}
-            disabled={!canInteract}
-            aria-label={srOpen ? "Close session request" : "Send session request"}
-            title={canInteract ? "Send session request" : verifyMessage}
-            className={`inline-flex shrink-0 items-center justify-center rounded-full border transition-colors ${
-              srOpen
-                ? "border-[#5D1C6A] bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090] dark:border-[#CA5995]"
-                : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-[#5D1C6A] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-[#FFB090]"
-            } ${isModal ? "h-10 w-10" : "h-8 w-8"}`}
-          >
-            <FiCalendar size={isModal ? 16 : 14} />
-          </button>
-          <button
-            onClick={sendText}
-            disabled={!canInteract || isSending || !text.trim()}
-            aria-label="Send message"
-            className={`inline-flex shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-white shadow-sm hover:bg-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-              isModal ? "h-10 w-10" : "h-8 w-8"
-            }`}
-          >
-            <FiSend size={isModal ? 16 : 14} />
-          </button>
-        </div>
-      </div>
+      <FriendChatInput
+        canInteract={canInteract}
+        verifyMessage={verifyMessage ?? null}
+        friendLabel={friendLabel}
+        isModal={isModal}
+        srOpen={srOpen}
+        setSrOpen={setSrOpen}
+        onSend={sendText}
+      />
     </>
   );
 
