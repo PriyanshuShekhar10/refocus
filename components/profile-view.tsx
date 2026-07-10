@@ -16,6 +16,7 @@ import {
   EmailVerificationBanner,
   EmailVerifiedBadge,
 } from "@/components/email-verification-banner";
+import { AvatarCropModal } from "@/components/avatar-crop-modal";
 
 const ABOUT_ME_PROMPTS = [
   "My most important project today",
@@ -97,6 +98,7 @@ export function ProfileView({ embedded = false }: Props) {
   >("idle");
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [editFields, setEditFields] = useState<EditableFields>({
     username: "",
@@ -244,11 +246,7 @@ export function ProfileView({ embedded = false }: Props) {
     avatarInputRef.current?.click();
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-
+  const uploadAvatarFile = async (file: File) => {
     setAvatarUploading(true);
     setAvatarError(null);
     try {
@@ -272,6 +270,26 @@ export function ProfileView({ embedded = false }: Props) {
     } finally {
       setAvatarUploading(false);
     }
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setAvatarError(null);
+    const url = URL.createObjectURL(file);
+    setCropImageUrl(url);
+  };
+
+  const closeCropModal = () => {
+    if (cropImageUrl) URL.revokeObjectURL(cropImageUrl);
+    setCropImageUrl(null);
+  };
+
+  const handleCropComplete = async (file: File) => {
+    closeCropModal();
+    await uploadAvatarFile(file);
   };
 
   const handleAvatarRemove = async () => {
@@ -378,8 +396,7 @@ export function ProfileView({ embedded = false }: Props) {
                 initials
               )}
             </div>
-            {isEditing && (
-              <button
+            <button
                 type="button"
                 onClick={handleAvatarPick}
                 disabled={avatarUploading}
@@ -404,7 +421,6 @@ export function ProfileView({ embedded = false }: Props) {
               >
                 <Camera size={14} />
               </button>
-            )}
             <input
               ref={avatarInputRef}
               type="file"
@@ -415,7 +431,7 @@ export function ProfileView({ embedded = false }: Props) {
               tabIndex={-1}
             />
           </div>
-          {isEditing && user?.avatarUrl && (
+          {user?.avatarUrl && (
             <button
               type="button"
               onClick={handleAvatarRemove}
@@ -668,6 +684,12 @@ export function ProfileView({ embedded = false }: Props) {
               gap: 20,
             }}
           >
+            <div style={{ gridColumn: "1 / -1" }}>
+              <ReadField
+                label="Username"
+                value={user?.username ? `@${user.username}` : ""}
+              />
+            </div>
             <ReadField label="First name" value={firstname} />
             <ReadField label="Last name" value={lastname} />
             <ReadField
@@ -872,6 +894,14 @@ export function ProfileView({ embedded = false }: Props) {
           </div>
         )}
       </section>
+
+      {cropImageUrl && (
+        <AvatarCropModal
+          imageUrl={cropImageUrl}
+          onCancel={closeCropModal}
+          onComplete={handleCropComplete}
+        />
+      )}
     </div>
   );
 }

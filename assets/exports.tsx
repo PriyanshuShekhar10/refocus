@@ -5,5 +5,6 @@ import DarkDashboard from "./screenshots/D-Dashboard.png"
 import DarkModal from "./screenshots/D-Modal.png"
 import LightDashboard from "./screenshots/L-Dashboard.png"
 import LightModal from "./screenshots/L-Modal.png"
+import DashboardScreenshot from "./screenshots/image.png"
 
-export { Logo, Graphic2, PastBuddies, DarkDashboard, DarkModal, LightDashboard, LightModal };
+export { Logo, Graphic2, PastBuddies, DarkDashboard, DarkModal, LightDashboard, LightModal, DashboardScreenshot };

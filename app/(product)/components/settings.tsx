@@ -16,11 +16,14 @@ import {
   Moon,
   Monitor,
   ImageIcon,
+  AtSign,
+  User,
 } from "lucide-react";
 import { EmailVerificationBanner } from "@/components/email-verification-banner";
 import {
   DButton,
   Field,
+  DInput,
   DPasswordInput,
   designStyles,
   Shell,
@@ -88,6 +91,7 @@ export default function Settings() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <EmailVerificationSection />
+          <UsernameSection />
           <FocusPreferences />
           <NotificationsSection />
           <PrivacySection />
@@ -137,6 +141,167 @@ function EmailVerificationSection() {
       subtitle="Optional — does not affect dashboard access."
     >
       <EmailVerificationBanner email={email} compact />
+    </SectionCard>
+  );
+}
+
+/* ─────────────────────────────────────────────────────
+   Username
+   ───────────────────────────────────────────────────── */
+function UsernameSection() {
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "checking" | "available" | "taken">(
+    "idle",
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/me");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const value = data?.user?.username ?? "";
+        setCurrentUsername(value || null);
+        setUsername(value);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const trimmed = username.trim().toLowerCase();
+    if (!trimmed || trimmed === (currentUsername || "")) {
+      setStatus("idle");
+      return;
+    }
+    if (!/^[a-z0-9_-]{3,20}$/.test(trimmed)) {
+      setStatus("taken");
+      return;
+    }
+    setStatus("checking");
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/users/username?q=${encodeURIComponent(trimmed)}`,
+        );
+        const data = await res.json();
+        setStatus(data.available ? "available" : "taken");
+      } catch {
+        setStatus("idle");
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [username, currentUsername]);
+
+  const trimmed = username.trim().toLowerCase();
+  const unchanged = trimmed === (currentUsername || "");
+  const canSave =
+    !loading &&
+    !saving &&
+    !unchanged &&
+    status !== "checking" &&
+    status !== "taken" &&
+    /^[a-z0-9_-]{3,20}$/.test(trimmed);
+
+  const usernameHint =
+    status === "checking" ? "Checking availability…" : undefined;
+  const usernameError =
+    status === "taken"
+      ? trimmed.length < 3
+        ? "Username must be at least 3 characters"
+        : "Username is already taken"
+      : error ?? undefined;
+  const usernameOk =
+    status === "available" ? "Username is available" : undefined;
+
+  const handleSave = async () => {
+    if (!canSave) return;
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+    try {
+      const res = await fetch("/api/users/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: trimmed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Could not update username");
+        return;
+      }
+      setCurrentUsername(trimmed);
+      setUsername(trimmed);
+      setStatus("idle");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      setError("Could not update username");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <SectionCard
+      icon={<User size={16} />}
+      title="Username"
+      subtitle="Your public handle at refocus.app/u/yourname."
+    >
+      {loading ? (
+        <div className={designStyles.shimmer} style={{ height: 44 }} />
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <Field
+            label="Username"
+            htmlFor="settings-username"
+            error={usernameError}
+            ok={usernameOk}
+            hint={usernameHint}
+          >
+            <DInput
+              id="settings-username"
+              leading={<AtSign size={14} />}
+              value={username}
+              onChange={(e) => {
+                setSaved(false);
+                setError(null);
+                setUsername(
+                  e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""),
+                );
+              }}
+              placeholder="yourname"
+              maxLength={20}
+            />
+          </Field>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <DButton
+              variant="primary"
+              size="sm"
+              onClick={handleSave}
+              disabled={!canSave}
+            >
+              {saving ? "Saving…" : "Save username"}
+            </DButton>
+            {saved && (
+              <span style={{ fontSize: 13, color: "var(--ink-mute)" }}>
+                Saved
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </SectionCard>
   );
 }

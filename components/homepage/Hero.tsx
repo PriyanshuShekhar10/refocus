@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { LightDashboard } from "@/assets/exports";
+import { DashboardScreenshot } from "@/assets/exports";
 import styles from "./Homepage.module.css";
 import { Reveal } from "./Reveal";
 import { ArrowIcon } from "./ArrowIcon";
@@ -57,7 +57,7 @@ export function Hero() {
             <i />
           </div>
           <Image
-            src={LightDashboard}
+            src={DashboardScreenshot}
             alt="Refocus dashboard with an active focus session"
             className={styles.previewImg}
             priority
