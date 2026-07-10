@@ -144,27 +144,46 @@ export async function GET(req: NextRequest) {
 
   const reportMaxAgeMs = SESSION_REPORT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 
-  const partners = await Promise.all(
-    partnerIds.map(async (pid) => {
-      const entry = partnerMap.get(pid)!;
-      const profile = userById[pid];
-      const sessionEnd = new Date(entry.lastSessionAt).getTime();
-      const reportable = now.getTime() - sessionEnd <= reportMaxAgeMs;
+  // Batch fetch accepted friends to avoid N+1 query
+  const acceptedRequests = await db.collection("friend_requests").find({
+    status: "accepted",
+    $or: [
+      { from_user_id: userId, to_user_id: { $in: partnerIds } },
+      { from_user_id: { $in: partnerIds }, to_user_id: userId },
+    ],
+  }).toArray();
+  const friendSet = new Set<string>();
+  for (const f of acceptedRequests) {
+    if (String(f.from_user_id) === userId) friendSet.add(String(f.to_user_id));
+    if (String(f.to_user_id) === userId) friendSet.add(String(f.from_user_id));
+  }
 
-      return {
-        userId: pid,
-        name: profile?.name ?? null,
-        username: profile?.username ?? null,
-        avatarUrl: profile?.avatarUrl ?? null,
-        lastSessionId: entry.lastSessionId,
-        lastSessionAt: entry.lastSessionAt,
-        isFriend: await areFriends(userId, pid),
-        friendRequestPending: pendingByPartner[pid] ?? "none",
-        isBlockedByMe: await isBlockedByMe(userId, pid),
-        reportable,
-      };
-    }),
-  );
+  // Batch fetch blocked users to avoid N+1 query
+  const blocks = await db.collection("user_blocks").find({
+    blocker_id: userId,
+    blocked_id: { $in: partnerIds },
+  }).project({ blocked_id: 1 }).toArray();
+  const blockedSet = new Set<string>(blocks.map(b => String(b.blocked_id)));
+
+  const partners = partnerIds.map((pid) => {
+    const entry = partnerMap.get(pid)!;
+    const profile = userById[pid];
+    const sessionEnd = new Date(entry.lastSessionAt).getTime();
+    const reportable = now.getTime() - sessionEnd <= reportMaxAgeMs;
+
+    return {
+      userId: pid,
+      name: profile?.name ?? null,
+      username: profile?.username ?? null,
+      avatarUrl: profile?.avatarUrl ?? null,
+      lastSessionId: entry.lastSessionId,
+      lastSessionAt: entry.lastSessionAt,
+      isFriend: friendSet.has(pid),
+      friendRequestPending: pendingByPartner[pid] ?? "none",
+      isBlockedByMe: blockedSet.has(pid),
+      reportable,
+    };
+  });
 
   return NextResponse.json({ partners });
 }
