@@ -268,40 +268,15 @@
 /* ───────── DASHBOARD PREVIEW ───────── */
 .preview {
   margin-top: 72px;
-  position: relative;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: var(--card);
-  padding: 10px;
-  box-shadow: 0 1px 0 rgba(10, 10, 10, 0.02),
-    0 30px 60px -30px rgba(10, 10, 10, 0.12);
-  overflow: hidden;
-}
-.previewBar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 28px;
-  padding: 0 6px;
-}
-.previewBar i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--line);
-  display: inline-block;
+  max-width: 1120px;
+  margin-inline: auto;
 }
 .previewImg {
   width: 100%;
-  display: block;
-  border-radius: 10px;
   height: auto;
-}
-.previewOverlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(to bottom, transparent 60%, var(--bg) 100%);
+  display: block;
+  border-radius: 16px;
+  box-shadow: 0 24px 64px -24px rgba(10, 10, 10, 0.22);
 }
 
 /* ───────── SECTION COMMON ───────── */

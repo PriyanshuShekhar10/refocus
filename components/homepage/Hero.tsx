@@ -50,12 +50,7 @@ export function Hero() {
           <span>Free to start. No card required.</span>
         </Reveal>
 
-        <div className={styles.preview}>
-          <div className={styles.previewBar}>
-            <i />
-            <i />
-            <i />
-          </div>
+        <Reveal className={styles.preview}>
           <Image
             src={DashboardScreenshot}
             alt="Refocus dashboard with an active focus session"
@@ -63,10 +58,9 @@ export function Hero() {
             priority
             placeholder="blur"
             sizes="(max-width: 640px) calc(100vw - 40px), (max-width: 1200px) calc(100vw - 56px), 1144px"
-            quality={75}
+            quality={90}
           />
-          <div className={styles.previewOverlay} />
-        </div>
+        </Reveal>
       </div>
     </section>
   );
