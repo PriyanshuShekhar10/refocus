@@ -26,6 +26,7 @@ export const NavbarLogo = ({ forceLight }: { forceLight?: boolean }) => {
       <Image
         src={Logo}
         alt="Refocus"
+        priority
         className={cn(
           `h-12 w-auto py-2 sm:h-16 sm:py-3 md:h-20`,
           useDarkLogo && "invert brightness-0",

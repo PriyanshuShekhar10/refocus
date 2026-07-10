@@ -109,6 +109,7 @@ const nextConfig: NextConfig = {
   // from node_modules at runtime (avoids ESM/CJS packaging issues on Vercel).
   serverExternalPackages: ["firebase-admin"],
   images: {
+    qualities: [75, 90],
     remotePatterns: [
       {
         protocol: "https",
