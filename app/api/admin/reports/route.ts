@@ -29,10 +29,12 @@ export async function GET(req: NextRequest) {
     db.collection("content_reports").countDocuments(filter),
   ]);
 
+  const targetIds = reports.map((r) => r.targetId).filter(Boolean);
+
   const pendingByTarget = await db
     .collection("content_reports")
     .aggregate([
-      { $match: { status: "pending" } },
+      { $match: { status: "pending", targetId: { $in: targetIds } } },
       {
         $group: {
           _id: { targetType: "$targetType", targetId: "$targetId" },

@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
   if (!currentUserId) return new Response("Unauthorized", { status: 401 });
@@ -13,6 +13,20 @@ export async function GET() {
   let unsubscribe: (() => void) | null = null;
   let pingInterval: NodeJS.Timeout | null = null;
   let isStreamClosed = false;
+
+  function cleanup() {
+    isStreamClosed = true;
+    if (pingInterval) {
+      clearInterval(pingInterval);
+      pingInterval = null;
+    }
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+  }
+
+  req.signal.addEventListener("abort", cleanup);
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
@@ -44,17 +58,6 @@ export async function GET() {
     },
   });
 
-  function cleanup() {
-    isStreamClosed = true;
-    if (pingInterval) {
-      clearInterval(pingInterval);
-      pingInterval = null;
-    }
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
-    }
-  }
 
   return new Response(stream, {
     headers: {

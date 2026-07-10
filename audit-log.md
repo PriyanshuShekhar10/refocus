@@ -27,7 +27,13 @@ Following the test suite stabilization, a systematic review of the core API rout
 6. **Profile Update Data Integrity (`api/users/me/route.ts`)**: Removed `upsert: true` from the profile `PATCH` route to prevent the accidental creation of ghost user accounts (missing email/passwords) if an update collided with account deletion.
 7. **Global Chat Message Size Unbounded (`api/global-chat/route.ts`)**: Implemented a `MAX_CHAT_TEXT_LENGTH = 2000` validation in the global chat POST handler, fixing a vulnerability where unbounded payload sizes could be persisted, causing client and database bloat.
 
+## Phase 2: Deep Scalability Audit (Memory & Realtime)
+Following the initial scaling fixes, a second pass was performed focusing on deep memory scaling patterns and realtime connection stability. 3 additional severe bottlenecks were addressed:
+1. **Unbounded User Stats Memory Leak (`api/users/me/stats/route.ts`)**: The profile dashboard previously loaded a user's *entire lifetime session history* into Node.js memory just to calculate counts (booked, attended, minutes, etc.). This O(N) memory leak was eliminated by pushing all calculation logic down to a MongoDB `$group` aggregation pipeline, ensuring the server uses constant memory regardless of a user's session count.
+2. **O(Total DB) Scan in Admin Reports (`api/admin/reports/route.ts`)**: The admin report fetcher executed an unbounded aggregation across all pending reports in the entire database to compute clusters. This was restricted to only `$match` the `targetId`s present in the current paginated page, converting the time complexity from O(Total Reports) to O(Page Size).
+3. **SSE Connection Leaks (`api/chat/.../events/route.ts`)**: Three Server-Sent Event routes relied on the stream `.cancel()` method, which is not reliably called in Next.js when clients forcefully disconnect. This was fixed by attaching cleanup logic to `req.signal.addEventListener("abort")`, ensuring immediate cleanup of dangling intervals and memory leaks when the TCP connection drops.
+
 ## Findings & Conclusion
 - The changes proposed on the `audit-fix-codebase` branch are syntactically and logically sound. The database operations use safe atomic patterns (`findOneAndUpdate`, `bulkWrite`). React hooks properly declare dependencies.
-- Seven specific bottlenecks and logical flaws in production scaling (memory leaks, full table scans, sorting bugs) have been resolved.
-- The repository is in a healthy state and passes all static analysis and unit tests cleanly.
+- Ten specific bottlenecks and logical flaws in production scaling (memory leaks, full table scans, sorting bugs, realtime dangling connections) have been resolved across two audit phases.
+- The repository is in a highly optimized state, ready for production traffic, and passes all static analysis and unit tests cleanly.

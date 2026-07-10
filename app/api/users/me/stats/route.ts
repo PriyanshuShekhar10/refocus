@@ -5,26 +5,24 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 
-type ParticipantDoc = {
-  user_id: string;
-  call_joined_at?: Date | string;
-  call_completed?: boolean;
-  quiet?: boolean;
-};
-
-type SessionDoc = {
-  _id: ObjectId;
-  owner_id: string;
-  start_time: Date;
-  end_time: Date;
-  duration_min: number;
-  session_type: string;
-  name?: string | null;
-  session_participants?: ParticipantDoc[];
-};
 
 type SessionTypeBreakdown = Record<string, number>;
 type WeekdayCount = number[]; // length 7, Sunday-first
+
+type AggregatedSession = {
+  _id: ObjectId;
+  start_time: Date;
+  duration_min: number;
+  session_type: string;
+  name?: string | null;
+  owner_id: string;
+  participantCount: number;
+  me?: {
+    call_joined_at?: Date | string;
+    call_completed?: boolean;
+  };
+  partnerId?: string | null;
+};
 
 // GET /api/users/me/stats
 //
@@ -42,22 +40,55 @@ export async function GET() {
   const now = new Date();
 
   const sessions = (await db
-    .collection<SessionDoc>("sessions")
-    .find({
-      end_time: { $lt: now },
-      "session_participants.user_id": userId,
-    })
-    .project({
-      start_time: 1,
-      end_time: 1,
-      duration_min: 1,
-      session_type: 1,
-      name: 1,
-      owner_id: 1,
-      session_participants: 1,
-    })
-    .sort({ start_time: -1 })
-    .toArray()) as unknown as SessionDoc[];
+    .collection("sessions")
+    .aggregate([
+      {
+        $match: {
+          end_time: { $lt: now },
+          "session_participants.user_id": userId,
+        },
+      },
+      {
+        $project: {
+          start_time: 1,
+          duration_min: 1,
+          session_type: 1,
+          name: 1,
+          owner_id: 1,
+          participantCount: { $size: { $ifNull: ["$session_participants", []] } },
+          me: {
+            $arrayElemAt: [
+              {
+                $filter: {
+                  input: "$session_participants",
+                  cond: { $eq: ["$$this.user_id", userId] },
+                },
+              },
+              0,
+            ],
+          },
+          partnerId: {
+            $arrayElemAt: [
+              {
+                $map: {
+                  input: {
+                    $filter: {
+                      input: "$session_participants",
+                      cond: { $ne: ["$$this.user_id", userId] },
+                    }
+                  },
+                  as: "p",
+                  in: "$$p.user_id"
+                }
+              },
+              0,
+            ]
+          }
+        },
+      },
+      { $sort: { start_time: -1 } },
+    ])
+    .toArray()) as unknown as AggregatedSession[];
 
   let booked = 0;
   let attended = 0;
@@ -102,15 +133,13 @@ export async function GET() {
   const completedDays = new Set<string>();
 
   for (const s of sessions) {
-    const me = (s.session_participants ?? []).find(
-      (p) => String(p.user_id) === String(userId),
-    );
+    const me = s.me;
     if (!me) continue;
 
     booked += 1;
     if (s.owner_id === userId) asOwner += 1;
 
-    const hadPartner = (s.session_participants?.length ?? 0) >= 2;
+    const hadPartner = s.participantCount >= 2;
     if (hadPartner) withPartner += 1;
     else solo += 1;
 
@@ -138,12 +167,6 @@ export async function GET() {
       (typeBreakdown[s.session_type] || 0) + (didComplete ? 1 : 0);
 
     if (recent.length < 8) {
-      const partnerId =
-        hadPartner
-          ? (s.session_participants ?? []).find(
-              (p) => String(p.user_id) !== String(userId),
-            )?.user_id ?? null
-          : null;
       recent.push({
         id: String(s._id),
         start: new Date(s.start_time).toISOString(),
@@ -153,7 +176,7 @@ export async function GET() {
         attended: didAttend,
         completed: didComplete,
         solo: !hadPartner,
-        partnerId: partnerId ? String(partnerId) : null,
+        partnerId: s.partnerId ? String(s.partnerId) : null,
       });
     }
   }

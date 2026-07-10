@@ -23,18 +23,33 @@ export async function GET(
 
   let pingInterval: ReturnType<typeof setInterval> | null = null;
   let unsub: (() => void) | null = null;
+  let isStreamClosed = false;
+
+  function cleanup() {
+    isStreamClosed = true;
+    if (pingInterval) {
+      clearInterval(pingInterval);
+      pingInterval = null;
+    }
+    if (unsub) {
+      unsub();
+      unsub = null;
+    }
+  }
+
+  _req.signal.addEventListener("abort", cleanup);
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       const encoder = new TextEncoder();
       const send = (data: unknown) => {
+        if (isStreamClosed) return;
         try {
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify(data)}\n\n`),
           );
         } catch {
-          if (pingInterval) clearInterval(pingInterval);
-          if (unsub) unsub();
+          cleanup();
         }
       };
 
@@ -46,8 +61,7 @@ export async function GET(
       );
     },
     cancel() {
-      if (pingInterval) clearInterval(pingInterval);
-      if (unsub) unsub();
+      cleanup();
     },
   });
 
