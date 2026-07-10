@@ -9,7 +9,6 @@ export function getAblyClient(): Ably.Realtime {
     client = new Ably.Realtime({
       authUrl: "/api/ably/token",
       echoMessages: false,
-      recover: "ably-js-refocus",
     });
   }
   return client;

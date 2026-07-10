@@ -59,6 +59,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const rateLimitResult = await checkRateLimit(currentUserId, "api");
+  if (!rateLimitResult.success) {
+    return rateLimitedResponse(rateLimitResult);
+  }
+
   // Parse pagination parameters
   const { searchParams } = new URL(req.url);
   const cursorParam = searchParams.get("cursor");

@@ -6,6 +6,7 @@ import { ObjectId } from "mongodb";
 import { globalChatChannel } from "@/lib/sse";
 import { broadcastEvent } from "@/lib/broadcaster";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { isUserAdmin } from "@/lib/admin";
 
 export async function PATCH(
   req: NextRequest,
@@ -43,7 +44,7 @@ export async function PATCH(
     if (!message) {
       return NextResponse.json({ error: "Message not found" }, { status: 404 });
     }
-    if (message.user_id !== currentUserId) {
+    if (message.user_id !== currentUserId && !(await isUserAdmin(currentUserId))) {
       return NextResponse.json(
         { error: "You can only edit your own messages" },
         { status: 403 },
@@ -93,9 +94,9 @@ export async function DELETE(
 
   const { id: messageId } = await params;
 
-  if (!messageId) {
+  if (!messageId || !ObjectId.isValid(messageId)) {
     return NextResponse.json(
-      { error: "Message ID is required" },
+      { error: "Invalid message id" },
       { status: 400 },
     );
   }
@@ -112,7 +113,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Message not found" }, { status: 404 });
     }
 
-    if (message.user_id !== currentUserId) {
+    if (message.user_id !== currentUserId && !(await isUserAdmin(currentUserId))) {
       return NextResponse.json(
         { error: "You can only delete your own messages" },
         { status: 403 },

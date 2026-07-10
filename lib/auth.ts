@@ -92,7 +92,7 @@ export const authOptions: NextAuthOptions = {
         if (!ok) return null;
         const image = user.avatar_url ?? user.image ?? undefined;
         return {
-          id: String(user._id as string),
+          id: String(user._id),
           email: user.email,
           name: user.name || undefined,
           image: image || undefined,

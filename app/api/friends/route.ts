@@ -136,31 +136,10 @@ export async function GET(req: NextRequest) {
     : null;
 
   // Count total friends (lightweight — just count docs, not load them)
-  const totalResult = (await db
-    .collection("friend_requests")
-    .aggregate([
-      {
-        $match: {
-          status: "accepted",
-          $or: [{ from_user_id: userId }, { to_user_id: userId }],
-        },
-      },
-      {
-        $project: {
-          friendId: {
-            $cond: {
-              if: { $eq: ["$from_user_id", userId] },
-              then: "$to_user_id",
-              else: "$from_user_id",
-            },
-          },
-        },
-      },
-      { $group: { _id: "$friendId" } },
-      { $count: "total" },
-    ])
-    .toArray()) as { total: number }[];
-  const total = totalResult[0]?.total ?? 0;
+  const total = await db.collection("friend_requests").countDocuments({
+    status: "accepted",
+    $or: [{ from_user_id: userId }, { to_user_id: userId }],
+  });
 
   return NextResponse.json({ friends, nextCursor, total });
 }

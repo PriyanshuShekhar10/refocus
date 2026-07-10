@@ -220,9 +220,20 @@ export async function PATCH(
   };
   if (typeof name !== "undefined") {
     // Reasonable bound to prevent storing pathologically large strings.
-    updates.name = name === null ? null : String(name).slice(0, 120);
+    updates.name = name === null ? null : String(name).trim().slice(0, 120);
   }
-  if (typeof color !== "undefined") updates.color = color;
+  if (typeof color !== "undefined") {
+    if (color === null) {
+      updates.color = null;
+    } else {
+      const colorStr = String(color).trim();
+      if (/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(colorStr)) {
+        updates.color = colorStr;
+      } else {
+        return NextResponse.json({ error: "Invalid color format" }, { status: 400 });
+      }
+    }
+  }
 
   await col.updateOne({ _id: new ObjectId(sessionId) }, { $set: updates });
   const updated = await col.findOne({ _id: new ObjectId(sessionId) });

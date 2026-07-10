@@ -59,9 +59,10 @@ export default function GlobalChat() {
   const [profileFriendReqStatus, setProfileFriendReqStatus] = useState<string | null>(null);
   const { canInteract, verified: myEmailVerified, message: verifyMessage } =
     useEmailVerified();
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const topRef = useRef<HTMLDivElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
+  const shouldAutoScrollRef = useRef(true);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -284,8 +285,17 @@ export default function GlobalChat() {
   }, [load]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (shouldAutoScrollRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages.length]);
+
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight - (container.scrollTop + container.clientHeight);
+    shouldAutoScrollRef.current = distanceFromBottom < 80;
+  }, []);
 
   /**
    * Send a message with optimistic UI update
@@ -318,6 +328,7 @@ export default function GlobalChat() {
     // Immediately add to UI (optimistic update)
     setMessages((prev) => [...prev, optimisticMessage]);
     setText("");
+    shouldAutoScrollRef.current = true;
     setIsSending(true);
     setError(null);
 
@@ -716,6 +727,7 @@ export default function GlobalChat() {
       {/* Messages Area */}
       <div
         ref={scrollContainerRef}
+        onScroll={handleScroll}
         className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-6"
       >
         {isLoading ? (

@@ -92,6 +92,12 @@ export default function FriendChat({
   );
   const [menuOpenMessageId, setMenuOpenMessageId] = useState<string | null>(null);
   const [reportMessage, setReportMessage] = useState<ChatMessage | null>(null);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!menuOpenMessageId) return;
@@ -222,7 +228,7 @@ export default function FriendChat({
 
   // Generate quick date options
   const dateOptions = useMemo(() => {
-    const today = new Date();
+    const today = new Date(currentTime);
     today.setHours(0, 0, 0, 0);
     const options: { label: string; date: Date }[] = [];
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -237,7 +243,7 @@ export default function FriendChat({
       options.push({ label, date: d });
     }
     return options;
-  }, []);
+  }, [currentTime]);
 
   // Generate time slots (12 AM to 11 PM, full 24 hours)
   const timeSlots = useMemo(() => {
@@ -253,11 +259,11 @@ export default function FriendChat({
   // Check if a time slot is in the past
   const isTimeSlotPast = useCallback((date: Date | null, hour: number) => {
     if (!date) return false;
-    const now = new Date();
+    const now = new Date(currentTime);
     const slotTime = new Date(date);
     slotTime.setHours(hour, 0, 0, 0);
     return slotTime <= now;
-  }, []);
+  }, [currentTime]);
   const [respondNoteById, setRespondNoteById] = useState<
     Record<string, string>
   >({});
@@ -436,8 +442,6 @@ export default function FriendChat({
     setMessages((prev) => [...prev, optimisticMessage]);
     setError(null);
     try {
-      const res = await fetch(`/api/chat/${friendId}`);
-      if (!res.ok) throw new Error("auth check failed");
       const post = await fetch(`/api/chat/${friendId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1299,6 +1303,7 @@ export default function FriendChat({
                       <input
                         type="text"
                         placeholder="Add a message (optional)"
+                        maxLength={500}
                         className="w-full rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-xs placeholder:text-gray-400"
                         value={srMessage}
                         onChange={(e) => setSrMessage(e.target.value)}

@@ -177,7 +177,7 @@ export default async function PublicProfilePage({ params }: Props) {
       <main style={{ padding: "56px 0 80px", minHeight: "calc(100vh - 64px)" }}>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd).replace(/</g, '\\u003c') }}
         />
         <div className={designStyles.wrap} style={{ maxWidth: 720 }}>
           <header

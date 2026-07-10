@@ -449,20 +449,31 @@ function AppearanceSection() {
               { value: "light", label: "Light", icon: <Sun size={13} /> },
               { value: "dark", label: "Dark", icon: <Moon size={13} /> },
               { value: "system", label: "System", icon: <Monitor size={13} /> },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setTheme(opt.value)}
-                className={`${designStyles.segmentedBtn} ${
-                  active === opt.value ? designStyles.segmentedBtnActive : ""
-                }`}
-                style={{ display: "inline-flex", gap: 6, alignItems: "center" }}
-              >
-                {opt.icon}
-                {opt.label}
-              </button>
-            ))}
+            ].map((opt) => {
+              const isDisabled = wallpaperUrl === "/wallpaper.webp" && opt.value !== "dark";
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setTheme(opt.value)}
+                  disabled={isDisabled}
+                  title={isDisabled ? "Preset wallpaper requires dark mode" : ""}
+                  className={`${designStyles.segmentedBtn} ${
+                    active === opt.value ? designStyles.segmentedBtnActive : ""
+                  }`}
+                  style={{ 
+                    display: "inline-flex", 
+                    gap: 6, 
+                    alignItems: "center",
+                    opacity: isDisabled ? 0.5 : 1,
+                    cursor: isDisabled ? "not-allowed" : "pointer"
+                  }}
+                >
+                  {opt.icon}
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
         </Row>
         <Row
@@ -477,26 +488,61 @@ function AppearanceSection() {
               gap: 10,
             }}
           >
-            <div
-              style={{
-                width: 120,
-                height: 72,
-                borderRadius: 10,
-                border: "1px solid var(--line)",
-                overflow: "hidden",
-                background: wallpaperUrl
-                  ? `url(${wallpaperUrl}) center/cover no-repeat`
-                  : "hsl(var(--muted))",
-                position: "relative",
-              }}
-              aria-hidden
-            >
-              {!wallpaperUrl && (
-                <div
-                  className="bg-dotted-grid"
-                  style={{ width: "100%", height: "100%" }}
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setWallpaperBusy(true);
+                    setWallpaperError(null);
+                    try {
+                      const res = await fetch("/api/users/me/wallpaper-url", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url: "/wallpaper.webp" })
+                      });
+                      if (!res.ok) throw new Error("Failed to save wallpaper");
+                      setWallpaperUrl("/wallpaper.webp");
+                      notifyWallpaperPref("/wallpaper.webp");
+                      setTheme("dark");
+                    } catch (err) {
+                      setWallpaperError("Failed to save wallpaper");
+                    } finally {
+                      setWallpaperBusy(false);
+                    }
+                  }}
+                  disabled={wallpaperBusy}
+                  style={{
+                    width: 60, height: 36, borderRadius: 6,
+                    border: wallpaperUrl === "/wallpaper.webp" ? "2px solid var(--accent)" : "1px solid var(--line)",
+                    background: `url(/wallpaper.webp) center/cover no-repeat`,
+                    cursor: "pointer"
+                  }}
+                  title="Preset Wallpaper"
                 />
-              )}
+                <span style={{ fontSize: 10, color: "var(--muted-foreground)" }}>Preset</span>
+              </div>
+              <div
+                style={{
+                  width: 120,
+                  height: 72,
+                  borderRadius: 10,
+                  border: (wallpaperUrl && wallpaperUrl !== "/wallpaper.webp") ? "2px solid var(--accent)" : "1px solid var(--line)",
+                  overflow: "hidden",
+                  background: (wallpaperUrl && wallpaperUrl !== "/wallpaper.webp")
+                    ? `url(${wallpaperUrl}) center/cover no-repeat`
+                    : "hsl(var(--muted))",
+                  position: "relative",
+                }}
+                aria-hidden
+              >
+                {(!wallpaperUrl || wallpaperUrl === "/wallpaper.webp") && (
+                  <div
+                    className="bg-dotted-grid"
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                )}
+              </div>
             </div>
             <input
               ref={wallpaperInputRef}
@@ -514,7 +560,7 @@ function AppearanceSection() {
                 style={{ display: "inline-flex", gap: 6, alignItems: "center" }}
               >
                 <ImageIcon size={14} />
-                {wallpaperBusy ? "Uploading…" : wallpaperUrl ? "Replace" : "Upload"}
+                {wallpaperBusy ? "Uploading…" : (wallpaperUrl && wallpaperUrl !== "/wallpaper.webp") ? "Replace" : "Upload"}
               </DButton>
               {wallpaperUrl ? (
                 <DButton

@@ -346,6 +346,16 @@ export async function POST(req: NextRequest) {
     created_at: new Date(),
     updated_at: new Date(),
   });
+
+  // Optimistic concurrency control to resolve race conditions
+  if (await hasSessionOverlap(db, userId, s, e, String(insert.insertedId))) {
+    await db.collection("sessions").deleteOne({ _id: insert.insertedId });
+    return NextResponse.json(
+      { error: "You already have a session during this time" },
+      { status: 409 },
+    );
+  }
+
   await publishSessionDocUpserted(db, {
     _id: insert.insertedId,
     owner_id: userId,

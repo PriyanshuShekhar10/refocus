@@ -23,10 +23,12 @@ export async function POST(req: NextRequest) {
     lastName?: string;
   };
   if (!email || !password) {
-    return NextResponse.json(
-      { error: "Missing email or password" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  }
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+  if (!normalizedEmail) {
+    return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
 
   // Validate password strength
@@ -51,10 +53,10 @@ export async function POST(req: NextRequest) {
     [firstname || undefined, lastname || undefined].filter(Boolean).join(" ") ||
     null;
 
-  const username = await generateUsername(usersCol, email);
+  const username = await generateUsername(usersCol, normalizedEmail);
 
   const doc = {
-    email: email.toLowerCase(),
+    email: normalizedEmail,
     username,
     name: fullName,
     firstname,

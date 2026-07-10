@@ -22,8 +22,8 @@ export function validatePassword(password: string): PasswordValidationResult {
 
   const metCount = Object.values(requirements).filter(Boolean).length;
   let strength: PasswordStrength = "weak";
-  if (metCount >= 5) strength = "strong";
-  else if (metCount >= 3) strength = "medium";
+  if (requirements.length && metCount >= 5) strength = "strong";
+  else if (requirements.length && metCount >= 4) strength = "medium";
 
   return { strength, requirements };
 }
