@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { TIME_CONFIG } from "@/constants/calendar";
 import { getDb } from "@/lib/mongodb";
 import { getSiteUrl } from "@/lib/site";
+import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 import { CALL_JOIN_GRACE_MINUTES } from "@/lib/sessionWindow";
 import {
   DEFAULT_SESSION_REMINDER_TIMING,
@@ -21,7 +22,7 @@ type SessionDoc = {
   duration_min: number;
   session_type: string;
   name?: string | null;
-  session_participants?: Array<{ user_id: string }>;
+  session_participants?: Array<{ user_id: string; label?: string | null }>;
 };
 
 type UserDoc = {
@@ -136,8 +137,9 @@ function displayName(user: UserDoc | null | undefined): string | null {
   return first || null;
 }
 
-function sessionTitle(session: SessionDoc): string {
-  if (session.name?.trim()) return session.name.trim();
+function sessionTitle(session: SessionDoc, userId: string): string {
+  const personal = resolveSessionDisplayName(session, userId);
+  if (personal) return personal;
   const type = session.session_type.replace("-", " ");
   return `${type} · ${session.duration_min} min`;
 }
@@ -194,7 +196,7 @@ export async function toReminderItems(
       endTime: new Date(s.end_time),
       durationMin: s.duration_min,
       sessionType: s.session_type,
-      title: sessionTitle(s),
+      title: sessionTitle(s, userId),
       partnerLabel: partner ? displayName(partner) : null,
       joinUrl: sessionJoinUrl(String(s._id)),
     };

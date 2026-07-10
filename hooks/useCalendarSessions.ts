@@ -227,8 +227,13 @@ export function useCalendarSessions({
         });
         const idx = withoutTemps.findIndex((e) => e.id === mapped.id);
         if (idx === -1) return [...withoutTemps, mapped];
+        const existing = withoutTemps[idx];
         const next = [...withoutTemps];
-        next[idx] = mapped;
+        next[idx] = {
+          ...mapped,
+          // Realtime payloads omit per-user labels; keep the viewer's name.
+          name: existing.name ?? mapped.name ?? null,
+        };
         return next;
       });
     };

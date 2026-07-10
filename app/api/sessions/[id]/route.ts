@@ -10,6 +10,10 @@ import {
   publishSessionDocUpserted,
   publishSessionRemoved,
 } from "@/lib/sessionRealtime";
+import {
+  applyParticipantLabel,
+  normalizeSessionLabel,
+} from "@/lib/sessionPersonalization";
 
 // Shared session document type for this file
 type SessionDoc = {
@@ -26,6 +30,7 @@ type SessionDoc = {
     user_id: string;
     joined_at: Date | string;
     quiet?: boolean;
+    label?: string | null;
   }>;
 };
 
@@ -207,22 +212,45 @@ export async function PATCH(
   const col = db.collection<SessionDoc>("sessions");
   const s = await col.findOne({ _id: new ObjectId(sessionId) });
   if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (s.owner_id !== userId)
+
+  const participants = s.session_participants ?? [];
+  const isParticipant = participants.some(
+    (p) => String(p.user_id) === String(userId),
+  );
+  if (!isParticipant) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const body = (await req.json().catch(() => ({}))) as {
     name?: string | null;
     color?: string | null;
   };
   const { name, color } = body;
-  const updates: Partial<SessionDoc> & { updated_at: Date } = {
+  const updates: Partial<SessionDoc> & {
+    updated_at: Date;
+    session_participants?: SessionDoc["session_participants"];
+  } = {
     updated_at: new Date(),
   };
+
   if (typeof name !== "undefined") {
-    // Reasonable bound to prevent storing pathologically large strings.
-    updates.name = name === null ? null : String(name).trim().slice(0, 120);
+    const label = normalizeSessionLabel(name);
+    updates.session_participants = applyParticipantLabel(
+      participants,
+      userId,
+      label,
+    );
+    // Drop legacy shared name once the owner sets a personal label.
+    if (String(s.owner_id) === String(userId)) {
+      updates.name = null;
+    }
   }
+
+  const isOwner = String(s.owner_id) === String(userId);
   if (typeof color !== "undefined") {
+    if (!isOwner) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     if (color === null) {
       updates.color = null;
     } else {

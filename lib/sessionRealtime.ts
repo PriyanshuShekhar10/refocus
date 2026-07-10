@@ -30,6 +30,7 @@ export type SessionRealtimeDoc = {
     user_id: string;
     joined_at: Date | string;
     quiet?: boolean;
+    label?: string | null;
   }>;
 };
 
@@ -123,7 +124,7 @@ export function toFetchedSession(
     end: end.toISOString(),
     durationMin: doc.duration_min as DurationMin,
     sessionType: doc.session_type as SessionType,
-    name: doc.name ?? null,
+    name: null,
     color: doc.color ?? null,
     status,
     participants: (doc.session_participants ?? []).map((p) => {

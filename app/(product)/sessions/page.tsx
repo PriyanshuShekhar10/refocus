@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SessionsTabs } from "./SessionsTabs";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 
 type RawSession = {
   _id: ObjectId;
@@ -20,6 +21,7 @@ type RawSession = {
     user_id: string;
     joined_at: Date | string;
     quiet?: boolean;
+    label?: string | null;
     call_joined_at?: Date | string;
     call_completed?: boolean;
   }>;
@@ -133,7 +135,14 @@ export default async function MySessionsPage() {
     end: new Date(s.end_time).toISOString(),
     durationMin: s.duration_min,
     sessionType: s.session_type,
-    name: s.name ?? null,
+    name: resolveSessionDisplayName(
+      {
+        name: s.name ?? null,
+        owner_id: s.owner_id,
+        session_participants: s.session_participants,
+      },
+      currentUserId,
+    ),
     status: s.status ?? null,
     ownerId: s.owner_id,
     isOwner: s.owner_id === currentUserId,

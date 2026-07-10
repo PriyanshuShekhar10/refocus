@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 
 
 type SessionTypeBreakdown = Record<string, number>;
@@ -18,6 +19,8 @@ type AggregatedSession = {
   owner_id: string;
   participantCount: number;
   me?: {
+    user_id?: string;
+    label?: string | null;
     call_joined_at?: Date | string;
     call_completed?: boolean;
   };
@@ -172,7 +175,21 @@ export async function GET() {
         start: new Date(s.start_time).toISOString(),
         durationMin: s.duration_min,
         sessionType: s.session_type,
-        name: s.name ?? null,
+        name: resolveSessionDisplayName(
+          {
+            name: s.name ?? null,
+            owner_id: s.owner_id,
+            session_participants: s.me
+              ? [
+                  {
+                    user_id: String(s.me.user_id ?? userId),
+                    label: s.me.label ?? null,
+                  },
+                ]
+              : [],
+          },
+          userId,
+        ),
         attended: didAttend,
         completed: didComplete,
         solo: !hadPartner,

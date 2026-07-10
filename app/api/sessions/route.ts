@@ -11,6 +11,7 @@ import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { requireNotCommunityBanned } from "@/lib/communityModeration";
 import { getBlockedUserIds } from "@/lib/blocking";
+import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 
 // GET /api/sessions?from=ISO&to=ISO
 /** Soft cap on open (bookable) slots returned per range request. */
@@ -31,6 +32,7 @@ type DbSession = {
     user_id: string;
     joined_at: Date | string;
     quiet?: boolean;
+    label?: string | null;
   }>;
 };
 
@@ -220,7 +222,7 @@ export async function GET(req: NextRequest) {
       end: end.toISOString(),
       durationMin: s.duration_min as 25 | 50 | 75,
       sessionType: s.session_type as "focus" | "deep-work" | "learning",
-      name: s.name ?? null,
+      name: resolveSessionDisplayName(s, userId),
       color: s.color ?? null,
       participants: (s.session_participants ?? []).map((p) => ({
         user_id: p.user_id,
