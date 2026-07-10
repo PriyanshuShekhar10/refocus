@@ -3,15 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { chatChannel, publish, userChannel } from "@/lib/sse";
+import { chatChannel, userChannel } from "@/lib/sse";
+import { broadcastEvent } from "@/lib/broadcaster";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { areFriends } from "@/lib/friendship";
-import { publishAbly } from "@/lib/ably-server";
-import { DURATION_OPTIONS } from "@/constants/calendar";
-import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { requireNotCommunityBanned } from "@/lib/communityModeration";
 import { areUsersBlocked } from "@/lib/blocking";
+import { createSessionRequest } from "@/lib/sessionRequests";
 
 type MessageDoc = {
   _id: ObjectId;
@@ -37,7 +36,7 @@ type MessageDoc = {
   deleted_at?: Date;
 };
 
-const MAX_BOOKING_HORIZON_DAYS = 90;
+
 const MAX_CHAT_TEXT_LENGTH = 2_000;
 
 // GET /api/chat/:friendId
@@ -175,19 +174,11 @@ export async function POST(
       created_at: createdAt.toISOString(),
     };
     await Promise.all([
-      publish(channel, {
+      broadcastEvent(channel, {
         type: "message:new",
         payload: newMsg,
       }),
-      publishAbly(channel, {
-        type: "message:new",
-        payload: newMsg,
-      }),
-      publish(userChannel(friendId), {
-        type: "unread:inc",
-        payload: { friendId: currentUserId, delta: 1 },
-      }),
-      publishAbly(userChannel(friendId), {
+      broadcastEvent(userChannel(friendId), {
         type: "unread:inc",
         payload: { friendId: currentUserId, delta: 1 },
       }),
@@ -213,153 +204,30 @@ export async function POST(
       message?: string;
       goal?: string;
     };
-    if (!start || typeof durationMin !== "number")
+
+    if (!start || typeof durationMin !== "number") {
       return NextResponse.json(
         { error: "Missing start or durationMin" },
         { status: 400 },
       );
-    if (!DURATION_OPTIONS.includes(durationMin as 25 | 50 | 75)) {
-      return NextResponse.json(
-        { error: `Invalid durationMin (allowed: ${DURATION_OPTIONS.join(", ")})` },
-        { status: 400 },
-      );
-    }
-    const s = new Date(start);
-    if (isNaN(s.getTime()))
-      return NextResponse.json({ error: "Invalid start" }, { status: 400 });
-    const now = new Date();
-    if (s.getTime() <= now.getTime()) {
-      return NextResponse.json(
-        { error: "Cannot request a session in the past" },
-        { status: 400 },
-      );
-    }
-    const maxFuture = new Date(
-      now.getTime() + MAX_BOOKING_HORIZON_DAYS * 24 * 60 * 60 * 1000,
-    );
-    if (s.getTime() > maxFuture.getTime()) {
-      return NextResponse.json(
-        {
-          error: `Cannot request a session more than ${MAX_BOOKING_HORIZON_DAYS} days in advance`,
-        },
-        { status: 400 },
-      );
-    }
-    const end = new Date(s.getTime() + durationMin * 60_000);
-    if (await hasSessionOverlap(db, currentUserId, s, end)) {
-      return NextResponse.json(
-        { error: "You already have a session during this time" },
-        { status: 409 },
-      );
-    }
-    if (await hasSessionOverlap(db, friendId, s, end)) {
-      return NextResponse.json(
-        { error: "Your friend already has a session during this time" },
-        { status: 409 },
-      );
-    }
-    const normalizedMessage =
-      typeof message === "string" ? message.trim() : "";
-    const normalizedGoal = typeof goal === "string" ? goal.trim() : "";
-    const trimmedMessage = normalizedMessage
-      ? normalizedMessage.slice(0, 500)
-      : null;
-    const trimmedGoal = normalizedGoal ? normalizedGoal.slice(0, 500) : null;
-
-    const existingRequest = await db.collection("session_requests").findOne({
-      from_user_id: currentUserId,
-      to_user_id: friendId,
-      start_time: s,
-      duration_min: durationMin,
-      status: "pending",
-    });
-    if (existingRequest) {
-      return NextResponse.json(
-        { error: "A pending request for this slot already exists" },
-        { status: 409 },
-      );
     }
 
-    // Create session request
-    const sr = await db.collection("session_requests").insertOne({
-      from_user_id: currentUserId,
-      to_user_id: friendId,
-      start_time: s,
-      duration_min: durationMin,
-      message: trimmedMessage,
-      goal: trimmedGoal,
-      response_message: null,
-      status: "pending",
-      created_at: new Date(),
-      responded_at: null,
-    });
-
-    // Create chat message that references the session request
-    const insert = await db.collection("messages").insertOne({
-      from_user_id: currentUserId,
-      to_user_id: friendId,
-      type: "session-request",
-      content: null,
-      payload: {
-        sessionRequestId: String(sr.insertedId),
-        start: s.toISOString(),
+    try {
+      const { id, sessionRequestId } = await createSessionRequest({
+        db,
+        currentUserId,
+        friendId,
+        start,
         durationMin,
-        message: trimmedMessage,
-        goal: trimmedGoal,
-        status: "pending",
-        from_user_id: currentUserId,
-        to_user_id: friendId,
-      },
-      created_at: new Date(),
-      read_at: null,
-    });
-
-    // Publish events (async for Redis support)
-    // Include the full message so clients can append directly.
-    const channel = chatChannel(currentUserId, friendId);
-    const srMsg = {
-      id: String(insert.insertedId),
-      from_user_id: currentUserId,
-      to_user_id: friendId,
-      type: "session-request" as const,
-      content: null,
-      payload: {
-        sessionRequestId: String(sr.insertedId),
-        start: s.toISOString(),
-        durationMin,
-        message: trimmedMessage,
-        goal: trimmedGoal,
-        status: "pending" as const,
-        from_user_id: currentUserId,
-        to_user_id: friendId,
-        responseMessage: null,
-        sessionId: null,
-      },
-      created_at: new Date().toISOString(),
-    };
-    await Promise.all([
-      publish(channel, {
-        type: "session-request:new",
-        payload: srMsg,
-      }),
-      publishAbly(channel, {
-        type: "session-request:new",
-        payload: srMsg,
-      }),
-      publish(userChannel(friendId), {
-        type: "unread:inc",
-        payload: { friendId: currentUserId, delta: 1 },
-      }),
-      publishAbly(userChannel(friendId), {
-        type: "unread:inc",
-        payload: { friendId: currentUserId, delta: 1 },
-      }),
-    ]);
-
-    return NextResponse.json({
-      id: String(insert.insertedId),
-      sessionRequestId: String(sr.insertedId),
-    });
+        message,
+        goal,
+      });
+      return NextResponse.json({ id, sessionRequestId });
+    } catch (err) {
+      const msg = (err as Error).message;
+      const status = msg.includes("already exists") || msg.includes("already have a session") ? 409 : 400;
+      return NextResponse.json({ error: msg }, { status });
+    }
   }
 
   return NextResponse.json({ error: "Unsupported type" }, { status: 400 });

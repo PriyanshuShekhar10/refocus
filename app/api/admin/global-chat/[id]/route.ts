@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { requireAdmin } from "@/lib/admin";
 import { ObjectId } from "mongodb";
-import { globalChatChannel, publish } from "@/lib/sse";
-import { publishAbly } from "@/lib/ably-server";
+import { globalChatChannel } from "@/lib/sse";
+import { broadcastEvent } from "@/lib/broadcaster";
 import { getUserAuditLabel, logAdminAction } from "@/lib/adminAudit";
 
 export async function DELETE(
@@ -51,10 +51,7 @@ export async function DELETE(
     type: "message:deleted",
     payload: { id: messageId },
   };
-  await Promise.all([
-    publish(globalChatChannel(), event),
-    publishAbly(globalChatChannel(), event),
-  ]);
+  await broadcastEvent(globalChatChannel(), event);
 
   const authorId = message.user_id ? String(message.user_id) : null;
   const target = authorId

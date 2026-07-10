@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { globalChatChannel, publish } from "@/lib/sse";
-import { publishAbly } from "@/lib/ably-server";
+import { globalChatChannel } from "@/lib/sse";
+import { broadcastEvent } from "@/lib/broadcaster";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 export async function PATCH(
@@ -66,10 +66,7 @@ export async function PATCH(
       type: "message:updated",
       payload: { id: messageId, content, edited_at: editedAt.toISOString() },
     };
-    await Promise.all([
-      publish(globalChatChannel(), event),
-      publishAbly(globalChatChannel(), event),
-    ]);
+    await broadcastEvent(globalChatChannel(), event);
     return NextResponse.json({ success: true, id: messageId });
   } catch (error) {
     console.error("Error editing message:", error);
@@ -146,10 +143,7 @@ export async function DELETE(
       type: "message:deleted",
       payload: { id: messageId },
     };
-    await Promise.all([
-      publish(globalChatChannel(), event),
-      publishAbly(globalChatChannel(), event),
-    ]);
+    await broadcastEvent(globalChatChannel(), event);
 
     return NextResponse.json({ success: true, id: messageId });
   } catch (error) {

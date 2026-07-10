@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { areFriends } from "@/lib/friendship";
-import { chatChannel, publish } from "@/lib/sse";
-import { publishAbly } from "@/lib/ably-server";
+import { chatChannel } from "@/lib/sse";
+import { broadcastEvent } from "@/lib/broadcaster";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 type ChatMessageDoc = {
@@ -83,7 +83,7 @@ export async function PATCH(
       edited_at: editedAt.toISOString(),
     },
   };
-  await Promise.all([publish(channel, event), publishAbly(channel, event)]);
+  await broadcastEvent(channel, event);
 
   return NextResponse.json({ ok: true });
 }
@@ -137,7 +137,7 @@ export async function DELETE(
       deleted_at: deletedAt.toISOString(),
     },
   };
-  await Promise.all([publish(channel, event), publishAbly(channel, event)]);
+  await broadcastEvent(channel, event);
 
   return NextResponse.json({ ok: true });
 }

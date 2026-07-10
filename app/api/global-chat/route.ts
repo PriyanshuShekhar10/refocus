@@ -4,8 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { globalChatChannel } from "@/lib/sse";
-import { publish } from "@/lib/sse";
-import { publishAbly } from "@/lib/ably-server";
+import { broadcastEvent } from "@/lib/broadcaster";
 import {
   checkRateLimit,
   rateLimitedResponse,
@@ -261,10 +260,7 @@ export async function POST(req: NextRequest) {
       deleted_at: null,
     },
   };
-  await Promise.all([
-    publish(globalChatChannel(), event),
-    publishAbly(globalChatChannel(), event),
-  ]);
+  await broadcastEvent(globalChatChannel(), event);
 
   // Return response with rate limit headers
   const response = NextResponse.json({ id: String(insert.insertedId) });

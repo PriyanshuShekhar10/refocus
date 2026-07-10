@@ -5,11 +5,10 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { areFriends } from "@/lib/friendship";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
-import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
-import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { requireNotCommunityBanned } from "@/lib/communityModeration";
 import { areUsersBlocked } from "@/lib/blocking";
+import { createSessionRequest } from "@/lib/sessionRequests";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 type SessionRequestDoc = {
@@ -31,7 +30,7 @@ type UserDoc = {
   name?: string | null;
 };
 
-const MAX_BOOKING_HORIZON_DAYS = 90;
+
 
 // POST /api/session-requests
 // Body: { to_user_id, start: ISO string, durationMin: 25|50|75, message?: string }
@@ -68,32 +67,6 @@ export async function POST(req: NextRequest) {
   }
   if (to_user_id === currentUserId)
     return NextResponse.json({ error: "Cannot request yourself" }, { status: 400 });
-  if (!DURATION_OPTIONS.includes(durationMin as DurationMin)) {
-    return NextResponse.json(
-      { error: `Invalid durationMin (allowed: ${DURATION_OPTIONS.join(", ")})` },
-      { status: 400 },
-    );
-  }
-
-  const s = new Date(start);
-  if (isNaN(s.getTime()))
-    return NextResponse.json({ error: "Invalid start time" }, { status: 400 });
-
-  const now = new Date();
-  if (s.getTime() <= now.getTime()) {
-    return NextResponse.json(
-      { error: "Cannot book a session in the past or current time" },
-      { status: 400 }
-    );
-  }
-  const maxFuture = new Date(now.getTime() + MAX_BOOKING_HORIZON_DAYS * 24 * 60 * 60 * 1000);
-  if (s.getTime() > maxFuture.getTime()) {
-    return NextResponse.json(
-      { error: `Cannot book a session more than ${MAX_BOOKING_HORIZON_DAYS} days in advance` },
-      { status: 400 },
-    );
-  }
-
   const db = await getDb();
 
   // Recipient must exist (prevents enumeration noise / orphan requests).
@@ -122,50 +95,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const end = new Date(s.getTime() + durationMin * 60_000);
-
-  // Calendar conflict — for the sender, hard-block. For the recipient, hard-block
-  // too: there's no point queuing a request the recipient can't accept anyway.
-  if (await hasSessionOverlap(db, currentUserId, s, end)) {
-    return NextResponse.json(
-      { error: "You already have a session during this time" },
-      { status: 409 },
-    );
+  try {
+    const { sessionRequestId } = await createSessionRequest({
+      db,
+      currentUserId,
+      friendId: to_user_id,
+      start,
+      durationMin: durationMin as number,
+      message,
+    });
+    return NextResponse.json({ ok: true, id: sessionRequestId });
+  } catch (err) {
+    const msg = (err as Error).message;
+    const status = msg.includes("already exists") || msg.includes("already have a session") ? 409 : 400;
+    return NextResponse.json({ error: msg }, { status });
   }
-  if (await hasSessionOverlap(db, to_user_id, s, end)) {
-    return NextResponse.json(
-      { error: "Recipient already has a session during this time" },
-      { status: 409 },
-    );
-  }
-
-  // Prevent spamming duplicate pending requests for the same slot.
-  const existing = await db.collection("session_requests").findOne({
-    from_user_id: currentUserId,
-    to_user_id,
-    start_time: s,
-    duration_min: durationMin,
-    status: "pending",
-  });
-  if (existing) {
-    return NextResponse.json(
-      { error: "A pending request for this slot already exists" },
-      { status: 409 },
-    );
-  }
-
-  const insert = await db.collection("session_requests").insertOne({
-    from_user_id: currentUserId,
-    to_user_id,
-    start_time: s,
-    duration_min: durationMin as DurationMin,
-    message: message ? String(message).slice(0, 500) : null,
-    response_message: null,
-    status: "pending",
-    created_at: new Date(),
-    responded_at: null,
-  });
-  return NextResponse.json({ ok: true, id: String(insert.insertedId) });
 }
 
 // GET /api/session-requests?type=incoming|outgoing&status=pending|accepted|declined

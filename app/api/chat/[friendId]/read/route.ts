@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
-import { userChannel, publish } from "@/lib/sse";
+import { userChannel } from "@/lib/sse";
+import { broadcastEvent } from "@/lib/broadcaster";
 import { areFriends } from "@/lib/friendship";
-import { publishAbly } from "@/lib/ably-server";
 
 // POST /api/chat/:friendId/read
 export async function POST(
@@ -42,10 +42,7 @@ export async function POST(
     type: "unread:update" as const,
     payload: { friendId, count: unread },
   };
-  await Promise.all([
-    publish(userChannel(currentUserId), event),
-    publishAbly(userChannel(currentUserId), event),
-  ]);
+  await broadcastEvent(userChannel(currentUserId), event);
 
   return NextResponse.json({ ok: true });
 }

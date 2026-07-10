@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
-import { chatChannel, publish } from "@/lib/sse";
-import { publishAbly } from "@/lib/ably-server";
+import { chatChannel } from "@/lib/sse";
+import { broadcastEvent } from "@/lib/broadcaster";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 
 // DELETE /api/friends/:friendId — remove an existing friendship.
@@ -79,12 +79,12 @@ export async function DELETE(
         );
       const channel = chatChannel(currentUserId, friendId);
       await Promise.all(
-        idStrings.flatMap((id) => {
+        idStrings.map((id) => {
           const event = {
             type: "session-request:update" as const,
             payload: { id, status: "cancelled" as const },
           };
-          return [publish(channel, event), publishAbly(channel, event)];
+          return broadcastEvent(channel, event);
         }),
       );
     }

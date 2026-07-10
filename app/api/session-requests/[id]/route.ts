@@ -3,9 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { publish } from "@/lib/sse";
+import { broadcastEvent } from "@/lib/broadcaster";
 import { chatChannel } from "@/lib/realtimeChannels";
-import { publishAbly } from "@/lib/ably-server";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
@@ -155,7 +154,7 @@ export async function POST(
           type: "session-request:update",
           payload: { id: String(reqDoc._id), status: "declined" as const },
         };
-        await Promise.all([publish(channel, event), publishAbly(channel, event)]);
+        await broadcastEvent(channel, event);
       } catch {
         // ignore — best effort
       }
@@ -214,7 +213,7 @@ export async function POST(
       type: "session-request:update",
       payload: { id: String(reqDoc._id), status: nextStatus },
     };
-    await Promise.all([publish(channel, event), publishAbly(channel, event)]);
+    await broadcastEvent(channel, event);
   } catch {
     // ignore — best effort
   }
@@ -269,7 +268,7 @@ export async function DELETE(
       type: "session-request:update",
       payload: { id: String(reqDoc._id), status: "cancelled" },
     };
-    await Promise.all([publish(channel, event), publishAbly(channel, event)]);
+    await broadcastEvent(channel, event);
   } catch {}
 
   return NextResponse.json({ ok: true });

@@ -3,8 +3,8 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { requireAdmin } from "@/lib/admin";
 import { getUserAuditLabel, logAdminAction } from "@/lib/adminAudit";
-import { chatChannel, publish } from "@/lib/sse";
-import { publishAbly } from "@/lib/ably-server";
+import { chatChannel } from "@/lib/sse";
+import { broadcastEvent } from "@/lib/broadcaster";
 
 export async function DELETE(
   _req: NextRequest,
@@ -57,7 +57,7 @@ export async function DELETE(
       deleted_at: deletedAt.toISOString(),
     },
   };
-  await Promise.all([publish(channel, event), publishAbly(channel, event)]);
+  await broadcastEvent(channel, event);
 
   await logAdminAction({
     actorId: guard.admin.userId,
