@@ -13,6 +13,7 @@ import {
 import {
   applyParticipantLabel,
   normalizeSessionLabel,
+  type SessionParticipantDoc,
 } from "@/lib/sessionPersonalization";
 
 // Shared session document type for this file
@@ -26,12 +27,7 @@ type SessionDoc = {
   status?: string;
   name?: string | null;
   color?: string | null;
-  session_participants?: Array<{
-    user_id: string;
-    joined_at: Date | string;
-    quiet?: boolean;
-    label?: string | null;
-  }>;
+  session_participants?: SessionParticipantDoc[];
 };
 
 export async function GET(

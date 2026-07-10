@@ -325,7 +325,7 @@ export function SessionDetailsModal({
                 Add friend
               </button>
             )}
-            {onLeave && (
+            {onLeave && !isOwner && (
               <button
                 type="button"
                 onClick={onLeave}

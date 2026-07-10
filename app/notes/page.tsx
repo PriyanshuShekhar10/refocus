@@ -1,5 +1,8 @@
 import { getDb } from "@/lib/mongodb";
 
+// Skip static generation at build time — this page needs MongoDB at runtime only.
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const db = await getDb();
   const notes = await db

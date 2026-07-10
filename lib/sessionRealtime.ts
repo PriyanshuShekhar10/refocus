@@ -8,6 +8,7 @@ import type {
   SessionRemovedEvent,
   SessionUpsertedEvent,
 } from "@/types/sessionRealtime";
+import type { SessionParticipantDoc } from "@/lib/sessionPersonalization";
 
 export type {
   SessionRealtimeEvent,
@@ -26,12 +27,7 @@ export type SessionRealtimeDoc = {
   name?: string | null;
   color?: string | null;
   participant_count?: number;
-  session_participants?: Array<{
-    user_id: string;
-    joined_at: Date | string;
-    quiet?: boolean;
-    label?: string | null;
-  }>;
+  session_participants?: SessionParticipantDoc[];
 };
 
 type UserSnippet = {
@@ -134,7 +130,9 @@ export function toFetchedSession(
         joined_at:
           p.joined_at instanceof Date
             ? p.joined_at.toISOString()
-            : String(p.joined_at),
+            : p.joined_at
+              ? String(p.joined_at)
+              : new Date(0).toISOString(),
         email: u?.email ?? undefined,
         firstname: u?.firstname ?? undefined,
         lastname: u?.lastname ?? undefined,
