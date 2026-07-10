@@ -1,6 +1,6 @@
 import {
-  findReminderRecipients,
-  findUserSessionsInRange,
+  bulkLoadReminderRecipients,
+  findSessionsStartingInRange,
   formatSessionTimeIST,
   getISTDayBounds,
   joinWindowNote,
@@ -36,22 +36,43 @@ export async function runMorningSessionReminders(
   };
 
   const { start, end, dayKey } = getISTDayBounds(now);
-  const recipients = await findReminderRecipients("morning");
-  result.recipients = recipients.length;
+  const dedupeKey = dayKey;
 
-  for (const recipient of recipients) {
-    const sessions = await findUserSessionsInRange(
-      recipient.userId,
-      start,
-      end,
-      now,
-    );
-    if (sessions.length === 0) {
-      result.skipped += 1;
-      continue;
+  // 1. Find active sessions starting today
+  const sessions = await findSessionsStartingInRange(start, end, now);
+  if (sessions.length === 0) return result;
+
+  // 2. Extract unique participant IDs
+  const userIds = new Set<string>();
+  for (const s of sessions) {
+    if (s.owner_id) userIds.add(String(s.owner_id));
+    for (const p of s.session_participants ?? []) {
+      userIds.add(String(p.user_id));
     }
+  }
 
-    const dedupeKey = dayKey;
+  // 3. Bulk load user preferences
+  const recipientsMap = await bulkLoadReminderRecipients(Array.from(userIds));
+
+  // 4. Group sessions by user, filtering for morning timing
+  const userSessions = new Map<string, typeof sessions>();
+  for (const recipient of recipientsMap.values()) {
+    if (recipient.timing !== "morning") continue;
+    const mySessions = sessions.filter(s => 
+      String(s.owner_id) === recipient.userId || 
+      (s.session_participants ?? []).some(p => String(p.user_id) === recipient.userId)
+    );
+    if (mySessions.length > 0) {
+      userSessions.set(recipient.userId, mySessions);
+    }
+  }
+
+  result.recipients = userSessions.size;
+
+  // 5. Send digest emails
+  for (const [userId, mySessions] of userSessions.entries()) {
+    const recipient = recipientsMap.get(userId)!;
+
     const marked = await markReminderSent({
       userId: recipient.userId,
       kind: "morning",
@@ -62,7 +83,7 @@ export async function runMorningSessionReminders(
       continue;
     }
 
-    const items = await toReminderItems(sessions, recipient.userId);
+    const items = await toReminderItems(mySessions, recipient.userId);
     const sendResult = await sendMorningSessionDigestEmail({
       email: recipient.email,
       firstName: recipient.firstName,
@@ -91,19 +112,43 @@ export async function runTimedSessionReminders(
   };
 
   const { from, to } = startWindowForTiming(timing, now);
-  const recipients = await findReminderRecipients(timing);
-  result.recipients = recipients.length;
 
-  for (const recipient of recipients) {
-    const sessions = await findUserSessionsInRange(
-      recipient.userId,
-      from,
-      to,
-      now,
+  // 1. Find sessions starting in this target window
+  const sessions = await findSessionsStartingInRange(from, to, now);
+  if (sessions.length === 0) return result;
+
+  // 2. Extract unique participant IDs
+  const userIds = new Set<string>();
+  for (const s of sessions) {
+    if (s.owner_id) userIds.add(String(s.owner_id));
+    for (const p of s.session_participants ?? []) {
+      userIds.add(String(p.user_id));
+    }
+  }
+
+  // 3. Bulk load user preferences
+  const recipientsMap = await bulkLoadReminderRecipients(Array.from(userIds));
+
+  // 4. Group sessions by user, filtering for specific timing
+  const userSessions = new Map<string, typeof sessions>();
+  for (const recipient of recipientsMap.values()) {
+    if (recipient.timing !== timing) continue;
+    const mySessions = sessions.filter(s => 
+      String(s.owner_id) === recipient.userId || 
+      (s.session_participants ?? []).some(p => String(p.user_id) === recipient.userId)
     );
-    if (sessions.length === 0) continue;
+    if (mySessions.length > 0) {
+      userSessions.set(recipient.userId, mySessions);
+    }
+  }
 
-    const items = await toReminderItems(sessions, recipient.userId);
+  result.recipients = userSessions.size;
+
+  // 5. Send reminder emails
+  for (const [userId, mySessions] of userSessions.entries()) {
+    const recipient = recipientsMap.get(userId)!;
+    const items = await toReminderItems(mySessions, recipient.userId);
+    
     for (const session of items) {
       const sent = await sendTimedReminderForSession(recipient, session, timing);
       if (sent === "sent") result.sent += 1;

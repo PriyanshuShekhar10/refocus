@@ -201,26 +201,32 @@ export async function toReminderItems(
   });
 }
 
-export async function findReminderRecipients(
-  timing: SessionReminderTiming,
-): Promise<ReminderRecipient[]> {
+export async function bulkLoadReminderRecipients(
+  userIds: string[],
+): Promise<Map<string, ReminderRecipient>> {
+  const unique = [...new Set(userIds.filter(Boolean))];
+  const map = new Map<string, ReminderRecipient>();
+  if (unique.length === 0) return map;
+
   const db = await getDb();
+  const objectIds = unique
+    .filter((id) => ObjectId.isValid(id))
+    .map((id) => new ObjectId(id));
+
   const users = (await db
     .collection<UserDoc>("users")
-    .find({
-      email: { $exists: true, $type: "string", $ne: "" },
-      "preferences.emailSessionReminders": { $ne: false },
-    })
+    .find({ _id: { $in: objectIds } })
     .project({ email: 1, firstname: 1, name: 1, preferences: 1 })
     .toArray()) as UserDoc[];
 
-  const out: ReminderRecipient[] = [];
   for (const user of users) {
-    const resolved = resolveReminderTiming(user.preferences);
-    if (resolved !== timing) continue;
     const email = user.email?.trim();
     if (!email) continue;
-    out.push({
+    
+    const timing = resolveReminderTiming(user.preferences);
+    if (!timing) continue; // emailSessionReminders is false
+
+    map.set(String(user._id), {
       userId: String(user._id),
       email,
       firstName: displayName(user),
@@ -228,11 +234,10 @@ export async function findReminderRecipients(
       timezone: resolveUserTimeZone(user.preferences),
     });
   }
-  return out;
+  return map;
 }
 
-export async function findUserSessionsInRange(
-  userId: string,
+export async function findSessionsStartingInRange(
   startFrom: Date,
   startTo: Date,
   now: Date,
@@ -243,22 +248,11 @@ export async function findUserSessionsInRange(
     .find({
       start_time: { $gte: startFrom, $lt: startTo },
       end_time: { $gt: now },
-      $and: [
+      $or: [
+        { participant_count: { $gte: SESSION_REMINDER_MIN_PARTICIPANTS } },
         {
-          $or: [
-            { owner_id: userId },
-            { "session_participants.user_id": userId },
-          ],
-        },
-        // Prefer participant_count; fall back for legacy docs not yet backfilled.
-        {
-          $or: [
-            { participant_count: { $gte: SESSION_REMINDER_MIN_PARTICIPANTS } },
-            {
-              participant_count: { $exists: false },
-              "session_participants.1": { $exists: true },
-            },
-          ],
+          participant_count: { $exists: false },
+          "session_participants.1": { $exists: true },
         },
       ],
     })
