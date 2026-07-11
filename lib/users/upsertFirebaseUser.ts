@@ -92,11 +92,6 @@ export async function upsertFirebaseUser(
   const db = await getDb();
   const usersCol = db.collection<UserDoc>("users");
 
-  await Promise.all([
-    usersCol.createIndex({ email: 1 }, { unique: true }),
-    usersCol.createIndex({ username: 1 }, { unique: true, sparse: true }),
-  ]);
-
   const existing = await usersCol.findOne({ email });
 
   if (existing) {
