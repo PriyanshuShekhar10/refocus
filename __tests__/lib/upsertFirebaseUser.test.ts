@@ -39,7 +39,6 @@ describe("upsertFirebaseUser", () => {
     usersCol.findOne.mockResolvedValue(null);
     usersCol.insertOne.mockResolvedValue({ insertedId: new ObjectId() });
     usersCol.updateOne.mockResolvedValue({ modifiedCount: 1 });
-    usersCol.createIndex.mockResolvedValue("email_1");
   });
 
   it("creates a new user with image and emailVerified", async () => {
