@@ -2,12 +2,12 @@
 
 Thank you for your interest in contributing to Refocus! This document provides guidelines and information for contributors, especially for Hacktoberfest participants.
 
-**Before you start:** read the [Architecture section in README.md](./README.md#architecture-read-this-first). Marketing and the dashboard live on **different branches** and deploy to different hosts. The repo **default branch is `landing`**.
+**Before you start:** read the [Architecture section in README.md](./README.md#architecture-read-this-first). Marketing and the dashboard live on **different branches** and deploy to different hosts.
 
 | Working on… | Base branch | Host |
 | --- | --- | --- |
-| Landing / blog / careers | `landing` (default) | `refocus.co.in` (Cloudflare Pages) |
 | Dashboard / APIs / auth | `test-dash` | `dashboard.refocus.co.in` (Vercel) |
+| Landing / blog / careers | `landing` | `refocus.co.in` (Cloudflare Pages) |
 
 Open PRs against the matching base branch. Do **not** put marketing site changes on `test-dash` (that folder does not exist there).
 
@@ -96,7 +96,7 @@ The application will be available at [http://localhost:3000](http://localhost:30
 
 ## Project Structure
 
-### `test-dash` — product app
+### `test-dash` — product app (this branch by default)
 
 ```
 refocus/
@@ -107,12 +107,13 @@ refocus/
 │   └── ...
 ├── components/                   # Shared UI
 ├── lib/                          # auth, mongodb, etc.
+├── .github/workflows/blog.yml    # Cron: generates posts on `landing` (not here)
 └── ...
 ```
 
 There is **no** `marketing/` directory on `test-dash`.
 
-### `landing` — marketing site (default branch)
+### `landing` — marketing site
 
 ```
 refocus/
