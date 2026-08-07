@@ -23,16 +23,35 @@ Create `marketing/.env` or put these in the repo-root `.env` (the blog script lo
 | --- | --- | --- |
 | `PUBLIC_APP_URL` | Build-time CTAs / auth links | `https://dashboard.refocus.co.in` |
 | `OPENAI_API_KEY` | `npm run blog:new` | (secret) |
-| `PUBLIC_GA_MEASUREMENT_ID` | Google Analytics 4 (`G-XXXXXXXX`) | set as GitHub Actions **variable** |
+| `PUBLIC_GA_MEASUREMENT_ID` | Google Analytics 4 (`G-XXXXXXXX`) | GitHub Actions **variable** (optional) |
+| `PUBLIC_POSTHOG_KEY` | PostHog project API key (`phc_…`) | GitHub Actions **variable** |
+| `PUBLIC_POSTHOG_HOST` | PostHog ingest host | `https://us.i.posthog.com` (or `https://eu.i.posthog.com`) |
+
+### PostHog
+
+You already have a PostHog account. CLI login needs a browser once; then:
+
+1. Open [PostHog → Project settings](https://us.posthog.com/settings/project) (or EU equivalent).
+2. Copy **Project API Key** (`phc_…`).
+3. Set GitHub variables (from this machine):
+
+```bash
+gh variable set PUBLIC_POSTHOG_KEY --body "phc_YOUR_KEY"
+gh variable set PUBLIC_POSTHOG_HOST --body "https://us.i.posthog.com"
+```
+
+4. Redeploy marketing (push or **Deploy marketing site**).
+
+Locally you can put the same keys in `marketing/.env`. The snippet loads from `Base.astro` only when `PUBLIC_POSTHOG_KEY` is set. Cookies use `cross_subdomain_cookie` so the same person can be followed onto `dashboard.refocus.co.in` once the Next app is instrumented too.
 
 ### Google Analytics 4
 
 1. Create a GA4 property at [analytics.google.com](https://analytics.google.com/) → Admin → Create property → Web stream for `https://refocus.co.in`.
 2. Copy the **Measurement ID** (`G-XXXXXXXX`).
-3. Add it as a GitHub Actions repository variable named `PUBLIC_GA_MEASUREMENT_ID` (Settings → Secrets and variables → Actions → Variables), **or** put it in `marketing/.env` for local builds.
-4. Redeploy the marketing site (push or run **Deploy marketing site**).
+3. `gh variable set PUBLIC_GA_MEASUREMENT_ID --body "G-XXXXXXXX"`
+4. Redeploy.
 
-The gtag snippet is injected from `src/layouts/Base.astro` only when that ID is set.
+Both GA4 and PostHog can run together; either alone is fine.
 
 Cloudflare Pages (production) also needs Function env:
 
