@@ -1,89 +1,183 @@
 <h1 align="center">Refocus</h1>
 
-## Features
+<p align="center">Virtual co-working for deep work — focus together, quietly.</p>
 
-- Next.js App Router, Server and Client Components
-- Authentication with NextAuth (Credentials provider) and MongoDB Adapter
-- MongoDB via official Node driver
-- Styling with Tailwind CSS and components via shadcn/ui
-- Friends management and session requests
-- Realtime chat between friends with embedded session requests
-- Unread message badges and live updates via Server‑Sent Events (SSE)
+## Architecture (read this first)
 
-## Getting started (local)
+Refocus is split across **two branches**, **two hosts**, and **two deploy targets**. Do not mix them.
 
-1. Copy `.env.example` to `.env.local` (create one if missing) and set:
+| What | Branch | Host | Platform |
+| --- | --- | --- | --- |
+| Marketing site + blog (Astro) | `landing` | [refocus.co.in](https://refocus.co.in) | Cloudflare Pages |
+| Product app (Next.js) | `test-dash` (default) | [dashboard.refocus.co.in](https://dashboard.refocus.co.in) | Vercel |
 
 ```
-MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>/<db>?retryWrites=true&w=majority
+refocus.co.in          →  Astro (marketing/, branch: landing)     →  Cloudflare Pages
+www.refocus.co.in      →  301 → apex
+dashboard.refocus.co.in →  Next.js app (branch: test-dash)         →  Vercel
+                        ↳  / and /career permanently redirect to apex
+```
+
+### Why two branches?
+
+The blog auto-publishes **hourly**. Those commits must not touch `test-dash`, or Vercel would redeploy the dashboard every hour. Marketing lives only on `landing`; the dashboard branch has **no** `marketing/` folder.
+
+### Shared auth
+
+Login/signup live on the dashboard host. The session cookie is scoped to `.refocus.co.in` (`AUTH_COOKIE_DOMAIN`) so the marketing site can detect a logged-in user and send them to `/dashboard`. Logout returns to the apex marketing site.
+
+### Which branch should I check out?
+
+| Working on… | Checkout |
+| --- | --- |
+| Dashboard, APIs, auth, sessions, chat | `test-dash` |
+| Landing page, careers, blog, SEO | `landing` |
+
+```bash
+git checkout test-dash   # this repo clone on the default branch
+git checkout landing     # marketing site + blog content
+```
+
+---
+
+## Features (product app)
+
+- Next.js App Router (dashboard, sessions, friends, chat)
+- Auth: NextAuth (credentials + Firebase Google), MongoDB adapter, JWT sessions
+- MongoDB via the official Node driver
+- Tailwind CSS + shadcn/ui
+- Friends, session requests, realtime chat (SSE)
+- Video sessions via Daily.co
+- Ably for presence / realtime where used
+
+Marketing (on `landing`): Astro static site, React islands, SEO blog with OpenAI-assisted posts.
+
+---
+
+## Getting started — dashboard (`test-dash`)
+
+1. Ensure you are on the dashboard branch:
+
+```bash
+git checkout test-dash
+```
+
+2. Copy `.env.example` to `.env` / `.env.local` and fill in values. Locally leave `AUTH_COOKIE_DOMAIN` unset. See `.env.example` for the full list.
+
+Minimum to boot:
+
+```
+MONGODB_URI=mongodb+srv://...
 NEXTAUTH_SECRET=your-long-random-secret
 NEXTAUTH_URL=http://localhost:3000
-DAILY_API_KEY=your-daily-api-key
+DAILY_API_KEY=...
 DAILY_DOMAIN=your-subdomain.daily.co
 ```
 
-2. Install deps and run dev server
+3. Install and run:
 
-```
+```bash
 npm install
 npm run dev
 ```
 
-App runs at http://localhost:3000.
+App: http://localhost:3000
 
 ### Useful scripts
 
-```
-# development
-npm run dev
-
-# typecheck + lint + production build
-npm run build
-
-# start production server (after build)
-npm run start
+```bash
+npm run dev      # development
+npm run build    # typecheck + production build
+npm run start    # production server after build
 ```
 
-## Notes
+---
 
-- Registration happens via `POST /api/auth/register` and stores a hashed password in `users`.
-- Login uses NextAuth Credentials at `/auth/login`.
-- Friends and Sessions APIs are backed by MongoDB.
-- Settings page includes a Logout button that redirects to `/`.
+## Getting started — marketing (`landing`)
 
-## Chat & Realtime
+```bash
+git checkout landing
+cd marketing
+npm install
+npm run dev          # http://localhost:4321
+npm run build        # static output in dist/
+npm run blog:new     # generate one blog post (needs OPENAI_API_KEY)
+```
 
-- Chat messages are stored in `messages` (MongoDB). New messages set `read_at: null` for the recipient.
-- Unread counts endpoint: `GET /api/chat/unread-counts` returns per‑friend counts.
-- Mark as read: `POST /api/chat/[friendId]/read` marks messages from that friend as read.
-- Realtime transport uses SSE:
-  - Per‑conversation events: `GET /api/chat/[friendId]/events`
-  - Per‑user unread events: `GET /api/chat/events`
-- Chat UI (`app/(product)/components/FriendChat.tsx`):
-  - Compose text or send session requests (datetime, duration, message)
-  - Accept/decline incoming requests with optional message; delete your own pending requests
-  - Realtime updates via EventSource; unread counts update in friends list
+Full details: [`marketing/README.md`](https://github.com/PriyanshuShekhar10/refocus/blob/landing/marketing/README.md) (only exists on the `landing` branch).
 
-## Session Requests
+---
 
-- Create: `POST /api/session-requests` with `{ to_user_id, start, durationMin, message? }`
-- List: `GET /api/session-requests?type=incoming|outgoing&status=...`
-- Respond: `POST /api/session-requests/[id]` with `{ action: 'accept'|'decline', message? }`
-  - Accept creates a session with both users
-- Delete (requester only, pending): `DELETE /api/session-requests/[id]`
+## Production domains & env
 
-## Video Calls (Daily.co)
+### Dashboard (Vercel, `test-dash`)
 
-- Session calls use Daily prebuilt rooms and meeting tokens.
-- Required server env vars:
-  - `DAILY_API_KEY` (server-only secret; never expose in client code)
-  - `DAILY_DOMAIN` (for example `refocus.daily.co`)
-- Get a free Daily account and API key at [daily.co](https://www.daily.co/).
+| Variable | Production value |
+| --- | --- |
+| `NEXTAUTH_URL` | `https://dashboard.refocus.co.in` |
+| `AUTH_COOKIE_DOMAIN` | `.refocus.co.in` |
+| `NEXT_PUBLIC_SITE_URL` | `https://refocus.co.in` |
 
-## Deploy
+Also set MongoDB, Daily, Firebase, Resend, Blob, etc. (see `.env.example`).
 
-Deploy to Vercel or your platform of choice. Ensure env vars above are set in the hosting environment.
+### Marketing (Cloudflare Pages, `landing`)
+
+| Variable | Purpose |
+| --- | --- |
+| `PUBLIC_APP_URL` | `https://dashboard.refocus.co.in` (CTA / auth links) |
+| `NEXTAUTH_SECRET` | Same secret as the Next app (Pages Function verifies JWT) |
+| `DASHBOARD_URL` | `https://dashboard.refocus.co.in` (logged-in redirect target) |
+
+### GitHub Actions secrets (blog + CF deploy)
+
+| Secret | Purpose |
+| --- | --- |
+| `OPENAI_API_KEY` | Blog post generation |
+| `CLOUDFLARE_API_TOKEN` | Pages deploy via Wrangler |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account |
+
+Optional repo variable: `OPENAI_MODEL` (defaults to `gpt-4o-mini`).
+
+---
+
+## CI / CD
+
+| Trigger | What happens |
+| --- | --- |
+| Push to `test-dash` | Vercel rebuilds the dashboard |
+| Push to `landing` under `marketing/` | GitHub Action builds Astro and deploys to Cloudflare Pages |
+| Hourly cron (`Auto-generate blog post`) | Generates a post on `landing`, builds, deploys to Cloudflare — **does not** push to `test-dash` |
+| Manual: Actions → “Auto-generate blog post” → Run workflow | Same as cron; optional topic input |
+
+The blog workflow file lives on the **default branch** (`test-dash`) because GitHub only schedules from the default branch. The job always **checks out and pushes to `landing`**.
+
+Workflow files:
+
+- `.github/workflows/blog.yml` — hourly (and manual) blog generate + CF deploy
+- `.github/workflows/deploy-marketing.yml` — on `landing` only; deploys marketing on push
+
+---
+
+## Blog (SEO)
+
+- Posts: Markdown in `marketing/src/content/blog/` on **`landing`**
+- Public URLs: `https://refocus.co.in/blog` and `/blog/<slug>`
+- Sitemap: dynamic at `/sitemap.xml` (includes posts)
+- Generation script: `marketing/scripts/generate-post.mjs`
+  - Writes useful articles; mentions Refocus once mid-body (not in the title)
+  - Requires `OPENAI_API_KEY` (repo-root `.env` locally, or GitHub secret in CI)
+
+---
+
+## Product notes (dashboard)
+
+- Registration: `POST /api/auth/register`
+- Login: NextAuth at `/auth/login` (also Firebase Google)
+- Friends / sessions / chat backed by MongoDB
+- Chat realtime via SSE (`/api/chat/.../events`)
+- Session requests: create / accept / decline APIs under `/api/session-requests`
+- Daily.co: `DAILY_API_KEY` (server-only), `DAILY_DOMAIN`
 
 ## Contributing
 
-Please open issues and PRs in this repository.
+See [CONTRIBUTING.md](./CONTRIBUTING.md). In short: branch from `test-dash` for app work, from `landing` for marketing/blog work; open a PR against the correct base branch.

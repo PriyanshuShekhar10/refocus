@@ -2,6 +2,15 @@
 
 Thank you for your interest in contributing to Refocus! This document provides guidelines and information for contributors, especially for Hacktoberfest participants.
 
+**Before you start:** read the [Architecture section in README.md](./README.md#architecture-read-this-first). Marketing and the dashboard live on **different branches** and deploy to different hosts.
+
+| Working on… | Base branch | Host |
+| --- | --- | --- |
+| Dashboard / APIs / auth | `test-dash` | `dashboard.refocus.co.in` (Vercel) |
+| Landing / blog / careers | `landing` | `refocus.co.in` (Cloudflare Pages) |
+
+Open PRs against the matching base branch. Do **not** put marketing site changes on `test-dash` (that folder does not exist there).
+
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
@@ -35,13 +44,14 @@ Before you begin, ensure you have the following installed:
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/refocus-frontend.git
-   cd refocus-frontend
+   git clone https://github.com/YOUR_USERNAME/refocus.git
+   cd refocus
    ```
 3. Add the original repository as upstream:
    ```bash
-   git remote add upstream https://github.com/ORIGINAL_OWNER/refocus-frontend.git
+   git remote add upstream https://github.com/PriyanshuShekhar10/refocus.git
    ```
+4. Check out the right base branch (`test-dash` for the app, `landing` for marketing).
 
 ## Development Setup
 
@@ -86,41 +96,39 @@ The application will be available at [http://localhost:3000](http://localhost:30
 
 ## Project Structure
 
+### `test-dash` — product app (this branch by default)
+
 ```
-refocus-frontend/
+refocus/
 ├── app/                          # Next.js App Router
-│   ├── (product)/               # Product routes (dashboard, chat, etc.)
-│   │   ├── components/          # React components
-│   │   ├── dashboard/           # Dashboard pages
-│   │   └── sessions/            # Session pages
+│   ├── (product)/               # Dashboard, chat, sessions, etc.
 │   ├── api/                     # API routes
-│   │   ├── auth/                # Authentication endpoints
-│   │   ├── chat/                # Chat functionality
-│   │   ├── friends/             # Friends management
-│   │   ├── session-requests/    # Session request handling
-│   │   ├── sessions/            # Session management
-│   │   └── users/               # User endpoints
-│   ├── auth/                    # Authentication pages
-│   └── globals.css              # Global styles
-├── components/                   # Shared components
-├── lib/                         # Utility libraries
-│   ├── auth.ts                  # Authentication utilities
-│   ├── mongodb.ts               # Database connection
-│   ├── utils.ts                 # General utilities
+│   ├── auth/                    # Auth pages
 │   └── ...
-├── assets/                      # Static assets
+├── components/                   # Shared UI
+├── lib/                          # auth, mongodb, etc.
+├── .github/workflows/blog.yml    # Cron: generates posts on `landing` (not here)
 └── ...
+```
+
+There is **no** `marketing/` directory on `test-dash`.
+
+### `landing` — marketing site
+
+```
+refocus/
+├── marketing/                    # Astro site
+│   ├── src/pages/                # /, /career, /blog, ...
+│   ├── src/content/blog/         # Markdown posts
+│   ├── scripts/generate-post.mjs # OpenAI blog generator
+│   └── functions/_middleware.ts  # Logged-in → dashboard redirect
+└── .github/workflows/deploy-marketing.yml
 ```
 
 ### Key Technologies
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **Authentication**: NextAuth.js with MongoDB adapter
-- **Database**: MongoDB
-- **Real-time**: Server-Sent Events (SSE)
-- **Video**: Daily.co integration
+- **Dashboard**: Next.js (App Router), TypeScript, Tailwind + shadcn/ui, NextAuth, MongoDB, SSE, Daily.co
+- **Marketing**: Astro (static) + React islands, Cloudflare Pages Functions, content collections for the blog
 
 ## How to Contribute
 
@@ -141,10 +149,10 @@ We welcome various types of contributions:
 1. **Check Existing Issues**: Look for existing issues or discussions
 2. **Create an Issue**: If you have an idea, create an issue first
 3. **Get Assigned**: Wait for maintainer approval or assignment
-4. **Create a Branch**: Create a feature branch from `main`
+4. **Create a Branch**: Branch from `test-dash` (app) or `landing` (marketing)
 5. **Make Changes**: Implement your changes
 6. **Test**: Ensure your changes work correctly
-7. **Submit PR**: Create a pull request with a clear description
+7. **Submit PR**: Open a pull request **against the same base branch** you branched from
 
 ### Branch Naming
 
@@ -163,8 +171,11 @@ Use descriptive branch names:
 
    ```bash
    git fetch upstream
-   git checkout main
-   git merge upstream/main
+   # App work:
+   git checkout test-dash
+   git merge upstream/test-dash
+   # Or marketing work:
+   # git checkout landing && git merge upstream/landing
    ```
 
 2. **Create a feature branch**:
