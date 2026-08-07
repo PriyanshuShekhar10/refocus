@@ -132,13 +132,15 @@ const nextConfig: NextConfig = {
         source: "/",
         has: [{ type: "host", value: marketingHost }],
         destination: toApex("/"),
-        permanent: false,
+        // 301: marketing permanently moved to the apex, so link equity and
+        // index signals from the old dashboard-host URLs consolidate there.
+        permanent: true,
       },
       {
         source: "/career",
         has: [{ type: "host", value: marketingHost }],
         destination: toApex("/career"),
-        permanent: false,
+        permanent: true,
       },
     ];
   },
@@ -150,6 +152,15 @@ const nextConfig: NextConfig = {
         // proxies in some configurations).
         source: "/((?!_next/static|_next/image|api/chat/events).*)",
         headers: securityHeaders,
+      },
+      {
+        // SEO: the dashboard host is the product app, not a marketing surface.
+        // Keep it out of the index so search authority consolidates on the
+        // apex (refocus.co.in). Crawling stays allowed (no robots.txt block)
+        // so Google still honors the 301s from / and /career to the apex.
+        source: "/:path*",
+        has: [{ type: "host", value: "dashboard.refocus.co.in" }],
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
     ];
   },

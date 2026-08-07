@@ -5,8 +5,6 @@
 // marketing entry pages straight to the product dashboard. Everything else
 // (assets, invalid/expired sessions) falls through to the static site.
 
-import { jwtDecrypt } from "jose";
-
 interface Env {
   NEXTAUTH_SECRET?: string;
   DASHBOARD_URL?: string;
@@ -81,6 +79,9 @@ async function deriveKey(secret: string): Promise<Uint8Array> {
 
 async function hasValidSession(token: string, secret: string): Promise<boolean> {
   try {
+    // Lazy import so a bundling/runtime issue in `jose` can never take down
+    // the whole middleware (host canonicalization must always run).
+    const { jwtDecrypt } = await import("jose");
     const key = await deriveKey(secret);
     const { payload } = await jwtDecrypt(token, key, { clockTolerance: 15 });
     return Boolean(payload && (payload.sub || payload.email));
@@ -92,6 +93,12 @@ async function hasValidSession(token: string, secret: string): Promise<boolean> 
 export const onRequest = async (context: PagesContext): Promise<Response> => {
   const { request, env, next } = context;
   const url = new URL(request.url);
+
+  // Canonicalize www -> apex (301), preserving path + query.
+  if (url.hostname === "www.refocus.co.in") {
+    url.hostname = "refocus.co.in";
+    return Response.redirect(url.toString(), 301);
+  }
 
   // Only consider GET navigations to the marketing entry pages.
   if (request.method !== "GET" || !REDIRECT_PATHS.has(url.pathname)) {

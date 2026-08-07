@@ -7,7 +7,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "blog:new": "node scripts/generate-post.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.0",

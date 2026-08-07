@@ -60,7 +60,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 <div class="container">
 
 <h1>refocus — Complete Call Flow &amp; Architecture Documentation</h1>
-<p class="subtitle">Generated from graphify knowledge graph: 1812 nodes, 4171 edges, 126 communities. Commit: 27f7cc4</p>
+<p class="subtitle">Generated from graphify knowledge graph: 1812 nodes, 4171 edges, 126 communities. Commit: c40f03f</p>
 
 <div class="nav">
     <a href="#overview">Architecture Overview</a>
@@ -76,8 +76,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
     <a href="#community-21">Community 21</a>
     <a href="#community-22">Community 22</a>
     <a href="#community-4">Community 4</a>
-    <a href="#community-10">Community 10</a>
     <a href="#community-29">Community 29</a>
+    <a href="#community-94">Community 94</a>
     <a href="#other">Other</a>
 </div>
 
@@ -102,7 +102,7 @@ flowchart LR
     class SERVE_API_35EC8E86 module;
     SECURITY_GLOBAL_5B9C6A04("Security &amp; Global Graph<br/><small>19 nodes</small>")
     class SECURITY_GLOBAL_5B9C6A04 module;
-    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>184 nodes</small>")
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>181 nodes</small>")
     class TESTS_FIXTURES_B84B1DCC module;
     COMMUNITY_45_E4978FE7("Community 45<br/><small>61 nodes</small>")
     class COMMUNITY_45_E4978FE7 module;
@@ -112,24 +112,24 @@ flowchart LR
     class COMMUNITY_22_65038249 module;
     COMMUNITY_4_AC2DC2A9("Community 4<br/><small>30 nodes</small>")
     class COMMUNITY_4_AC2DC2A9 module;
-    COMMUNITY_10_48432F59("Community 10<br/><small>28 nodes</small>")
-    class COMMUNITY_10_48432F59 module;
     COMMUNITY_29_DAB74D83("Community 29<br/><small>28 nodes</small>")
     class COMMUNITY_29_DAB74D83 module;
-    OTHER_D0941E68("Other<br/><small>574 nodes</small>")
+    COMMUNITY_94_0AE67AB2("Community 94<br/><small>28 nodes</small>")
+    class COMMUNITY_94_0AE67AB2 module;
+    OTHER_D0941E68("Other<br/><small>577 nodes</small>")
     class OTHER_D0941E68 module;
-    SERVE_API_35EC8E86 -->|imports x46| OTHER_D0941E68
+    SERVE_API_35EC8E86 -->|imports x41| OTHER_D0941E68
     SERVE_API_35EC8E86 -->|imports x35| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|imports x35| OTHER_D0941E68
     ANALYSIS_CLUSTERING_C79796DA -->|imports x32| COMMUNITY_21_47BA4108
     OTHER_D0941E68 -->|imports x30| COMMUNITY_21_47BA4108
-    OTHER_D0941E68 -->|imports x28| SERVE_API_35EC8E86
-    TESTS_FIXTURES_B84B1DCC -->|imports x27| OTHER_D0941E68
+    OTHER_D0941E68 -->|imports x25| TESTS_FIXTURES_B84B1DCC
     TESTS_FIXTURES_B84B1DCC -->|imports x24| SERVE_API_35EC8E86
-    OTHER_D0941E68 -->|imports x24| COMMUNITY_10_48432F59
-    COMMUNITY_10_48432F59 -->|imports x21| OTHER_D0941E68
-    COMMUNITY_21_47BA4108 -->|imports x20| OTHER_D0941E68
-    OTHER_D0941E68 -->|imports x19| TESTS_FIXTURES_B84B1DCC
-    COMMUNITY_10_48432F59 -->|imports x16| TESTS_FIXTURES_B84B1DCC
+    OTHER_D0941E68 -->|imports x20| SERVE_API_35EC8E86
+    OTHER_D0941E68 -->|imports x20| COMMUNITY_94_0AE67AB2
+    COMMUNITY_21_47BA4108 -->|imports x17| OTHER_D0941E68
+    OTHER_D0941E68 -->|imports x15| COMMUNITY_22_65038249
+    COMMUNITY_94_0AE67AB2 -->|imports x14| OTHER_D0941E68
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -146,12 +146,12 @@ flowchart LR
     <h4>Architecture Layers</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
-      <tr><td>Graph Build</td><td>155</td><td><code>9, 13, 53, 18, 28, 37, 68, 121, 54, 60, 80, 96</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>136</td><td><code>46, 30, 62, 40, 32</code></td></tr><tr><td>Outputs &amp; Docs</td><td>15</td><td><code>102</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>8</td><td><code>48</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>70</td><td><code>20, 23, 35, 44</code></td></tr><tr><td>Serving API</td><td>429</td><td><code>70, 19, 6, 26, 99, 2, 15, 43, 25, 11, 110, 111, 118, 119</code></td></tr><tr><td>Security &amp; Global Graph</td><td>19</td><td><code>108, 67</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>184</td><td><code>27, 58, 1, 52, 57, 36, 17, 39, 51, 103, 106, 69, 104</code></td></tr><tr><td>Community 45</td><td>61</td><td><code>45</code></td></tr><tr><td>Community 21</td><td>44</td><td><code>21</code></td></tr><tr><td>Community 22</td><td>31</td><td><code>22</code></td></tr><tr><td>Community 4</td><td>30</td><td><code>4</code></td></tr><tr><td>Community 10</td><td>28</td><td><code>10</code></td></tr><tr><td>Community 29</td><td>28</td><td><code>29</code></td></tr><tr><td>Other</td><td>574</td><td><code>94, 5, 12, 33, 7, 97, 3, 31, 50, 34, 8, 16, 98, 101, 0, 105, 93, 109, 112, 14, 38, 107, 114, 24, 41, 42, 115, 116, 117, 47, 49, 65, 120, 55, 56, 59, 61, 63, 64, 66, 113, 71, 72, 73, 74, 75, 76, 77, 78, 79, 100, 81, 82, 83, 84, 85, 86, 87, 88, 95, 122, 123, 124, 125, 89, 90, 91, 92</code></td></tr>
+      <tr><td>Graph Build</td><td>155</td><td><code>9, 13, 53, 18, 28, 37, 68, 121, 54, 60, 80, 96</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>136</td><td><code>46, 30, 62, 40, 32</code></td></tr><tr><td>Outputs &amp; Docs</td><td>15</td><td><code>102</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>8</td><td><code>48</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>70</td><td><code>20, 23, 35, 44</code></td></tr><tr><td>Serving API</td><td>429</td><td><code>70, 19, 6, 26, 99, 2, 15, 43, 25, 11, 110, 111, 118, 119</code></td></tr><tr><td>Security &amp; Global Graph</td><td>19</td><td><code>108, 67</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>181</td><td><code>27, 58, 1, 52, 57, 36, 17, 39, 51, 103, 106, 69, 104</code></td></tr><tr><td>Community 45</td><td>61</td><td><code>45</code></td></tr><tr><td>Community 21</td><td>44</td><td><code>21</code></td></tr><tr><td>Community 22</td><td>31</td><td><code>22</code></td></tr><tr><td>Community 4</td><td>30</td><td><code>4</code></td></tr><tr><td>Community 29</td><td>28</td><td><code>29</code></td></tr><tr><td>Community 94</td><td>28</td><td><code>94</code></td></tr><tr><td>Other</td><td>577</td><td><code>5, 12, 33, 7, 97, 10, 3, 31, 50, 8, 120, 16, 34, 98, 101, 0, 105, 93, 109, 112, 14, 38, 107, 114, 24, 41, 42, 115, 116, 117, 47, 49, 65, 55, 56, 59, 61, 63, 64, 66, 113, 71, 72, 73, 74, 75, 76, 77, 78, 79, 100, 81, 82, 83, 84, 85, 86, 87, 88, 95, 122, 123, 124, 125, 89, 90, 91, 92</code></td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Core Flow</h4>
-    <div class="arrow-chain">Graph Build -&gt; Analysis &amp; Clustering -&gt; Community 21 -&gt; Other -&gt; Serving API -&gt; Tests &amp; Fixtures -&gt; Community 10</div>
+    <div class="arrow-chain">Graph Build -&gt; Analysis &amp; Clustering -&gt; Community 21 -&gt; Other -&gt; Tests &amp; Fixtures -&gt; Serving API -&gt; Community 94</div>
   </div>
 </div>
 <div class="grid">
@@ -849,7 +849,7 @@ flowchart LR
   <td>30</td>
   <td><code>wallpaper-context.tsx</code><br><small style="color:var(--muted)">components/wallpaper-context.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>Community.tsx</code><br><small style="color:var(--muted)">components/Community/Community.tsx</small><br><code>CommunityChatPanel.tsx</code><br><small style="color:var(--muted)">components/Community/CommunityChatPanel.tsx</small><br><code>index.tsx</code><br><small style="color:var(--muted)">components/SessionHistory/index.tsx</small><br>+2 more</td>
+  <td><code>Community.tsx</code><br><small style="color:var(--muted)">components/Community/Community.tsx</small><br><code>CommunityChatPanel.tsx</code><br><small style="color:var(--muted)">components/Community/CommunityChatPanel.tsx</small><br><code>index.tsx</code><br><small style="color:var(--muted)">components/Friends/index.tsx</small><br>+2 more</td>
   <td><code>useWallpaperSurface.ts</code><br><small style="color:var(--muted)">hooks/useWallpaperSurface.ts</small></td>
   <td>Module file in components/wallpaper-context.tsx.</td>
 </tr>
@@ -2201,12 +2201,12 @@ flowchart LR
 
 <!-- ====== 9. Tests & Fixtures ====== -->
 <h2 id="tests-fixtures">9. Tests &amp; Fixtures</h2>
-<p>Tests &amp; Fixtures groups implementation around tests, api, components, sessions, mostly in lib/sessionReminders.ts, (product)/components/settings.tsx, api/chat/chat.test.ts. This section covers 184 nodes and 284 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Tests &amp; Fixtures groups implementation around tests, api, components, sessions, mostly in lib/sessionReminders.ts, (product)/components/settings.tsx, api/chat/chat.test.ts. This section covers 181 nodes and 276 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Tests &amp; Fixtures (184 nodes, 284 edges)
+    %% Section: Tests &amp; Fixtures (181 nodes, 276 edges)
     subgraph tests_fixtures_product_components_settings_tsx_dab3c36b["(product)/components/settings.tsx"]
         components_settings_focuspreferences_b06cc34b("FocusPreferences()<br/><small>(product)/components/settings.tsx</small>")
         components_settings_useprefs_5bbbf500("usePrefs()<br/><small>(product)/components/settings.tsx</small>")
@@ -2221,27 +2221,26 @@ flowchart LR
         tests_helpers_mockdb_ec0883fe("mockDb()<br/><small>__tests__/helpers.ts</small>")
         tests_helpers_mockrequest_80a82ece("mockRequest()<br/><small>__tests__/helpers.ts</small>")
     end
-    subgraph tests_fixtures_lib_utils_ts_2c8c04bc["lib/utils.ts"]
-        lib_utils_ymd_83c1a3cf("ymd()<br/><small>lib/utils.ts</small>")
-        lib_utils_toiso_9fdd70f7("toISO()<br/><small>lib/utils.ts</small>")
+    subgraph tests_fixtures_lib_cropAvatarImage_ts_6e0d04ca["lib/cropAvatarImage.ts"]
+        lib_cropavatarimage_clampcropoffset_b6fcaa07("clampCropOffset()<br/><small>lib/cropAvatarImage.ts</small>")
+        lib_cropavatarimage_loadimage_5d739d97("loadImage()<br/><small>lib/cropAvatarImage.ts</small>")
+        lib_cropavatarimage_cropavatartoblob_16b06087("cropAvatarToBlob()<br/><small>lib/cropAvatarImage.ts</small>")
+    end
+    subgraph tests_fixtures_lib_sessionReminders_ts_10835ab8["lib/sessionReminders.ts"]
+        lib_sessionreminders_istdatekey_a4fe1678("istDateKey()<br/><small>lib/sessionReminders.ts</small>")
+        lib_sessionreminders_getistdaybounds_f1535172("getISTDayBounds()<br/><small>lib/sessionReminders.ts</small>")
     end
     tests_lib_utils_test_ts_3f6596a2("utils.test.ts")
-    mobile_mobilecalendar_mobilecalendar_b36be840("MobileCalendar()<br/><small>components/Mobile/MobileCalendar.tsx</small>")
     components_avatar_crop_modal_avatarcropmodal_94f7b8b5("AvatarCropModal()<br/><small>components/avatar-crop-modal.tsx</small>")
-    hooks_usecalendarsessions_usecalendarsessions_6e6ca517("useCalendarSessions()<br/><small>hooks/useCalendarSessions.ts</small>")
-    lib_cropavatarimage_clampcropoffset_b6fcaa07("clampCropOffset()<br/><small>lib/cropAvatarImage.ts</small>")
     lib_validatepassword_validatepassword_76a99402("validatePassword()<br/><small>lib/validatePassword.ts</small>")
     components_settings_focuspreferences_b06cc34b -->|calls| components_settings_useprefs_5bbbf500
     components_settings_notificationssection_b955c2ea -->|calls| components_settings_useprefs_5bbbf500
     components_settings_privacysection_7de10c0c -->|calls| components_settings_useprefs_5bbbf500
     components_settings_changepasswordsection_ece33215 -->|calls| lib_validatepassword_validatepassword_76a99402
-    mobile_mobilecalendar_mobilecalendar_b36be840 -->|calls| hooks_usecalendarsessions_usecalendarsessions_6e6ca517
-    mobile_mobilecalendar_mobilecalendar_b36be840 -->|calls| lib_utils_ymd_83c1a3cf
     components_avatar_crop_modal_avatarcropmodal_94f7b8b5 -->|calls| lib_cropavatarimage_clampcropoffset_b6fcaa07
-    hooks_usecalendarsessions_usecalendarsessions_6e6ca517 -->|calls| lib_utils_toiso_9fdd70f7
-    tests_lib_utils_test_ts_3f6596a2 -->|imports| lib_utils_toiso_9fdd70f7
-    tests_lib_utils_test_ts_3f6596a2 -->|imports| lib_utils_ymd_83c1a3cf
-    %% Omitted for readability: 166 nodes, 0 edges
+    lib_cropavatarimage_loadimage_5d739d97 -->|calls| lib_cropavatarimage_cropavatartoblob_16b06087
+    lib_sessionreminders_istdatekey_a4fe1678 -->|calls| lib_sessionreminders_getistdaybounds_f1535172
+    %% Omitted for readability: 163 nodes, 0 edges
     class components_settings_focuspreferences_b06cc34b ui;
     class components_settings_useprefs_5bbbf500 ui;
     class components_settings_notificationssection_b955c2ea async;
@@ -2252,13 +2251,13 @@ flowchart LR
     class tests_helpers_mockcollection_b25c8dad test;
     class tests_helpers_mockdb_ec0883fe test;
     class tests_helpers_mockrequest_80a82ece test;
-    class lib_utils_ymd_83c1a3cf function;
-    class lib_utils_toiso_9fdd70f7 function;
-    class tests_lib_utils_test_ts_3f6596a2 test;
-    class mobile_mobilecalendar_mobilecalendar_b36be840 ui;
-    class components_avatar_crop_modal_avatarcropmodal_94f7b8b5 ui;
-    class hooks_usecalendarsessions_usecalendarsessions_6e6ca517 ui;
     class lib_cropavatarimage_clampcropoffset_b6fcaa07 function;
+    class lib_cropavatarimage_loadimage_5d739d97 function;
+    class lib_cropavatarimage_cropavatartoblob_16b06087 function;
+    class lib_sessionreminders_istdatekey_a4fe1678 function;
+    class lib_sessionreminders_getistdaybounds_f1535172 function;
+    class tests_lib_utils_test_ts_3f6596a2 test;
+    class components_avatar_crop_modal_avatarcropmodal_94f7b8b5 ui;
     class lib_validatepassword_validatepassword_76a99402 function;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
@@ -2533,14 +2532,14 @@ flowchart LR
 <tr><td><code>api/chat/chat.test.ts</code></td><td>13 nodes</td></tr>
 <tr><td><code>api/session-requests/accept.test.ts</code></td><td>11 nodes</td></tr>
 <tr><td><code>api/sessions/join.test.ts</code></td><td>10 nodes</td></tr>
-<tr><td><code>lib/utils.ts</code></td><td>9 nodes</td></tr>
 <tr><td><code>api/sessions/create.test.ts</code></td><td>8 nodes</td></tr>
 <tr><td><code>api/sessions/daily.test.ts</code></td><td>8 nodes</td></tr>
+<tr><td><code>lib/utils.ts</code></td><td>8 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x155, imports x71, calls x37, imports x20. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x153, imports x69, calls x33, imports x20. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -3067,7 +3066,7 @@ flowchart LR
   <td><code>FriendRow.tsx</code><br><small style="color:var(--muted)">components/Friends/FriendRow.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>Avatar()</code><br><small style="color:var(--muted)">components/ui/avatar.tsx</small><br><code>Avatar.tsx</code><br><small style="color:var(--muted)">components/Friends/Avatar.tsx</small><br><code>avatar.tsx</code><br><small style="color:var(--muted)">components/ui/avatar.tsx</small><br>+4 more</td>
+  <td><code>Avatar()</code><br><small style="color:var(--muted)">components/ui/avatar.tsx</small><br><code>avatar.tsx</code><br><small style="color:var(--muted)">components/ui/avatar.tsx</small><br><code>Avatar.tsx</code><br><small style="color:var(--muted)">components/Friends/Avatar.tsx</small><br>+4 more</td>
   <td>Module file in components/Friends/FriendRow.tsx.</td>
 </tr>
 <tr>
@@ -3107,7 +3106,7 @@ flowchart LR
   <td><code>FriendRequestCard.tsx</code><br><small style="color:var(--muted)">components/Friends/FriendRequestCard.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>Avatar()</code><br><small style="color:var(--muted)">components/ui/avatar.tsx</small><br><code>Avatar.tsx</code><br><small style="color:var(--muted)">components/Friends/Avatar.tsx</small><br><code>avatar.tsx</code><br><small style="color:var(--muted)">components/ui/avatar.tsx</small><br>+4 more</td>
+  <td><code>Avatar()</code><br><small style="color:var(--muted)">components/ui/avatar.tsx</small><br><code>avatar.tsx</code><br><small style="color:var(--muted)">components/ui/avatar.tsx</small><br><code>Avatar.tsx</code><br><small style="color:var(--muted)">components/Friends/Avatar.tsx</small><br>+4 more</td>
   <td>Module file in components/Friends/FriendRequestCard.tsx.</td>
 </tr>
 <tr>
@@ -3543,7 +3542,7 @@ flowchart LR
   <td>23</td>
   <td><code>Shell()</code><br><small style="color:var(--muted)">components/design/Shell.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>layout.tsx</code><br><small style="color:var(--muted)">app/profile/layout.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">app/features/page.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">app/career/page.tsx</small><br>+1 more</td>
+  <td><code>layout.tsx</code><br><small style="color:var(--muted)">app/profile/layout.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">app/features/page.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">u/[username]/page.tsx</small><br>+1 more</td>
   <td>No direct outbound edge</td>
   <td>Shell() node in components/design/Shell.tsx.</td>
 </tr>
@@ -3583,7 +3582,7 @@ flowchart LR
   <td>28</td>
   <td><code>index.ts</code><br><small style="color:var(--muted)">components/design/index.ts</small></td>
   <td><span class="tag tag-class">Module</span></td>
-  <td><code>layout.tsx</code><br><small style="color:var(--muted)">app/profile/layout.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">app/features/page.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">app/career/page.tsx</small><br>+1 more</td>
+  <td><code>layout.tsx</code><br><small style="color:var(--muted)">app/profile/layout.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">app/features/page.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">u/[username]/page.tsx</small><br>+1 more</td>
   <td>No direct outbound edge</td>
   <td>Module file in components/design/index.ts.</td>
 </tr>
@@ -3967,350 +3966,8 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 14. Community 10 ====== -->
-<h2 id="community-10">14. Community 10</h2>
-<p>Community 10 groups implementation around app, product, components, mobilecalendartsx, mostly in components/Mobile/MobileCalendar.tsx, lib/zonedTime.ts, hooks/useCalendarGrid.ts. This section covers 28 nodes and 63 internal edges; the diagram shows only representative relationships to stay readable.</p>
-
-<div class="mermaid">
-%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
-flowchart LR
-    %% Section: Community 10 (28 nodes, 63 edges)
-    subgraph community_10_components_Mobile_MobileCalendar_ts_cef47804["components/Mobile/MobileCalendar.tsx"]
-        app_product_components_mobile_mobilecalendar_tsx_09dcd4a2("MobileCalendar.tsx")
-        mobile_mobilecalendar_uireducer_1ecde1b3("uiReducer()<br/><small>components/Mobile/MobileCalendar.tsx</small>")
-        mobile_mobilecalendar_formatbooktime_5020ce9b("formatBookTime()<br/><small>components/Mobile/MobileCalendar.tsx</small>")
-        mobile_mobilecalendar_getdefaultbooktime_ccc3ce44("getDefaultBookTime()<br/><small>components/Mobile/MobileCalendar.tsx</small>")
-        mobile_mobilecalendar_normalizebooktime_f8178a39("normalizeBookTime()<br/><small>components/Mobile/MobileCalendar.tsx</small>")
-        mobile_mobilecalendar_snapbooktimeminutes_146da53b("snapBookTimeMinutes()<br/><small>components/Mobile/MobileCalendar.tsx</small>")
-        mobile_mobilecalendar_createinitialstate_fc06e789("createInitialState()<br/><small>components/Mobile/MobileCalendar.tsx</small>")
-    end
-    subgraph community_10_lib_zonedTime_ts_de8d525e["lib/zonedTime.ts"]
-        lib_zonedtime_getzonedparts_933eaf0d("getZonedParts()<br/><small>lib/zonedTime.ts</small>")
-        lib_zonedtime_walltimetoutc_2e2642aa("wallTimeToUtc()<br/><small>lib/zonedTime.ts</small>")
-        lib_zonedtime_adddaysintimezone_dada79af("addDaysInTimeZone()<br/><small>lib/zonedTime.ts</small>")
-        lib_zonedtime_startofdayintimezone_5c1287a5("startOfDayInTimeZone()<br/><small>lib/zonedTime.ts</small>")
-        lib_zonedtime_ymdintimezone_7576f8e9("ymdInTimeZone()<br/><small>lib/zonedTime.ts</small>")
-        lib_zonedtime_minutesofdayintimezone_38372eac("minutesOfDayInTimeZone()<br/><small>lib/zonedTime.ts</small>")
-        lib_zonedtime_gettimezoneoffsetms_8929c66c("getTimeZoneOffsetMs()<br/><small>lib/zonedTime.ts</small>")
-    end
-    subgraph community_10_product_components_Calendar_tsx_54d75eb5["(product)/components/Calendar.tsx"]
-        components_calendar_uireducer_5067852c("uiReducer()<br/><small>(product)/components/Calendar.tsx</small>")
-        components_calendar_createinitialstate_1f8e744f("createInitialState()<br/><small>(product)/components/Calendar.tsx</small>")
-    end
-    hooks_usecalendargrid_ts_c5f81001("useCalendarGrid.ts")
-    lib_utils_startofday_d0fd9972("startOfDay()<br/><small>lib/utils.ts</small>")
-    components_calendar_uireducer_5067852c -->|calls| lib_zonedtime_adddaysintimezone_dada79af
-    components_calendar_uireducer_5067852c -->|calls| lib_zonedtime_startofdayintimezone_5c1287a5
-    components_calendar_uireducer_5067852c -->|calls| lib_utils_startofday_d0fd9972
-    components_calendar_createinitialstate_1f8e744f -->|calls| lib_zonedtime_startofdayintimezone_5c1287a5
-    components_calendar_createinitialstate_1f8e744f -->|calls| lib_utils_startofday_d0fd9972
-    mobile_mobilecalendar_formatbooktime_5020ce9b -->|calls| mobile_mobilecalendar_getdefaultbooktime_ccc3ce44
-    mobile_mobilecalendar_formatbooktime_5020ce9b -->|calls| mobile_mobilecalendar_normalizebooktime_f8178a39
-    mobile_mobilecalendar_snapbooktimeminutes_146da53b -->|calls| mobile_mobilecalendar_getdefaultbooktime_ccc3ce44
-    mobile_mobilecalendar_snapbooktimeminutes_146da53b -->|calls| mobile_mobilecalendar_normalizebooktime_f8178a39
-    mobile_mobilecalendar_getdefaultbooktime_ccc3ce44 -->|calls| lib_zonedtime_ymdintimezone_7576f8e9
-    mobile_mobilecalendar_getdefaultbooktime_ccc3ce44 -->|calls| lib_zonedtime_minutesofdayintimezone_38372eac
-    mobile_mobilecalendar_uireducer_1ecde1b3 -->|calls| lib_zonedtime_adddaysintimezone_dada79af
-    mobile_mobilecalendar_uireducer_1ecde1b3 -->|calls| lib_zonedtime_startofdayintimezone_5c1287a5
-    mobile_mobilecalendar_uireducer_1ecde1b3 -->|calls| lib_utils_startofday_d0fd9972
-    mobile_mobilecalendar_createinitialstate_fc06e789 -->|calls| lib_zonedtime_startofdayintimezone_5c1287a5
-    mobile_mobilecalendar_createinitialstate_fc06e789 -->|calls| lib_utils_startofday_d0fd9972
-    lib_zonedtime_getzonedparts_933eaf0d -->|calls| lib_zonedtime_gettimezoneoffsetms_8929c66c
-    lib_zonedtime_getzonedparts_933eaf0d -->|calls| lib_zonedtime_ymdintimezone_7576f8e9
-    lib_zonedtime_getzonedparts_933eaf0d -->|calls| lib_zonedtime_minutesofdayintimezone_38372eac
-    lib_zonedtime_getzonedparts_933eaf0d -->|calls| lib_zonedtime_startofdayintimezone_5c1287a5
-    lib_zonedtime_getzonedparts_933eaf0d -->|calls| lib_zonedtime_adddaysintimezone_dada79af
-    lib_zonedtime_gettimezoneoffsetms_8929c66c -->|calls| lib_zonedtime_walltimetoutc_2e2642aa
-    lib_zonedtime_walltimetoutc_2e2642aa -->|calls| lib_zonedtime_startofdayintimezone_5c1287a5
-    lib_zonedtime_walltimetoutc_2e2642aa -->|calls| lib_zonedtime_adddaysintimezone_dada79af
-    %% Omitted for readability: 10 nodes, 11 edges
-    class app_product_components_mobile_mobilecalendar_tsx_09dcd4a2 ui;
-    class mobile_mobilecalendar_uireducer_1ecde1b3 ui;
-    class mobile_mobilecalendar_formatbooktime_5020ce9b ui;
-    class mobile_mobilecalendar_getdefaultbooktime_ccc3ce44 ui;
-    class mobile_mobilecalendar_normalizebooktime_f8178a39 ui;
-    class mobile_mobilecalendar_snapbooktimeminutes_146da53b ui;
-    class mobile_mobilecalendar_createinitialstate_fc06e789 ui;
-    class lib_zonedtime_getzonedparts_933eaf0d function;
-    class lib_zonedtime_walltimetoutc_2e2642aa function;
-    class lib_zonedtime_adddaysintimezone_dada79af function;
-    class lib_zonedtime_startofdayintimezone_5c1287a5 function;
-    class lib_zonedtime_ymdintimezone_7576f8e9 function;
-    class lib_zonedtime_minutesofdayintimezone_38372eac function;
-    class lib_zonedtime_gettimezoneoffsetms_8929c66c function;
-    class components_calendar_uireducer_5067852c ui;
-    class components_calendar_createinitialstate_1f8e744f ui;
-    class hooks_usecalendargrid_ts_c5f81001 ui;
-    class lib_utils_startofday_d0fd9972 function;
-    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
-    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
-    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
-    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
-    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
-    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
-    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
-    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
-    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
-</div>
-
-<h3>Call Details</h3>
-<table class="call-table">
-<tr>
-  <th style="width:5%">#</th>
-  <th style="width:28%">Node</th>
-  <th style="width:10%">Type</th>
-  <th style="width:17%">Caller</th>
-  <th style="width:20%">Callees</th>
-  <th style="width:20%">Description</th>
-</tr>
-<tr>
-  <td>1</td>
-  <td><code>uiReducer()</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>addDaysInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>startOfDay()</code><br><small style="color:var(--muted)">lib/utils.ts</small><br><code>startOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td>uiReducer() node in (product)/components/Calendar.tsx.</td>
-</tr>
-<tr>
-  <td>2</td>
-  <td><code>createInitialState()</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>startOfDay()</code><br><small style="color:var(--muted)">lib/utils.ts</small><br><code>startOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td>createInitialState() node in (product)/components/Calendar.tsx.</td>
-</tr>
-<tr>
-  <td>3</td>
-  <td><code>MobileCalendar.tsx</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>addDaysInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>minutesOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>startOfDay()</code><br><small style="color:var(--muted)">lib/utils.ts</small><br>+4 more</td>
-  <td>Module file in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>4</td>
-  <td><code>formatBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>getDefaultBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>normalizeBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td>formatBookTime() node in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>5</td>
-  <td><code>snapBookTimeMinutes()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>getDefaultBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>normalizeBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td>snapBookTimeMinutes() node in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>6</td>
-  <td><code>getDefaultBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>formatBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>snapBookTimeMinutes()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><code>minutesOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>ymdInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td>getDefaultBookTime() node in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>7</td>
-  <td><code>parseBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>parseBookTime() node in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>8</td>
-  <td><code>normalizeBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td><code>formatBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>snapBookTimeMinutes()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td>No direct outbound edge</td>
-  <td>normalizeBookTime() node in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>9</td>
-  <td><code>ProcessedEvent</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-async">Async</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>ProcessedEvent node in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>10</td>
-  <td><code>ModalState</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>ModalState node in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>11</td>
-  <td><code>UIAction</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>UIAction node in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>12</td>
-  <td><code>uiReducer()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>addDaysInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>startOfDay()</code><br><small style="color:var(--muted)">lib/utils.ts</small><br><code>startOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td>uiReducer() node in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>13</td>
-  <td><code>createInitialState()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>startOfDay()</code><br><small style="color:var(--muted)">lib/utils.ts</small><br><code>startOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td>createInitialState() node in components/Mobile/MobileCalendar.tsx.</td>
-</tr>
-<tr>
-  <td>14</td>
-  <td><code>formatRelativeDay()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>startOfDay()</code><br><small style="color:var(--muted)">lib/utils.ts</small></td>
-  <td>formatRelativeDay() node in (product)/sessions/PastSessionsList.tsx.</td>
-</tr>
-<tr>
-  <td>15</td>
-  <td><code>useCalendarGrid.ts</code><br><small style="color:var(--muted)">hooks/useCalendarGrid.ts</small></td>
-  <td><span class="tag tag-hook">UI</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>addDaysInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>minutesOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>startOfDay()</code><br><small style="color:var(--muted)">lib/utils.ts</small><br>+4 more</td>
-  <td>Module file in hooks/useCalendarGrid.ts.</td>
-</tr>
-<tr>
-  <td>16</td>
-  <td><code>HoverState</code><br><small style="color:var(--muted)">hooks/useCalendarGrid.ts</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>HoverState node in hooks/useCalendarGrid.ts.</td>
-</tr>
-<tr>
-  <td>17</td>
-  <td><code>UseCalendarGridReturn</code><br><small style="color:var(--muted)">hooks/useCalendarGrid.ts</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>UseCalendarGridReturn node in hooks/useCalendarGrid.ts.</td>
-</tr>
-<tr>
-  <td>18</td>
-  <td><code>startOfDay()</code><br><small style="color:var(--muted)">lib/utils.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>createInitialState()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>createInitialState()</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small><br><code>formatRelativeDay()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small><br>+4 more</td>
-  <td>No direct outbound edge</td>
-  <td>startOfDay() node in lib/utils.ts.</td>
-</tr>
-<tr>
-  <td>19</td>
-  <td><code>zonedTime.ts</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td><code>MobileCalendar.tsx</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>useCalendarGrid.ts</code><br><small style="color:var(--muted)">hooks/useCalendarGrid.ts</small></td>
-  <td>No direct outbound edge</td>
-  <td>Module file in lib/zonedTime.ts.</td>
-</tr>
-<tr>
-  <td>20</td>
-  <td><code>ZonedParts</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>ZonedParts node in lib/zonedTime.ts.</td>
-</tr>
-<tr>
-  <td>21</td>
-  <td><code>getZonedParts()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>addDaysInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>getTimeZoneOffsetMs()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>minutesOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br>+3 more</td>
-  <td>getZonedParts() node in lib/zonedTime.ts.</td>
-</tr>
-<tr>
-  <td>22</td>
-  <td><code>getTimeZoneOffsetMs()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>getZonedParts()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><code>wallTimeToUtc()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td>getTimeZoneOffsetMs() node in lib/zonedTime.ts.</td>
-</tr>
-<tr>
-  <td>23</td>
-  <td><code>wallTimeToUtc()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>getTimeZoneOffsetMs()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><code>addDaysInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>startOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>wallMinutesOnDayToUtc()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td>wallTimeToUtc() node in lib/zonedTime.ts.</td>
-</tr>
-<tr>
-  <td>24</td>
-  <td><code>ymdInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>getDefaultBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>getZonedParts()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>MobileCalendar.tsx</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br>+1 more</td>
-  <td>No direct outbound edge</td>
-  <td>ymdInTimeZone() node in lib/zonedTime.ts.</td>
-</tr>
-<tr>
-  <td>25</td>
-  <td><code>minutesOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>getDefaultBookTime()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>getZonedParts()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>MobileCalendar.tsx</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br>+1 more</td>
-  <td>No direct outbound edge</td>
-  <td>minutesOfDayInTimeZone() node in lib/zonedTime.ts.</td>
-</tr>
-<tr>
-  <td>26</td>
-  <td><code>startOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>createInitialState()</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>createInitialState()</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small><br><code>getZonedParts()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br>+5 more</td>
-  <td><code>addDaysInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td>startOfDayInTimeZone() node in lib/zonedTime.ts.</td>
-</tr>
-<tr>
-  <td>27</td>
-  <td><code>addDaysInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>getZonedParts()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>MobileCalendar.tsx</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>startOfDayInTimeZone()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br>+4 more</td>
-  <td>No direct outbound edge</td>
-  <td>addDaysInTimeZone() node in lib/zonedTime.ts.</td>
-</tr>
-<tr>
-  <td>28</td>
-  <td><code>wallMinutesOnDayToUtc()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>getZonedParts()</code><br><small style="color:var(--muted)">lib/zonedTime.ts</small><br><code>MobileCalendar.tsx</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small><br><code>useCalendarGrid.ts</code><br><small style="color:var(--muted)">hooks/useCalendarGrid.ts</small><br>+1 more</td>
-  <td>No direct outbound edge</td>
-  <td>wallMinutesOnDayToUtc() node in lib/zonedTime.ts.</td>
-</tr>
-</table>
-
-<div class="grid">
-  <div class="card">
-    <h4>Key Files</h4>
-    <table style="width:100%;font-size:0.85rem;">
-      <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>components/Mobile/MobileCalendar.tsx</code></td><td>11 nodes</td></tr>
-<tr><td><code>lib/zonedTime.ts</code></td><td>10 nodes</td></tr>
-<tr><td><code>hooks/useCalendarGrid.ts</code></td><td>3 nodes</td></tr>
-<tr><td><code>(product)/components/Calendar.tsx</code></td><td>2 nodes</td></tr>
-<tr><td><code>(product)/sessions/PastSessionsList.tsx</code></td><td>1 nodes</td></tr>
-<tr><td><code>lib/utils.ts</code></td><td>1 nodes</td></tr>
-    </table>
-  </div>
-  <div class="card">
-    <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: calls x27, contains x21, imports x12, imports x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
-  </div>
-</div>
-<hr>
-
-<!-- ====== 15. Community 29 ====== -->
-<h2 id="community-29">15. Community 29</h2>
+<!-- ====== 14. Community 29 ====== -->
+<h2 id="community-29">14. Community 29</h2>
 <p>Community 29 groups implementation around components, session, stats, sharedtsx, mostly in components/session-stats/shared.tsx, hooks/useSessionStats.ts, components/session-stats/dashboard.tsx. This section covers 28 nodes and 50 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
@@ -4644,71 +4301,74 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 16. Other ====== -->
-<h2 id="other">16. Other</h2>
-<p>Other groups implementation around components, app, product, homepage, mostly in CONTRIBUTING.md, components/profile-stats.tsx, constants/calendar.ts. This section covers 574 nodes and 843 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<!-- ====== 15. Community 94 ====== -->
+<h2 id="community-94">15. Community 94</h2>
+<p>Community 94 groups implementation around calendarts, constants, calendardts, types, mostly in constants/calendar.ts, types/calendar.d.ts, lib/sessionColors.ts. This section covers 28 nodes and 40 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Other (574 nodes, 843 edges)
-    subgraph other_middleware_ts_14cbe1e5["middleware.ts"]
-        refocus_middleware_pathisprotected_3458a88d("pathIsProtected()<br/><small>middleware.ts</small>")
-        refocus_middleware_middleware_b0363c54("middleware()<br/><small>middleware.ts</small>")
-        refocus_middleware_hostof_c8d76622("hostOf()<br/><small>middleware.ts</small>")
-        refocus_middleware_originmatcheshost_1f0f740e("originMatchesHost()<br/><small>middleware.ts</small>")
+    %% Section: Community 94 (28 nodes, 40 edges)
+    subgraph community_94_constants_calendar_ts_b5dc5d43["constants/calendar.ts"]
+        constants_calendar_getresolvedsessioncolor_6b7f0e39("getResolvedSessionColor()<br/><small>constants/calendar.ts</small>")
+        constants_calendar_getsessioncolorpresetindex_11a7bc07("getSessionColorPresetIndex()<br/><small>constants/calendar.ts</small>")
+        constants_calendar_sessiontype_69187fc3("SessionType<br/><small>constants/calendar.ts</small>")
+        constants_calendar_sessionstatus_e217f279("SessionStatus<br/><small>constants/calendar.ts</small>")
+        constants_calendar_ts_78275e7e("calendar.ts")
+        constants_calendar_session_color_presets_06abdc22("SESSION_COLOR_PRESETS<br/><small>constants/calendar.ts</small>")
+        constants_calendar_time_config_d3cc170b("TIME_CONFIG<br/><small>constants/calendar.ts</small>")
+        constants_calendar_calendar_layout_878e4c37("CALENDAR_LAYOUT<br/><small>constants/calendar.ts</small>")
     end
-    subgraph other_product_components_CalendarBooking_jsx_f899da40["(product)/components/CalendarBooking.jsx"]
-        components_calendarbooking_minutestotimestring_db935e07("minutesToTimeString()<br/><small>(product)/components/CalendarBooking.jsx</small>")
-        components_calendarbooking_bookingitem_886dce8d("BookingItem()<br/><small>(product)/components/CalendarBooking.jsx</small>")
-        components_calendarbooking_calendarbooking_d99110a9("CalendarBooking()<br/><small>(product)/components/CalendarBooking.jsx</small>")
+    subgraph community_94_lib_sessionColors_ts_deb88adc["lib/sessionColors.ts"]
+        lib_sessioncolors_getstorage_0b6abefa("getStorage()<br/><small>lib/sessionColors.ts</small>")
+        lib_sessioncolors_setstorage_a2eea869("setStorage()<br/><small>lib/sessionColors.ts</small>")
+        lib_sessioncolors_getlocalsessioncolor_14fd1518("getLocalSessionColor()<br/><small>lib/sessionColors.ts</small>")
+        lib_sessioncolors_setlocalsessioncolor_c5820ec5("setLocalSessionColor()<br/><small>lib/sessionColors.ts</small>")
+        lib_sessioncolors_ts_be70c4c3("sessionColors.ts")
     end
-    subgraph other_product_components_Calendar_tsx_a1379bf4["(product)/components/Calendar.tsx"]
-        app_product_components_calendar_tsx_6ef5085e("Calendar.tsx")
-        components_calendar_calendar_d7ad332c("Calendar()<br/><small>(product)/components/Calendar.tsx</small>")
+    subgraph community_94_Calendar_Modals_SessionDetailsModal_a32757b2["Calendar/Modals/SessionDetailsModal.tsx"]
+        app_product_components_calendar_modals_sessionde_c8fa29ef("SessionDetailsModal.tsx")
+        modals_sessiondetailsmodal_sessiondetailsmodal_f77aac49("SessionDetailsModal()<br/><small>Calendar/Modals/SessionDetailsModal.tsx</small>")
     end
-    components_booksessionbutton_booksessionbutton_09e56a8a("BookSessionButton()<br/><small>(product)/components/BookSessionButton.tsx</small>")
-    app_product_components_calendar_modals_sessionde_c8fa29ef("SessionDetailsModal.tsx")
-    app_product_components_calendar_calendareventcar_97060de8("CalendarEventCard.tsx")
-    components_login_form_tsx_42f1402c("login-form.tsx")
-    components_profile_view_tsx_16a1c1c5("profile-view.tsx")
-    components_sign_up_form_tsx_54f0c0b1("sign-up-form.tsx")
-    components_user_timezone_provider_useusertimezon_776d3c59("useUserTimezone()<br/><small>components/user-timezone-provider.tsx</small>")
-    hooks_usecalendargrid_usecalendargrid_a0e247d3("useCalendarGrid()<br/><small>hooks/useCalendarGrid.ts</small>")
-    hooks_usecommunitymoderation_usecommunitymoderat_f6b6fc3f("useCommunityModeration()<br/><small>hooks/useCommunityModeration.ts</small>")
-    refocus_middleware_pathisprotected_3458a88d -->|calls| refocus_middleware_middleware_b0363c54
-    refocus_middleware_hostof_c8d76622 -->|calls| refocus_middleware_originmatcheshost_1f0f740e
-    refocus_middleware_originmatcheshost_1f0f740e -->|calls| refocus_middleware_middleware_b0363c54
-    components_booksessionbutton_booksessionbutton_09e56a8a -->|calls| hooks_usecommunitymoderation_usecommunitymoderat_f6b6fc3f
-    components_calendar_calendar_d7ad332c -->|calls| components_user_timezone_provider_useusertimezon_776d3c59
-    components_calendar_calendar_d7ad332c -->|calls| hooks_usecommunitymoderation_usecommunitymoderat_f6b6fc3f
-    components_calendar_calendar_d7ad332c -->|calls| hooks_usecalendargrid_usecalendargrid_a0e247d3
-    components_calendarbooking_minutestotimestring_db935e07 -->|calls| components_calendarbooking_bookingitem_886dce8d
-    components_calendarbooking_minutestotimestring_db935e07 -->|calls| components_calendarbooking_calendarbooking_d99110a9
-    app_product_components_calendar_tsx_6ef5085e -->|imports| components_user_timezone_provider_useusertimezon_776d3c59
-    app_product_components_calendar_tsx_6ef5085e -->|imports| hooks_usecalendargrid_usecalendargrid_a0e247d3
-    app_product_components_calendar_tsx_6ef5085e -->|imports| hooks_usecommunitymoderation_usecommunitymoderat_f6b6fc3f
-    app_product_components_calendar_tsx_6ef5085e -->|imports| app_product_components_calendar_modals_sessionde_c8fa29ef
-    app_product_components_calendar_tsx_6ef5085e -->|imports| app_product_components_calendar_calendareventcar_97060de8
-    %% Omitted for readability: 556 nodes, 0 edges
-    class refocus_middleware_pathisprotected_3458a88d function;
-    class refocus_middleware_middleware_b0363c54 function;
-    class refocus_middleware_hostof_c8d76622 function;
-    class refocus_middleware_originmatcheshost_1f0f740e function;
-    class components_calendarbooking_minutestotimestring_db935e07 ui;
-    class components_calendarbooking_bookingitem_886dce8d ui;
-    class components_calendarbooking_calendarbooking_d99110a9 ui;
-    class app_product_components_calendar_tsx_6ef5085e ui;
-    class components_calendar_calendar_d7ad332c ui;
-    class components_booksessionbutton_booksessionbutton_09e56a8a ui;
+    calendar_calendareventcard_calendareventcard_fd4be61d("CalendarEventCard()<br/><small>components/Calendar/CalendarEventCard.tsx</small>")
+    lib_localtime_formatlocaltimerange_160df089("formatLocalTimeRange()<br/><small>lib/localTime.ts</small>")
+    types_calendar_d_ts_24f72315("calendar.d.ts")
+    calendar_calendareventcard_calendareventcard_fd4be61d -->|calls| lib_sessioncolors_getlocalsessioncolor_14fd1518
+    calendar_calendareventcard_calendareventcard_fd4be61d -->|calls| constants_calendar_getresolvedsessioncolor_6b7f0e39
+    modals_sessiondetailsmodal_sessiondetailsmodal_f77aac49 -->|calls| constants_calendar_getsessioncolorpresetindex_11a7bc07
+    modals_sessiondetailsmodal_sessiondetailsmodal_f77aac49 -->|calls| lib_localtime_formatlocaltimerange_160df089
+    lib_sessioncolors_getstorage_0b6abefa -->|calls| lib_sessioncolors_getlocalsessioncolor_14fd1518
+    lib_sessioncolors_getstorage_0b6abefa -->|calls| lib_sessioncolors_setlocalsessioncolor_c5820ec5
+    lib_sessioncolors_setstorage_a2eea869 -->|calls| lib_sessioncolors_setlocalsessioncolor_c5820ec5
+    types_calendar_d_ts_24f72315 -->|imports| constants_calendar_sessiontype_69187fc3
+    types_calendar_d_ts_24f72315 -->|imports| constants_calendar_sessionstatus_e217f279
+    app_product_components_calendar_modals_sessionde_c8fa29ef -->|imports| constants_calendar_ts_78275e7e
+    app_product_components_calendar_modals_sessionde_c8fa29ef -->|imports| constants_calendar_session_color_presets_06abdc22
+    app_product_components_calendar_modals_sessionde_c8fa29ef -->|imports| constants_calendar_getsessioncolorpresetindex_11a7bc07
+    app_product_components_calendar_modals_sessionde_c8fa29ef -->|imports| lib_sessioncolors_ts_be70c4c3
+    app_product_components_calendar_modals_sessionde_c8fa29ef -->|imports| lib_sessioncolors_getlocalsessioncolor_14fd1518
+    app_product_components_calendar_modals_sessionde_c8fa29ef -->|imports| lib_sessioncolors_setlocalsessioncolor_c5820ec5
+    app_product_components_calendar_modals_sessionde_c8fa29ef -->|imports| lib_localtime_formatlocaltimerange_160df089
+    app_product_components_calendar_modals_sessionde_c8fa29ef -->|imports| constants_calendar_time_config_d3cc170b
+    %% Omitted for readability: 10 nodes, 0 edges
+    class constants_calendar_getresolvedsessioncolor_6b7f0e39 function;
+    class constants_calendar_getsessioncolorpresetindex_11a7bc07 function;
+    class constants_calendar_sessiontype_69187fc3 klass;
+    class constants_calendar_sessionstatus_e217f279 klass;
+    class constants_calendar_ts_78275e7e module;
+    class constants_calendar_session_color_presets_06abdc22 klass;
+    class constants_calendar_time_config_d3cc170b klass;
+    class constants_calendar_calendar_layout_878e4c37 klass;
+    class lib_sessioncolors_getstorage_0b6abefa function;
+    class lib_sessioncolors_setstorage_a2eea869 function;
+    class lib_sessioncolors_getlocalsessioncolor_14fd1518 function;
+    class lib_sessioncolors_setlocalsessioncolor_c5820ec5 function;
+    class lib_sessioncolors_ts_be70c4c3 module;
     class app_product_components_calendar_modals_sessionde_c8fa29ef ui;
-    class app_product_components_calendar_calendareventcar_97060de8 ui;
-    class components_login_form_tsx_42f1402c ui;
-    class components_profile_view_tsx_16a1c1c5 ui;
-    class components_sign_up_form_tsx_54f0c0b1 ui;
-    class components_user_timezone_provider_useusertimezon_776d3c59 ui;
-    class hooks_usecalendargrid_usecalendargrid_a0e247d3 ui;
-    class hooks_usecommunitymoderation_usecommunitymoderat_f6b6fc3f ui;
+    class modals_sessiondetailsmodal_sessiondetailsmodal_f77aac49 ui;
+    class calendar_calendareventcard_calendareventcard_fd4be61d ui;
+    class lib_localtime_formatlocaltimerange_160df089 function;
+    class types_calendar_d_ts_24f72315 module;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -4735,7 +4395,7 @@ flowchart LR
   <td><code>calendar.d.ts</code><br><small style="color:var(--muted)">types/calendar.d.ts</small></td>
   <td><span class="tag tag-class">Module</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>DurationMin</code><br><small style="color:var(--muted)">constants/calendar.ts</small><br><code>SessionStatus</code><br><small style="color:var(--muted)">constants/calendar.ts</small><br><code>SessionType</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
+  <td><code>SessionStatus</code><br><small style="color:var(--muted)">constants/calendar.ts</small><br><code>SessionType</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
   <td>Module file in types/calendar.d.ts.</td>
 </tr>
 <tr>
@@ -4774,31 +4434,31 @@ flowchart LR
   <td>6</td>
   <td><code>CalendarEventCard()</code><br><small style="color:var(--muted)">components/Calendar/CalendarEventCard.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small></td>
-  <td><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>getLocalSessionColor()</code><br><small style="color:var(--muted)">lib/sessionColors.ts</small><br><code>getResolvedSessionColor()</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>getLocalSessionColor()</code><br><small style="color:var(--muted)">lib/sessionColors.ts</small><br><code>getResolvedSessionColor()</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
   <td>CalendarEventCard() node in components/Calendar/CalendarEventCard.tsx.</td>
 </tr>
 <tr>
   <td>7</td>
   <td><code>SessionDetailsModal.tsx</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small></td>
-  <td><code>calendar.ts</code><br><small style="color:var(--muted)">constants/calendar.ts</small><br><code>formatLocalDate()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalTimeRange()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br>+9 more</td>
+  <td>External entry / no inbound edge</td>
+  <td><code>calendar.ts</code><br><small style="color:var(--muted)">constants/calendar.ts</small><br><code>formatLocalTimeRange()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>getLocalSessionColor()</code><br><small style="color:var(--muted)">lib/sessionColors.ts</small><br>+5 more</td>
   <td>Module file in Calendar/Modals/SessionDetailsModal.tsx.</td>
 </tr>
 <tr>
   <td>8</td>
   <td><code>SessionDetailsModal()</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small></td>
-  <td><code>formatLocalDate()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalTimeRange()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>getSessionColorPresetIndex()</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>formatLocalTimeRange()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>getSessionColorPresetIndex()</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
   <td>SessionDetailsModal() node in Calendar/Modals/SessionDetailsModal.tsx.</td>
 </tr>
 <tr>
   <td>9</td>
   <td><code>calendar.ts</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
   <td><span class="tag tag-class">Module</span></td>
-  <td><code>BookSessionButton.tsx</code><br><small style="color:var(--muted)">(product)/components/BookSessionButton.tsx</small><br><code>Calendar.tsx</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small><br><code>CalendarEventCard.tsx</code><br><small style="color:var(--muted)">components/Calendar/CalendarEventCard.tsx</small><br>+3 more</td>
+  <td><code>SessionDetailsModal.tsx</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small></td>
   <td>No direct outbound edge</td>
   <td>Module file in constants/calendar.ts.</td>
 </tr>
@@ -4806,7 +4466,7 @@ flowchart LR
   <td>10</td>
   <td><code>DEFAULT_DURATION_FILTER</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>DEFAULT_DURATION_FILTER node in constants/calendar.ts.</td>
 </tr>
@@ -4814,7 +4474,7 @@ flowchart LR
   <td>11</td>
   <td><code>CALENDAR_LAYOUT</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>CALENDAR_LAYOUT node in constants/calendar.ts.</td>
 </tr>
@@ -4822,7 +4482,7 @@ flowchart LR
   <td>12</td>
   <td><code>TIME_CONFIG</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small><br><code>SessionDetailsModal.tsx</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small></td>
+  <td><code>SessionDetailsModal.tsx</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small></td>
   <td>No direct outbound edge</td>
   <td>Reads, resolves, or persists project configuration.</td>
 </tr>
@@ -4894,7 +4554,7 @@ flowchart LR
   <td>21</td>
   <td><code>getResolvedSessionColor()</code><br><small style="color:var(--muted)">constants/calendar.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>CalendarEventCard()</code><br><small style="color:var(--muted)">components/Calendar/CalendarEventCard.tsx</small><br><code>CalendarEventCard.tsx</code><br><small style="color:var(--muted)">components/Calendar/CalendarEventCard.tsx</small></td>
+  <td><code>CalendarEventCard()</code><br><small style="color:var(--muted)">components/Calendar/CalendarEventCard.tsx</small></td>
   <td>No direct outbound edge</td>
   <td>getResolvedSessionColor() node in constants/calendar.ts.</td>
 </tr>
@@ -4910,7 +4570,7 @@ flowchart LR
   <td>23</td>
   <td><code>formatLocalTimeRange()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>SessionDetailsModal()</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small><br><code>SessionDetailsModal.tsx</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small></td>
+  <td><code>SessionDetailsModal()</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small><br><code>SessionDetailsModal.tsx</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small></td>
   <td>No direct outbound edge</td>
   <td>formatLocalTimeRange() node in lib/localTime.ts.</td>
 </tr>
@@ -4918,7 +4578,7 @@ flowchart LR
   <td>24</td>
   <td><code>sessionColors.ts</code><br><small style="color:var(--muted)">lib/sessionColors.ts</small></td>
   <td><span class="tag tag-class">Module</span></td>
-  <td><code>CalendarEventCard.tsx</code><br><small style="color:var(--muted)">components/Calendar/CalendarEventCard.tsx</small><br><code>SessionDetailsModal.tsx</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small></td>
+  <td><code>SessionDetailsModal.tsx</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small></td>
   <td>No direct outbound edge</td>
   <td>Module file in lib/sessionColors.ts.</td>
 </tr>
@@ -4942,7 +4602,7 @@ flowchart LR
   <td>27</td>
   <td><code>getLocalSessionColor()</code><br><small style="color:var(--muted)">lib/sessionColors.ts</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>CalendarEventCard()</code><br><small style="color:var(--muted)">components/Calendar/CalendarEventCard.tsx</small><br><code>CalendarEventCard.tsx</code><br><small style="color:var(--muted)">components/Calendar/CalendarEventCard.tsx</small><br><code>getStorage()</code><br><small style="color:var(--muted)">lib/sessionColors.ts</small><br>+1 more</td>
+  <td><code>CalendarEventCard()</code><br><small style="color:var(--muted)">components/Calendar/CalendarEventCard.tsx</small><br><code>getStorage()</code><br><small style="color:var(--muted)">lib/sessionColors.ts</small><br><code>SessionDetailsModal.tsx</code><br><small style="color:var(--muted)">Calendar/Modals/SessionDetailsModal.tsx</small></td>
   <td>No direct outbound edge</td>
   <td>getLocalSessionColor() node in lib/sessionColors.ts.</td>
 </tr>
@@ -4954,21 +4614,365 @@ flowchart LR
   <td>No direct outbound edge</td>
   <td>setLocalSessionColor() node in lib/sessionColors.ts.</td>
 </tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>constants/calendar.ts</code></td><td>14 nodes</td></tr>
+<tr><td><code>lib/sessionColors.ts</code></td><td>5 nodes</td></tr>
+<tr><td><code>types/calendar.d.ts</code></td><td>5 nodes</td></tr>
+<tr><td><code>Calendar/Modals/SessionDetailsModal.tsx</code></td><td>2 nodes</td></tr>
+<tr><td><code>components/Calendar/CalendarEventCard.tsx</code></td><td>1 nodes</td></tr>
+<tr><td><code>lib/localTime.ts</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x22, imports x8, calls x7, imports x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 16. Other ====== -->
+<h2 id="other">16. Other</h2>
+<p>Other groups implementation around components, app, product, homepage, mostly in CONTRIBUTING.md, components/profile-stats.tsx, sessions/[id]/ClientCall.tsx. This section covers 577 nodes and 894 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Other (577 nodes, 894 edges)
+    subgraph other_middleware_ts_14cbe1e5["middleware.ts"]
+        refocus_middleware_pathisprotected_3458a88d("pathIsProtected()<br/><small>middleware.ts</small>")
+        refocus_middleware_middleware_b0363c54("middleware()<br/><small>middleware.ts</small>")
+        refocus_middleware_hostof_c8d76622("hostOf()<br/><small>middleware.ts</small>")
+        refocus_middleware_originmatcheshost_1f0f740e("originMatchesHost()<br/><small>middleware.ts</small>")
+    end
+    subgraph other_product_components_Calendar_tsx_a1379bf4["(product)/components/Calendar.tsx"]
+        app_product_components_calendar_tsx_6ef5085e("Calendar.tsx")
+        components_calendar_uireducer_5067852c("uiReducer()<br/><small>(product)/components/Calendar.tsx</small>")
+        components_calendar_createinitialstate_1f8e744f("createInitialState()<br/><small>(product)/components/Calendar.tsx</small>")
+    end
+    subgraph other_lib_utils_ts_7592ec0d["lib/utils.ts"]
+        lib_utils_startofday_d0fd9972("startOfDay()<br/><small>lib/utils.ts</small>")
+        lib_utils_adddays_6850f28f("addDays()<br/><small>lib/utils.ts</small>")
+    end
+    subgraph other_lib_zonedTime_ts_43bdb700["lib/zonedTime.ts"]
+        lib_zonedtime_adddaysintimezone_dada79af("addDaysInTimeZone()<br/><small>lib/zonedTime.ts</small>")
+        lib_zonedtime_startofdayintimezone_5c1287a5("startOfDayInTimeZone()<br/><small>lib/zonedTime.ts</small>")
+    end
+    components_booksessionbutton_booksessionbutton_09e56a8a("BookSessionButton()<br/><small>(product)/components/BookSessionButton.tsx</small>")
+    app_product_components_mobile_mobilecalendar_tsx_09dcd4a2("MobileCalendar.tsx")
+    components_login_form_tsx_42f1402c("login-form.tsx")
+    components_profile_view_tsx_16a1c1c5("profile-view.tsx")
+    components_sign_up_form_tsx_54f0c0b1("sign-up-form.tsx")
+    hooks_usecalendargrid_ts_c5f81001("useCalendarGrid.ts")
+    hooks_usecommunitymoderation_usecommunitymoderat_f6b6fc3f("useCommunityModeration()<br/><small>hooks/useCommunityModeration.ts</small>")
+    refocus_middleware_pathisprotected_3458a88d -->|calls| refocus_middleware_middleware_b0363c54
+    refocus_middleware_hostof_c8d76622 -->|calls| refocus_middleware_originmatcheshost_1f0f740e
+    refocus_middleware_originmatcheshost_1f0f740e -->|calls| refocus_middleware_middleware_b0363c54
+    components_booksessionbutton_booksessionbutton_09e56a8a -->|calls| hooks_usecommunitymoderation_usecommunitymoderat_f6b6fc3f
+    components_calendar_uireducer_5067852c -->|calls| lib_zonedtime_adddaysintimezone_dada79af
+    components_calendar_uireducer_5067852c -->|calls| lib_zonedtime_startofdayintimezone_5c1287a5
+    components_calendar_uireducer_5067852c -->|calls| lib_utils_startofday_d0fd9972
+    components_calendar_uireducer_5067852c -->|calls| lib_utils_adddays_6850f28f
+    components_calendar_createinitialstate_1f8e744f -->|calls| lib_zonedtime_startofdayintimezone_5c1287a5
+    components_calendar_createinitialstate_1f8e744f -->|calls| lib_utils_startofday_d0fd9972
+    lib_zonedtime_startofdayintimezone_5c1287a5 -->|calls| lib_zonedtime_adddaysintimezone_dada79af
+    app_product_components_calendar_tsx_6ef5085e -->|imports| lib_zonedtime_adddaysintimezone_dada79af
+    app_product_components_calendar_tsx_6ef5085e -->|imports| lib_zonedtime_startofdayintimezone_5c1287a5
+    app_product_components_calendar_tsx_6ef5085e -->|imports| hooks_usecalendargrid_ts_c5f81001
+    app_product_components_calendar_tsx_6ef5085e -->|imports| hooks_usecommunitymoderation_usecommunitymoderat_f6b6fc3f
+    app_product_components_calendar_tsx_6ef5085e -->|imports| lib_utils_startofday_d0fd9972
+    app_product_components_calendar_tsx_6ef5085e -->|imports| lib_utils_adddays_6850f28f
+    app_product_components_mobile_mobilecalendar_tsx_09dcd4a2 -->|imports| lib_zonedtime_adddaysintimezone_dada79af
+    app_product_components_mobile_mobilecalendar_tsx_09dcd4a2 -->|imports| lib_zonedtime_startofdayintimezone_5c1287a5
+    app_product_components_mobile_mobilecalendar_tsx_09dcd4a2 -->|imports| hooks_usecommunitymoderation_usecommunitymoderat_f6b6fc3f
+    app_product_components_mobile_mobilecalendar_tsx_09dcd4a2 -->|imports| lib_utils_startofday_d0fd9972
+    app_product_components_mobile_mobilecalendar_tsx_09dcd4a2 -->|imports| lib_utils_adddays_6850f28f
+    hooks_usecalendargrid_ts_c5f81001 -->|imports| lib_zonedtime_adddaysintimezone_dada79af
+    hooks_usecalendargrid_ts_c5f81001 -->|imports| lib_zonedtime_startofdayintimezone_5c1287a5
+    %% Omitted for readability: 559 nodes, 2 edges
+    class refocus_middleware_pathisprotected_3458a88d function;
+    class refocus_middleware_middleware_b0363c54 function;
+    class refocus_middleware_hostof_c8d76622 function;
+    class refocus_middleware_originmatcheshost_1f0f740e function;
+    class app_product_components_calendar_tsx_6ef5085e ui;
+    class components_calendar_uireducer_5067852c ui;
+    class components_calendar_createinitialstate_1f8e744f ui;
+    class lib_utils_startofday_d0fd9972 function;
+    class lib_utils_adddays_6850f28f function;
+    class lib_zonedtime_adddaysintimezone_dada79af function;
+    class lib_zonedtime_startofdayintimezone_5c1287a5 function;
+    class components_booksessionbutton_booksessionbutton_09e56a8a ui;
+    class app_product_components_mobile_mobilecalendar_tsx_09dcd4a2 ui;
+    class components_login_form_tsx_42f1402c ui;
+    class components_profile_view_tsx_16a1c1c5 ui;
+    class components_sign_up_form_tsx_54f0c0b1 ui;
+    class hooks_usecalendargrid_ts_c5f81001 ui;
+    class hooks_usecommunitymoderation_usecommunitymoderat_f6b6fc3f ui;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
 <tr>
-  <td>29</td>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
   <td><code>BookingModal()</code><br><small style="color:var(--muted)">Calendar/Modals/BookingModal.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>Calendar.tsx</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small></td>
-  <td><code>formatLocalDateTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td><code>formatLocalDateTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>MobileCalendar.tsx</code><br><small style="color:var(--muted)">components/Mobile/MobileCalendar.tsx</small></td>
   <td>BookingModal() node in Calendar/Modals/BookingModal.tsx.</td>
 </tr>
 <tr>
-  <td>30</td>
+  <td>2</td>
   <td><code>PastSessionsList.tsx</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td>External entry / no inbound edge</td>
   <td><code>formatLocalDate()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>localTime.ts</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
   <td>Module file in (product)/sessions/PastSessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>PastParticipant</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>PastParticipant node in (product)/sessions/PastSessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>PastSessionsListProps</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>PastSessionsListProps node in (product)/sessions/PastSessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>getParticipantName()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>getParticipantName() node in (product)/sessions/PastSessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>getInitials()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>getInitials() node in (product)/sessions/PastSessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>formatTime()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>SessionCountdown()</code><br><small style="color:var(--muted)">sessions/[id]/SessionCountdown.tsx</small></td>
+  <td>formatTime() node in (product)/sessions/PastSessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>formatTotalMinutes()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>StatsRow()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td>formatTotalMinutes() node in (product)/sessions/PastSessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>StatsRow()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>formatTotalMinutes()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>StatsRow() node in (product)/sessions/PastSessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>StatCard()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>StatCard() node in (product)/sessions/PastSessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>AttendanceBadge()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>AttendanceBadge() node in (product)/sessions/PastSessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>formatDateTime()</code><br><small style="color:var(--muted)">(product)/sessions/SessionsList.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>formatLocalDate()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td>formatDateTime() node in (product)/sessions/SessionsList.tsx.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>SessionCountdown.tsx</code><br><small style="color:var(--muted)">sessions/[id]/SessionCountdown.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>formatLocalDateTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>localTime.ts</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td>Module file in sessions/[id]/SessionCountdown.tsx.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>SessionCountdownProps</code><br><small style="color:var(--muted)">sessions/[id]/SessionCountdown.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>SessionCountdownProps node in sessions/[id]/SessionCountdown.tsx.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>SessionCountdown()</code><br><small style="color:var(--muted)">sessions/[id]/SessionCountdown.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>formatTime()</code><br><small style="color:var(--muted)">(product)/sessions/PastSessionsList.tsx</small></td>
+  <td><code>formatLocalDateTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td>SessionCountdown() node in sessions/[id]/SessionCountdown.tsx.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>local-datetime.tsx</code><br><small style="color:var(--muted)">components/local-datetime.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>formatLocalDate()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalDateTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br>+1 more</td>
+  <td>Module file in components/local-datetime.tsx.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>Props</code><br><small style="color:var(--muted)">components/local-datetime.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Props node in components/local-datetime.tsx.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>LocalDateTime()</code><br><small style="color:var(--muted)">components/local-datetime.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>LocalDateTime() node in components/local-datetime.tsx.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>formatRecentTime()</code><br><small style="color:var(--muted)">components/session-stats/shared.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>formatLocalDate()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>startOfDay()</code><br><small style="color:var(--muted)">lib/utils.ts</small></td>
+  <td>formatRecentTime() node in components/session-stats/shared.tsx.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>resolveLocale()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>formatLocalDate()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalDateTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td>resolveLocale() node in lib/localTime.ts.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>withZone()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>formatLocalDate()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalDateTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td>withZone() node in lib/localTime.ts.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>CalendarEventCard.tsx</code><br><small style="color:var(--muted)">components/Calendar/CalendarEventCard.tsx</small><br><code>formatDateTime()</code><br><small style="color:var(--muted)">(product)/sessions/SessionsList.tsx</small><br><code>formatRecentTime()</code><br><small style="color:var(--muted)">components/session-stats/shared.tsx</small><br>+7 more</td>
+  <td><code>formatRecentTime()</code><br><small style="color:var(--muted)">components/profile-stats.tsx</small></td>
+  <td>formatLocalTime() node in lib/localTime.ts.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>formatLocalDate()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>CalendarHeader()</code><br><small style="color:var(--muted)">components/Calendar/CalendarHeader.tsx</small><br><code>CalendarHeader.tsx</code><br><small style="color:var(--muted)">components/Calendar/CalendarHeader.tsx</small><br><code>formatDateTime()</code><br><small style="color:var(--muted)">(product)/sessions/SessionsList.tsx</small><br>+7 more</td>
+  <td><code>formatRecentTime()</code><br><small style="color:var(--muted)">components/profile-stats.tsx</small></td>
+  <td>formatLocalDate() node in lib/localTime.ts.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>formatLocalDateTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>BookingModal()</code><br><small style="color:var(--muted)">Calendar/Modals/BookingModal.tsx</small><br><code>BookingModal.tsx</code><br><small style="color:var(--muted)">Calendar/Modals/BookingModal.tsx</small><br><code>Calendar.tsx</code><br><small style="color:var(--muted)">(product)/components/Calendar.tsx</small><br>+7 more</td>
+  <td>No direct outbound edge</td>
+  <td>formatLocalDateTime() node in lib/localTime.ts.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>formatRecentTime()</code><br><small style="color:var(--muted)">components/profile-stats.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>formatLocalDate()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>formatLocalTime()</code><br><small style="color:var(--muted)">lib/localTime.ts</small><br><code>startOfDay()</code><br><small style="color:var(--muted)">lib/utils.ts</small></td>
+  <td>No direct outbound edge</td>
+  <td>formatRecentTime() node in components/profile-stats.tsx.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>Navbar.tsx</code><br><small style="color:var(--muted)">src/components/Navbar.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Career.tsx</code><br><small style="color:var(--muted)">src/components/Career.tsx</small><br><code>config.ts</code><br><small style="color:var(--muted)">src/lib/config.ts</small><br><code>Homepage.tsx</code><br><small style="color:var(--muted)">components/homepage/Homepage.tsx</small><br>+1 more</td>
+  <td>Module file in src/components/Navbar.tsx.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>cn()</code><br><small style="color:var(--muted)">src/components/Navbar.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Navbar()</code><br><small style="color:var(--muted)">src/components/Navbar.tsx</small></td>
+  <td>cn() node in src/components/Navbar.tsx.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>MenuIcon()</code><br><small style="color:var(--muted)">src/components/Navbar.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>MenuIcon() node in src/components/Navbar.tsx.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>CloseIcon()</code><br><small style="color:var(--muted)">src/components/Navbar.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>CloseIcon() node in src/components/Navbar.tsx.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>AuthButtons()</code><br><small style="color:var(--muted)">src/components/Navbar.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>url()</code><br><small style="color:var(--muted)">src/lib/config.ts</small></td>
+  <td>AuthButtons() node in src/components/Navbar.tsx.</td>
 </tr>
 </table>
 
@@ -4979,17 +4983,17 @@ flowchart LR
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>CONTRIBUTING.md</code></td><td>31 nodes</td></tr>
 <tr><td><code>components/profile-stats.tsx</code></td><td>18 nodes</td></tr>
-<tr><td><code>constants/calendar.ts</code></td><td>16 nodes</td></tr>
 <tr><td><code>sessions/[id]/ClientCall.tsx</code></td><td>14 nodes</td></tr>
+<tr><td><code>components/Mobile/MobileCalendar.tsx</code></td><td>13 nodes</td></tr>
 <tr><td><code>components/homepage/Modes.tsx</code></td><td>13 nodes</td></tr>
-<tr><td><code>lib/localTime.ts</code></td><td>11 nodes</td></tr>
-<tr><td><code>(product)/sessions/PastSessionsList.tsx</code></td><td>10 nodes</td></tr>
-<tr><td><code>components/design/Button.tsx</code></td><td>10 nodes</td></tr>
+<tr><td><code>(product)/components/Calendar.tsx</code></td><td>11 nodes</td></tr>
+<tr><td><code>(product)/sessions/PastSessionsList.tsx</code></td><td>11 nodes</td></tr>
+<tr><td><code>lib/zonedTime.ts</code></td><td>11 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x443, imports x165, calls x116, imports x106. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x446, imports x181, calls x142, imports x109. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -5019,7 +5023,7 @@ flowchart LR
 
 <div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
   <p>refocus — Architecture Documentation</p>
-  <p>Generated: 2026-08-07 21:22 UTC · graphify callflow-html</p>
+  <p>Generated: 2026-08-07 22:12 UTC · graphify callflow-html</p>
 </div>
 
 </div><!-- .container -->

@@ -47,6 +47,7 @@ function AuthButtons({
 const navItems = [
   { name: "Sessions", link: "/#sessions" },
   { name: "How it works", link: "/#how" },
+  { name: "Blog", link: "/blog" },
   { name: "FAQ", link: "/#faq" },
   { name: "Careers", link: "/career" },
 ];

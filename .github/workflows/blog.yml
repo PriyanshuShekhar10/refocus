@@ -1,0 +1,62 @@
+name: Auto-generate blog post
+
+# Publishes a new Refocus blog post on a schedule (and on demand). The script
+# writes a Markdown file under marketing/src/content/blog and this workflow
+# commits + pushes it. If Cloudflare Pages is connected to this repo, the push
+# triggers a rebuild and the post goes live automatically.
+
+on:
+  schedule:
+    # Every 12 hours (00:00 and 12:00 UTC). Cron on GitHub uses UTC.
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "Optional topic/angle for the post (blank = auto-pick)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-generate
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: marketing/package-lock.json
+
+      - name: Install marketing dependencies
+        working-directory: marketing
+        run: npm ci
+
+      - name: Generate post
+        working-directory: marketing
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+          POST_TOPIC: ${{ github.event.inputs.topic }}
+        run: node scripts/generate-post.mjs
+
+      - name: Commit & push new post
+        run: |
+          git config user.name "refocus-blog-bot"
+          git config user.email "bot@refocus.co.in"
+          if [ -n "$(git status --porcelain marketing/src/content/blog)" ]; then
+            git add marketing/src/content/blog
+            git commit -m "blog: auto-generated post ($(date -u +%Y-%m-%d))"
+            git push
+          else
+            echo "No new post to commit."
+          fi

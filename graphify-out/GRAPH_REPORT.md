@@ -1,7 +1,7 @@
 # Graph Report - refocus  (2026-08-08)
 
 ## Corpus Check
-- 357 files · ~144,586 words
+- 357 files · ~144,631 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `27f7cc43`
+- Built from commit: `c40f03fa`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -156,8 +156,8 @@ Cohesion: 0.17
 Nodes (12): CalendarSidebarProps, DurationSelectorBaseProps, DurationSelectorProps, MultiSelectProps, SingleSelectProps, VARIANT_STYLES, UIState, DurationMin (+4 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.12
-Nodes (19): useCalendarSessions(), UseCalendarSessionsOptions, UseCalendarSessionsReturn, addDays(), addMinutes(), clamp(), formatHour(), minutesBetween() (+11 more)
+Cohesion: 0.13
+Nodes (16): UseCalendarSessionsOptions, UseCalendarSessionsReturn, addMinutes(), clamp(), formatHour(), minutesBetween(), pad(), a (+8 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.14
@@ -185,15 +185,15 @@ Nodes (14): siteUrl, siteUrl, emailAssetBaseUrl(), emailBrand, getEmailLogoDataU
 
 ### Community 8 - "Community 8"
 Cohesion: 0.16
-Nodes (14): BookSessionButton(), CreatedSession, Props, Calendar(), CalendarProps, ModalState, ProcessedEvent, SidebarProfilePreview (+6 more)
+Nodes (16): BookSessionButton(), CreatedSession, Props, Calendar(), CalendarProps, ModalState, ProcessedEvent, SidebarProfilePreview (+8 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.06
 Nodes (34): dependencies, ably, ai, @ai-sdk/google, @ai-sdk/openai, @auth/mongodb-adapter, bcryptjs, child_process (+26 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.17
-Nodes (24): createInitialState(), uiReducer(), HoverState, UseCalendarGridReturn, startOfDay(), addDaysInTimeZone(), getTimeZoneOffsetMs(), getZonedParts() (+16 more)
+Cohesion: 0.23
+Nodes (18): createInitialState(), uiReducer(), HoverState, UseCalendarGridReturn, addDays(), startOfDay(), addDaysInTimeZone(), getTimeZoneOffsetMs() (+10 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.23
@@ -288,8 +288,8 @@ Cohesion: 0.15
 Nodes (12): AuthLoadingOverlay(), AuthLoadingOverlayProps, DetailsForm(), AuthDivider(), LoginForm(), DInput, DInputProps, DPasswordInput (+4 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.22
-Nodes (14): CalendarHeader(), CalendarHeaderProps, VIEW_OPTIONS, ViewDays, applyPreference(), resolveEffective(), TimezoneContext, TimezoneContextValue (+6 more)
+Cohesion: 0.21
+Nodes (13): CalendarHeader(), CalendarHeaderProps, VIEW_OPTIONS, ViewDays, applyPreference(), resolveEffective(), TimezoneContext, TimezoneContextValue (+5 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.21
@@ -540,8 +540,8 @@ Cohesion: 0.38
 Nodes (5): SESSION_REMINDER_TIMINGS, SessionReminderTiming, DEFAULTS, GET(), Prefs
 
 ### Community 120 - "Community 120"
-Cohesion: 0.38
-Nodes (4): ConfirmModal(), ConfirmModalProps, ModalWrapper(), ModalWrapperProps
+Cohesion: 0.17
+Nodes (12): formatBookTime(), getDefaultBookTime(), ModalState, normalizeBookTime(), ProcessedEvent, snapBookTimeMinutes(), UIAction, ConfirmModal() (+4 more)
 
 ### Community 121 - "Community 121"
 Cohesion: 0.29
@@ -557,14 +557,14 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `getDb()` connect `Community 70` to `Community 2`, `Community 99`, `Community 58`, `Community 101`, `Community 6`, `Community 43`, `Community 11`, `Community 110`, `Community 15`, `Community 111`, `Community 19`, `Community 20`, `Community 21`, `Community 22`, `Community 119`, `Community 26`, `Community 27`?**
   _High betweenness centrality (0.117) - this node is a cross-community bridge._
-- **Why does `DurationMin` connect `Community 0` to `Community 1`, `Community 2`, `Community 6`, `Community 8`, `Community 10`, `Community 21`, `Community 25`, `Community 26`, `Community 94`?**
+- **Why does `DurationMin` connect `Community 0` to `Community 1`, `Community 2`, `Community 6`, `Community 8`, `Community 10`, `Community 21`, `Community 120`, `Community 25`, `Community 26`, `Community 94`?**
   _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **Why does `authOptions` connect `Community 99` to `Community 33`, `Community 2`, `Community 6`, `Community 70`, `Community 43`, `Community 11`, `Community 15`, `Community 19`, `Community 20`, `Community 21`, `Community 119`, `Community 26`, `Community 62`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **What connects `MUTATING_METHODS`, `PROTECTED_PREFIXES`, `config` to the rest of the system?**
   _634 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.12307692307692308 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.12648221343873517 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.13903743315508021 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**

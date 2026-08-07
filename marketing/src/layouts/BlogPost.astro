@@ -1,0 +1,97 @@
+---
+import Base from "./Base.astro";
+import Navbar from "../components/Navbar";
+import { APP_URL } from "../lib/config";
+import "../styles/blog.css";
+
+export interface Props {
+  title: string;
+  description: string;
+  canonical: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  tags?: string[];
+  author?: string;
+  minutes?: number;
+  jsonLd?: unknown[];
+}
+
+const {
+  title,
+  description,
+  canonical,
+  pubDate,
+  updatedDate,
+  tags = [],
+  author = "Refocus Team",
+  minutes = 5,
+  jsonLd = [],
+} = Astro.props;
+
+const fmtDate = (d: Date) =>
+  new Date(d).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+const isoDate = new Date(pubDate).toISOString();
+---
+
+<Base
+  title={`${title} — Refocus`}
+  description={description}
+  canonical={canonical}
+  ogTitle={title}
+  ogDescription={description}
+  ogType="article"
+  jsonLd={jsonLd}
+>
+  <div class="blog">
+    <Navbar client:load />
+
+    <article class="blog-article">
+      <header class="blog-header">
+        <a class="blog-back" href="/blog">&larr; All posts</a>
+        <h1>{title}</h1>
+        <p class="blog-meta">
+          <time datetime={isoDate}>{fmtDate(pubDate)}</time>
+          &middot; {minutes} min read &middot; {author}
+        </p>
+        {
+          tags.length > 0 && (
+            <ul class="blog-tags">
+              {tags.map((t) => (
+                <li>#{t}</li>
+              ))}
+            </ul>
+          )
+        }
+      </header>
+
+      <hr class="blog-divider" />
+
+      <div class="blog-prose">
+        <slot />
+      </div>
+
+      <aside class="blog-cta">
+        <h3>Try focusing with someone else in the room</h3>
+        <p>
+          Refocus is a virtual co-working room for deep work. Pick a 25, 50, or
+          75 minute session and get the thing done &mdash; alone, with a friend,
+          or with someone new.
+        </p>
+        <a class="blog-cta-btn" href={`${APP_URL}/auth/sign-up`}>
+          Start a free session &rarr;
+        </a>
+      </aside>
+    </article>
+
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href="/">Home</a>
+      <a href="/blog">Blog</a>
+      <a href="/career">Careers</a>
+    </footer>
+  </div>
+</Base>
