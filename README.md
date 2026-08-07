@@ -8,8 +8,8 @@ Refocus is split across **two branches**, **two hosts**, and **two deploy target
 
 | What | Branch | Host | Platform |
 | --- | --- | --- | --- |
-| Marketing site + blog (Astro) | `landing` | [refocus.co.in](https://refocus.co.in) | Cloudflare Pages |
-| Product app (Next.js) | `test-dash` (default) | [dashboard.refocus.co.in](https://dashboard.refocus.co.in) | Vercel |
+| Marketing site + blog (Astro) | `landing` (**default**) | [refocus.co.in](https://refocus.co.in) | Cloudflare Pages |
+| Product app (Next.js) | `test-dash` | [dashboard.refocus.co.in](https://dashboard.refocus.co.in) | Vercel |
 
 ```
 refocus.co.in          →  Astro (marketing/, branch: landing)     →  Cloudflare Pages
@@ -20,7 +20,7 @@ dashboard.refocus.co.in →  Next.js app (branch: test-dash)         →  Vercel
 
 ### Why two branches?
 
-The blog auto-publishes **hourly**. Those commits must not touch `test-dash`, or Vercel would redeploy the dashboard every hour. Marketing lives only on `landing`; the dashboard branch has **no** `marketing/` folder.
+The blog auto-publishes **hourly**. Those commits go to `landing` (the default branch) so GitHub does not nag you with a “Compare & pull request” banner, and so they never touch `test-dash` (which would redeploy the dashboard on Vercel every hour). The dashboard branch has **no** `marketing/` folder.
 
 ### Shared auth
 
@@ -34,8 +34,8 @@ Login/signup live on the dashboard host. The session cookie is scoped to `.refoc
 | Landing page, careers, blog, SEO | `landing` |
 
 ```bash
-git checkout test-dash   # this repo clone on the default branch
-git checkout landing     # marketing site + blog content
+git checkout landing     # marketing site + blog (default branch)
+git checkout test-dash   # dashboard / product app
 ```
 
 ---
@@ -56,7 +56,7 @@ Marketing (on `landing`): Astro static site, React islands, SEO blog with OpenAI
 
 ## Getting started — dashboard (`test-dash`)
 
-1. Ensure you are on the dashboard branch:
+1. Check out the dashboard branch:
 
 ```bash
 git checkout test-dash
@@ -149,7 +149,7 @@ Optional repo variable: `OPENAI_MODEL` (defaults to `gpt-4o-mini`).
 | Hourly cron (`Auto-generate blog post`) | Generates a post on `landing`, builds, deploys to Cloudflare — **does not** push to `test-dash` |
 | Manual: Actions → “Auto-generate blog post” → Run workflow | Same as cron; optional topic input |
 
-The blog workflow file lives on the **default branch** (`test-dash`) because GitHub only schedules from the default branch. The job always **checks out and pushes to `landing`**.
+The blog workflow runs from the **default branch** (`landing`). It commits and deploys marketing only — never the dashboard.
 
 Workflow files:
 

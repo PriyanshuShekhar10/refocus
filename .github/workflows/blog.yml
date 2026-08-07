@@ -4,8 +4,8 @@ name: Auto-generate blog post
 # on the `landing` branch only — never on `test-dash` — so the hourly blog
 # does not trigger Vercel dashboard deploys.
 #
-# This file lives on the default branch (`test-dash`) so GitHub's schedule
-# can run it. The job always checks out and pushes to `landing`.
+# `landing` is the repo default branch, so GitHub schedules this workflow from
+# here and the hourly pushes do not show a “Compare & pull request” banner.
 
 on:
   schedule:
