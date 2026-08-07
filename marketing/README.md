@@ -64,14 +64,14 @@ The script is designed to write a useful article and mention Refocus **once in t
 
 ### Hourly automation
 
-GitHub Action **“Auto-generate blog post”** (`.github/workflows/blog.yml` on the default branch):
+GitHub Action **“Auto-generate blog post”** (`.github/workflows/blog.yml`):
 
-1. Checks out `landing`
+1. Checks out `landing` (repo default)
 2. Runs the generator
 3. Commits the new Markdown to `landing`
 4. Builds Astro and deploys to Cloudflare Pages
 
-It does **not** push to `test-dash`, so Vercel is unaffected.
+It does **not** push to `test-dash`, so Vercel is unaffected. Because `landing` is the default branch, hourly pushes also do not show GitHub’s “Compare & pull request” banner.
 
 Manual run: GitHub → Actions → Auto-generate blog post → Run workflow.
 
