@@ -1,0 +1,21 @@
+name: "Blog: Productivity"
+
+# Generic / productivity niche — hourly at :00 UTC.
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-niche-productivity
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      category: productivity
+    secrets: inherit

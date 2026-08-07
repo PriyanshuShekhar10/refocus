@@ -1,0 +1,21 @@
+name: "Blog: Loneliness & studying alone"
+
+# Loneliness / quiet co-presence niche — hourly at :36 UTC (staggered).
+on:
+  schedule:
+    - cron: "36 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-niche-loneliness
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      category: loneliness
+    secrets: inherit
