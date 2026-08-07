@@ -1,0 +1,21 @@
+name: "Blog: ADHD & mental health"
+
+# ADHD / mental health niche — hourly at :12 UTC (staggered).
+on:
+  schedule:
+    - cron: "12 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-niche-adhd
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      category: adhd
+    secrets: inherit

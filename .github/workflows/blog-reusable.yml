@@ -1,30 +1,19 @@
-name: Auto-generate blog post
+name: Blog niche (reusable)
 
-# Publishes a new Refocus blog post on a schedule (and on demand). Commits land
-# on the `landing` branch only — never on `test-dash` — so the hourly blog
-# does not trigger Vercel dashboard deploys.
-#
-# Note: GitHub runs scheduled workflows from the *default* branch. The copy of
-# this file on `test-dash` (default) is what the cron uses; it checks out
-# `landing` and pushes there. This copy on `landing` supports manual runs.
+# Called by per-niche hourly workflows. Checks out `landing`, generates one
+# post for the given category, commits, builds, and deploys to Cloudflare.
+# Posts are usefulness/SEO-first (outbound links); Refocus is optional & soft.
 
 on:
-  schedule:
-    # Every hour at :00 UTC. Cron on GitHub uses UTC.
-    - cron: "0 * * * *"
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      topic:
-        description: "Optional topic/angle for the post (blank = auto-pick)"
-        required: false
-        default: ""
+      category:
+        description: "productivity | adhd | exams | loneliness | remote"
+        required: true
+        type: string
 
 permissions:
   contents: write
-
-concurrency:
-  group: blog-generate
-  cancel-in-progress: false
 
 jobs:
   generate:
@@ -34,6 +23,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: landing
+          # Need a token that can push; default GITHUB_TOKEN is fine for same repo.
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -46,22 +37,29 @@ jobs:
         working-directory: marketing
         run: npm ci
 
-      - name: Generate post
+      - name: Generate ${{ inputs.category }} post
         working-directory: marketing
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
-          POST_TOPIC: ${{ github.event.inputs.topic }}
-        run: node scripts/generate-post.mjs
+          POST_CATEGORY: ${{ inputs.category }}
+        run: node scripts/generate-post.mjs --category "${{ inputs.category }}"
 
-      - name: Commit & push new post to landing
+      - name: Commit & push to landing
         run: |
           git config user.name "refocus-blog-bot"
           git config user.email "bot@refocus.co.in"
+          # Rebase if another niche pushed while we were generating
+          git pull --rebase origin landing || true
           if [ -n "$(git status --porcelain marketing/src/content/blog)" ]; then
             git add marketing/src/content/blog
-            git commit -m "blog: auto-generated post ($(date -u +%Y-%m-%d))"
-            git push origin HEAD:landing
+            git commit -m "blog(${{ inputs.category }}): auto-generated post ($(date -u +%Y-%m-%d))"
+            for i in 1 2 3; do
+              git push origin HEAD:landing && break
+              echo "Push conflict — rebase and retry ($i)"
+              git pull --rebase origin landing
+              sleep 5
+            done
           else
             echo "No new post to commit."
           fi

@@ -1,0 +1,21 @@
+name: "Blog: Remote work & freelancing"
+
+# Remote / freelance niche — hourly at :48 UTC (staggered).
+on:
+  schedule:
+    - cron: "48 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-niche-remote
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      category: remote
+    secrets: inherit

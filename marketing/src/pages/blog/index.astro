@@ -4,6 +4,14 @@ import Navbar from "../../components/Navbar";
 import { getCollection } from "astro:content";
 import "../../styles/blog.css";
 
+const CATEGORY_LABELS = {
+  productivity: "Productivity",
+  adhd: "ADHD & mental health",
+  exams: "Competitive exams",
+  loneliness: "Loneliness & studying alone",
+  remote: "Remote work",
+};
+
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
   (a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate),
 );
@@ -11,7 +19,7 @@ const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
 const site = "https://refocus.co.in";
 const title = "Blog — Refocus";
 const description =
-  "Practical notes on deep work, focus, body doubling, and virtual co-working — how to actually start, stay on task, and finish.";
+  "Practical notes on deep work, ADHD-friendly focus, competitive exam prep, studying alone, and remote work — with links to real resources.";
 
 const fmt = (d: Date) =>
   new Date(d).toLocaleDateString("en-US", {
@@ -19,6 +27,10 @@ const fmt = (d: Date) =>
     month: "long",
     day: "numeric",
   });
+
+const categoryLabel = (id?: string) =>
+  (id && CATEGORY_LABELS[id as keyof typeof CATEGORY_LABELS]) ||
+  CATEGORY_LABELS.productivity;
 
 const blogJsonLd = {
   "@context": "https://schema.org",
@@ -43,7 +55,7 @@ const blogJsonLd = {
     <section class="blog-index">
       <header class="blog-index-head">
         <p class="blog-eyebrow">The Refocus Blog</p>
-        <h1>Notes on focus, deep work &amp; co-working</h1>
+        <h1>Notes on focus, exams, ADHD &amp; co-working</h1>
         <p class="blog-lede">{description}</p>
       </header>
 
@@ -57,7 +69,8 @@ const blogJsonLd = {
                 <a href={`/blog/${post.id}`}>
                   <p class="blog-card-meta">
                     {fmt(post.data.pubDate)}
-                    {post.data.tags?.[0] ? ` · ${post.data.tags[0]}` : ""}
+                    {" · "}
+                    {categoryLabel(post.data.category)}
                   </p>
                   <h2>{post.data.title}</h2>
                   <p class="blog-card-desc">{post.data.description}</p>

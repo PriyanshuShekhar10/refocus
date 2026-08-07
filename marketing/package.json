@@ -8,7 +8,12 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "blog:new": "node scripts/generate-post.mjs"
+    "blog:new": "node scripts/generate-post.mjs",
+    "blog:productivity": "node scripts/generate-post.mjs --category productivity",
+    "blog:adhd": "node scripts/generate-post.mjs --category adhd",
+    "blog:exams": "node scripts/generate-post.mjs --category exams",
+    "blog:loneliness": "node scripts/generate-post.mjs --category loneliness",
+    "blog:remote": "node scripts/generate-post.mjs --category remote"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.0",

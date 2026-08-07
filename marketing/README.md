@@ -33,50 +33,57 @@ Cloudflare Pages (production) also needs Function env:
 
 ## Blog
 
-- Content: `src/content/blog/*.md` (Astro content collection)
+Goal: **useful, searchable content that ranks** — not product pitches. Posts should help people even if they never try Refocus. Soft brand mentions are optional; outbound links to real resources are required.
+
+- Content: `src/content/blog/*.md`
 - Listing: `/blog` · Post: `/blog/<slug>`
-- Sitemap: `/sitemap.xml` (generated at build time, includes posts)
+- Sitemap: `/sitemap.xml` (includes posts)
+
+### Niches (5 separate hourly crons)
+
+| Niche | Workflow | UTC cron | Local script |
+| --- | --- | --- | --- |
+| Productivity (generic) | `Blog: Productivity` | `0 * * * *` | `npm run blog:productivity` |
+| ADHD & mental health | `Blog: ADHD & mental health` | `12 * * * *` | `npm run blog:adhd` |
+| Competitive exams | `Blog: Competitive exams` | `24 * * * *` | `npm run blog:exams` |
+| Loneliness / studying alone | `Blog: Loneliness & studying alone` | `36 * * * *` | `npm run blog:loneliness` |
+| Remote work & freelancing | `Blog: Remote work & freelancing` | `48 * * * *` | `npm run blog:remote` |
+
+Crons are **staggered** (~12 min apart) so five niches ≈ five posts/hour without git push collisions. Each job checks out `landing`, commits there, builds, and deploys to Cloudflare — never touches `test-dash` / Vercel.
+
+Topic pools + prompts: `scripts/blog-categories.mjs`. Generator: `scripts/generate-post.mjs`.
 
 ### Write a post by hand
-
-Add a Markdown file under `src/content/blog/` with frontmatter:
 
 ```yaml
 ---
 title: "Your title (no brand name)"
 description: "Meta description under ~155 chars"
 pubDate: 2026-08-08
-tags: ["focus", "deep work"]
+category: exams   # productivity | adhd | exams | loneliness | remote
+tags: ["jee", "focus"]
 author: "Refocus Team"
 draft: false
 ---
 ```
 
-### Generate a post with OpenAI
+### Generate with OpenAI
 
 ```bash
-# from marketing/
-npm run blog:new
-npm run blog:new -- --topic "how to start deep work when you feel stuck"
+npm run blog:exams
+npm run blog:adhd -- --topic "body doubling for ADHD study sessions"
+npm run blog:new -- --category loneliness
 ```
 
-The script is designed to write a useful article and mention Refocus **once in the middle** (never in the title), with a link to https://refocus.co.in.
+Each generated post should include **3–5 outbound links** (NTA, UPSC, CDC/CHADD, APA, etc.). Refocus may appear at most once mid-article, or not at all.
 
-### Hourly automation
+### Manual run in GitHub
 
-GitHub Action **“Auto-generate blog post”** (`.github/workflows/blog.yml` on the default branch):
+Actions → pick a niche workflow (e.g. **Blog: Competitive exams**) → Run workflow.
 
-1. Checks out `landing`
-2. Runs the generator
-3. Commits the new Markdown to `landing`
-4. Builds Astro and deploys to Cloudflare Pages
+Required secrets (on the repo): `OPENAI_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 
-It does **not** push to `test-dash`, so Vercel is unaffected.
-
-Manual run: GitHub → Actions → Auto-generate blog post → Run workflow.
-
-Required secrets: `OPENAI_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
-
+**Note:** Scheduled workflows run from the **default branch** (`test-dash`). The niche workflow files must exist there; they always check out `landing` for content.
 ## Deploy
 
 - **On push** to `landing` (paths under `marketing/`): workflow `Deploy marketing site`

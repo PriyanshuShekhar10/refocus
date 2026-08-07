@@ -10,11 +10,20 @@ export interface Props {
   canonical: string;
   pubDate: Date;
   updatedDate?: Date;
+  category?: string;
   tags?: string[];
   author?: string;
   minutes?: number;
   jsonLd?: unknown[];
 }
+
+const CATEGORY_LABELS: Record<string, string> = {
+  productivity: "Productivity",
+  adhd: "ADHD & mental health",
+  exams: "Competitive exams",
+  loneliness: "Loneliness & studying alone",
+  remote: "Remote work",
+};
 
 const {
   title,
@@ -22,6 +31,7 @@ const {
   canonical,
   pubDate,
   updatedDate,
+  category = "productivity",
   tags = [],
   author = "Refocus Team",
   minutes = 5,
@@ -35,6 +45,7 @@ const fmtDate = (d: Date) =>
     day: "numeric",
   });
 const isoDate = new Date(pubDate).toISOString();
+const categoryLabel = CATEGORY_LABELS[category] || category;
 ---
 
 <Base
@@ -55,7 +66,7 @@ const isoDate = new Date(pubDate).toISOString();
         <h1>{title}</h1>
         <p class="blog-meta">
           <time datetime={isoDate}>{fmtDate(pubDate)}</time>
-          &middot; {minutes} min read &middot; {author}
+          &middot; {minutes} min read &middot; {categoryLabel}
         </p>
         {
           tags.length > 0 && (
@@ -75,14 +86,15 @@ const isoDate = new Date(pubDate).toISOString();
       </div>
 
       <aside class="blog-cta">
-        <h3>Try focusing with someone else in the room</h3>
+        <h3>Prefer quiet company while you work?</h3>
         <p>
-          Refocus is a virtual co-working room for deep work. Pick a 25, 50, or
-          75 minute session and get the thing done &mdash; alone, with a friend,
-          or with someone new.
+          Some people focus better with another person in the room — even
+          silently. If that sounds useful, you can try a timed co-working
+          session on Refocus; otherwise, stick with whatever system in this
+          article already works for you.
         </p>
         <a class="blog-cta-btn" href={`${APP_URL}/auth/sign-up`}>
-          Start a free session &rarr;
+          See how sessions work &rarr;
         </a>
       </aside>
     </article>

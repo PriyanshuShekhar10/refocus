@@ -1,0 +1,21 @@
+name: "Blog: Competitive exams"
+
+# UPSC / JEE / NEET / CAT / GATE / etc. — hourly at :24 UTC (staggered).
+on:
+  schedule:
+    - cron: "24 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-niche-exams
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      category: exams
+    secrets: inherit

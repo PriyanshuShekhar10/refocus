@@ -1,28 +1,34 @@
 #!/usr/bin/env node
 /**
- * Generate a blog post for the Refocus marketing site using the OpenAI API.
+ * Generate a niche blog post for the Refocus marketing site (OpenAI).
  *
  * Usage:
  *   node scripts/generate-post.mjs
- *   node scripts/generate-post.mjs --topic "beating procrastination as a remote worker"
+ *   node scripts/generate-post.mjs --category exams
+ *   node scripts/generate-post.mjs --category adhd --topic "body doubling for study"
  *
  * Env:
- *   OPENAI_API_KEY   (required)  — read from process.env or the repo-root .env
- *   OPENAI_MODEL     (optional)  — defaults to "gpt-4o-mini"
- *   POST_TOPIC       (optional)  — same as --topic (used by CI)
+ *   OPENAI_API_KEY   (required)
+ *   OPENAI_MODEL     (optional, default gpt-4o-mini)
+ *   POST_CATEGORY    (optional)  — productivity | adhd | exams | loneliness | remote
+ *   POST_TOPIC       (optional)  — override the topic angle
  *
- * Output:
- *   Writes a Markdown file to src/content/blog/<slug>.md and prints the path.
- *
- * The post is written to be genuinely useful. Refocus is mentioned once,
- * naturally, in the MIDDLE of the article (never the title/intro) with a soft,
- * non-salesy suggestion and a link to https://refocus.co.in.
+ * SEO / usefulness goals (not hard promotion):
+ *   - Specific, niche angles (exams, ADHD, loneliness, etc.)
+ *   - Multiple outbound links to real, useful resources
+ *   - At most one soft Refocus mention mid-article (never the title)
  */
 
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  CATEGORIES,
+  CATEGORY_IDS,
+  getCategory,
+  pickCategoryByUtcHour,
+} from "./blog-categories.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MARKETING_DIR = resolve(__dirname, "..");
@@ -32,7 +38,6 @@ const BLOG_DIR = join(MARKETING_DIR, "src/content/blog");
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const SITE = "https://refocus.co.in";
 
-/** Load a KEY=VALUE .env file into process.env if not already set. */
 async function loadEnvFile(path) {
   if (!existsSync(path)) return;
   const raw = await readFile(path, "utf8");
@@ -64,56 +69,59 @@ function slugify(input) {
     .replace(/-+$/g, "");
 }
 
-function getArgTopic() {
+function getArg(flag) {
   const argv = process.argv.slice(2);
-  const i = argv.indexOf("--topic");
+  const i = argv.indexOf(flag);
   if (i !== -1 && argv[i + 1]) return argv[i + 1];
-  return process.env.POST_TOPIC?.trim() || "";
+  return "";
 }
 
-// Pool of angles the model can draw from when no topic is supplied. Kept broad
-// so scheduled runs stay varied and useful to a productivity-minded audience.
-const TOPIC_POOL = [
-  "the psychology of body doubling and why working near someone helps you focus",
-  "how to start a deep work session when you keep procrastinating",
-  "building a focus routine that survives bad days",
-  "why remote workers lose momentum and how to get it back",
-  "time-boxing vs. the Pomodoro technique: what actually sticks",
-  "beating the blank-page problem for writers and students",
-  "how to study for competitive exams without burning out",
-  "the real reason open-ended to-do lists make you anxious",
-  "designing a distraction-resistant workspace at home",
-  "accountability without pressure: gentle ways to stay on task",
-  "how ADHD brains can use structure and co-working to focus",
-  "the cost of context switching and how to protect your attention",
-  "why 'just focus' advice fails and what to do instead",
-  "morning deep work: making the first hour count",
-  "finishing side projects when motivation runs out",
-];
+function resolveCategoryId() {
+  const fromArg = getArg("--category") || process.env.POST_CATEGORY || "";
+  if (fromArg) {
+    const cat = getCategory(fromArg);
+    if (!cat) {
+      console.error(
+        `Unknown category "${fromArg}". Use one of: ${CATEGORY_IDS.join(", ")}`,
+      );
+      process.exit(1);
+    }
+    return cat.id;
+  }
+  return pickCategoryByUtcHour();
+}
 
-function pickTopic(existingTitles) {
+function pickTopic(category, existingTitles) {
+  const forced =
+    getArg("--topic") || process.env.POST_TOPIC?.trim() || "";
+  if (forced) return forced;
+
+  const pool = category.topics;
   const seed = Date.now() + Math.floor(Math.random() * 1000);
-  const start = seed % TOPIC_POOL.length;
-  // Prefer a topic whose words don't heavily overlap recent titles.
-  for (let k = 0; k < TOPIC_POOL.length; k++) {
-    const candidate = TOPIC_POOL[(start + k) % TOPIC_POOL.length];
-    const key = candidate.split(" ").slice(0, 3).join(" ").toLowerCase();
-    const clash = existingTitles.some((t) => t.toLowerCase().includes(key));
+  const start = seed % pool.length;
+  for (let k = 0; k < pool.length; k++) {
+    const candidate = pool[(start + k) % pool.length];
+    const key = candidate.split(" ").slice(0, 4).join(" ").toLowerCase();
+    const clash = existingTitles.some((t) =>
+      t.toLowerCase().includes(key.slice(0, 24)),
+    );
     if (!clash) return candidate;
   }
-  return TOPIC_POOL[start];
+  return pool[start];
 }
 
-async function getExistingTitles() {
-  if (!existsSync(BLOG_DIR)) return [];
+async function getExistingMeta() {
+  if (!existsSync(BLOG_DIR)) return { titles: [], urls: [] };
   const files = (await readdir(BLOG_DIR)).filter((f) => f.endsWith(".md"));
   const titles = [];
+  const urls = [];
   for (const f of files) {
     const raw = await readFile(join(BLOG_DIR, f), "utf8");
     const m = raw.match(/^title:\s*(.+)$/m);
     if (m) titles.push(m[1].replace(/^["']|["']$/g, "").trim());
+    urls.push(`${SITE}/blog/${f.replace(/\.md$/, "")}`);
   }
-  return titles;
+  return { titles, urls };
 }
 
 async function uniqueSlug(slug) {
@@ -125,36 +133,99 @@ async function uniqueSlug(slug) {
   return candidate;
 }
 
-const SYSTEM_PROMPT = `You are a seasoned writer for a productivity blog. You write clear, warm, genuinely useful articles for people who struggle to focus: remote workers, students, freelancers, and folks with ADHD. You avoid hype, buzzwords, and "productivity porn". You write like a thoughtful human sharing what actually works.
+/** Suggested outbound sources the model may link — real, useful sites. */
+const LINK_BANK = {
+  productivity: [
+    "https://www.calnewport.com/blog/ — Deep Work / Cal Newport",
+    "https://todoist.com/productivity-methods/pomodoro-technique — Pomodoro overview",
+    "https://jamesclear.com/atomic-habits — habit design (Atomic Habits)",
+    "https://en.wikipedia.org/wiki/Time_management — time management overview",
+    "https://www.apa.org/topics/stress — APA on stress / overload",
+  ],
+  adhd: [
+    "https://www.cdc.gov/adhd/ — CDC ADHD overview",
+    "https://chadd.org/ — CHADD (ADHD education & support)",
+    "https://www.nimh.nih.gov/health/topics/attention-deficit-hyperactivity-disorder-adhd — NIMH ADHD",
+    "https://add.org/ — ADDA",
+    "https://en.wikipedia.org/wiki/Body_doubling — body doubling (concept)",
+    "https://www.understood.org/ — Understood.org (learning & attention)",
+  ],
+  exams: [
+    "https://upsc.gov.in/ — UPSC official",
+    "https://jeemain.nta.nic.in/ — JEE Main (NTA)",
+    "https://neet.nta.nic.in/ — NEET (NTA)",
+    "https://iimcat.ac.in/ — CAT",
+    "https://gate.iitk.ac.in/ — GATE (example host IIT)",
+    "https://www.icai.org/ — ICAI (CA)",
+    "https://exams.nta.ac.in/CUET-UG/ — CUET",
+    "https://www.ets.org/gre.html — GRE",
+    "https://www.mba.com/exams/gmat — GMAT",
+    "https://cbse.gov.in/ — CBSE boards",
+  ],
+  loneliness: [
+    "https://www.cdc.gov/emotional-wellbeing/social-connectedness/index.htm — CDC social connectedness",
+    "https://www.apa.org/monitor/2019/05/ce-corner-isolation — APA on loneliness",
+    "https://en.wikipedia.org/wiki/Loneliness — loneliness overview",
+    "https://www.mind.org.uk/information-support/tips-for-everyday-living/loneliness/about-loneliness/ — Mind UK on loneliness",
+  ],
+  remote: [
+    "https://www.buffer.com/state-of-remote-work — State of Remote Work (Buffer)",
+    "https://www.oecd.org/employment/future-of-work/ — OECD future of work",
+    "https://www.ilo.org/topics/telework — ILO telework",
+    "https://sloanreview.mit.edu/ — MIT Sloan (remote / knowledge work articles)",
+    "https://en.wikipedia.org/wiki/Remote_work — remote work overview",
+  ],
+};
 
-Refocus is a virtual co-working app (https://refocus.co.in): pick a 25/50/75-minute session, get paired with someone who's also there to focus, briefly share what you're working on, then work side-by-side with synced timers and a check-in at the end. It is built around accountability, not conversation.
+function buildSystemPrompt(category) {
+  return `You write SEO-friendly, genuinely useful long-form articles. Readers should leave with tactics they can use today — even if they never hear of any product.
 
-Rules for the article you write:
-- The TITLE must be about the topic and useful on its own. It must NOT contain the word "Refocus" or any brand name.
-- The introduction must NOT mention Refocus.
-- Mention Refocus exactly once, naturally, roughly in the MIDDLE of the article, as a helpful suggestion (not a pitch). Include a Markdown link to https://refocus.co.in in that mention. Keep it to 2-3 sentences and make it feel like a genuine aside, e.g. a tool that happens to make body doubling easy.
-- The rest of the article stands on its own and would be valuable even without that mention.
-- Use Markdown with 3-5 "##" section headings, short paragraphs, and the occasional list. ~800-1100 words.
-- Warm, concrete, second-person voice. No emojis. No "In conclusion". No made-up statistics.`;
+Niche for this article: ${category.label}
+Audience: ${category.audience}
+Voice: ${category.voice}
 
-function buildUserPrompt(topic, existingTitles) {
-  const avoid =
+Hard requirements:
+1. TITLE: specific and searchable. No brand names. Prefer including a concrete exam, situation, or named tactic when the niche calls for it.
+2. Do NOT pitch or center any product. The article must stand alone as useful content.
+3. OUTBOUND LINKS (critical for usefulness + SEO): include 3–5 Markdown links to real external resources (official sites, reputable orgs, well-known references). Prefer links from this bank when they fit, and only use real https URLs you are confident exist:
+${(LINK_BANK[category.id] || LINK_BANK.productivity).map((l) => `   - ${l}`).join("\n")}
+   Spread links through the article (not dumped at the end). Anchor text should be natural ("NTA's JEE Main site", "CHADD's ADHD overview"), not "click here".
+4. OPTIONAL soft tool mention: You MAY mention Refocus (https://refocus.co.in) at most ONCE, mid-article, as a quiet example of virtual body doubling / co-working — never in the title or intro, never as a CTA, never more than 1–2 sentences. If the article is stronger without it, omit Refocus entirely.
+5. Must include: ${category.mustInclude}
+6. Avoid: ${category.avoid}
+7. Structure: Markdown with 3–5 "##" headings, short paragraphs, occasional lists. ~900–1200 words. No emojis. No "In conclusion". No invented statistics or fake studies.
+8. Be specific: name exams, tools, routines, times of day, failure modes. Vague motivational writing is a failure.`;
+}
+
+function buildUserPrompt(category, topic, existingTitles, existingUrls) {
+  const avoidTitles =
     existingTitles.length > 0
-      ? `\n\nWe have already published these titles — pick a clearly different angle and title:\n${existingTitles.map((t) => `- ${t}`).join("\n")}`
+      ? `\n\nAlready published titles — pick a clearly different angle:\n${existingTitles
+          .slice(0, 40)
+          .map((t) => `- ${t}`)
+          .join("\n")}`
       : "";
-  return `Write a blog post about: ${topic}.${avoid}
+  const internal =
+    existingUrls.length > 0
+      ? `\n\nIf natural, you may add 0–1 internal link to a related older post on our site (same niche feel):\n${existingUrls
+          .slice(0, 8)
+          .map((u) => `- ${u}`)
+          .join("\n")}`
+      : "";
 
-Return ONLY a JSON object with these exact keys:
+  return `Write a blog post in the "${category.label}" niche about: ${topic}.${avoidTitles}${internal}
+
+Return ONLY JSON with these keys:
 {
-  "title": "compelling, specific, under 70 characters, no brand name",
+  "title": "specific, searchable, under 70 chars, no brand",
   "slug": "kebab-case-url-slug",
-  "description": "meta description under 155 characters",
-  "tags": ["2-4", "lowercase", "tags"],
-  "body_markdown": "the full article body in Markdown (no H1 title inside)"
+  "description": "meta description under 155 chars, specific",
+  "tags": ["2-5", "lowercase", "tags"],
+  "body_markdown": "full Markdown body (no H1). Must include 3-5 outbound https links."
 }`;
 }
 
-async function callOpenAI(apiKey, topic, existingTitles) {
+async function callOpenAI(apiKey, category, topic, existingTitles, existingUrls) {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -163,11 +234,19 @@ async function callOpenAI(apiKey, topic, existingTitles) {
     },
     body: JSON.stringify({
       model: MODEL,
-      temperature: 0.8,
+      temperature: 0.85,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: buildUserPrompt(topic, existingTitles) },
+        { role: "system", content: buildSystemPrompt(category) },
+        {
+          role: "user",
+          content: buildUserPrompt(
+            category,
+            topic,
+            existingTitles,
+            existingUrls,
+          ),
+        },
       ],
     }),
   });
@@ -184,7 +263,6 @@ async function callOpenAI(apiKey, topic, existingTitles) {
 }
 
 function sanitizeTitle(title) {
-  // Belt-and-suspenders: strip any brand mention that slipped into the title.
   return title
     .replace(/\brefocus\b/gi, "")
     .replace(/\s{2,}/g, " ")
@@ -192,25 +270,38 @@ function sanitizeTitle(title) {
     .trim();
 }
 
-function ensureBrandMention(body) {
-  if (/refocus\.co\.in/i.test(body)) return body;
-  // Fallback: insert a natural aside near the middle if the model omitted it.
-  const paras = body.split(/\n\n+/);
-  const mid = Math.max(1, Math.floor(paras.length / 2));
-  const aside =
-    "If you find it hard to start alone, working alongside someone else can help. A tool like [Refocus](https://refocus.co.in) pairs you with another person for a timed session so you have quiet, low-pressure accountability — no meeting, no small talk, just two people getting things done.";
-  paras.splice(mid, 0, aside);
-  return paras.join("\n\n");
+function countOutboundLinks(body) {
+  const matches = body.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) || [];
+  return matches.filter((m) => !/refocus\.co\.in/i.test(m)).length;
 }
 
-function toFrontmatter({ title, description, tags }) {
+function ensureOutboundLinks(body, categoryId) {
+  if (countOutboundLinks(body) >= 3) return body;
+
+  // Fallback: append a short "Further reading" section with bank links.
+  const bank = LINK_BANK[categoryId] || LINK_BANK.productivity;
+  const picks = bank.slice(0, 4);
+  const lines = picks.map((entry) => {
+    const url = entry.split(" — ")[0].trim();
+    const label = entry.split(" — ")[1]?.trim() || url;
+    return `- [${label}](${url})`;
+  });
+  return `${body.trim()}\n\n## Further reading\n\n${lines.join("\n")}\n`;
+}
+
+function toFrontmatter({ title, description, tags, category }) {
   const pubDate = new Date().toISOString();
   const q = (s) => JSON.stringify(String(s));
   const tagList = Array.isArray(tags) ? tags : [];
+  // Ensure category id is among tags for listing filters.
+  if (!tagList.map((t) => String(t).toLowerCase()).includes(category.id)) {
+    tagList.unshift(category.id);
+  }
   return `---
 title: ${q(title)}
 description: ${q(description)}
 pubDate: ${q(pubDate)}
+category: ${q(category.id)}
 tags: [${tagList.map((t) => q(t)).join(", ")}]
 author: ${q("Refocus Team")}
 draft: false
@@ -230,23 +321,43 @@ async function main() {
     process.exit(1);
   }
 
-  const existingTitles = await getExistingTitles();
-  const topic = getArgTopic() || pickTopic(existingTitles);
+  const categoryId = resolveCategoryId();
+  const category = CATEGORIES[categoryId];
+  const { titles: existingTitles, urls: existingUrls } =
+    await getExistingMeta();
+  const topic = pickTopic(category, existingTitles);
+
+  console.log(`Category: ${category.id} (${category.label})`);
   console.log(`Topic: ${topic}`);
   console.log(`Model: ${MODEL}`);
 
-  const result = await callOpenAI(apiKey, topic, existingTitles);
+  const result = await callOpenAI(
+    apiKey,
+    category,
+    topic,
+    existingTitles,
+    existingUrls,
+  );
 
   const title = sanitizeTitle(result.title || "");
   if (!title) throw new Error("Model did not return a usable title.");
   const description = String(result.description || "").slice(0, 160);
-  const body = ensureBrandMention(String(result.body_markdown || "").trim());
+  let body = String(result.body_markdown || "").trim();
   if (body.length < 200) throw new Error("Model returned an empty/short body.");
+  body = ensureOutboundLinks(body, category.id);
+
+  const outbound = countOutboundLinks(body);
+  console.log(`Outbound links (non-Refocus): ${outbound}`);
 
   const baseSlug = slugify(result.slug || title);
   const slug = await uniqueSlug(baseSlug);
 
-  const contents = `${toFrontmatter({ title, description, tags: result.tags })}\n${body}\n`;
+  const contents = `${toFrontmatter({
+    title,
+    description,
+    tags: result.tags,
+    category,
+  })}\n${body}\n`;
   const outPath = join(BLOG_DIR, `${slug}.md`);
   await writeFile(outPath, contents, "utf8");
 
