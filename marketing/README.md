@@ -23,6 +23,16 @@ Create `marketing/.env` or put these in the repo-root `.env` (the blog script lo
 | --- | --- | --- |
 | `PUBLIC_APP_URL` | Build-time CTAs / auth links | `https://dashboard.refocus.co.in` |
 | `OPENAI_API_KEY` | `npm run blog:new` | (secret) |
+| `PUBLIC_GA_MEASUREMENT_ID` | Google Analytics 4 (`G-XXXXXXXX`) | set as GitHub Actions **variable** |
+
+### Google Analytics 4
+
+1. Create a GA4 property at [analytics.google.com](https://analytics.google.com/) → Admin → Create property → Web stream for `https://refocus.co.in`.
+2. Copy the **Measurement ID** (`G-XXXXXXXX`).
+3. Add it as a GitHub Actions repository variable named `PUBLIC_GA_MEASUREMENT_ID` (Settings → Secrets and variables → Actions → Variables), **or** put it in `marketing/.env` for local builds.
+4. Redeploy the marketing site (push or run **Deploy marketing site**).
+
+The gtag snippet is injected from `src/layouts/Base.astro` only when that ID is set.
 
 Cloudflare Pages (production) also needs Function env:
 

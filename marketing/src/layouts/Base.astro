@@ -28,6 +28,9 @@ const site = "https://refocus.co.in";
 const canonicalUrl = new URL(canonical, site).href;
 const ogImage = new URL("/opengraph-image.png", site).href;
 const twitterImage = new URL("/twitter-image.png", site).href;
+
+// Google Analytics 4 — set PUBLIC_GA_MEASUREMENT_ID (e.g. G-XXXXXXXX) at build time.
+const gaId = (import.meta.env.PUBLIC_GA_MEASUREMENT_ID || "").trim();
 ---
 
 <!doctype html>
@@ -57,6 +60,25 @@ const twitterImage = new URL("/twitter-image.png", site).href;
     <meta name="twitter:title" content={ogTitle} />
     <meta name="twitter:description" content={ogDescription} />
     <meta name="twitter:image" content={twitterImage} />
+
+    {
+      gaId && (
+        <>
+          <script
+            async
+            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+          />
+          <script is:inline define:vars={{ gaId }}>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+              dataLayer.push(arguments);
+            }
+            gtag("js", new Date());
+            gtag("config", gaId);
+          </script>
+        </>
+      )
+    }
 
     {
       jsonLd.map((entry) => (
