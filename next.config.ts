@@ -41,6 +41,8 @@ const cspDirectives: Record<string, string[]> = {
     ...(isProd ? [] : ["'unsafe-eval'"]),
     "https://va.vercel-scripts.com",
     "https://vercel.live",
+    "https://*.posthog.com",
+    "https://*.i.posthog.com",
     ...firebaseAuthScriptSrc,
   ],
   "style-src": ["'self'", "'unsafe-inline'"],
@@ -55,6 +57,8 @@ const cspDirectives: Record<string, string[]> = {
     "https://*.ably-realtime.com",
     "wss://*.ably.io",
     "wss://*.ably-realtime.com",
+    "https://*.posthog.com",
+    "https://*.i.posthog.com",
     ...firebaseAuthConnectSrc,
   ].filter(Boolean),
   "frame-src": [
