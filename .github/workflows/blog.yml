@@ -1,9 +1,12 @@
 name: Auto-generate blog post
 
-# Publishes a new Refocus blog post on a schedule (and on demand). The script
-# writes a Markdown file under marketing/src/content/blog and this workflow
-# commits + pushes it. If Cloudflare Pages is connected to this repo, the push
-# triggers a rebuild and the post goes live automatically.
+# Publishes a new Refocus blog post on a schedule (and on demand). Commits land
+# on the `landing` branch only — never on `test-dash` — so the hourly blog
+# does not trigger Vercel dashboard deploys.
+#
+# Note: GitHub runs scheduled workflows from the *default* branch. The copy of
+# this file on `test-dash` (default) is what the cron uses; it checks out
+# `landing` and pushes there. This copy on `landing` supports manual runs.
 
 on:
   schedule:
@@ -27,8 +30,10 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout landing branch
         uses: actions/checkout@v4
+        with:
+          ref: landing
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -49,14 +54,14 @@ jobs:
           POST_TOPIC: ${{ github.event.inputs.topic }}
         run: node scripts/generate-post.mjs
 
-      - name: Commit & push new post
+      - name: Commit & push new post to landing
         run: |
           git config user.name "refocus-blog-bot"
           git config user.email "bot@refocus.co.in"
           if [ -n "$(git status --porcelain marketing/src/content/blog)" ]; then
             git add marketing/src/content/blog
             git commit -m "blog: auto-generated post ($(date -u +%Y-%m-%d))"
-            git push
+            git push origin HEAD:landing
           else
             echo "No new post to commit."
           fi
@@ -73,5 +78,5 @@ jobs:
         run: >-
           npx wrangler pages deploy dist
           --project-name refocus-marketing
-          --branch test-dash
+          --branch landing
           --commit-dirty=true
