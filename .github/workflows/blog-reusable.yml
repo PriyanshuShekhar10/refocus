@@ -66,6 +66,8 @@ jobs:
 
       - name: Build site
         working-directory: marketing
+        env:
+          PUBLIC_GA_MEASUREMENT_ID: ${{ vars.PUBLIC_GA_MEASUREMENT_ID }}
         run: npm run build
 
       - name: Deploy to Cloudflare Pages
