@@ -7,9 +7,53 @@ import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 import { ObjectId } from "mongodb";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 
+// When the app is served from a subdomain (dashboard.refocus.co.in) but the
+// marketing site lives on the apex/www, set AUTH_COOKIE_DOMAIN=".refocus.co.in"
+// so the session cookie is readable across subdomains. Left unset in local dev
+// so cookies stay host-only on localhost.
+const AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN;
+const useSecureCookies = (process.env.NEXTAUTH_URL ?? "").startsWith("https://");
+const cookiePrefix = useSecureCookies ? "__Secure-" : "";
+
+const sharedCookies: NextAuthOptions["cookies"] = AUTH_COOKIE_DOMAIN
+  ? {
+      sessionToken: {
+        name: `${cookiePrefix}next-auth.session-token`,
+        options: {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          secure: useSecureCookies,
+          domain: AUTH_COOKIE_DOMAIN,
+        },
+      },
+      callbackUrl: {
+        name: `${cookiePrefix}next-auth.callback-url`,
+        options: {
+          sameSite: "lax",
+          path: "/",
+          secure: useSecureCookies,
+          domain: AUTH_COOKIE_DOMAIN,
+        },
+      },
+      // CSRF token stays host-only: the __Host- prefix forbids a Domain
+      // attribute, and auth flows only run on the dashboard host anyway.
+      csrfToken: {
+        name: `${useSecureCookies ? "__Host-" : ""}next-auth.csrf-token`,
+        options: {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          secure: useSecureCookies,
+        },
+      },
+    }
+  : undefined;
+
 export const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
   session: { strategy: "jwt" },
+  ...(sharedCookies ? { cookies: sharedCookies } : {}),
   providers: [
     Credentials({
       name: "Credentials",

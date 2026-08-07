@@ -1,0 +1,6 @@
+marketing
+graphify-out
+__tests__
+.env
+.env.*
+*.tsbuildinfo

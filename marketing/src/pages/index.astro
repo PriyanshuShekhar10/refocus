@@ -1,0 +1,38 @@
+---
+import Base from "../layouts/Base.astro";
+import { Homepage } from "../components/homepage/Homepage";
+
+const site = "https://refocus.co.in";
+
+const title = "Refocus — Focus, together. Quietly.";
+const description =
+  "Refocus is a virtual co-working room for deep work. Pick a 25, 50, or 75 minute session and get the thing done — alone, with a friend, or with someone new.";
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Refocus",
+  url: site,
+  description:
+    "Virtual co-working room for deep work with synced timers, focus mode, friends, and global chat.",
+};
+
+const orgJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Refocus",
+  url: site,
+  logo: `${site}/icon1.png`,
+};
+---
+
+<Base
+  title={title}
+  description={description}
+  canonical="/"
+  ogTitle={title}
+  ogDescription="A virtual co-working room for deep work. 25, 50, or 75 minute sessions. Focus mode mutes both mics so you're present, not performing."
+  jsonLd={[websiteJsonLd, orgJsonLd]}
+>
+  <Homepage client:load />
+</Base>

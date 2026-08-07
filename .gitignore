@@ -47,3 +47,4 @@ graphify-out/cost.json
 
 .venv
 .claude
+.env*

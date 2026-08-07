@@ -1,0 +1,73 @@
+---
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource/geist-mono/400.css";
+import "@fontsource/geist-mono/500.css";
+import "../styles/global.css";
+
+export interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogType?: string;
+  jsonLd?: unknown[];
+}
+
+const {
+  title,
+  description,
+  canonical = "/",
+  ogTitle = title,
+  ogDescription = description,
+  ogType = "website",
+  jsonLd = [],
+} = Astro.props;
+
+const site = "https://refocus.co.in";
+const canonicalUrl = new URL(canonical, site).href;
+const ogImage = new URL("/opengraph-image.png", site).href;
+const twitterImage = new URL("/twitter-image.png", site).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icon0.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="Refocus" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+    <meta name="twitter:image" content={twitterImage} />
+
+    {
+      jsonLd.map((entry) => (
+        <script
+          type="application/ld+json"
+          set:html={JSON.stringify(entry)}
+        />
+      ))
+    }
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

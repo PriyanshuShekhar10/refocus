@@ -121,6 +121,27 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    // Post-cutover: marketing lives on the Astro site (apex refocus.co.in).
+    // These are host-scoped to the dashboard host so the dashboard never
+    // serves a landing page — its marketing routes bounce to the Astro site.
+    const marketingHost = "dashboard.refocus.co.in";
+    const toApex = (path: string) => `https://refocus.co.in${path}`;
+    return [
+      {
+        source: "/",
+        has: [{ type: "host", value: marketingHost }],
+        destination: toApex("/"),
+        permanent: false,
+      },
+      {
+        source: "/career",
+        has: [{ type: "host", value: marketingHost }],
+        destination: toApex("/career"),
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {
