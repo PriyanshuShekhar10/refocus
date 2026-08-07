@@ -1,9 +1,9 @@
 name: "Blog: Loneliness & studying alone"
 
-# Loneliness / quiet co-presence niche — hourly at :36 UTC (staggered).
+# Loneliness / quiet co-presence niche — once daily at 15:00 UTC (~20:30 IST).
 on:
   schedule:
-    - cron: "36 * * * *"
+    - cron: "0 15 * * *"
   workflow_dispatch:
 
 permissions:

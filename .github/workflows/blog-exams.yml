@@ -1,9 +1,9 @@
 name: "Blog: Competitive exams"
 
-# UPSC / JEE / NEET / CAT / GATE / etc. — hourly at :24 UTC (staggered).
+# UPSC / JEE / NEET / CAT / GATE / etc. — once daily at 12:00 UTC (~17:30 IST).
 on:
   schedule:
-    - cron: "24 * * * *"
+    - cron: "0 12 * * *"
   workflow_dispatch:
 
 permissions:
