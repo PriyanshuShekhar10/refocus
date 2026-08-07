@@ -1,9 +1,9 @@
 name: "Blog: ADHD & mental health"
 
-# ADHD / mental health niche — hourly at :12 UTC (staggered).
+# ADHD / mental health niche — once daily at 09:00 UTC (~14:30 IST).
 on:
   schedule:
-    - cron: "12 * * * *"
+    - cron: "0 9 * * *"
   workflow_dispatch:
 
 permissions:

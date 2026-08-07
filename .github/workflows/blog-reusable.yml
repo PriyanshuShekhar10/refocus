@@ -1,6 +1,6 @@
 name: Blog niche (reusable)
 
-# Called by per-niche hourly workflows. Checks out `landing`, generates one
+# Called by per-niche daily workflows. Checks out `landing`, generates one
 # post for the given category, commits, builds, and deploys to Cloudflare.
 # Posts are usefulness/SEO-first (outbound links); Refocus is optional & soft.
 

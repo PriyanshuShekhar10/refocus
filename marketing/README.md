@@ -39,17 +39,17 @@ Goal: **useful, searchable content that ranks** — not product pitches. Posts s
 - Listing: `/blog` · Post: `/blog/<slug>`
 - Sitemap: `/sitemap.xml` (includes posts)
 
-### Niches (5 separate hourly crons)
+### Niches (5 separate daily crons)
 
-| Niche | Workflow | UTC cron | Local script |
-| --- | --- | --- | --- |
-| Productivity (generic) | `Blog: Productivity` | `0 * * * *` | `npm run blog:productivity` |
-| ADHD & mental health | `Blog: ADHD & mental health` | `12 * * * *` | `npm run blog:adhd` |
-| Competitive exams | `Blog: Competitive exams` | `24 * * * *` | `npm run blog:exams` |
-| Loneliness / studying alone | `Blog: Loneliness & studying alone` | `36 * * * *` | `npm run blog:loneliness` |
-| Remote work & freelancing | `Blog: Remote work & freelancing` | `48 * * * *` | `npm run blog:remote` |
+| Niche | Workflow | UTC cron | ~IST | Local script |
+| --- | --- | --- | --- | --- |
+| Productivity (generic) | `Blog: Productivity` | `0 6 * * *` | 11:30 | `npm run blog:productivity` |
+| ADHD & mental health | `Blog: ADHD & mental health` | `0 9 * * *` | 14:30 | `npm run blog:adhd` |
+| Competitive exams | `Blog: Competitive exams` | `0 12 * * *` | 17:30 | `npm run blog:exams` |
+| Loneliness / studying alone | `Blog: Loneliness & studying alone` | `0 15 * * *` | 20:30 | `npm run blog:loneliness` |
+| Remote work & freelancing | `Blog: Remote work & freelancing` | `0 18 * * *` | 23:30 | `npm run blog:remote` |
 
-Crons are **staggered** (~12 min apart) so five niches ≈ five posts/hour without git push collisions. Each job checks out `landing`, commits there, builds, and deploys to Cloudflare — never touches `test-dash` / Vercel.
+**Five posts per day** (one per niche), staggered so deploys don’t collide. Each job checks out `landing`, commits there, builds, and deploys to Cloudflare — never touches `test-dash` / Vercel.
 
 Topic pools + prompts: `scripts/blog-categories.mjs`. Generator: `scripts/generate-post.mjs`.
 

@@ -1,6 +1,6 @@
 /**
  * Blog niches for Refocus auto-publishing.
- * Each category has its own hourly cron (staggered) and a concrete topic pool
+ * Each category has its own daily cron (staggered) and a concrete topic pool
  * so posts stay specific — exams, ADHD, loneliness, etc. — not vague advice.
  */
 
@@ -132,13 +132,13 @@ export const CATEGORIES = {
 
 export const CATEGORY_IDS = Object.keys(CATEGORIES);
 
-/** Stagger minutes so niche crons don't fight over the same git push. */
-export const CRON_MINUTE_BY_CATEGORY = {
-  productivity: 0,
-  adhd: 12,
-  exams: 24,
-  loneliness: 36,
-  remote: 48,
+/** Stagger UTC hours so niches publish once each per day. */
+export const CRON_HOUR_BY_CATEGORY = {
+  productivity: 6,
+  adhd: 9,
+  exams: 12,
+  loneliness: 15,
+  remote: 18,
 };
 
 export function getCategory(id) {

@@ -1,9 +1,9 @@
 name: "Blog: Remote work & freelancing"
 
-# Remote / freelance niche — hourly at :48 UTC (staggered).
+# Remote / freelance niche — once daily at 18:00 UTC (~23:30 IST).
 on:
   schedule:
-    - cron: "48 * * * *"
+    - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:
