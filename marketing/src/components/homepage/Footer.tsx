@@ -11,7 +11,6 @@ export function Footer() {
         <div className={styles.footLinks}>
           <a href="/about">About</a>
           <a href="/blog">Blog</a>
-          <a href="/career">Career</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
           <a href={url("/auth/login")}>Log in</a>

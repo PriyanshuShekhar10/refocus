@@ -9,8 +9,8 @@ export default defineConfig({
   output: "static",
   trailingSlash: "never",
   build: {
-    // Emit `career.html` (served at `/career`) instead of `career/index.html`
-    // so URLs match the Next app and avoid trailing-slash 308 redirects.
+    // Emit `about.html` (served at `/about`) instead of `about/index.html`
+    // so URLs avoid trailing-slash 308 redirects on Cloudflare Pages.
     format: "file",
   },
   integrations: [react()],

@@ -49,7 +49,6 @@ const navItems = [
   { name: "How it works", link: "/#how" },
   { name: "Blog", link: "/blog" },
   { name: "FAQ", link: "/#faq" },
-  { name: "Careers", link: "/career" },
 ];
 
 export default function Navbar() {

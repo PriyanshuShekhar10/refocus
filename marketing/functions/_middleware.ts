@@ -22,7 +22,7 @@ const SESSION_COOKIE_NAMES = [
 ];
 
 // Only these navigation paths auto-redirect logged-in users.
-const REDIRECT_PATHS = new Set(["/", "/career", "/career/"]);
+const REDIRECT_PATHS = new Set(["/"]);
 
 // The single host search engines are allowed to index. Cloudflare also serves
 // this project on its `*.pages.dev` alias (and preview/branch URLs), which are

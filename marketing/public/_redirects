@@ -1,0 +1,5 @@
+# Cloudflare Pages redirects.
+
+# The careers page was removed — send any old links to the homepage.
+/career / 301
+/career/ / 301

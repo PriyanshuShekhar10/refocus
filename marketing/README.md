@@ -1,6 +1,6 @@
 # Refocus marketing site
 
-Astro static site for **https://refocus.co.in** (landing, careers, blog).
+Astro static site for **https://refocus.co.in** (landing, blog).
 
 This folder only exists on the **`landing`** branch. The product dashboard lives on **`test-dash`** and deploys to Vercel — see the [root README](../README.md).
 
@@ -130,10 +130,11 @@ npx wrangler pages deploy dist --project-name refocus-marketing --branch landing
 `functions/_middleware.ts` (Cloudflare Pages Function):
 
 - `www.refocus.co.in` → 301 to apex
-- Logged-in visitors (valid NextAuth JWT on `.refocus.co.in`) hitting `/` or `/career` → redirect to the dashboard
+- Non-canonical hosts (`*.pages.dev`, previews) get `X-Robots-Tag: noindex, nofollow`
+- Logged-in visitors (valid NextAuth JWT on `.refocus.co.in`) hitting `/` → redirect to the dashboard
 
 ## SEO notes
 
 - Canonical host is the **apex** (`refocus.co.in`)
 - Self-referencing canonicals + Open Graph + `BlogPosting` JSON-LD on posts
-- Dashboard host is `noindex` and permanently redirects `/` + `/career` to the apex
+- Dashboard host is `noindex` and permanently redirects `/` to the apex
