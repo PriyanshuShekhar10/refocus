@@ -141,9 +141,11 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        // The careers page was removed from the marketing site, so old
+        // dashboard-host /career links consolidate to the apex homepage.
         source: "/career",
         has: [{ type: "host", value: marketingHost }],
-        destination: toApex("/career"),
+        destination: toApex("/"),
         permanent: true,
       },
     ];
@@ -163,7 +165,7 @@ const nextConfig: NextConfig = {
         // as well as Vercel's *.vercel.app production/preview URLs, which are
         // duplicate copies of the app. Search authority consolidates on the
         // apex (refocus.co.in). Crawling stays allowed (no robots.txt block)
-        // so Google still honors the 301s from / and /career to the apex.
+        // so Google still honors the 301s from / and /career to the apex home.
         source: "/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
