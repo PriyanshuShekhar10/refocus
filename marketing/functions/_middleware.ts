@@ -24,6 +24,11 @@ const SESSION_COOKIE_NAMES = [
 // Only these navigation paths auto-redirect logged-in users.
 const REDIRECT_PATHS = new Set(["/", "/career", "/career/"]);
 
+// The single host search engines are allowed to index. Cloudflare also serves
+// this project on its `*.pages.dev` alias (and preview/branch URLs), which are
+// byte-for-byte duplicates of refocus.co.in. Those must not be indexed.
+const CANONICAL_HOST = "refocus.co.in";
+
 function parseCookies(header: string | null): Record<string, string> {
   const out: Record<string, string> = {};
   if (!header) return out;
@@ -90,32 +95,46 @@ async function hasValidSession(token: string, secret: string): Promise<boolean> 
   }
 }
 
+// Serve `response`, adding a noindex header when the request came in on a
+// non-canonical host so duplicate copies (*.pages.dev, previews) stay out of
+// search results. Redirects keep their semantics; the header is harmless there.
+function guardIndexing(response: Response, hostname: string): Response {
+  if (hostname === CANONICAL_HOST) return response;
+  const guarded = new Response(response.body, response);
+  guarded.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return guarded;
+}
+
 export const onRequest = async (context: PagesContext): Promise<Response> => {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
   // Canonicalize www -> apex (301), preserving path + query.
   if (url.hostname === "www.refocus.co.in") {
-    url.hostname = "refocus.co.in";
+    url.hostname = CANONICAL_HOST;
     return Response.redirect(url.toString(), 301);
   }
 
-  // Only consider GET navigations to the marketing entry pages.
-  if (request.method !== "GET" || !REDIRECT_PATHS.has(url.pathname)) {
+  const respond = async (): Promise<Response> => {
+    // Only consider GET navigations to the marketing entry pages.
+    if (request.method !== "GET" || !REDIRECT_PATHS.has(url.pathname)) {
+      return next();
+    }
+
+    const secret = env.NEXTAUTH_SECRET;
+    if (!secret) return next();
+
+    const cookies = parseCookies(request.headers.get("cookie"));
+    const token = readSessionToken(cookies);
+    if (!token) return next();
+
+    if (await hasValidSession(token, secret)) {
+      const dashboard = env.DASHBOARD_URL || "https://dashboard.refocus.co.in";
+      return Response.redirect(`${dashboard}/dashboard`, 302);
+    }
+
     return next();
-  }
+  };
 
-  const secret = env.NEXTAUTH_SECRET;
-  if (!secret) return next();
-
-  const cookies = parseCookies(request.headers.get("cookie"));
-  const token = readSessionToken(cookies);
-  if (!token) return next();
-
-  if (await hasValidSession(token, secret)) {
-    const dashboard = env.DASHBOARD_URL || "https://dashboard.refocus.co.in";
-    return Response.redirect(`${dashboard}/dashboard`, 302);
-  }
-
-  return next();
+  return guardIndexing(await respond(), url.hostname);
 };

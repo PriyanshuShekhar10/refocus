@@ -154,12 +154,13 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
       {
-        // SEO: the dashboard host is the product app, not a marketing surface.
-        // Keep it out of the index so search authority consolidates on the
+        // SEO: the product app is never a marketing surface, so keep it out of
+        // the index on EVERY host it is served from — dashboard.refocus.co.in
+        // as well as Vercel's *.vercel.app production/preview URLs, which are
+        // duplicate copies of the app. Search authority consolidates on the
         // apex (refocus.co.in). Crawling stays allowed (no robots.txt block)
         // so Google still honors the 301s from / and /career to the apex.
         source: "/:path*",
-        has: [{ type: "host", value: "dashboard.refocus.co.in" }],
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
     ];
