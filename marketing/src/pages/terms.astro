@@ -1,0 +1,112 @@
+---
+import ContentPage from "../layouts/ContentPage.astro";
+
+const site = "https://refocus.co.in";
+const UPDATED = "2026-08-08";
+const title = "Terms & Conditions";
+const description =
+  "The terms that govern your use of Refocus — accounts, acceptable use, content, and liability.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Terms & Conditions — Refocus",
+    url: `${site}/terms`,
+    description,
+    dateModified: new Date(UPDATED).toISOString(),
+  },
+];
+---
+
+<ContentPage
+  title={title}
+  description={description}
+  canonical="/terms"
+  heading="Terms & Conditions"
+  updated={UPDATED}
+  jsonLd={jsonLd}
+>
+  <p>
+    These Terms &amp; Conditions ("Terms") govern your use of Refocus, including
+    <a href="https://refocus.co.in">refocus.co.in</a> and
+    <a href="https://dashboard.refocus.co.in">dashboard.refocus.co.in</a> (the
+    "Service"). By creating an account or using the Service, you agree to these
+    Terms. If you do not agree, please do not use Refocus.
+  </p>
+
+  <h2>Accounts</h2>
+  <ul>
+    <li>You must provide accurate information and keep your credentials secure.</li>
+    <li>You are responsible for activity that happens under your account.</li>
+    <li>You must be old enough to form a binding contract in your country.</li>
+  </ul>
+
+  <h2>Acceptable use</h2>
+  <p>When using Refocus — especially in shared sessions and chat — you agree not to:</p>
+  <ul>
+    <li>Harass, threaten, or abuse other users.</li>
+    <li>Share illegal, hateful, or explicit content.</li>
+    <li>Attempt to disrupt, reverse-engineer, or overload the Service.</li>
+    <li>Use the Service to violate any applicable law or the rights of others.</li>
+  </ul>
+  <p>
+    We may suspend or terminate accounts that violate these Terms or put other
+    users at risk.
+  </p>
+
+  <h2>Your content</h2>
+  <p>
+    You retain ownership of content you create (such as messages and check-in
+    notes). You grant us a limited license to store and process that content
+    solely to operate and provide the Service. See our
+    <a href="/privacy">Privacy Policy</a> for how we handle data.
+  </p>
+
+  <h2>Service availability</h2>
+  <p>
+    Refocus is provided on an "as is" and "as available" basis. Features may
+    change, and we may experience downtime. We do not guarantee uninterrupted or
+    error-free operation.
+  </p>
+
+  <h2>Third-party services</h2>
+  <p>
+    Refocus integrates services such as video, email, and analytics providers.
+    Your use of those features may also be subject to their terms. See the
+    <a href="/privacy">Privacy Policy</a> for the current list.
+  </p>
+
+  <h2>Limitation of liability</h2>
+  <p>
+    To the maximum extent permitted by law, Refocus and its team are not liable
+    for indirect, incidental, or consequential damages, or for any loss of data
+    or profits arising from your use of the Service.
+  </p>
+
+  <h2>Termination</h2>
+  <p>
+    You may stop using Refocus and delete your account at any time. We may
+    suspend or terminate access if you breach these Terms or misuse the Service.
+  </p>
+
+  <h2>Changes to these Terms</h2>
+  <p>
+    We may update these Terms occasionally. Continued use after changes means
+    you accept the updated Terms. The "Last updated" date above reflects the
+    latest version.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Questions about these Terms? Email
+    <a href="mailto:hello@refocus.co.in">hello@refocus.co.in</a>.
+  </p>
+
+  <p>
+    <em>
+      These Terms are provided for transparency and are not legal advice. For
+      specific compliance needs, consult a qualified professional.
+    </em>
+  </p>
+</ContentPage>

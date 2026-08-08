@@ -1,0 +1,127 @@
+---
+import ContentPage from "../layouts/ContentPage.astro";
+
+const site = "https://refocus.co.in";
+const UPDATED = "2026-08-08";
+const title = "Privacy Policy";
+const description =
+  "How Refocus collects, uses, and protects your data — accounts, sessions, cookies, analytics, and third-party services.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Privacy Policy — Refocus",
+    url: `${site}/privacy`,
+    description,
+    dateModified: new Date(UPDATED).toISOString(),
+  },
+];
+---
+
+<ContentPage
+  title={title}
+  description={description}
+  canonical="/privacy"
+  heading="Privacy Policy"
+  updated={UPDATED}
+  jsonLd={jsonLd}
+>
+  <p>
+    This Privacy Policy explains how Refocus ("we", "us") collects, uses, and
+    protects information when you use our website (<a href="https://refocus.co.in">refocus.co.in</a>)
+    and product (<a href="https://dashboard.refocus.co.in">dashboard.refocus.co.in</a>).
+    By using Refocus you agree to this policy.
+  </p>
+
+  <h2>Information we collect</h2>
+  <ul>
+    <li>
+      <strong>Account information:</strong> name, email address, and a securely
+      hashed password (or a Google sign-in identifier if you use Google).
+    </li>
+    <li>
+      <strong>Profile &amp; usage:</strong> username, profile photo (if you
+      upload one), focus sessions, session history, and check-in notes.
+    </li>
+    <li>
+      <strong>Content you create:</strong> messages you send to friends and
+      session requests.
+    </li>
+    <li>
+      <strong>Technical data:</strong> device/browser information, approximate
+      location derived from IP, and cookies or similar identifiers.
+    </li>
+  </ul>
+
+  <h2>How we use your information</h2>
+  <ul>
+    <li>To create and operate your account and match you into focus sessions.</li>
+    <li>To provide chat, friends, and video-session features.</li>
+    <li>To send account and verification emails.</li>
+    <li>To understand usage and improve the product (analytics).</li>
+    <li>To keep the service secure and prevent abuse.</li>
+  </ul>
+
+  <h2>Cookies</h2>
+  <p>
+    We use cookies for authentication and analytics. Because our marketing site
+    (<code>refocus.co.in</code>) and app (<code>dashboard.refocus.co.in</code>)
+    share sign-in, an authentication cookie is scoped to
+    <code>.refocus.co.in</code> so your session works across both. Analytics
+    cookies help us measure traffic and improve content. You can control cookies
+    in your browser settings; blocking some may affect functionality.
+  </p>
+
+  <h2>Third-party services</h2>
+  <p>We rely on trusted providers to run Refocus. These may process limited data on our behalf:</p>
+  <ul>
+    <li><a href="https://www.mongodb.com/legal/privacy-policy" rel="nofollow noopener" target="_blank">MongoDB Atlas</a> — database hosting</li>
+    <li><a href="https://firebase.google.com/support/privacy" rel="nofollow noopener" target="_blank">Google Firebase</a> — Google sign-in</li>
+    <li><a href="https://www.daily.co/legal/privacy/" rel="nofollow noopener" target="_blank">Daily.co</a> — video sessions</li>
+    <li><a href="https://resend.com/legal/privacy-policy" rel="nofollow noopener" target="_blank">Resend</a> — transactional email</li>
+    <li><a href="https://ably.com/privacy" rel="nofollow noopener" target="_blank">Ably</a> — realtime messaging</li>
+    <li><a href="https://vercel.com/legal/privacy-policy" rel="nofollow noopener" target="_blank">Vercel</a> and <a href="https://www.cloudflare.com/privacypolicy/" rel="nofollow noopener" target="_blank">Cloudflare</a> — hosting</li>
+    <li><a href="https://posthog.com/privacy" rel="nofollow noopener" target="_blank">PostHog</a> and <a href="https://policies.google.com/privacy" rel="nofollow noopener" target="_blank">Google Analytics</a> — product/website analytics</li>
+  </ul>
+
+  <h2>Data retention</h2>
+  <p>
+    We keep your information for as long as your account is active or as needed
+    to provide the service. You can request deletion of your account and
+    associated data at any time (see below).
+  </p>
+
+  <h2>Your rights</h2>
+  <p>
+    You may access, correct, export, or delete your personal data. Depending on
+    your location (for example under the EU GDPR or India's DPDP Act), you may
+    have additional rights. To exercise any of these, email
+    <a href="mailto:hello@refocus.co.in">hello@refocus.co.in</a>.
+  </p>
+
+  <h2>Children</h2>
+  <p>
+    Refocus is not intended for children under 13 (or the minimum age required
+    in your country). We do not knowingly collect data from children.
+  </p>
+
+  <h2>Changes</h2>
+  <p>
+    We may update this policy from time to time. Material changes will be
+    reflected by the "Last updated" date above.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Questions about privacy? Email
+    <a href="mailto:hello@refocus.co.in">hello@refocus.co.in</a>.
+  </p>
+
+  <p>
+    <em>
+      This policy is provided for transparency and is not legal advice. For
+      specific compliance needs, consult a qualified professional.
+    </em>
+  </p>
+</ContentPage>

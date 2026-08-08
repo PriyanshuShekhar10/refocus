@@ -1,0 +1,67 @@
+---
+import Base from "./Base.astro";
+import Navbar from "../components/Navbar";
+import "../styles/blog.css";
+
+export interface Props {
+  title: string;
+  description: string;
+  canonical: string;
+  heading: string;
+  updated?: string; // ISO date, e.g. "2026-08-08"
+  jsonLd?: unknown[];
+}
+
+const { title, description, canonical, heading, updated, jsonLd = [] } =
+  Astro.props;
+
+const fmt = (iso?: string) =>
+  iso
+    ? new Date(iso).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
+const updatedLabel = fmt(updated);
+---
+
+<Base
+  title={`${title} — Refocus`}
+  description={description}
+  canonical={canonical}
+  ogTitle={title}
+  ogDescription={description}
+  jsonLd={jsonLd}
+>
+  <div class="blog">
+    <Navbar client:load />
+
+    <article class="blog-article">
+      <header class="blog-header">
+        <a class="blog-back" href="/">&larr; Home</a>
+        <h1>{heading}</h1>
+        {
+          updatedLabel && (
+            <p class="blog-meta">Last updated {updatedLabel}</p>
+          )
+        }
+      </header>
+
+      <hr class="blog-divider" />
+
+      <div class="blog-prose">
+        <slot />
+      </div>
+    </article>
+
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+      <a href="/blog">Blog</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </footer>
+  </div>
+</Base>

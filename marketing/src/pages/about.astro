@@ -1,0 +1,78 @@
+---
+import ContentPage from "../layouts/ContentPage.astro";
+import { APP_URL } from "../lib/config";
+
+const site = "https://refocus.co.in";
+const title = "About Refocus";
+const description =
+  "Refocus is a virtual co-working room for deep work — pick a session, get paired with someone who's also there to focus, and get the thing done.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    name: "About Refocus",
+    url: `${site}/about`,
+    description,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Refocus",
+    url: site,
+    logo: `${site}/icon1.png`,
+    email: "hello@refocus.co.in",
+  },
+];
+---
+
+<ContentPage
+  title={title}
+  description={description}
+  canonical="/about"
+  heading="About Refocus"
+  jsonLd={jsonLd}
+>
+  <p>
+    Refocus is a virtual co-working room built around accountability, not
+    conversation. You pick a session length, get paired with someone else who's
+    also there to focus, briefly share what you're working on, then work side by
+    side with synced timers — with a short check-in at the end.
+  </p>
+
+  <h2>Why we built it</h2>
+  <p>
+    A lot of us are productive in libraries and coffee shops but fall apart
+    alone at home. The thing that reliably helps isn't another app or a longer
+    to-do list — it's another person in the room, quietly working. That's called
+    <strong>body doubling</strong>, and it's the idea Refocus is built on. Your
+    friends aren't always free when you need to focus, and most video tools feel
+    like meetings. Refocus is the opposite: quiet, low-pressure company for deep
+    work.
+  </p>
+
+  <h2>Who it's for</h2>
+  <ul>
+    <li>Students preparing for competitive exams and long study cycles</li>
+    <li>Remote workers and freelancers who miss the energy of an office</li>
+    <li>People with ADHD who find it easier to start with someone present</li>
+    <li>Anyone who knows what to do but struggles to start and stay on task</li>
+  </ul>
+
+  <h2>How a session works</h2>
+  <ol>
+    <li>Pick a 25, 50, or 75 minute session.</li>
+    <li>Get matched with someone who's also there to focus.</li>
+    <li>Say what you'll work on.</li>
+    <li>Work side by side with a shared timer.</li>
+    <li>Check in at the end — what you got done, how it went.</li>
+  </ol>
+
+  <h2>Get in touch</h2>
+  <p>
+    Questions, feedback, or ideas? Email
+    <a href="mailto:hello@refocus.co.in">hello@refocus.co.in</a>. You can also
+    read the <a href="/blog">blog</a> or
+    <a href={`${APP_URL}/auth/sign-up`}>try a session</a>.
+  </p>
+</ContentPage>

@@ -16,7 +16,10 @@ export const GET: APIRoute = async () => {
   const staticEntries: Entry[] = [
     { loc: `${site}/`, changefreq: "weekly", priority: "1.0" },
     { loc: `${site}/blog`, changefreq: "daily", priority: "0.8" },
+    { loc: `${site}/about`, changefreq: "monthly", priority: "0.6" },
     { loc: `${site}/career`, changefreq: "monthly", priority: "0.6" },
+    { loc: `${site}/privacy`, changefreq: "yearly", priority: "0.3" },
+    { loc: `${site}/terms`, changefreq: "yearly", priority: "0.3" },
   ];
 
   const postEntries: Entry[] = posts.map((post) => ({
