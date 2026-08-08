@@ -17,9 +17,11 @@
   },
   "dependencies": {
     "@astrojs/react": "^4.2.0",
+    "@astrojs/rss": "^4.0.19",
     "@fontsource-variable/bricolage-grotesque": "^5.1.1",
     "@fontsource/geist-mono": "^5.1.1",
     "astro": "^5.2.0",
+    "astro-og-canvas": "^0.13.0",
     "jose": "^5.9.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

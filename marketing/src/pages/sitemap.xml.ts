@@ -1,7 +1,9 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
+import { SITE_URL } from "../lib/seo";
+import { CATEGORY_IDS } from "../lib/categories";
 
-const site = "https://refocus.co.in";
+const site = SITE_URL;
 
 type Entry = {
   loc: string;
@@ -10,17 +12,54 @@ type Entry = {
   priority: string;
 };
 
+const PAGE_SIZE = 12;
+
 export const GET: APIRoute = async () => {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
 
+  const latestPost = posts
+    .map((p) => +new Date(p.data.updatedDate ?? p.data.pubDate))
+    .sort((a, b) => b - a)[0];
+  const blogLastmod = latestPost
+    ? new Date(latestPost).toISOString()
+    : new Date().toISOString();
+
   const staticEntries: Entry[] = [
-    { loc: `${site}/`, changefreq: "weekly", priority: "1.0" },
-    { loc: `${site}/blog`, changefreq: "daily", priority: "0.8" },
+    {
+      loc: `${site}/`,
+      lastmod: new Date().toISOString(),
+      changefreq: "weekly",
+      priority: "1.0",
+    },
+    {
+      loc: `${site}/blog`,
+      lastmod: blogLastmod,
+      changefreq: "daily",
+      priority: "0.8",
+    },
     { loc: `${site}/about`, changefreq: "monthly", priority: "0.6" },
     { loc: `${site}/career`, changefreq: "monthly", priority: "0.6" },
     { loc: `${site}/privacy`, changefreq: "yearly", priority: "0.3" },
     { loc: `${site}/terms`, changefreq: "yearly", priority: "0.3" },
   ];
+
+  // Paginated blog listing pages (page 1 lives at /blog above).
+  const pageCount = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
+  const paginationEntries: Entry[] = Array.from(
+    { length: pageCount - 1 },
+    (_, i) => ({
+      loc: `${site}/blog/${i + 2}`,
+      changefreq: "weekly",
+      priority: "0.4",
+    }),
+  );
+
+  // Category archive pages.
+  const categoryEntries: Entry[] = CATEGORY_IDS.map((id) => ({
+    loc: `${site}/blog/category/${id}`,
+    changefreq: "weekly",
+    priority: "0.6",
+  }));
 
   const postEntries: Entry[] = posts.map((post) => ({
     loc: `${site}/blog/${post.id}`,
@@ -31,7 +70,12 @@ export const GET: APIRoute = async () => {
     priority: "0.7",
   }));
 
-  const entries = [...staticEntries, ...postEntries];
+  const entries = [
+    ...staticEntries,
+    ...categoryEntries,
+    ...paginationEntries,
+    ...postEntries,
+  ];
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

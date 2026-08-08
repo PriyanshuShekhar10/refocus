@@ -2,6 +2,7 @@
 import Base from "./Base.astro";
 import Navbar from "../components/Navbar";
 import { APP_URL } from "../lib/config";
+import { categoryLabel as labelFor } from "../lib/categories";
 import "../styles/blog.css";
 
 export interface Props {
@@ -14,16 +15,10 @@ export interface Props {
   tags?: string[];
   author?: string;
   minutes?: number;
+  ogImage?: string;
   jsonLd?: unknown[];
+  related?: { title: string; slug: string; category?: string }[];
 }
-
-const CATEGORY_LABELS: Record<string, string> = {
-  productivity: "Productivity",
-  adhd: "ADHD & mental health",
-  exams: "Competitive exams",
-  loneliness: "Loneliness & studying alone",
-  remote: "Remote work",
-};
 
 const {
   title,
@@ -35,7 +30,9 @@ const {
   tags = [],
   author = "Refocus Team",
   minutes = 5,
+  ogImage,
   jsonLd = [],
+  related = [],
 } = Astro.props;
 
 const fmtDate = (d: Date) =>
@@ -45,7 +42,7 @@ const fmtDate = (d: Date) =>
     day: "numeric",
   });
 const isoDate = new Date(pubDate).toISOString();
-const categoryLabel = CATEGORY_LABELS[category] || category;
+const categoryLabel = labelFor(category);
 ---
 
 <Base
@@ -55,6 +52,8 @@ const categoryLabel = CATEGORY_LABELS[category] || category;
   ogTitle={title}
   ogDescription={description}
   ogType="article"
+  ogImage={ogImage}
+  ogImageAlt={title}
   jsonLd={jsonLd}
 >
   <div class="blog">
@@ -66,7 +65,8 @@ const categoryLabel = CATEGORY_LABELS[category] || category;
         <h1>{title}</h1>
         <p class="blog-meta">
           <time datetime={isoDate}>{fmtDate(pubDate)}</time>
-          &middot; {minutes} min read &middot; {categoryLabel}
+          &middot; {minutes} min read &middot;
+          <a href={`/blog/category/${category}`}>{categoryLabel}</a>
         </p>
         {
           tags.length > 0 && (
@@ -99,11 +99,30 @@ const categoryLabel = CATEGORY_LABELS[category] || category;
       </aside>
     </article>
 
+    {
+      related.length > 0 && (
+        <section class="blog-related" aria-label="Related posts">
+          <h2>Keep reading</h2>
+          <ul class="blog-related-list">
+            {related.map((r) => (
+              <li>
+                <a href={`/blog/${r.slug}`}>
+                  <h3>{r.title}</h3>
+                  <span class="blog-related-cat">{labelFor(r.category)}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
     <footer class="blog-foot">
       <span>&copy; {new Date().getFullYear()} Refocus</span>
       <a href="/">Home</a>
       <a href="/blog">Blog</a>
       <a href="/career">Careers</a>
+      <a href="/rss.xml">RSS</a>
     </footer>
   </div>
 </Base>

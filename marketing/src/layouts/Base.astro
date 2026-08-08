@@ -3,6 +3,7 @@ import "@fontsource-variable/bricolage-grotesque";
 import "@fontsource/geist-mono/400.css";
 import "@fontsource/geist-mono/500.css";
 import "../styles/global.css";
+import { SITE_URL, THEME_COLOR, TWITTER_HANDLE } from "../lib/seo";
 
 export interface Props {
   title: string;
@@ -11,6 +12,8 @@ export interface Props {
   ogTitle?: string;
   ogDescription?: string;
   ogType?: string;
+  ogImage?: string;
+  ogImageAlt?: string;
   jsonLd?: unknown[];
 }
 
@@ -21,13 +24,15 @@ const {
   ogTitle = title,
   ogDescription = description,
   ogType = "website",
+  ogImage: ogImageProp,
+  ogImageAlt = "Refocus — a virtual co-working room for deep work",
   jsonLd = [],
 } = Astro.props;
 
-const site = "https://refocus.co.in";
+const site = SITE_URL;
 const canonicalUrl = new URL(canonical, site).href;
-const ogImage = new URL("/opengraph-image.png", site).href;
-const twitterImage = new URL("/twitter-image.png", site).href;
+const ogImage = new URL(ogImageProp ?? "/opengraph-image.png", site).href;
+const twitterImage = new URL(ogImageProp ?? "/twitter-image.png", site).href;
 
 // Analytics (build-time public env)
 const gaId = (import.meta.env.PUBLIC_GA_MEASUREMENT_ID || "").trim();
@@ -44,7 +49,14 @@ const posthogHost = (
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="theme-color" content={THEME_COLOR} />
     <link rel="canonical" href={canonicalUrl} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Refocus Blog"
+      href={new URL("/rss.xml", site).href}
+    />
 
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon0.svg" type="image/svg+xml" />
@@ -57,6 +69,7 @@ const posthogHost = (
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:site_name" content="Refocus" />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:alt" content={ogImageAlt} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
 
@@ -64,6 +77,9 @@ const posthogHost = (
     <meta name="twitter:title" content={ogTitle} />
     <meta name="twitter:description" content={ogDescription} />
     <meta name="twitter:image" content={twitterImage} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
+    {TWITTER_HANDLE && <meta name="twitter:site" content={TWITTER_HANDLE} />}
+    {TWITTER_HANDLE && <meta name="twitter:creator" content={TWITTER_HANDLE} />}
 
     {
       gaId && (
@@ -152,6 +168,7 @@ const posthogHost = (
         />
       ))
     }
+    <slot name="head" />
   </head>
   <body>
     <slot />

@@ -1,8 +1,21 @@
 ---
 import Base from "../layouts/Base.astro";
-import { Homepage } from "../components/homepage/Homepage";
+import { getImage } from "astro:assets";
+import dashboardImg from "../assets/dashboard.png";
+import homeStyles from "../components/homepage/Homepage.module.css";
+import Navbar from "../components/Navbar";
+import { Hero } from "../components/homepage/Hero";
+import { Sessions } from "../components/homepage/Sessions";
+import { Modes } from "../components/homepage/Modes";
+import { WhyItWorks } from "../components/homepage/WhyItWorks";
+import { Faq } from "../components/homepage/Faq";
+import { FinalCTA } from "../components/homepage/FinalCTA";
+import { Footer } from "../components/homepage/Footer";
+import { SITE_URL, organizationJsonLd } from "../lib/seo";
+import { faqPageJsonLd } from "../lib/faq";
+import { APP_URL } from "../lib/config";
 
-const site = "https://refocus.co.in";
+const site = SITE_URL;
 
 const title = "Refocus — Focus, together. Quietly.";
 const description =
@@ -17,12 +30,53 @@ const websiteJsonLd = {
     "Virtual co-working room for deep work with synced timers, focus mode, friends, and global chat.",
 };
 
-const orgJsonLd = {
+const orgJsonLd = organizationJsonLd();
+
+const softwareJsonLd = {
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": "SoftwareApplication",
   name: "Refocus",
   url: site,
-  logo: `${site}/icon1.png`,
+  applicationCategory: "ProductivityApplication",
+  operatingSystem: "Web",
+  description:
+    "A virtual co-working room for deep work. Pick a 25, 50, or 75 minute session, get matched with someone who's also there to focus, and work side by side with synced timers.",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  installUrl: `${APP_URL}/auth/sign-up`,
+};
+
+const faqJsonLd = faqPageJsonLd();
+
+// Optimize the hero LCP image: AVIF/WebP + responsive srcset.
+const heroWidths = [768, 1200, 1600, 2400];
+const heroSizes = "(max-width: 980px) 92vw, 900px";
+const heroAvif = await getImage({
+  src: dashboardImg,
+  widths: heroWidths,
+  format: "avif",
+});
+const heroWebp = await getImage({
+  src: dashboardImg,
+  widths: heroWidths,
+  format: "webp",
+});
+const heroPng = await getImage({
+  src: dashboardImg,
+  widths: heroWidths,
+  format: "png",
+});
+const heroImage = {
+  avifSrcset: heroAvif.srcSet.attribute,
+  webpSrcset: heroWebp.srcSet.attribute,
+  fallbackSrc: heroPng.src,
+  fallbackSrcset: heroPng.srcSet.attribute,
+  sizes: heroSizes,
+  width: dashboardImg.width,
+  height: dashboardImg.height,
 };
 ---
 
@@ -32,7 +86,26 @@ const orgJsonLd = {
   canonical="/"
   ogTitle={title}
   ogDescription="A virtual co-working room for deep work. 25, 50, or 75 minute sessions. Focus mode mutes both mics so you're present, not performing."
-  jsonLd={[websiteJsonLd, orgJsonLd]}
+  jsonLd={[websiteJsonLd, orgJsonLd, softwareJsonLd, faqJsonLd]}
 >
-  <Homepage client:load />
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    type="image/avif"
+    imagesrcset={heroAvif.srcSet.attribute}
+    imagesizes={heroSizes}
+  />
+  <div class={homeStyles.root}>
+    <Navbar client:load />
+    <main>
+      <Hero client:load image={heroImage} />
+      <Sessions client:visible />
+      <Modes client:visible />
+      <WhyItWorks client:visible />
+      <Faq client:visible />
+      <FinalCTA client:visible />
+    </main>
+    <Footer />
+  </div>
 </Base>

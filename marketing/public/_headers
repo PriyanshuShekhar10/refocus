@@ -1,0 +1,17 @@
+# Cloudflare Pages headers.
+
+# Hashed, content-addressed build assets never change — cache hard.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Generated OG images are stable per slug.
+/open-graph/*
+  Cache-Control: public, max-age=86400
+
+# Static image/font assets.
+/*.webp
+  Cache-Control: public, max-age=604800
+/*.avif
+  Cache-Control: public, max-age=604800
+/*.svg
+  Cache-Control: public, max-age=604800

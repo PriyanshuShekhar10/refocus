@@ -1,0 +1,131 @@
+---
+import type { GetStaticPaths } from "astro";
+import Base from "../../../layouts/Base.astro";
+import Navbar from "../../../components/Navbar";
+import { getCollection } from "astro:content";
+import { SITE_URL, breadcrumbJsonLd } from "../../../lib/seo";
+import {
+  CATEGORIES,
+  CATEGORY_IDS,
+  categoryMeta,
+  categoryLabel,
+} from "../../../lib/categories";
+import "../../../styles/blog.css";
+
+export const getStaticPaths = (async () => {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return CATEGORY_IDS.map((id) => ({
+    params: { category: id },
+    props: {
+      category: id,
+      posts: posts
+        .filter((p) => (p.data.category ?? "productivity") === id)
+        .sort((a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate)),
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+const { category, posts } = Astro.props as {
+  category: string;
+  posts: Awaited<ReturnType<typeof getCollection<"blog">>>;
+};
+
+const site = SITE_URL;
+const meta = categoryMeta(category);
+const canonical = `/blog/category/${category}`;
+const title = `${meta.label} — Refocus Blog`;
+
+const fmt = (d: Date) =>
+  new Date(d).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+const collectionJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: title,
+  url: `${site}${canonical}`,
+  description: meta.description,
+  hasPart: posts.map((p) => ({
+    "@type": "BlogPosting",
+    headline: p.data.title,
+    url: `${site}/blog/${p.id}`,
+    datePublished: new Date(p.data.pubDate).toISOString(),
+  })),
+};
+
+const breadcrumb = breadcrumbJsonLd([
+  { name: "Home", path: "/" },
+  { name: "Blog", path: "/blog" },
+  { name: meta.label, path: canonical },
+]);
+---
+
+<Base
+  title={title}
+  description={meta.description}
+  canonical={canonical}
+  ogTitle={`${meta.label} — Refocus Blog`}
+  ogDescription={meta.description}
+  jsonLd={[collectionJsonLd, breadcrumb]}
+>
+  <div class="blog">
+    <Navbar client:load />
+
+    <section class="blog-index">
+      <header class="blog-index-head">
+        <p class="blog-eyebrow">
+          <a href="/blog">Blog</a> / {meta.label}
+        </p>
+        <h1>{meta.label}</h1>
+        <p class="blog-lede">{meta.intro}</p>
+
+        <nav class="blog-topics" aria-label="Browse by topic">
+          {
+            CATEGORY_IDS.map((id) => (
+              <a
+                href={`/blog/category/${id}`}
+                aria-current={id === category ? "page" : undefined}
+                class={id === category ? "is-active" : undefined}
+              >
+                {CATEGORIES[id].label}
+              </a>
+            ))
+          }
+        </nav>
+      </header>
+
+      {
+        posts.length === 0 ? (
+          <p class="blog-empty">No posts in this topic yet — check back soon.</p>
+        ) : (
+          <ul class="blog-list">
+            {posts.map((post) => (
+              <li class="blog-card">
+                <a href={`/blog/${post.id}`}>
+                  <p class="blog-card-meta">
+                    {fmt(post.data.pubDate)}
+                    {" · "}
+                    {categoryLabel(post.data.category)}
+                  </p>
+                  <h2>{post.data.title}</h2>
+                  <p class="blog-card-desc">{post.data.description}</p>
+                  <span class="blog-card-more">Read &rarr;</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href="/">Home</a>
+      <a href="/blog">All posts</a>
+      <a href="/rss.xml">RSS</a>
+    </footer>
+  </div>
+</Base>

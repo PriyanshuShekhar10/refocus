@@ -5,7 +5,17 @@ import { url } from "../../lib/config";
 
 const AVATAR_COLORS = ["#FFF1D3", "#FFB090", "#CA5995", "#5D1C6A"];
 
-export function Hero() {
+export type HeroImage = {
+  avifSrcset: string;
+  webpSrcset: string;
+  fallbackSrc: string;
+  fallbackSrcset?: string;
+  sizes: string;
+  width: number;
+  height: number;
+};
+
+export function Hero({ image }: { image?: HeroImage }) {
   return (
     <section className={styles.hero}>
       <div className={styles.wrap}>
@@ -49,15 +59,43 @@ export function Hero() {
         </Reveal>
 
         <Reveal className={styles.preview}>
-          <img
-            src="/dashboard.png"
-            alt="Refocus dashboard with an active focus session"
-            className={styles.previewImg}
-            width={2940}
-            height={1766}
-            loading="eager"
-            decoding="async"
-          />
+          {image ? (
+            <picture>
+              <source
+                type="image/avif"
+                srcSet={image.avifSrcset}
+                sizes={image.sizes}
+              />
+              <source
+                type="image/webp"
+                srcSet={image.webpSrcset}
+                sizes={image.sizes}
+              />
+              <img
+                src={image.fallbackSrc}
+                srcSet={image.fallbackSrcset}
+                sizes={image.sizes}
+                alt="Refocus dashboard with an active focus session"
+                className={styles.previewImg}
+                width={image.width}
+                height={image.height}
+                loading="eager"
+                decoding="async"
+                // @ts-expect-error fetchpriority is a valid HTML attribute
+                fetchpriority="high"
+              />
+            </picture>
+          ) : (
+            <img
+              src="/dashboard.png"
+              alt="Refocus dashboard with an active focus session"
+              className={styles.previewImg}
+              width={2940}
+              height={1766}
+              loading="eager"
+              decoding="async"
+            />
+          )}
         </Reveal>
       </div>
     </section>

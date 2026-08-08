@@ -1,25 +1,29 @@
 ---
+import type { GetStaticPaths, Page } from "astro";
+import type { CollectionEntry } from "astro:content";
 import Base from "../../layouts/Base.astro";
 import Navbar from "../../components/Navbar";
 import { getCollection } from "astro:content";
+import { SITE_URL } from "../../lib/seo";
+import { CATEGORIES, CATEGORY_IDS, categoryLabel } from "../../lib/categories";
 import "../../styles/blog.css";
 
-const CATEGORY_LABELS = {
-  productivity: "Productivity",
-  adhd: "ADHD & mental health",
-  exams: "Competitive exams",
-  loneliness: "Loneliness & studying alone",
-  remote: "Remote work",
-};
+export const getStaticPaths = (async ({ paginate }) => {
+  const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+    (a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate),
+  );
+  return paginate(posts, { pageSize: 12 });
+}) satisfies GetStaticPaths;
 
-const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
-  (a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate),
-);
+type Props = { page: Page<CollectionEntry<"blog">> };
+const { page } = Astro.props as Props;
 
-const site = "https://refocus.co.in";
-const title = "Blog — Refocus";
+const site = SITE_URL;
 const description =
   "Practical notes on deep work, ADHD-friendly focus, competitive exam prep, studying alone, and remote work — with links to real resources.";
+const title =
+  page.currentPage > 1 ? `Blog — page ${page.currentPage} — Refocus` : "Blog — Refocus";
+const canonical = page.url.current;
 
 const fmt = (d: Date) =>
   new Date(d).toLocaleDateString("en-US", {
@@ -27,10 +31,6 @@ const fmt = (d: Date) =>
     month: "long",
     day: "numeric",
   });
-
-const categoryLabel = (id?: string) =>
-  (id && CATEGORY_LABELS[id as keyof typeof CATEGORY_LABELS]) ||
-  CATEGORY_LABELS.productivity;
 
 const blogJsonLd = {
   "@context": "https://schema.org",
@@ -44,7 +44,7 @@ const blogJsonLd = {
 <Base
   title={title}
   description={description}
-  canonical="/blog"
+  canonical={canonical}
   ogTitle="The Refocus Blog"
   ogDescription={description}
   jsonLd={[blogJsonLd]}
@@ -57,14 +57,22 @@ const blogJsonLd = {
         <p class="blog-eyebrow">The Refocus Blog</p>
         <h1>Notes on focus, exams, ADHD &amp; co-working</h1>
         <p class="blog-lede">{description}</p>
+
+        <nav class="blog-topics" aria-label="Browse by topic">
+          {
+            CATEGORY_IDS.map((id) => (
+              <a href={`/blog/category/${id}`}>{CATEGORIES[id].label}</a>
+            ))
+          }
+        </nav>
       </header>
 
       {
-        posts.length === 0 ? (
+        page.data.length === 0 ? (
           <p class="blog-empty">No posts yet — check back soon.</p>
         ) : (
           <ul class="blog-list">
-            {posts.map((post) => (
+            {page.data.map((post) => (
               <li class="blog-card">
                 <a href={`/blog/${post.id}`}>
                   <p class="blog-card-meta">
@@ -81,12 +89,33 @@ const blogJsonLd = {
           </ul>
         )
       }
+
+      {
+        page.lastPage > 1 && (
+          <nav class="blog-pagination" aria-label="Pagination">
+            {page.url.prev ? (
+              <a href={page.url.prev}>&larr; Newer</a>
+            ) : (
+              <span class="is-disabled">&larr; Newer</span>
+            )}
+            <span class="blog-pagination-count">
+              Page {page.currentPage} of {page.lastPage}
+            </span>
+            {page.url.next ? (
+              <a href={page.url.next}>Older &rarr;</a>
+            ) : (
+              <span class="is-disabled">Older &rarr;</span>
+            )}
+          </nav>
+        )
+      }
     </section>
 
     <footer class="blog-foot">
       <span>&copy; {new Date().getFullYear()} Refocus</span>
       <a href="/">Home</a>
       <a href="/career">Careers</a>
+      <a href="/rss.xml">RSS</a>
     </footer>
   </div>
 </Base>

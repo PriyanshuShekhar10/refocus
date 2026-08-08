@@ -1,17 +1,36 @@
 ---
 import { getCollection, render } from "astro:content";
 import BlogPost from "../../layouts/BlogPost.astro";
+import { SITE_URL, publisherJsonLd, breadcrumbJsonLd } from "../../lib/seo";
+import { categoryLabel } from "../../lib/categories";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("blog", ({ data }) => !data.draft);
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+  const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+    (a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate),
+  );
+  return posts.map((post) => {
+    const cat = post.data.category ?? "productivity";
+    const sameCat = posts.filter(
+      (p) => p.id !== post.id && (p.data.category ?? "productivity") === cat,
+    );
+    const fallback = posts.filter((p) => p.id !== post.id);
+    const related = (sameCat.length ? sameCat : fallback)
+      .slice(0, 3)
+      .map((p) => ({
+        title: p.data.title,
+        slug: p.id,
+        category: p.data.category,
+      }));
+    return { params: { slug: post.id }, props: { post, related } };
+  });
 }
 
-const { post } = Astro.props;
+const { post, related } = Astro.props;
 const { Content } = await render(post);
 
-const site = "https://refocus.co.in";
+const site = SITE_URL;
 const canonical = `/blog/${post.id}`;
+const ogImage = `/open-graph/${post.id}.png`;
 
 const words = (post.body ?? "").trim().split(/\s+/).filter(Boolean).length;
 const minutes = Math.max(1, Math.round(words / 200));
@@ -26,15 +45,18 @@ const blogPostingJsonLd = {
     post.data.updatedDate ?? post.data.pubDate,
   ).toISOString(),
   author: { "@type": "Organization", name: post.data.author ?? "Refocus" },
-  publisher: {
-    "@type": "Organization",
-    name: "Refocus",
-    logo: { "@type": "ImageObject", url: `${site}/icon1.png` },
-  },
+  publisher: publisherJsonLd(),
   mainEntityOfPage: `${site}${canonical}`,
-  image: `${site}/opengraph-image.png`,
+  image: `${site}${ogImage}`,
   keywords: (post.data.tags ?? []).join(", "),
+  articleSection: categoryLabel(post.data.category),
 };
+
+const breadcrumb = breadcrumbJsonLd([
+  { name: "Home", path: "/" },
+  { name: "Blog", path: "/blog" },
+  { name: post.data.title, path: canonical },
+]);
 ---
 
 <BlogPost
@@ -47,7 +69,9 @@ const blogPostingJsonLd = {
   tags={post.data.tags}
   author={post.data.author}
   minutes={minutes}
-  jsonLd={[blogPostingJsonLd]}
+  related={related}
+  ogImage={ogImage}
+  jsonLd={[blogPostingJsonLd, breadcrumb]}
 >
   <Content />
 </BlogPost>

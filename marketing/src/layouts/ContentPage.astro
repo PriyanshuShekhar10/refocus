@@ -1,6 +1,7 @@
 ---
 import Base from "./Base.astro";
 import Navbar from "../components/Navbar";
+import { breadcrumbJsonLd } from "../lib/seo";
 import "../styles/blog.css";
 
 export interface Props {
@@ -14,6 +15,12 @@ export interface Props {
 
 const { title, description, canonical, heading, updated, jsonLd = [] } =
   Astro.props;
+
+const breadcrumb = breadcrumbJsonLd([
+  { name: "Home", path: "/" },
+  { name: heading, path: canonical },
+]);
+const allJsonLd = [breadcrumb, ...jsonLd];
 
 const fmt = (iso?: string) =>
   iso
@@ -32,7 +39,7 @@ const updatedLabel = fmt(updated);
   canonical={canonical}
   ogTitle={title}
   ogDescription={description}
-  jsonLd={jsonLd}
+  jsonLd={allJsonLd}
 >
   <div class="blog">
     <Navbar client:load />
