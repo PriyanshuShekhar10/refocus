@@ -1,0 +1,171 @@
+---
+import LandingPage from "../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../lib/seo";
+import { APP_URL } from "../lib/config";
+
+const UPDATED = "2026-08-09";
+const canonical = "/focusmate-alternative";
+const title = "A Focusmate Alternative: Refocus vs Focusmate";
+const description =
+  "Looking for a Focusmate alternative? Here's an honest comparison of Refocus vs Focusmate — sessions, cameras, community, and pricing — so you can pick the virtual coworking tool that fits.";
+
+const faqs = [
+  {
+    question: "Is there a free Focusmate alternative?",
+    answer:
+      "Yes. Refocus is free to start with no credit card required, and it works the same way as Focusmate — you get matched with someone who's also there to focus and work through a timed session together. Focusmate's own free plan covers three sessions per week, so if you need more than that, comparing free tiers is worth it.",
+  },
+  {
+    question: "Does Refocus require your camera on the whole time like Focusmate?",
+    answer:
+      "Focusmate asks you to keep your video on for the entire session. Refocus is built around low-pressure focus: its focus mode keeps mics optional so you're there to work, not perform. If constant on-camera pressure is the thing that stops you from showing up, a lighter-weight setup can help you actually start.",
+  },
+  {
+    question: "What session lengths does Refocus offer?",
+    answer:
+      "Refocus offers the same 25, 50, and 75-minute sessions as Focusmate, with synced timers so you and your partner start and break together. You can work solo, with a friend, or get matched with someone new.",
+  },
+  {
+    question: "Can I cowork with friends on Refocus?",
+    answer:
+      "Yes. Refocus has a friends list and session requests, plus a global chat lounge to find a partner for the next slot. Focusmate has a similar 'Favorite partners' feature for reconnecting with people you've worked well with.",
+  },
+  {
+    question: "Refocus vs Focusmate — which should I choose?",
+    answer:
+      "Choose Focusmate if you want the largest, most established 24/7 community and cameras-on accountability is exactly what makes you focus. Choose Refocus if you want a free start, lower on-camera pressure, synced timers, and a friends-and-chat community layer between sessions.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Comparison"
+  heading="A Focusmate alternative: Refocus vs Focusmate"
+  lead="Focusmate popularized virtual coworking, and it's a genuinely good tool. But it isn't the only option — and its cameras-on rule doesn't suit everyone. Here's an honest look at how Refocus compares, so you can pick what actually gets you working."
+  updated={UPDATED}
+  faqs={faqs}
+  ctaTitle="Try Refocus free"
+  ctaText="Refocus is a virtual coworking room: pick a 25, 50, or 75-minute session, get matched with someone who's also there to focus, and work side by side with synced timers. Free to start, no card required."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Start a free session"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <p>
+    <a href="https://www.focusmate.com/" rel="nofollow noopener" target="_blank">Focusmate</a>
+    is one of the best-known
+    <a href="/virtual-coworking">virtual coworking</a> tools around. It matches
+    you 1:1 with a partner for a timed video session — you share your goal, work
+    quietly, and check in at the end. It's a solid, well-built product with a
+    large 24/7 community. If it already works for you, keep using it.
+  </p>
+  <p>
+    But people look for a Focusmate alternative for real reasons — usually the
+    always-on camera, the weekly session cap on the free plan, or simply wanting
+    to try a different community. If that's you, Refocus covers the same core
+    idea of <a href="/body-doubling">body doubling</a> with a lighter feel.
+  </p>
+
+  <h2>Refocus vs Focusmate at a glance</h2>
+  <div class="blog-table">
+    <table>
+      <thead>
+        <tr>
+          <th>&nbsp;</th>
+          <th>Refocus</th>
+          <th>Focusmate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Format</th>
+          <td>Matched focus sessions; solo, with a friend, or with someone new</td>
+          <td>Matched 1:1 video sessions</td>
+        </tr>
+        <tr>
+          <th>Session lengths</th>
+          <td>25, 50, 75 min with synced timers</td>
+          <td>25, 50, 75 min</td>
+        </tr>
+        <tr>
+          <th>Camera</th>
+          <td>Low-pressure focus mode; mic optional — present, not performing</td>
+          <td>Video required on for the whole session</td>
+        </tr>
+        <tr>
+          <th>Community layer</th>
+          <td>Friends, session requests, and a global chat lounge</td>
+          <td>Favorite partners; large 24/7 global pool</td>
+        </tr>
+        <tr>
+          <th>Free plan</th>
+          <td>Free to start, no card required</td>
+          <td>3 sessions per week free</td>
+        </tr>
+        <tr>
+          <th>Setup</th>
+          <td>Runs in your browser</td>
+          <td>Runs in your browser</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Details on Focusmate's plans and rules are on their
+    <a href="https://www.focusmate.com/pricing/" rel="nofollow noopener" target="_blank">pricing</a>
+    and
+    <a href="https://www.focusmate.com/how-it-works/" rel="nofollow noopener" target="_blank">how-it-works</a>
+    pages — always check the source for the latest.
+  </p>
+
+  <h2>Where Refocus is different</h2>
+  <p>
+    The biggest practical difference is <strong>camera pressure</strong>.
+    Focusmate requires your video to stay on the entire time, which is exactly
+    what keeps some people accountable — and exactly what stops others from ever
+    starting. Refocus leans on a quieter form of presence: a focus mode where
+    mics are optional and the point is shared momentum, not being watched.
+  </p>
+  <p>
+    Refocus also adds a <strong>community layer between sessions</strong> — a
+    friends list, session requests, and a global chat lounge for finding a
+    partner for the next slot. It's less of a solo utility and a bit more of a
+    place to keep coming back to.
+  </p>
+
+  <h2>Where Focusmate is still great</h2>
+  <p>
+    Credit where it's due: Focusmate has been doing this since 2017 and has a
+    huge, reliable 24/7 pool of members across 150+ countries, plus niceties
+    like task modes, gender-matching, and calendar integrations. If cameras-on
+    accountability is your thing and you want the biggest possible community,
+    Focusmate is a great choice. This isn't a takedown — it's a fit question.
+  </p>
+
+  <h2>Who should pick which</h2>
+  <ul>
+    <li>
+      <strong>Pick Focusmate</strong> if cameras-on structure is what makes you
+      show up, and you want the largest established community.
+    </li>
+    <li>
+      <strong>Pick Refocus</strong> if on-camera pressure is what holds you back,
+      you want a free start, synced timers, and friends/chat between sessions.
+    </li>
+  </ul>
+  <p>
+    Comparing other tools too? See how we stack up against
+    <a href="/flown-alternative">Flown</a> and
+    <a href="/cofocus-alternative">Cofocus</a>, or read the background on
+    <a href="/body-doubling">body doubling</a> if the whole idea is new to you.
+  </p>
+</LandingPage>

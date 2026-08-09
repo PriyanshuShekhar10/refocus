@@ -1,0 +1,155 @@
+---
+import LandingPage from "../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../lib/seo";
+import { APP_URL } from "../lib/config";
+
+const UPDATED = "2026-08-09";
+const canonical = "/flown-alternative";
+const title = "A FLOWN Alternative: Refocus vs FLOWN";
+const description =
+  "Looking for a FLOWN alternative? An honest Refocus vs FLOWN comparison — facilitated deep-work sessions and wellbeing content vs simple, free matched focus sessions.";
+
+const faqs = [
+  {
+    question: "What is FLOWN and why look for an alternative?",
+    answer:
+      "FLOWN is a deep-work membership platform with facilitated focus sessions, 24/7 drop-in rooms, and wellbeing content like breathwork and planning workshops. It's rich but membership-based, so people look for an alternative when they want something simpler and free, without the facilitator-led format or the broader curriculum.",
+  },
+  {
+    question: "Is Refocus a free alternative to FLOWN?",
+    answer:
+      "Yes. Refocus is free to start with no credit card, and it focuses on one thing: matched, timed coworking sessions. FLOWN runs on a membership (with a free trial), which makes sense for its facilitated sessions and wellbeing programming but is more than some people need.",
+  },
+  {
+    question: "Does Refocus have facilitated or guided sessions like FLOWN?",
+    answer:
+      "No, and that's the main difference. FLOWN offers facilitator-led 1–2 hour sessions plus guided breaks. Refocus is deliberately lightweight: you pick a 25, 50, or 75-minute session, get matched with a partner, and work — no facilitator, no curriculum, no scheduling around events.",
+  },
+  {
+    question: "Refocus vs FLOWN — which should I choose?",
+    answer:
+      "Choose FLOWN if you want structured, facilitator-led deep-work sessions plus wellbeing content and are happy with a membership. Choose Refocus if you want a free, no-frills way to get matched with a focus partner in seconds and just start working.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Comparison"
+  heading="A FLOWN alternative: Refocus vs FLOWN"
+  lead="FLOWN is a polished deep-work membership with facilitated sessions and wellbeing content. It's great — but it's also more (and more expensive) than some people want. If you just need a simple, free way to focus alongside someone, here's how Refocus compares."
+  updated={UPDATED}
+  faqs={faqs}
+  ctaTitle="Try Refocus free"
+  ctaText="Refocus is a virtual coworking room: pick a 25, 50, or 75-minute session, get matched with someone who's also there to focus, and work side by side with synced timers. Free to start, no card required."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Start a free session"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <p>
+    <a href="https://flown.com/" rel="nofollow noopener" target="_blank">FLOWN</a>
+    is a deep-work platform built around
+    <a href="/virtual-coworking">virtual coworking</a> and
+    <a href="/body-doubling">body doubling</a>. Alongside 24/7 silent drop-in
+    rooms, it offers facilitator-led focus sessions, peer-hosted sessions, and
+    "recharge" content like breathwork, journaling, and planning workshops. It's
+    a thoughtful, well-rounded membership — closer to a deep-work club than a
+    single-purpose tool.
+  </p>
+  <p>
+    That breadth is exactly why some people look for a FLOWN alternative: they
+    don't want a facilitator, a curriculum, or a membership — they just want to
+    sit down and focus with someone else present. That's where Refocus fits.
+  </p>
+
+  <h2>Refocus vs FLOWN at a glance</h2>
+  <div class="blog-table">
+    <table>
+      <thead>
+        <tr>
+          <th>&nbsp;</th>
+          <th>Refocus</th>
+          <th>FLOWN</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Core idea</th>
+          <td>Simple matched coworking sessions</td>
+          <td>Deep-work membership + wellbeing content</td>
+        </tr>
+        <tr>
+          <th>Session format</th>
+          <td>25, 50, 75 min, self-serve, matched instantly</td>
+          <td>Drop-in rooms + facilitator-led 1–2 hr sessions</td>
+        </tr>
+        <tr>
+          <th>Facilitators</th>
+          <td>No — you and a partner, no host</td>
+          <td>Yes — expert-led sessions and workshops</td>
+        </tr>
+        <tr>
+          <th>Extras</th>
+          <td>Synced timers, friends, global chat</td>
+          <td>Breathwork, journaling, planning, community events</td>
+        </tr>
+        <tr>
+          <th>Pricing</th>
+          <td>Free to start, no card required</td>
+          <td>Membership (free trial, no card to start)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Check FLOWN's
+    <a href="https://flown.com/how-it-works" rel="nofollow noopener" target="_blank">how-it-works</a>
+    and
+    <a href="https://flown.com/pricing" rel="nofollow noopener" target="_blank">pricing</a>
+    pages for their current details.
+  </p>
+
+  <h2>Where Refocus is different</h2>
+  <p>
+    Refocus does one thing on purpose: it gets you into a focused session with a
+    partner as fast as possible. There's no facilitator to schedule around and
+    nothing to learn — pick a length, get matched, work. For a lot of people the
+    friction of a broader platform is the reason they never actually start, and
+    a smaller surface area helps.
+  </p>
+
+  <h2>Where FLOWN is still great</h2>
+  <p>
+    If you value structure and variety, FLOWN is excellent. Facilitator-led
+    sessions add real accountability, the recharge content supports sustainable
+    focus, and there's independent research on its impact for ADHD and remote
+    workers. For people who want a whole deep-work practice rather than a quick
+    session, the membership earns its keep.
+  </p>
+
+  <h2>Who should pick which</h2>
+  <ul>
+    <li>
+      <strong>Pick FLOWN</strong> if you want facilitated sessions, wellbeing
+      content, and a structured community, and a membership is fine.
+    </li>
+    <li>
+      <strong>Pick Refocus</strong> if you want a free, instant, no-frills focus
+      partner and nothing else to manage.
+    </li>
+  </ul>
+  <p>
+    Weighing other options? See our
+    <a href="/focusmate-alternative">Focusmate</a> and
+    <a href="/cofocus-alternative">Cofocus</a> comparisons too.
+  </p>
+</LandingPage>

@@ -384,6 +384,36 @@
   color: var(--ink);
 }
 
+/* ───────── comparison tables (alternative pages) ───────── */
+.blog-prose .blog-table {
+  width: 100%;
+  overflow-x: auto;
+  margin: 24px 0;
+}
+.blog-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.blog-prose th,
+.blog-prose td {
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.blog-prose thead th {
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 600;
+}
+.blog-prose tbody th {
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
 /* ───────── landing-page FAQ ───────── */
 .lp-faq {
   margin-top: 48px;

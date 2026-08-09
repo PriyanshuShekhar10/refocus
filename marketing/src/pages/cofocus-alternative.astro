@@ -1,0 +1,147 @@
+---
+import LandingPage from "../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../lib/seo";
+import { APP_URL } from "../lib/config";
+
+const UPDATED = "2026-08-09";
+const canonical = "/cofocus-alternative";
+const title = "A Cofocus Alternative: Refocus vs Cofocus";
+const description =
+  "Looking for a Cofocus alternative? An honest Refocus vs Cofocus comparison — session lengths, focus mode, and a community layer for virtual coworking and body doubling.";
+
+const faqs = [
+  {
+    question: "What is Cofocus?",
+    answer:
+      "Cofocus (cofocus.one) is a simple virtual coworking tool that pairs you 1:1 for a 50-minute video session. You book via a calendar, get matched, greet your partner, share goals, work, and check in at the end. It's a lightweight, no-frills take on body doubling.",
+  },
+  {
+    question: "How is Refocus different from Cofocus?",
+    answer:
+      "Both are lightweight coworking tools, but Refocus adds flexible 25, 50, and 75-minute sessions (Cofocus centers on 50), synced timers, a low-pressure focus mode with optional mics, and a community layer — a friends list, session requests, and a global chat lounge.",
+  },
+  {
+    question: "Is Refocus free like Cofocus?",
+    answer:
+      "Refocus is free to start with no credit card required. Cofocus is also positioned as a simple, low-cost tool; pricing details can change, so check cofocus.one for the latest before deciding.",
+  },
+  {
+    question: "Refocus vs Cofocus — which should I choose?",
+    answer:
+      "Choose Cofocus if you want the simplest possible 50-minute 1:1 session and nothing more. Choose Refocus if you want more session lengths, synced timers, optional-mic focus mode, and a friends-and-chat community to keep coming back to.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Comparison"
+  heading="A Cofocus alternative: Refocus vs Cofocus"
+  lead="Cofocus keeps virtual coworking refreshingly simple: one partner, 50 minutes, go. Refocus shares that lightweight spirit but adds a bit more flexibility and a community around it. Here's an honest comparison."
+  updated={UPDATED}
+  faqs={faqs}
+  ctaTitle="Try Refocus free"
+  ctaText="Refocus is a virtual coworking room: pick a 25, 50, or 75-minute session, get matched with someone who's also there to focus, and work side by side with synced timers. Free to start, no card required."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Start a free session"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <p>
+    <a href="https://cofocus.one/" rel="nofollow noopener" target="_blank">Cofocus</a>
+    is a simple
+    <a href="/virtual-coworking">virtual coworking</a> tool: it pairs you 1:1
+    for a 50-minute video session, you share goals, work, and check in. It's a
+    clean, focused take on <a href="/body-doubling">body doubling</a>, and if
+    the plain 50-minute format is all you need, it does the job well.
+  </p>
+  <p>
+    People look for a Cofocus alternative usually when they want more than a
+    single fixed session length, or a reason to keep coming back — a partner
+    they've worked with before, or a room that feels a little more alive.
+    That's the gap Refocus fills.
+  </p>
+
+  <h2>Refocus vs Cofocus at a glance</h2>
+  <div class="blog-table">
+    <table>
+      <thead>
+        <tr>
+          <th>&nbsp;</th>
+          <th>Refocus</th>
+          <th>Cofocus</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Format</th>
+          <td>Matched sessions; solo, with a friend, or with someone new</td>
+          <td>Matched 1:1 video sessions</td>
+        </tr>
+        <tr>
+          <th>Session lengths</th>
+          <td>25, 50, 75 min with synced timers</td>
+          <td>Primarily 50 min</td>
+        </tr>
+        <tr>
+          <th>Focus mode</th>
+          <td>Low-pressure, mic optional</td>
+          <td>Standard 1:1 video session</td>
+        </tr>
+        <tr>
+          <th>Community layer</th>
+          <td>Friends, session requests, global chat lounge</td>
+          <td>Minimal — session-focused</td>
+        </tr>
+        <tr>
+          <th>Pricing</th>
+          <td>Free to start, no card required</td>
+          <td>Simple, low-cost (check site)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Where Refocus is different</h2>
+  <p>
+    Refocus gives you room to match the session to the task — a 25-minute sprint,
+    a 50-minute deep-work block, or a 75-minute marathon — with timers that sync
+    between you and your partner. It also adds a community layer: a friends list,
+    session requests, and a global chat lounge so you're not starting from a cold
+    match every time. Small things, but they're what turn a one-off tool into a
+    habit.
+  </p>
+
+  <h2>Where Cofocus is still great</h2>
+  <p>
+    Simplicity is a feature. If you find extra options distracting and just want
+    one partner for 50 minutes with zero setup, Cofocus's minimalism is a real
+    strength. Not everyone needs a community layer or multiple session lengths —
+    sometimes the plainest tool is the one you'll actually use.
+  </p>
+
+  <h2>Who should pick which</h2>
+  <ul>
+    <li>
+      <strong>Pick Cofocus</strong> if you want the simplest possible 50-minute
+      1:1 session and nothing else.
+    </li>
+    <li>
+      <strong>Pick Refocus</strong> if you want flexible session lengths, synced
+      timers, optional-mic focus mode, and a community to keep coming back to.
+    </li>
+  </ul>
+  <p>
+    Comparing more tools? See our
+    <a href="/focusmate-alternative">Focusmate</a> and
+    <a href="/flown-alternative">Flown</a> comparisons too.
+  </p>
+</LandingPage>

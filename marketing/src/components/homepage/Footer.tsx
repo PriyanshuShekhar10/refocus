@@ -12,6 +12,7 @@ export function Footer() {
           <a href="/body-doubling">Body doubling</a>
           <a href="/virtual-coworking">Virtual coworking</a>
           <a href="/study-with-me">Study with me</a>
+          <a href="/focusmate-alternative">vs Focusmate</a>
           <a href="/about">About</a>
           <a href="/blog">Blog</a>
           <a href="/privacy">Privacy</a>
