@@ -37,6 +37,10 @@ export const GET: APIRoute = async () => {
       changefreq: "daily",
       priority: "0.8",
     },
+    // Topic-cluster landing pages.
+    { loc: `${site}/body-doubling`, changefreq: "monthly", priority: "0.8" },
+    { loc: `${site}/virtual-coworking`, changefreq: "monthly", priority: "0.8" },
+    { loc: `${site}/study-with-me`, changefreq: "monthly", priority: "0.8" },
     { loc: `${site}/about`, changefreq: "monthly", priority: "0.6" },
     { loc: `${site}/privacy`, changefreq: "yearly", priority: "0.3" },
     { loc: `${site}/terms`, changefreq: "yearly", priority: "0.3" },

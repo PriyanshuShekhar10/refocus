@@ -1,10 +1,13 @@
 import styles from "./Homepage.module.css";
 import { Reveal } from "./Reveal";
 
-const REASONS = [
+type Reason = { num: string; title: string; text: string; href?: string };
+
+const REASONS: Reason[] = [
   {
     num: "01",
     title: "Body doubling",
+    href: "/body-doubling",
     text: "The presence of another working human reliably keeps you on task — there's research and there's your own experience.",
   },
   {
@@ -38,7 +41,9 @@ export function WhyItWorks() {
               className={styles.whyCell}
             >
               <div className={styles.whyNum}>{r.num}</div>
-              <h3 className={styles.whyTitle}>{r.title}</h3>
+              <h3 className={styles.whyTitle}>
+                {r.href ? <a href={r.href}>{r.title}</a> : r.title}
+              </h3>
               <p className={styles.whyText}>{r.text}</p>
             </Reveal>
           ))}

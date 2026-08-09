@@ -1,0 +1,119 @@
+---
+import LandingPage from "../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../lib/seo";
+import { APP_URL } from "../lib/config";
+
+const UPDATED = "2026-08-09";
+const canonical = "/virtual-coworking";
+const title = "Virtual Coworking: Focus With People, Remotely";
+const description =
+  "Virtual coworking recreates the quiet focus of a shared office online. Here's how it works, how it differs from Zoom and Discord, and how remote workers and freelancers use it to stay on task.";
+
+const faqs = [
+  {
+    question: "What is virtual coworking?",
+    answer:
+      "Virtual coworking is working alongside other people over the internet in a shared, timed session. Everyone does their own work quietly with light structure — a short intro, a focus block, and a check-in — so you get the accountability of a shared office without being in the same room.",
+  },
+  {
+    question: "How is virtual coworking different from a Zoom call?",
+    answer:
+      "A Zoom meeting is about talking to each other. Virtual coworking is the opposite: cameras and mics stay quiet, and the point is parallel focus, not conversation. There's no agenda, no presenting, and no performance energy — just co-presence and a timer.",
+  },
+  {
+    question: "Isn't a Discord server the same thing?",
+    answer:
+      "A Discord server is a persistent chat community, which is great for conversation but easy to get pulled into. Virtual coworking is a focused, time-boxed session with a defined start and end and a partner who's there to work — so the default is focus, not scrolling messages.",
+  },
+  {
+    question: "Who uses virtual coworking?",
+    answer:
+      "Remote workers who miss the ambient focus of an office, freelancers with no built-in structure, students, and anyone who works better around other people. It's especially popular with people who use body doubling to beat procrastination.",
+  },
+  {
+    question: "Do I need to turn my camera on?",
+    answer:
+      "No. Virtual coworking is about co-presence, not surveillance. In Refocus, cameras are optional and mics stay quiet — you share one line about what you're working on, then get to work.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Guide"
+  heading="Virtual coworking: focus with people, remotely"
+  lead="Working from home can be quiet in the wrong way — no colleagues, no ambient momentum, nothing stopping you from opening a new tab. Virtual coworking brings back the focus of a shared office, minus the commute and the meetings."
+  updated={UPDATED}
+  faqs={faqs}
+  ctaTitle="Try a virtual coworking session"
+  ctaText="Refocus is a virtual coworking room: pick a session length, get matched with someone who's also there to focus, and work side by side with a shared timer — no small talk required."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Start a free session"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <h2>What virtual coworking actually is</h2>
+  <p>
+    <strong>Virtual coworking</strong> (sometimes called an online coworking
+    space or online focus room) is a session where you and one or more people
+    work on your own tasks at the same time, over the internet. The structure is
+    light on purpose: a quick note about what you're tackling, a focus block
+    against a shared timer, and a short check-in at the end. What makes it work
+    isn't the software — it's the same thing that makes a
+    <a href="/body-doubling">body double</a> effective: a present, focused
+    person makes it easier for you to start and stay on task.
+  </p>
+
+  <h2>Why remote work makes focus harder</h2>
+  <p>
+    Offices have accidental accountability built in — people around you, a
+    shared rhythm, the mild social pressure of being seen working. Home has none
+    of that. That's freedom, but it's also why the day can dissolve into
+    half-finished tasks. Virtual coworking rebuilds the useful part of the office
+    (ambient focus) without the parts you left behind (commutes, interruptions,
+    meetings). If context-switching is your particular problem, we dig into that
+    in <a href="/blog/hidden-costs-context-switching-focus">this post</a>.
+  </p>
+
+  <h2>Virtual coworking vs. Zoom, Discord, and cafes</h2>
+  <ul>
+    <li>
+      <strong>Zoom / video calls</strong> are built for talking. Turning one
+      into a focus session means fighting the tool's whole purpose.
+    </li>
+    <li>
+      <strong>Discord / Slack communities</strong> are persistent chat — great
+      for connection, easy to fall into instead of working.
+    </li>
+    <li>
+      <strong>Cafes and libraries</strong> work well, but you can't always get
+      there, and the coffee shop isn't always open when you need to focus.
+    </li>
+    <li>
+      <strong>Virtual coworking</strong> is purpose-built for parallel focus:
+      time-boxed, quiet, and matched to someone who's there for the same reason.
+    </li>
+  </ul>
+
+  <h2>How to get the most from a session</h2>
+  <ol>
+    <li>Pick one concrete task before you join — not "work", but "draft section 2".</li>
+    <li>Say it in one line at the start so it's real.</li>
+    <li>Silence notifications and keep the shared timer visible.</li>
+    <li>When the block ends, note what you finished. Momentum compounds.</li>
+  </ol>
+  <p>
+    If your work is long-haul studying rather than knowledge work, the same idea
+    applies — see <a href="/study-with-me">study with me, online</a>. And if you
+    want a no-friction way to start, Refocus matches you with a focus partner
+    automatically so you never have to coordinate schedules.
+  </p>
+</LandingPage>

@@ -1,0 +1,124 @@
+---
+import Base from "./Base.astro";
+import Navbar from "../components/Navbar";
+import { APP_URL } from "../lib/config";
+import { breadcrumbJsonLd } from "../lib/seo";
+import "../styles/blog.css";
+
+export interface FaqEntry {
+  question: string;
+  answer: string;
+}
+
+export interface Props {
+  title: string; // <title> (–  Refocus appended)
+  description: string;
+  canonical: string;
+  eyebrow?: string;
+  heading: string;
+  lead: string;
+  updated?: string; // ISO date shown as "Last updated"
+  faqs?: FaqEntry[];
+  ctaTitle?: string;
+  ctaText?: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+  jsonLd?: unknown[]; // page passes Article + FAQPage; breadcrumb is auto-added
+}
+
+const {
+  title,
+  description,
+  canonical,
+  eyebrow,
+  heading,
+  lead,
+  updated,
+  faqs = [],
+  ctaTitle = "Try a focus session",
+  ctaText =
+    "Refocus is a virtual co-working room: pick a session length, get matched with someone who's also there to focus, and work side by side with a shared timer.",
+  ctaHref = `${APP_URL}/auth/sign-up`,
+  ctaLabel = "Start a free session",
+  jsonLd = [],
+} = Astro.props;
+
+const breadcrumb = breadcrumbJsonLd([
+  { name: "Home", path: "/" },
+  { name: heading, path: canonical },
+]);
+const allJsonLd = [breadcrumb, ...jsonLd];
+
+const fmt = (iso?: string) =>
+  iso
+    ? new Date(iso).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
+const updatedLabel = fmt(updated);
+---
+
+<Base
+  title={`${title} — Refocus`}
+  description={description}
+  canonical={canonical}
+  ogTitle={title}
+  ogDescription={description}
+  ogType="article"
+  jsonLd={allJsonLd}
+>
+  <div class="blog">
+    <Navbar client:load />
+
+    <article class="blog-article">
+      <header class="blog-header">
+        <a class="blog-back" href="/">&larr; Home</a>
+        {eyebrow && <p class="blog-eyebrow">{eyebrow}</p>}
+        <h1>{heading}</h1>
+        <p class="blog-lede">{lead}</p>
+        {
+          updatedLabel && (
+            <p class="blog-meta">Last updated {updatedLabel}</p>
+          )
+        }
+      </header>
+
+      <hr class="blog-divider" />
+
+      <div class="blog-prose">
+        <slot />
+
+        {
+          faqs.length > 0 && (
+            <section class="lp-faq" aria-label="Frequently asked questions">
+              <h2>Frequently asked questions</h2>
+              {faqs.map((f) => (
+                <div class="lp-faq-item">
+                  <h3>{f.question}</h3>
+                  <p>{f.answer}</p>
+                </div>
+              ))}
+            </section>
+          )
+        }
+      </div>
+
+      <aside class="blog-cta">
+        <h3>{ctaTitle}</h3>
+        <p>{ctaText}</p>
+        <a class="blog-cta-btn" href={ctaHref}>{ctaLabel} &rarr;</a>
+      </aside>
+    </article>
+
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href="/">Home</a>
+      <a href="/body-doubling">Body doubling</a>
+      <a href="/virtual-coworking">Virtual coworking</a>
+      <a href="/study-with-me">Study with me</a>
+      <a href="/blog">Blog</a>
+    </footer>
+  </div>
+</Base>

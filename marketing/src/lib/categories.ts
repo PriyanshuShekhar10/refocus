@@ -16,6 +16,8 @@ export type CategoryMeta = {
   description: string;
   /** Longer intro paragraph shown at the top of the archive. */
   intro: string;
+  /** Cluster pillar/landing page this niche feeds into (topic-cluster model). */
+  pillar: { path: string; label: string };
 };
 
 export const CATEGORIES: Record<CategoryId, CategoryMeta> = {
@@ -26,6 +28,7 @@ export const CATEGORIES: Record<CategoryId, CategoryMeta> = {
       "Practical focus systems — deep work, time-boxing, starting, and finishing — without the productivity-porn.",
     intro:
       "Concrete tactics for deep work and getting started: time-boxing, shutdown rituals, and beating the blank-page resistance.",
+    pillar: { path: "/body-doubling", label: "body doubling" },
   },
   adhd: {
     id: "adhd",
@@ -34,6 +37,7 @@ export const CATEGORIES: Record<CategoryId, CategoryMeta> = {
       "Focus strategies that work with an ADHD brain — external structure, body doubling, and starting without shame.",
     intro:
       "Compassionate, practical notes on executive dysfunction, task initiation, and building focus scaffolding that doesn't rely on willpower.",
+    pillar: { path: "/body-doubling", label: "body doubling for ADHD" },
   },
   exams: {
     id: "exams",
@@ -42,6 +46,7 @@ export const CATEGORIES: Record<CategoryId, CategoryMeta> = {
       "Study-session design for UPSC, JEE, NEET, CAT, GATE, CA, boards and more — through long, lonely prep cycles.",
     intro:
       "Specific study tactics for real exams: revision blocks, surviving mocks, and staying on your own plan instead of comparing to toppers.",
+    pillar: { path: "/study-with-me", label: "studying with me online" },
   },
   loneliness: {
     id: "loneliness",
@@ -50,6 +55,7 @@ export const CATEGORIES: Record<CategoryId, CategoryMeta> = {
       "Honest notes on the isolation of studying alone — and how quiet co-presence can bridge it.",
     intro:
       "For anyone grinding alone at home: the difference between needing company and needing conversation, and how to get silent co-focus.",
+    pillar: { path: "/virtual-coworking", label: "virtual coworking" },
   },
   remote: {
     id: "remote",
@@ -58,6 +64,7 @@ export const CATEGORIES: Record<CategoryId, CategoryMeta> = {
       "Session design for remote workers, freelancers, and makers who miss office presence and external structure.",
     intro:
       "Realistic focus tactics for WFH life: protecting a deep-work block around calls, clients, async Slack, and home distractions.",
+    pillar: { path: "/virtual-coworking", label: "virtual coworking" },
   },
 };
 

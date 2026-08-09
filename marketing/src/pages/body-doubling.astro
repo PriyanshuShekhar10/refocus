@@ -1,0 +1,135 @@
+---
+import LandingPage from "../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../lib/seo";
+import { APP_URL } from "../lib/config";
+
+const UPDATED = "2026-08-09";
+const canonical = "/body-doubling";
+const title = "Body Doubling: The Focus Tool That Actually Works";
+const description =
+  "What body doubling is, why it works for focus and ADHD, and how to do it online — plus how to find a body doubling tool or partner when you're working alone.";
+
+const faqs = [
+  {
+    question: "What is body doubling?",
+    answer:
+      "Body doubling is working on your own task while another person is present and also working. The other person doesn't help with the task — their quiet presence just makes it easier to start and stay on track. It's a common strategy for people with ADHD, but it helps almost anyone who struggles to begin.",
+  },
+  {
+    question: "Why does body doubling work?",
+    answer:
+      "A working partner adds gentle external accountability and a shared sense of focus, which lowers the friction of starting and reduces the pull of distractions. For ADHD brains in particular, an external cue can stand in for the internal 'just start' signal that's harder to summon alone.",
+  },
+  {
+    question: "Is body doubling only for people with ADHD?",
+    answer:
+      "No. Body doubling is widely used in the ADHD community because it targets task-initiation and follow-through, but students, remote workers, freelancers, and writers use it too. If you focus better in a library or cafe than at home alone, body doubling recreates that effect.",
+  },
+  {
+    question: "How do I do body doubling online?",
+    answer:
+      "Join a timed virtual session with someone who's also there to focus: briefly state what you'll work on, keep cameras optional and mics quiet, work side by side for a set block, then check in at the end. A dedicated tool like Refocus matches you automatically so you don't have to coordinate with a friend.",
+  },
+  {
+    question: "What's the difference between body doubling and a study group?",
+    answer:
+      "A study group is collaborative and conversational — you discuss the work. Body doubling is parallel and quiet — you each do your own work with someone present. The goal is co-presence, not conversation, which is why it protects focus instead of turning into a chat.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: "Body Doubling: The Focus Tool That Actually Works",
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Guide"
+  heading="Body doubling: the focus tool that actually works"
+  lead="If you can focus in a library but fall apart alone at home, body doubling is probably the missing piece. Here's what it is, why it works — especially for ADHD — and how to do it online when no one's around."
+  updated={UPDATED}
+  faqs={faqs}
+  ctaTitle="Try body doubling online"
+  ctaText="Refocus is a virtual co-working room built around body doubling: pick a session length, get matched with someone who's also there to focus, and work side by side with a shared timer."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Start a free session"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <h2>What is body doubling?</h2>
+  <p>
+    <strong>Body doubling</strong> is the practice of working on your own task
+    while another person is present and also working. The other person isn't
+    helping with your task — they're simply there. That quiet co-presence turns
+    out to be a surprisingly effective focus tool: it makes starting easier,
+    keeps you on task, and makes the time feel less lonely. The term comes from
+    the ADHD community, but the effect is familiar to anyone who works better in
+    a cafe or library than alone at home.
+  </p>
+
+  <h2>Why body doubling works</h2>
+  <p>
+    Two things make it click. First, <em>gentle accountability</em>: knowing
+    someone else is present and focused makes it socially awkward to drift into
+    your phone, so you don't. Second, <em>a shared sense of momentum</em>: their
+    focus is contagious, and starting alongside someone lowers the activation
+    energy that usually stalls you. It's the same reason a
+    <a href="https://en.wikipedia.org/wiki/Body_doubling" rel="noopener" target="_blank">
+      body double
+    </a>
+    is a recognized strategy rather than just a productivity fad.
+  </p>
+  <p>
+    If you want the deeper mechanics of why simply <em>showing up</em> is the
+    hardest and most important step, we go into it in
+    <a href="/blog/why-showing-up-is-the-hardest-part">this post on starting</a>.
+  </p>
+
+  <h2>Body doubling for ADHD</h2>
+  <p>
+    For ADHD brains, the hard part is often <strong>task initiation</strong> —
+    the gap between wanting to start and actually starting. An external cue (a
+    present, working partner) can stand in for the internal "just begin" signal
+    that's harder to summon on demand. It's not a cure and it's not medical
+    advice; it's scaffolding. Organizations like
+    <a href="https://chadd.org/" rel="noopener" target="_blank">CHADD</a> and
+    <a href="https://add.org/" rel="noopener" target="_blank">ADDA</a> cover a
+    range of ADHD strategies, and body doubling is one of the most repeatable.
+    We've written more on
+    <a href="/blog/category/adhd">ADHD-friendly focus tactics</a> if you want
+    specifics.
+  </p>
+
+  <h2>How to do body doubling online</h2>
+  <p>
+    You don't need a friend on call. Online body doubling works like this:
+  </p>
+  <ol>
+    <li>Join a session with someone who's also there to focus.</li>
+    <li>Say what you'll work on in one line.</li>
+    <li>Keep cameras optional and mics quiet — this is co-presence, not a call.</li>
+    <li>Work side by side against a shared timer.</li>
+    <li>Check in at the end: what got done, how it went.</li>
+  </ol>
+  <p>
+    This is essentially structured
+    <a href="/virtual-coworking">virtual co-working</a>, and it's especially
+    useful for <a href="/study-with-me">studying alone</a> during long exam prep
+    cycles.
+  </p>
+
+  <h2>Body doubling tools and apps</h2>
+  <p>
+    You can body double with a friend over a muted video call, in a public
+    space, or with a dedicated tool that matches you with a focus partner
+    automatically. Purpose-built tools remove the coordination problem — you
+    don't have to find someone who's free at the same time. Refocus is one such
+    tool: a virtual co-working room where you pick a 25, 50, or 75-minute
+    session and get matched with someone who's also there to work. Whatever you
+    choose, the mechanics above matter more than the brand.
+  </p>
+</LandingPage>

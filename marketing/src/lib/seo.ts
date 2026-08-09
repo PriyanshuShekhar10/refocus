@@ -57,3 +57,45 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
     })),
   };
 }
+
+/**
+ * Article JSON-LD for evergreen guide/landing pages. `path` and `image` may be
+ * relative. `dateModified` should be an ISO date string.
+ */
+export function articleJsonLd(opts: {
+  headline: string;
+  description: string;
+  path: string;
+  dateModified: string;
+  datePublished?: string;
+  image?: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: opts.headline,
+    description: opts.description,
+    mainEntityOfPage: abs(opts.path),
+    author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    publisher: publisherJsonLd(),
+    datePublished: opts.datePublished ?? opts.dateModified,
+    dateModified: opts.dateModified,
+    image: abs(opts.image ?? "/opengraph-image.png"),
+  };
+}
+
+/**
+ * FAQPage JSON-LD. Only use on pages that render the same Q&A visibly — the
+ * text here must match what's on the page verbatim.
+ */
+export function faqJsonLd(items: { question: string; answer: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
+  };
+}

@@ -2,7 +2,7 @@
 import Base from "./Base.astro";
 import Navbar from "../components/Navbar";
 import { APP_URL } from "../lib/config";
-import { categoryLabel as labelFor } from "../lib/categories";
+import { categoryLabel as labelFor, categoryMeta } from "../lib/categories";
 import "../styles/blog.css";
 
 export interface Props {
@@ -43,6 +43,7 @@ const fmtDate = (d: Date) =>
   });
 const isoDate = new Date(pubDate).toISOString();
 const categoryLabel = labelFor(category);
+const pillar = categoryMeta(category).pillar;
 ---
 
 <Base
@@ -92,6 +93,9 @@ const categoryLabel = labelFor(category);
           silently. If that sounds useful, you can try a timed co-working
           session on Refocus; otherwise, stick with whatever system in this
           article already works for you.
+        </p>
+        <p class="blog-cta-more">
+          New to the idea? Read our guide to <a href={pillar.path}>{pillar.label}</a>.
         </p>
         <a class="blog-cta-btn" href={`${APP_URL}/auth/sign-up`}>
           See how sessions work &rarr;

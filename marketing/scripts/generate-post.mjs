@@ -38,6 +38,22 @@ const BLOG_DIR = join(MARKETING_DIR, "src/content/blog");
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const SITE = "https://refocus.co.in";
 
+/**
+ * Cluster landing pages every niche can reference. Each niche's own `pillar`
+ * page (see blog-categories.mjs) MUST be linked once in-body; the others are
+ * optional related internal pages.
+ */
+const LANDING_PAGES = [
+  "/body-doubling — What body doubling is and how to do it online",
+  "/virtual-coworking — Virtual coworking for remote/solo focus",
+  "/study-with-me — Study-with-me online study rooms for exam prep",
+];
+
+/** Absolute URL of the pillar page for a category. */
+function pillarUrl(category) {
+  return `${SITE}${category.pillar?.path || "/body-doubling"}`;
+}
+
 async function loadEnvFile(path) {
   if (!existsSync(path)) return;
   const raw = await readFile(path, "utf8");
@@ -191,10 +207,11 @@ Hard requirements:
 ${(LINK_BANK[category.id] || LINK_BANK.productivity).map((l) => `   - ${l}`).join("\n")}
    Spread links through the article (not dumped at the end). Anchor text should be natural ("NTA's JEE Main site", "CHADD's ADHD overview"), not "click here".
 4. OPTIONAL soft tool mention: You MAY mention Refocus (https://refocus.co.in) at most ONCE, mid-article, as a quiet example of virtual body doubling / co-working — never in the title or intro, never as a CTA, never more than 1–2 sentences. If the article is stronger without it, omit Refocus entirely.
-5. Must include: ${category.mustInclude}
-6. Avoid: ${category.avoid}
-7. Structure: Markdown with 3–5 "##" headings, short paragraphs, occasional lists. ~900–1200 words. No emojis. No "In conclusion". No invented statistics or fake studies.
-8. Be specific: name exams, tools, routines, times of day, failure modes. Vague motivational writing is a failure.`;
+5. INTERNAL LINK (required): include EXACTLY ONE Markdown link to our guide at ${pillarUrl(category)}, placed naturally high in the article (within the first few paragraphs) as "further reading", with descriptive anchor text (e.g. "our guide to ${category.pillar?.label || "body doubling"}"). This is an internal reference, not a CTA, and does NOT count toward the 3–5 outbound links above. Do not link it more than once.
+6. Must include: ${category.mustInclude}
+7. Avoid: ${category.avoid}
+8. Structure: Markdown with 3–5 "##" headings, short paragraphs, occasional lists. ~900–1200 words. No emojis. No "In conclusion". No invented statistics or fake studies.
+9. Be specific: name exams, tools, routines, times of day, failure modes. Vague motivational writing is a failure.`;
 }
 
 function buildUserPrompt(category, topic, existingTitles, existingUrls) {
@@ -212,8 +229,9 @@ function buildUserPrompt(category, topic, existingTitles, existingUrls) {
           .map((u) => `- ${u}`)
           .join("\n")}`
       : "";
+  const landing = `\n\nRequired internal link — link to this guide exactly once, high in the article, as further reading:\n- ${pillarUrl(category)}\nOther related internal pages you MAY link if genuinely relevant:\n${LANDING_PAGES.map((p) => `- ${SITE}${p}`).join("\n")}`;
 
-  return `Write a blog post in the "${category.label}" niche about: ${topic}.${avoidTitles}${internal}
+  return `Write a blog post in the "${category.label}" niche about: ${topic}.${avoidTitles}${landing}${internal}
 
 Return ONLY JSON with these keys:
 {
@@ -289,6 +307,33 @@ function ensureOutboundLinks(body, categoryId) {
   return `${body.trim()}\n\n## Further reading\n\n${lines.join("\n")}\n`;
 }
 
+/**
+ * Guarantee exactly one in-body internal link to the category's pillar page.
+ * If the model omitted it, inject a natural "further reading" line after the
+ * first paragraph. Internal links don't count toward the outbound requirement.
+ */
+function ensurePillarLink(body, category) {
+  const path = category.pillar?.path || "/body-doubling";
+  const label = category.pillar?.label || "body doubling";
+  // Already links the pillar (relative or absolute)? Leave it alone.
+  const linksPillar = new RegExp(
+    `\\]\\((?:${SITE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})?${path.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&",
+    )}(?:[)#/?]|$)`,
+    "i",
+  ).test(body);
+  if (linksPillar) return body;
+
+  const sentence = `If you're new to the idea, see our guide to [${label}](${SITE}${path}).`;
+  const paras = body.split(/\n{2,}/);
+  // Insert after the first non-heading paragraph so it sits high in the article.
+  const idx = paras.findIndex((p) => p.trim() && !p.trim().startsWith("#"));
+  if (idx === -1) return `${sentence}\n\n${body}`;
+  paras.splice(idx + 1, 0, sentence);
+  return paras.join("\n\n");
+}
+
 function toFrontmatter({ title, description, tags, category }) {
   const pubDate = new Date().toISOString();
   const q = (s) => JSON.stringify(String(s));
@@ -345,9 +390,11 @@ async function main() {
   let body = String(result.body_markdown || "").trim();
   if (body.length < 200) throw new Error("Model returned an empty/short body.");
   body = ensureOutboundLinks(body, category.id);
+  body = ensurePillarLink(body, category);
 
   const outbound = countOutboundLinks(body);
   console.log(`Outbound links (non-Refocus): ${outbound}`);
+  console.log(`Pillar link: ${pillarUrl(category)}`);
 
   const baseSlug = slugify(result.slug || title);
   const slug = await uniqueSlug(baseSlug);

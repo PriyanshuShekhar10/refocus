@@ -1,0 +1,100 @@
+---
+import LandingPage from "../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../lib/seo";
+import { APP_URL } from "../lib/config";
+
+const UPDATED = "2026-08-09";
+const canonical = "/study-with-me";
+const title = "Study With Me, Online: Focus Rooms for Exam Prep";
+const description =
+  "Study with me sessions turn solo exam prep into focused, accountable study time. Here's how online study rooms work and why they help for UPSC, JEE, NEET, and other long grinds.";
+
+const faqs = [
+  {
+    question: "What does 'study with me' mean?",
+    answer:
+      "'Study with me' started as a genre of videos where you study alongside someone in real time. Online study rooms take it further: instead of watching a recording, you join a live, timed session and study in parallel with a real partner who's also preparing for something.",
+  },
+  {
+    question: "Why is studying alone so hard?",
+    answer:
+      "Long prep cycles like UPSC, JEE, or NEET are isolating, and isolation makes procrastination easier and motivation harder to sustain. Studying with someone present adds gentle accountability and structure, so you sit down and actually begin — which is usually the hardest part.",
+  },
+  {
+    question: "How is an online study room different from a study group?",
+    answer:
+      "A study group discusses material together. An online study room is quiet and parallel — everyone does their own work with someone present. That keeps sessions focused instead of turning into a discussion, which is better for solo syllabus grinding.",
+  },
+  {
+    question: "Can this help with exam anxiety and consistency?",
+    answer:
+      "It can help with consistency, which is often the real problem. Showing up daily to a timed session builds a routine, and finishing sessions gives you visible proof of work. It's not a substitute for rest or support, but it makes the daily grind less lonely and easier to sustain.",
+  },
+  {
+    question: "Do I need to talk during a study session?",
+    answer:
+      "No. You share one line about what you'll study, then work quietly against a shared timer. Cameras are optional. The point is co-presence, not conversation.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Guide"
+  heading="Study with me, online: focus rooms for exam prep"
+  lead="Solo exam prep is a grind, and the loneliness is half the battle. An online study room lets you study alongside someone else in real time — quiet, timed, and accountable — so you actually sit down and start."
+  updated={UPDATED}
+  faqs={faqs}
+  ctaTitle="Study with someone tonight"
+  ctaText="Refocus is a virtual study room: pick a session length, get matched with someone who's also studying, and work side by side with a shared timer. No talking, just company."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Start a free session"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <h2>From "study with me" videos to live study rooms</h2>
+  <p>
+    "Study with me" videos work because watching someone else focus nudges you
+    to focus too. But a recording can't tell whether you actually studied. A live
+    <strong>online study room</strong> closes that gap: you join a timed session
+    and study in parallel with a real person who's also preparing for something.
+    It's the study-specific form of
+    <a href="/body-doubling">body doubling</a> — the presence of a working
+    partner makes it far easier to begin.
+  </p>
+
+  <h2>Why solo prep breaks people (and how co-study helps)</h2>
+  <p>
+    Multi-month prep for exams like UPSC, JEE, NEET, CA, or GATE is isolating by
+    design — most of it happens alone at a desk. Isolation quietly erodes
+    consistency: it's easier to skip a day, and easier to spiral after a bad
+    mock test. Studying with someone present rebuilds structure and accountability
+    without adding pressure. We've written specifically about
+    <a href="/blog/combatting-study-isolation">beating study isolation</a> and
+    <a href="/blog/handle-bad-scores-jee-neet-mock-tests">handling bad mock scores</a>
+    if either of those is your sticking point.
+  </p>
+
+  <h2>How to run a good study session</h2>
+  <ol>
+    <li>Decide the one topic or problem set before you sit down.</li>
+    <li>Pick a session length that matches your energy (25, 50, or 75 minutes).</li>
+    <li>Put your phone out of reach; keep the shared timer in view.</li>
+    <li>At the end, log what you covered — small wins compound over months.</li>
+  </ol>
+  <p>
+    For more exam-specific tactics — active recall, night-owl scheduling,
+    restarting after a wasted day — browse our
+    <a href="/blog/category/exams">competitive exam prep articles</a>. And when
+    you're ready to stop studying alone, Refocus matches you with a study partner
+    automatically, so there's no schedule to coordinate.
+  </p>
+</LandingPage>

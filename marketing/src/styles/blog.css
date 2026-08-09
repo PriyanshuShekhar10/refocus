@@ -384,6 +384,31 @@
   color: var(--ink);
 }
 
+/* ───────── landing-page FAQ ───────── */
+.lp-faq {
+  margin-top: 48px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.lp-faq > h2 {
+  margin-top: 28px;
+}
+.lp-faq-item {
+  margin-top: 20px;
+}
+.lp-faq-item h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.lp-faq-item p {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
 /* ───────── in-article CTA ───────── */
 .blog-cta {
   margin-top: 48px;
