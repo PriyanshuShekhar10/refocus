@@ -197,3 +197,62 @@ ${joinNote}
 
   return emailShell({ eyebrow, subject, bodyHtml, bodyText });
 }
+
+export function buildMatchedSessionEmail(params: {
+  firstName?: string | null;
+  partnerLabel: string | null;
+  sessionTitle: string;
+  startsAtLabel: string;
+  joinUrl: string;
+  isFirstMatch: boolean;
+}): { subject: string; html: string; text: string } {
+  const greet = greeting(params.firstName);
+  const partner = params.partnerLabel?.trim() || "a focus partner";
+  const subject = params.isFirstMatch
+    ? "You're matched — your first Refocus session awaits"
+    : `You're matched with ${partner}`;
+
+  const intro = params.isFirstMatch
+    ? `Congratulations — you've been matched with <strong style="color:${emailBrand.ink};">${partner}</strong>. We can't wait for you to have your first focus session together.`
+    : `You're matched with <strong style="color:${emailBrand.ink};">${partner}</strong> for an upcoming focus session. Quiet company, shared timer — you've got this.`;
+
+  const introText = params.isFirstMatch
+    ? `Congratulations — you've been matched with ${partner}. We can't wait for you to have your first focus session together.`
+    : `You're matched with ${partner} for an upcoming focus session. Quiet company, shared timer — you've got this.`;
+
+  const bodyText = `${greet}
+
+${introText}
+
+${params.sessionTitle}
+${params.startsAtLabel}
+
+${params.joinUrl}
+
+You'll also get a reminder before it starts if you have session emails enabled.
+
+— The Refocus team`;
+
+  const bodyHtml = `
+    <p style="margin:0 0 16px;font-size:17px;line-height:1.5;color:${emailBrand.ink};font-weight:500;">${greet}</p>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">${intro}</p>
+    <div style="margin:0 0 24px;padding:16px;border-radius:12px;border:1px solid ${emailBrand.line};background:${emailBrand.bg};">
+      <p style="margin:0 0 6px;font-size:16px;font-weight:600;color:${emailBrand.ink};">${params.sessionTitle}</p>
+      <p style="margin:0;font-size:14px;color:${emailBrand.inkSoft};">${params.startsAtLabel}</p>
+    </div>
+    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 20px;">
+      <tr>
+        <td style="border-radius:10px;background:${emailBrand.ink};">
+          <a href="${params.joinUrl}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:${emailBrand.accentInk};text-decoration:none;">View session</a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0;font-size:12px;line-height:1.55;color:${emailBrand.inkMute};">You'll also get a reminder before it starts if you have session emails enabled.</p>`;
+
+  return emailShell({
+    eyebrow: "You're matched",
+    subject,
+    bodyHtml,
+    bodyText,
+  });
+}

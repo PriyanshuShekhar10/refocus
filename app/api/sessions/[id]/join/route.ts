@@ -8,6 +8,7 @@ import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { areUsersBlocked } from "@/lib/blocking";
+import { notifySessionMatched } from "@/lib/notifySessionMatched";
 
 export async function POST(
   req: NextRequest,
@@ -135,5 +136,13 @@ export async function POST(
     duration_min: result.duration_min ?? 50,
     session_type: result.session_type ?? "focus",
   });
+
+  // Fire-and-forget match congratulations for both participants.
+  void notifySessionMatched(db, {
+    ...result,
+    duration_min: result.duration_min ?? 50,
+    session_type: result.session_type ?? "focus",
+  });
+
   return NextResponse.json({ ok: true });
 }

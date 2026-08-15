@@ -11,6 +11,7 @@ import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { areUsersBlocked } from "@/lib/blocking";
+import { notifySessionMatched } from "@/lib/notifySessionMatched";
 
 // POST /api/session-requests/:id { action: 'accept'|'decline', message?: string }
 // On accept: create a session and add both users as participants
@@ -188,6 +189,19 @@ export async function POST(
       session_type: "focus",
       status: "booked",
       participant_count: 2,
+      session_participants: [
+        { user_id: reqDoc.from_user_id, joined_at: joinedAt, quiet: false },
+        { user_id: reqDoc.to_user_id, joined_at: joinedAt, quiet: false },
+      ],
+    });
+
+    void notifySessionMatched(db, {
+      _id: insert.insertedId,
+      owner_id: reqDoc.from_user_id,
+      start_time: start,
+      end_time: end,
+      duration_min: duration,
+      session_type: "focus",
       session_participants: [
         { user_id: reqDoc.from_user_id, joined_at: joinedAt, quiet: false },
         { user_id: reqDoc.to_user_id, joined_at: joinedAt, quiet: false },

@@ -264,7 +264,7 @@ export async function findSessionsStartingInRange(
 
 export async function markReminderSent(input: {
   userId: string;
-  kind: SessionReminderTiming;
+  kind: SessionReminderTiming | "matched";
   dedupeKey: string;
 }): Promise<boolean> {
   const db = await getDb();
