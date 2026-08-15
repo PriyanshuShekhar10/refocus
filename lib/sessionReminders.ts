@@ -114,7 +114,9 @@ export function startWindowForTiming(
   now: Date,
 ): { from: Date; to: Date } {
   const offsetMinutes = timing === "1h" ? 60 : 10;
-  const halfWindowMs = 3 * 60 * 1000;
+  // ±30m so an hourly Hobby-plan cron still catches "about 1 hour" sessions.
+  // (Vercel Hobby only allows once-daily schedules per cron entry.)
+  const halfWindowMs = 30 * 60 * 1000;
   const target = now.getTime() + offsetMinutes * 60 * 1000;
   return {
     from: new Date(target - halfWindowMs),
