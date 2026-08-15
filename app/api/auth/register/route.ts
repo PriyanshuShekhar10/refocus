@@ -6,6 +6,10 @@ import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/ratelimi
 import { validatePassword } from "@/lib/validatePassword";
 import { sendWelcomeVerificationEmail } from "@/lib/email/sendWelcomeEmail";
 import { generateUsername } from "@/lib/users/generateUsername";
+import {
+  DISPOSABLE_EMAIL_ERROR,
+  isDisposableEmail,
+} from "@/lib/disposableEmail";
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -27,8 +31,15 @@ export async function POST(req: NextRequest) {
   }
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  if (!normalizedEmail) {
+  if (!normalizedEmail || !normalizedEmail.includes("@")) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+  }
+
+  if (isDisposableEmail(normalizedEmail)) {
+    return NextResponse.json(
+      { error: DISPOSABLE_EMAIL_ERROR },
+      { status: 400 },
+    );
   }
 
   // Validate password strength

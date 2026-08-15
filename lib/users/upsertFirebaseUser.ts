@@ -3,6 +3,10 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 import { generateUsername } from "@/lib/users/generateUsername";
+import {
+  DISPOSABLE_EMAIL_ERROR,
+  isDisposableEmail,
+} from "@/lib/disposableEmail";
 
 export type AuthProviderKey = "google";
 
@@ -134,6 +138,10 @@ export async function upsertFirebaseUser(
       image: image ?? undefined,
       isNewUser: false,
     };
+  }
+
+  if (isDisposableEmail(email)) {
+    throw new Error(DISPOSABLE_EMAIL_ERROR);
   }
 
   const username = await generateUsername(usersCol, email);

@@ -57,7 +57,7 @@ describe("POST /api/auth/register", () => {
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(400);
-    expect(json.error).toBe("Missing email or password");
+    expect(json.error).toBe("Missing fields");
   });
 
   it("returns 400 when password is missing", async () => {
@@ -66,7 +66,7 @@ describe("POST /api/auth/register", () => {
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(400);
-    expect(json.error).toBe("Missing email or password");
+    expect(json.error).toBe("Missing fields");
   });
 
   it("returns 400 for weak passwords", async () => {
@@ -95,6 +95,16 @@ describe("POST /api/auth/register", () => {
     const res = await POST(req);
     expect(res.status).toBe(429);
     expect(rateLimitedResponse).toHaveBeenCalled();
+  });
+
+  it("returns 400 for disposable email domains", async () => {
+    const req = mockRequest("/api/auth/register", {
+      body: { email: "spam@mailinator.com", password: "StrongP@ss1" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(400);
+    expect(json.error).toMatch(/disposable/i);
+    expect(usersCol.insertOne).not.toHaveBeenCalled();
   });
 
   it("successfully registers a new user with valid input", async () => {

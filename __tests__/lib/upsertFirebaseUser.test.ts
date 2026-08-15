@@ -184,4 +184,39 @@ describe("upsertFirebaseUser", () => {
       upsertFirebaseUser(makeDecodedToken({ email: undefined })),
     ).rejects.toThrow(/No email returned/);
   });
+
+  it("rejects new accounts with disposable email domains", async () => {
+    const { upsertFirebaseUser } = await import(
+      "@/lib/users/upsertFirebaseUser"
+    );
+
+    await expect(
+      upsertFirebaseUser(
+        makeDecodedToken({ email: "temp@mailinator.com" }),
+      ),
+    ).rejects.toThrow(/disposable/i);
+    expect(usersCol.insertOne).not.toHaveBeenCalled();
+  });
+
+  it("allows existing accounts even if domain is disposable", async () => {
+    const existingId = new ObjectId();
+    usersCol.findOne.mockResolvedValue({
+      _id: existingId,
+      email: "temp@mailinator.com",
+      name: "Existing",
+      avatar_url: null,
+      image: null,
+    });
+
+    const { upsertFirebaseUser } = await import(
+      "@/lib/users/upsertFirebaseUser"
+    );
+    const result = await upsertFirebaseUser(
+      makeDecodedToken({ email: "temp@mailinator.com" }),
+    );
+
+    expect(result.isNewUser).toBe(false);
+    expect(result.id).toBe(String(existingId));
+    expect(usersCol.insertOne).not.toHaveBeenCalled();
+  });
 });
