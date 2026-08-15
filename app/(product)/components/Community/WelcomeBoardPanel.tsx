@@ -2,22 +2,14 @@
 
 import type { ReactNode } from "react";
 import { Columns2, PanelLeft, PanelRight } from "lucide-react";
-import CommunityChat from "./CommunityChat";
+import WelcomeBoard from "./WelcomeBoard";
 import type { CommunityLayoutMode } from "@/hooks/useCommunityPanelLayout";
 
 type Props = {
   layout: CommunityLayoutMode;
   chatWidth: number;
-  isAdmin: boolean;
-  canParticipate: boolean;
-  participationMessage?: string;
   onLayoutChange: (mode: CommunityLayoutMode) => void;
   onResizeStart: (event: React.MouseEvent) => void;
-  onModerateUser?: (
-    userId: string,
-    action: "ban" | "unban" | "mute" | "unmute",
-    muteDays?: number,
-  ) => Promise<void>;
 };
 
 function LayoutButton({
@@ -48,18 +40,12 @@ function LayoutButton({
   );
 }
 
-export default function CommunityChatPanel({
+export default function WelcomeBoardPanel({
   layout,
   chatWidth,
-  isAdmin,
-  canParticipate,
-  participationMessage,
   onLayoutChange,
   onResizeStart,
-  onModerateUser,
 }: Props) {
-  const panelShell = "bg-card";
-
   return (
     <div
       className={`relative hidden min-h-0 shrink-0 flex-col lg:flex ${
@@ -71,7 +57,7 @@ export default function CommunityChatPanel({
         <div
           role="separator"
           aria-orientation="vertical"
-          aria-label="Resize chat panel"
+          aria-label="Resize welcome panel"
           onMouseDown={onResizeStart}
           className="absolute -left-2 top-4 bottom-4 z-10 w-4 cursor-col-resize"
         >
@@ -79,13 +65,11 @@ export default function CommunityChatPanel({
         </div>
       ) : null}
 
-      <div
-        className={`flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border shadow-sm ${panelShell}`}
-      >
+      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2.5">
           <div className="min-w-0">
-            <h3 className="text-sm font-medium leading-tight">Chat</h3>
-            <p className="text-[11px] text-muted-foreground">Community chat</p>
+            <h3 className="text-sm font-medium leading-tight">Welcome</h3>
+            <p className="text-[11px] text-muted-foreground">Getting started</p>
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
             <LayoutButton
@@ -97,14 +81,14 @@ export default function CommunityChatPanel({
             </LayoutButton>
             <LayoutButton
               active={layout === "split"}
-              title="Split feed and chat"
+              title="Split feed and welcome board"
               onClick={() => onLayoutChange("split")}
             >
               <Columns2 className="h-3.5 w-3.5" />
             </LayoutButton>
             <LayoutButton
               active={layout === "chat"}
-              title="Focus on chat"
+              title="Focus on welcome board"
               onClick={() => onLayoutChange("chat")}
             >
               <PanelRight className="h-3.5 w-3.5" />
@@ -113,13 +97,7 @@ export default function CommunityChatPanel({
         </div>
 
         <div className="min-h-0 flex-1">
-          <CommunityChat
-            embedded
-            isAdmin={isAdmin}
-            canParticipate={canParticipate}
-            participationMessage={participationMessage}
-            onModerateUser={onModerateUser}
-          />
+          <WelcomeBoard />
         </div>
       </div>
     </div>

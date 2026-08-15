@@ -5,10 +5,10 @@ import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare, Sparkles } from "lucide-react";
 import PostCard, { Post, Comment } from "./PostCard";
-import CommunityChat from "./CommunityChat";
-import CommunityChatPanel from "./CommunityChatPanel";
+import WelcomeBoard from "./WelcomeBoard";
+import WelcomeBoardPanel from "./WelcomeBoardPanel";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 import { useWallpaperActive } from "@/components/wallpaper-context";
@@ -18,7 +18,7 @@ import { useAdminMe } from "@/hooks/useAdminMe";
 import useSWR from "swr";
 import { swrKeys } from "@/lib/swr/keys";
 
-type MobileCommunityView = "feed" | "chat";
+type MobileCommunityView = "feed" | "welcome";
 
 type ProfilePreviewPayload = {
   username: string;
@@ -286,14 +286,14 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
             </button>
             <button
               type="button"
-              onClick={() => setMobileView("chat")}
+              onClick={() => setMobileView("welcome")}
               className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                mobileView === "chat"
+                mobileView === "welcome"
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground"
               }`}
             >
-              Chat
+              Welcome
             </button>
           </div>
         </div>
@@ -302,7 +302,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
       {/* Main Feed */}
       <div
         className={`flex min-h-0 flex-col ${
-          isMobile && mobileView === "chat"
+          isMobile && mobileView === "welcome"
             ? "hidden"
             : layout === "chat"
               ? "hidden lg:hidden"
@@ -325,8 +325,8 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                   onClick={() => setLayout("split")}
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  Open chat
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Getting started
                 </button>
               ) : null}
             </div>
@@ -459,32 +459,27 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
         </div>
       </div>
 
-      {/* Chat panel - desktop */}
+      {/* Welcome board panel - desktop */}
       {!isMobile && layout !== "feed" ? (
-        <CommunityChatPanel
+        <WelcomeBoardPanel
           layout={layout}
           chatWidth={chatWidth}
-          isAdmin={isAdmin}
-          canParticipate={canParticipate}
-          participationMessage={participationMessage}
           onLayoutChange={setLayout}
           onResizeStart={startResize}
-          onModerateUser={isAdmin ? moderateUser : undefined}
         />
       ) : null}
 
-      {/* Chat - mobile full panel */}
-      {isMobile && mobileView === "chat" && (
+      {/* Welcome board - mobile full panel */}
+      {isMobile && mobileView === "welcome" && (
         <div className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-1 lg:hidden">
-          <div
-            className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border shadow-sm bg-card"
-          >
-            <CommunityChat
-              isAdmin={isAdmin}
-              canParticipate={canParticipate}
-              participationMessage={participationMessage}
-              onModerateUser={isAdmin ? moderateUser : undefined}
-            />
+          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="shrink-0 border-b border-border px-3 py-2.5">
+              <h3 className="text-sm font-medium leading-tight">Welcome</h3>
+              <p className="text-[11px] text-muted-foreground">Getting started</p>
+            </div>
+            <div className="min-h-0 flex-1">
+              <WelcomeBoard />
+            </div>
           </div>
         </div>
       )}

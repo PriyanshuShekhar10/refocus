@@ -25,9 +25,9 @@ const FEATURES = [
     body: "Send friend requests. Send session requests. See who's free, who's in a session, and how long is left on their timer.",
   },
   {
-    eyebrow: "Global chat",
-    title: "A quiet lounge between sessions.",
-    body: "Drop into the global chat between rooms. Say hi, find a partner for the next slot, or just lurk while you wait for the timer to tick down.",
+    eyebrow: "Community",
+    title: "Share wins. Find your people.",
+    body: "Post updates, ask for advice, and cheer others on between sessions — quiet company when you work, supportive community when you don't.",
   },
 ];
 

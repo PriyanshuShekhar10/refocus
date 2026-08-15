@@ -99,8 +99,8 @@ const MODES: Mode[] = [
     visual: <FriendsVisual />,
   },
   {
-    title: "Global chat",
-    body: "Between sessions, drop into the lounge. Say hi, find a partner for the next slot, or just lurk.",
+    title: "Community",
+    body: "Share wins and tips with other members. Quiet company on sessions; supportive posts between them.",
     visual: <GlobalChatVisual />,
   },
 ];

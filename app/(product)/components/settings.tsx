@@ -499,16 +499,6 @@ function PrivacySection() {
             disabled={saving}
           />
         </Row>
-        <Row
-          label="Appear in global chat"
-          hint="Your handle shows up in the global lounge between sessions."
-        >
-          <Toggle
-            checked={prefs.showInGlobalChat}
-            onChange={(v) => setPref("showInGlobalChat", v)}
-            disabled={saving}
-          />
-        </Row>
       </RowGroup>
     </SectionCard>
   );
