@@ -16,11 +16,16 @@ import { AdminTag } from "@/components/admin-tag";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import FriendChatInput from "./chat/FriendChatInput";
+import {
+  DEFAULT_DURATION,
+  isValidDuration,
+  type DurationMin,
+} from "@/constants/calendar";
 
 type SessionRequestPayload = {
   sessionRequestId: string;
   start: string;
-  durationMin: 25 | 50 | 75;
+  durationMin: DurationMin;
   message?: string | null;
   goal?: string | null;
   status: "pending" | "accepted" | "declined" | "cancelled";
@@ -76,7 +81,7 @@ export default function FriendChat({
   const [srDate, setSrDate] = useState<Date | null>(null);
   const [srHour, setSrHour] = useState<number | null>(null);
   const [srMinute, setSrMinute] = useState<number>(0);
-  const [srDuration, setSrDuration] = useState<25 | 50 | 75>(25);
+  const [srDuration, setSrDuration] = useState<DurationMin>(DEFAULT_DURATION);
   const [srMessage, setSrMessage] = useState("");
   const [srGoal, setSrGoal] = useState("");
   const [isRefining, setIsRefining] = useState(false);
@@ -97,6 +102,26 @@ export default function FriendChat({
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(Date.now()), 60000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/preferences");
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        const preferred = data?.preferences?.defaultSessionLength;
+        if (!cancelled && typeof preferred === "number" && isValidDuration(preferred)) {
+          setSrDuration(preferred);
+        }
+      } catch {
+        // Keep DEFAULT_DURATION when preferences cannot be loaded.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

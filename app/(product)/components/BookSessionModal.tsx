@@ -3,6 +3,11 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { FiX } from "react-icons/fi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
+import {
+  DEFAULT_DURATION,
+  isValidDuration,
+  type DurationMin,
+} from "@/constants/calendar";
 
 type BookSessionModalProps = {
   friendId: string;
@@ -23,7 +28,7 @@ export default function BookSessionModal({
   const [srDate, setSrDate] = useState<Date | null>(null);
   const [srHour, setSrHour] = useState<number | null>(null);
   const [srMinute, setSrMinute] = useState<number>(0);
-  const [srDuration, setSrDuration] = useState<25 | 50 | 75>(25);
+  const [srDuration, setSrDuration] = useState<DurationMin>(DEFAULT_DURATION);
   const [srMessage, setSrMessage] = useState("");
   const [srGoal, setSrGoal] = useState("");
   const [isRefining, setIsRefining] = useState(false);
@@ -54,6 +59,26 @@ export default function BookSessionModal({
       setIsRefining(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/users/preferences");
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        const preferred = data?.preferences?.defaultSessionLength;
+        if (!cancelled && typeof preferred === "number" && isValidDuration(preferred)) {
+          setSrDuration(preferred);
+        }
+      } catch {
+        // Keep DEFAULT_DURATION when preferences cannot be loaded.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const from = new Date();
