@@ -7,7 +7,7 @@ import {
 } from "@/lib/sessionReminders";
 import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 
-type Participant = { user_id: string };
+type Participant = { user_id: string; joined_at?: Date | string; quiet?: boolean };
 
 type SessionLike = {
   _id: ObjectId | string;
