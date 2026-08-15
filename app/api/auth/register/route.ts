@@ -81,6 +81,21 @@ export async function POST(req: NextRequest) {
       }),
     );
 
+    after(() =>
+      import("@/lib/welcomeAnnouncements")
+        .then(({ createWelcomeAnnouncement }) =>
+          createWelcomeAnnouncement({
+            userId,
+            username: doc.username,
+            displayName: doc.firstname || doc.name || doc.username,
+            avatarUrl: null,
+          }),
+        )
+        .catch((err) => {
+          console.error("[register] Welcome board announcement failed:", err);
+        }),
+    );
+
     return NextResponse.json({ id: userId });
   } catch (e: unknown) {
     // MongoDB duplicate key error code is 11000

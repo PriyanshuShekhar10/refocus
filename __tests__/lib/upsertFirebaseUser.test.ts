@@ -10,6 +10,10 @@ vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
 }));
 
+vi.mock("@/lib/welcomeAnnouncements", () => ({
+  createWelcomeAnnouncement: vi.fn().mockResolvedValue(undefined),
+}));
+
 function makeDecodedToken(
   overrides: Partial<DecodedIdToken> = {},
 ): DecodedIdToken {

@@ -5,11 +5,19 @@ import { Columns2, PanelLeft, PanelRight } from "lucide-react";
 import WelcomeBoard from "./WelcomeBoard";
 import type { CommunityLayoutMode } from "@/hooks/useCommunityPanelLayout";
 
+type ProfilePreviewPayload = {
+  username: string;
+  name: string;
+  about?: string | null;
+  avatarUrl?: string | null;
+};
+
 type Props = {
   layout: CommunityLayoutMode;
   chatWidth: number;
   onLayoutChange: (mode: CommunityLayoutMode) => void;
   onResizeStart: (event: React.MouseEvent) => void;
+  onPreviewProfile?: (profile: ProfilePreviewPayload) => void;
 };
 
 function LayoutButton({
@@ -45,6 +53,7 @@ export default function WelcomeBoardPanel({
   chatWidth,
   onLayoutChange,
   onResizeStart,
+  onPreviewProfile,
 }: Props) {
   return (
     <div
@@ -66,38 +75,32 @@ export default function WelcomeBoardPanel({
       ) : null}
 
       <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2.5">
-          <div className="min-w-0">
-            <h3 className="text-sm font-medium leading-tight">Welcome</h3>
-            <p className="text-[11px] text-muted-foreground">Getting started</p>
-          </div>
-          <div className="flex shrink-0 items-center gap-0.5">
-            <LayoutButton
-              active={layout === "feed"}
-              title="Focus on community feed"
-              onClick={() => onLayoutChange("feed")}
-            >
-              <PanelLeft className="h-3.5 w-3.5" />
-            </LayoutButton>
-            <LayoutButton
-              active={layout === "split"}
-              title="Split feed and welcome board"
-              onClick={() => onLayoutChange("split")}
-            >
-              <Columns2 className="h-3.5 w-3.5" />
-            </LayoutButton>
-            <LayoutButton
-              active={layout === "chat"}
-              title="Focus on welcome board"
-              onClick={() => onLayoutChange("chat")}
-            >
-              <PanelRight className="h-3.5 w-3.5" />
-            </LayoutButton>
-          </div>
+        <div className="flex shrink-0 items-center justify-end gap-0.5 border-b border-border px-2 py-1.5">
+          <LayoutButton
+            active={layout === "feed"}
+            title="Focus on community feed"
+            onClick={() => onLayoutChange("feed")}
+          >
+            <PanelLeft className="h-3.5 w-3.5" />
+          </LayoutButton>
+          <LayoutButton
+            active={layout === "split"}
+            title="Split feed and welcome board"
+            onClick={() => onLayoutChange("split")}
+          >
+            <Columns2 className="h-3.5 w-3.5" />
+          </LayoutButton>
+          <LayoutButton
+            active={layout === "chat"}
+            title="Focus on welcome board"
+            onClick={() => onLayoutChange("chat")}
+          >
+            <PanelRight className="h-3.5 w-3.5" />
+          </LayoutButton>
         </div>
 
         <div className="min-h-0 flex-1">
-          <WelcomeBoard />
+          <WelcomeBoard onPreviewProfile={onPreviewProfile} />
         </div>
       </div>
     </div>
