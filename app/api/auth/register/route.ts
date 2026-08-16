@@ -82,29 +82,31 @@ export async function POST(req: NextRequest) {
     const res = await db.collection("users").insertOne(doc);
     const userId = String(res.insertedId);
 
+    // Create welcome board announcement before responding so it exists
+    // when the new user (or others) open Community.
+    try {
+      const { createWelcomeAnnouncement } = await import(
+        "@/lib/welcomeAnnouncements"
+      );
+      await createWelcomeAnnouncement({
+        userId,
+        username: doc.username,
+        displayName: doc.firstname || doc.name || doc.username,
+        avatarUrl: null,
+        createdAt: doc.createdAt,
+      });
+    } catch (err) {
+      console.error("[register] Welcome board announcement failed:", err);
+    }
+
     after(() =>
       sendWelcomeVerificationEmail({
         userId,
         email: doc.email,
         firstName: doc.firstname,
-      }).catch((err) => {
-        console.error("[register] Welcome email failed:", err);
+      }).catch((emailErr) => {
+        console.error("[register] Welcome email failed:", emailErr);
       }),
-    );
-
-    after(() =>
-      import("@/lib/welcomeAnnouncements")
-        .then(({ createWelcomeAnnouncement }) =>
-          createWelcomeAnnouncement({
-            userId,
-            username: doc.username,
-            displayName: doc.firstname || doc.name || doc.username,
-            avatarUrl: null,
-          }),
-        )
-        .catch((err) => {
-          console.error("[register] Welcome board announcement failed:", err);
-        }),
     );
 
     return NextResponse.json({ id: userId });

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 import { Loader2, PartyPopper } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAblyClient } from "@/lib/ably-client";
+import { welcomeBoardChannel } from "@/lib/realtimeChannels";
 import { swrKeys } from "@/lib/swr/keys";
 import type { WelcomeAnnouncement } from "@/lib/welcomeAnnouncements";
 
@@ -68,18 +70,65 @@ export default function WelcomeBoard({ onPreviewProfile }: Props) {
   const { data, error, isLoading, mutate } = useSWR<WelcomeResponse>(
     swrKeys.communityWelcome(40),
     fetcher,
-    { refreshInterval: 30_000, revalidateOnFocus: true },
+    { refreshInterval: 15_000, revalidateOnFocus: true },
   );
 
   const [older, setOlder] = useState<WelcomeAnnouncement[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const seenIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setOlder([]);
     setNextCursor(data?.nextCursor ?? null);
+    seenIdsRef.current = new Set(
+      (data?.announcements ?? []).map((a) => a.id),
+    );
   }, [data?.nextCursor, data?.announcements]);
+
+  // Live updates when someone new signs up
+  useEffect(() => {
+    const client = getAblyClient();
+    const channel = client.channels.get(welcomeBoardChannel());
+
+    const onEvent = (message: { data?: unknown }) => {
+      const payload = message.data as {
+        type?: string;
+        announcement?: WelcomeAnnouncement;
+      } | null;
+      if (payload?.type !== "welcome_announcement" || !payload.announcement) {
+        return;
+      }
+      const incoming = payload.announcement;
+      if (seenIdsRef.current.has(incoming.id)) return;
+      seenIdsRef.current.add(incoming.id);
+
+      void mutate(
+        (current) => {
+          if (!current) {
+            return {
+              announcements: [incoming],
+              nextCursor: null,
+            };
+          }
+          if (current.announcements.some((a) => a.id === incoming.id)) {
+            return current;
+          }
+          return {
+            ...current,
+            announcements: [incoming, ...current.announcements],
+          };
+        },
+        { revalidate: false },
+      );
+    };
+
+    channel.subscribe("event", onEvent);
+    return () => {
+      channel.unsubscribe("event", onEvent);
+    };
+  }, [mutate]);
 
   const announcements = [...(data?.announcements ?? []), ...older];
 
@@ -90,7 +139,11 @@ export default function WelcomeBoard({ onPreviewProfile }: Props) {
       const res = await fetch(swrKeys.communityWelcomePage(nextCursor, 30));
       if (!res.ok) return;
       const page = (await res.json()) as WelcomeResponse;
-      setOlder((prev) => [...prev, ...page.announcements]);
+      setOlder((prev) => {
+        const ids = new Set(prev.map((a) => a.id));
+        const fresh = page.announcements.filter((a) => !ids.has(a.id));
+        return [...prev, ...fresh];
+      });
       setNextCursor(page.nextCursor);
     } finally {
       setLoadingMore(false);
@@ -129,7 +182,7 @@ export default function WelcomeBoard({ onPreviewProfile }: Props) {
           <div className="min-w-0">
             <p className="text-sm font-semibold leading-tight">#welcome</p>
             <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-              Public announcements when someone joins the Refocus community.
+              Live announcements when someone joins the Refocus community.
             </p>
           </div>
         </div>

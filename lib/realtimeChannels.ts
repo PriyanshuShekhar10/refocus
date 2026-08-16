@@ -14,3 +14,7 @@ export function globalChatChannel() {
 export function sessionsChannel() {
   return "sessions:updates";
 }
+
+export function welcomeBoardChannel() {
+  return "community:welcome";
+}

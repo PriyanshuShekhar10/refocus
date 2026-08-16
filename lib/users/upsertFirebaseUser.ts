@@ -168,18 +168,20 @@ export async function upsertFirebaseUser(
   const res = await usersCol.insertOne(doc as never);
   const userId = String(res.insertedId);
 
-  void import("@/lib/welcomeAnnouncements")
-    .then(({ createWelcomeAnnouncement }) =>
-      createWelcomeAnnouncement({
-        userId,
-        username,
-        displayName: fullName || firstname || username,
-        avatarUrl: picture,
-      }),
-    )
-    .catch((err) => {
-      console.error("[upsertFirebaseUser] Welcome announcement failed:", err);
+  try {
+    const { createWelcomeAnnouncement } = await import(
+      "@/lib/welcomeAnnouncements"
+    );
+    await createWelcomeAnnouncement({
+      userId,
+      username,
+      displayName: fullName || firstname || username,
+      avatarUrl: picture,
+      createdAt: now,
     });
+  } catch (err) {
+    console.error("[upsertFirebaseUser] Welcome announcement failed:", err);
+  }
 
   return {
     id: userId,

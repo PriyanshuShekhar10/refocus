@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createAblyTokenRequest } from "@/lib/ably-server";
-import { globalChatChannel, sessionsChannel, userChannel } from "@/lib/realtimeChannels";
+import { globalChatChannel, sessionsChannel, userChannel, welcomeBoardChannel } from "@/lib/realtimeChannels";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -18,6 +18,7 @@ export async function GET() {
       [userChannel(userId)]: ["subscribe"],
       "chat:*": ["subscribe", "publish", "history"],
       [sessionsChannel()]: ["subscribe"],
+      [welcomeBoardChannel()]: ["subscribe"],
     });
     const tokenRequest = await createAblyTokenRequest({
       clientId: userId,

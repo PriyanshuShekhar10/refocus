@@ -1,6 +1,8 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { publishAbly } from "@/lib/ably-server";
+import { welcomeBoardChannel } from "@/lib/realtimeChannels";
 
 export type WelcomeAnnouncement = {
   id: string;
@@ -65,8 +67,8 @@ export async function createWelcomeAnnouncement(params: {
   displayName?: string | null;
   avatarUrl?: string | null;
   createdAt?: Date;
-}): Promise<void> {
-  if (!ObjectId.isValid(params.userId)) return;
+}): Promise<WelcomeAnnouncement | null> {
+  if (!ObjectId.isValid(params.userId)) return null;
 
   const db = await getDb();
   const userId = new ObjectId(params.userId);
@@ -74,15 +76,32 @@ export async function createWelcomeAnnouncement(params: {
     params.displayName?.trim() ||
     params.username?.trim() ||
     "someone";
+  const createdAt = params.createdAt ?? new Date();
 
   try {
-    await db.collection("welcome_announcements").insertOne({
+    const result = await db.collection("welcome_announcements").insertOne({
       userId,
       username: params.username?.trim() || null,
       displayName,
       avatarUrl: params.avatarUrl ?? null,
-      createdAt: params.createdAt ?? new Date(),
+      createdAt,
     });
+
+    const announcement: WelcomeAnnouncement = {
+      id: String(result.insertedId),
+      userId: String(userId),
+      username: params.username?.trim() || null,
+      displayName,
+      avatarUrl: params.avatarUrl ?? null,
+      createdAt: createdAt.toISOString(),
+    };
+
+    await publishAbly(welcomeBoardChannel(), {
+      type: "welcome_announcement",
+      announcement,
+    });
+
+    return announcement;
   } catch (err) {
     // Unique index on userId — ignore duplicates from retries.
     if (
@@ -90,7 +109,7 @@ export async function createWelcomeAnnouncement(params: {
       "code" in err &&
       (err as { code: number }).code === 11000
     ) {
-      return;
+      return null;
     }
     throw err;
   }
@@ -151,12 +170,79 @@ export async function backfillWelcomeAnnouncementsIfEmpty(
     ) {
       return;
     }
-    // BulkWriteError with partial success is fine for backfill.
+    if (err && typeof err === "object" && "writeErrors" in err) {
+      return;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Catch users who signed up when announcement create was dropped (serverless
+ * fire-and-forget). Safe to call on every list — only inserts missing rows.
+ */
+export async function syncMissingWelcomeAnnouncements(
+  lookbackDays = 14,
+  limit = 30,
+): Promise<void> {
+  const db = await getDb();
+  const since = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
+
+  const recentUsers = (await db
+    .collection("users")
+    .find(
+      { createdAt: { $gte: since } },
+      {
+        projection: {
+          username: 1,
+          name: 1,
+          firstname: 1,
+          email: 1,
+          avatar_url: 1,
+          image: 1,
+          createdAt: 1,
+        },
+      },
+    )
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .toArray()) as UserSeed[];
+
+  if (recentUsers.length === 0) return;
+
+  const ids = recentUsers.map((u) => u._id);
+  const existing = await db
+    .collection("welcome_announcements")
+    .find({ userId: { $in: ids } }, { projection: { userId: 1 } })
+    .toArray();
+  const have = new Set(existing.map((d) => String(d.userId)));
+
+  const missing = recentUsers.filter((u) => !have.has(String(u._id)));
+  if (missing.length === 0) return;
+
+  try {
+    await db.collection("welcome_announcements").insertMany(
+      missing.map((u) => ({
+        userId: u._id,
+        username: u.username?.trim() || null,
+        displayName: displayNameFor(u),
+        avatarUrl: resolveAvatarUrl({
+          avatar_url: u.avatar_url,
+          image: u.image,
+        }),
+        createdAt: u.createdAt instanceof Date ? u.createdAt : new Date(),
+      })),
+      { ordered: false },
+    );
+  } catch (err) {
     if (
-      err &&
-      typeof err === "object" &&
-      "writeErrors" in err
+      err instanceof Error &&
+      "code" in err &&
+      (err as { code: number }).code === 11000
     ) {
+      return;
+    }
+    if (err && typeof err === "object" && "writeErrors" in err) {
       return;
     }
     throw err;
@@ -171,28 +257,54 @@ export async function listWelcomeAnnouncements(params: {
   const db = await getDb();
 
   await backfillWelcomeAnnouncementsIfEmpty();
+  // Only sync gaps on the first page — keeps pagination cheap.
+  if (!params.cursor) {
+    await syncMissingWelcomeAnnouncements().catch((err) => {
+      console.error("[welcome] syncMissing failed:", err);
+    });
+  }
 
-  // Ensure one welcome per user for future inserts.
   await db
     .collection("welcome_announcements")
     .createIndex({ userId: 1 }, { unique: true })
     .catch(() => undefined);
+  await db
+    .collection("welcome_announcements")
+    .createIndex({ createdAt: -1, _id: -1 })
+    .catch(() => undefined);
 
   const query: Record<string, unknown> = {};
-  if (params.cursor && ObjectId.isValid(params.cursor)) {
-    query._id = { $lt: new ObjectId(params.cursor) };
+  if (params.cursor) {
+    // cursor format: `${createdAtISO}_${id}`
+    const [createdAtIso, id] = params.cursor.split("_");
+    if (createdAtIso && id && ObjectId.isValid(id)) {
+      const createdAt = new Date(createdAtIso);
+      if (!Number.isNaN(createdAt.getTime())) {
+        query.$or = [
+          { createdAt: { $lt: createdAt } },
+          { createdAt, _id: { $lt: new ObjectId(id) } },
+        ];
+      }
+    } else if (ObjectId.isValid(params.cursor)) {
+      // Back-compat with old ObjectId-only cursors
+      query._id = { $lt: new ObjectId(params.cursor) };
+    }
   }
 
   const docs = (await db
     .collection("welcome_announcements")
     .find(query)
-    .sort({ _id: -1 })
+    .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1)
     .toArray()) as WelcomeDoc[];
 
   const hasMore = docs.length > limit;
   const page = hasMore ? docs.slice(0, limit) : docs;
-  const nextCursor = hasMore ? String(page[page.length - 1]._id) : null;
+  const last = page[page.length - 1];
+  const nextCursor =
+    hasMore && last
+      ? `${mapDoc(last).createdAt}_${String(last._id)}`
+      : null;
 
   return {
     announcements: page.map(mapDoc),

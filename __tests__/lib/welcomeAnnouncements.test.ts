@@ -13,6 +13,10 @@ vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
 }));
 
+vi.mock("@/lib/ably-server", () => ({
+  publishAbly: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe("createWelcomeAnnouncement", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -62,6 +66,6 @@ describe("createWelcomeAnnouncement", () => {
         userId: String(new ObjectId()),
         username: "priya",
       }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBeNull();
   });
 });

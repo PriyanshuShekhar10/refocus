@@ -27,6 +27,10 @@ vi.mock("@/lib/email/sendWelcomeEmail", () => ({
   sendWelcomeVerificationEmail: vi.fn().mockResolvedValue({ sent: true }),
 }));
 
+vi.mock("@/lib/ably-server", () => ({
+  publishAbly: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("next/server", async (importOriginal) => {
   const actual = await importOriginal<typeof import("next/server")>();
   return {
