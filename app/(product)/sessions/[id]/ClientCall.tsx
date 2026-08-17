@@ -94,7 +94,7 @@ export default function ClientCall({
   const [videoOff, setVideoOff] = useState<boolean>(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState<boolean>(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
-  const [tasksOpen, setTasksOpen] = useState(false);
+  const [tasksOpen, setTasksOpen] = useState(true);
   const sessionTasks = useSessionTasks(sessionId, currentUserId);
   const [partner, setPartner] = useState<SessionPartner | null>(() =>
     partnerFromPrejoin(prejoin),
