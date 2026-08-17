@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, MessageSquare, Sparkles } from "lucide-react";
+import { PageRefreshButton } from "@/components/page-refresh";
 import PostCard, { Post, Comment } from "./PostCard";
 import WelcomeBoard from "./WelcomeBoard";
 import WelcomeBoardPanel from "./WelcomeBoardPanel";
@@ -268,10 +269,15 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
     >
       {isMobile && (
         <div className="shrink-0 border-b border-border px-4 py-3">
-          <h1 className="text-xl font-semibold">Community</h1>
-          <p className="text-sm text-muted-foreground">
-            Share updates and connect with others
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-xl font-semibold">Community</h1>
+              <p className="text-sm text-muted-foreground">
+                Share updates and connect with others
+              </p>
+            </div>
+            <PageRefreshButton compact />
+          </div>
           <div className="mt-3 flex rounded-lg bg-muted p-1">
             <button
               type="button"
@@ -319,16 +325,19 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                   Share updates and connect with others
                 </p>
               </div>
-              {layout === "feed" ? (
-                <button
-                  type="button"
-                  onClick={() => setLayout("split")}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Welcome
-                </button>
-              ) : null}
+              <div className="flex shrink-0 items-center gap-2">
+                <PageRefreshButton />
+                {layout === "feed" ? (
+                  <button
+                    type="button"
+                    onClick={() => setLayout("split")}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Welcome
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
         )}

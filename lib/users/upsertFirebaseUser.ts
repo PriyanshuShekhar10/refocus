@@ -15,6 +15,7 @@ import {
 import { findUserByEmailIdentity, isEmailBanned } from "@/lib/bannedEmails";
 import { logBannedIpSignupAttempt } from "@/lib/bannedIpWatch";
 import { recordSignupIp } from "@/lib/userIps";
+import { notifyOpsSignup } from "@/lib/email/opsNotify";
 
 export type AuthProviderKey = "google";
 
@@ -202,6 +203,12 @@ export async function upsertFirebaseUser(
     attemptedEmail: email,
     outcome: "created",
     createdUserId: userId,
+  });
+  void notifyOpsSignup({
+    userId,
+    email,
+    firstName: firstname,
+    method: "google",
   });
 
   try {

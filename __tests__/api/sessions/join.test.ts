@@ -76,6 +76,28 @@ describe("POST /api/sessions/:id/join", () => {
     expect(json.ok).toBe(true);
   });
 
+  it("returns ok when an existing participant joins after start", async () => {
+    const started = new Date(Date.now() - 5 * 60 * 1000);
+    const stillRunning = new Date(started.getTime() + 50 * 60 * 1000);
+    sessionsCol.findOne.mockResolvedValue({
+      _id: SESSION_ID,
+      owner_id: USER_ID,
+      start_time: started,
+      end_time: stillRunning,
+      session_participants: [{ user_id: USER_ID, joined_at: new Date() }],
+    });
+
+    const req = mockRequest(`/api/sessions/${SESSION_ID}/join`, {
+      body: {},
+    });
+    const { status, json } = await parseResponse(
+      await POST(req, makeParams(String(SESSION_ID)))
+    );
+    expect(status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(sessionsCol.findOneAndUpdate).not.toHaveBeenCalled();
+  });
+
   it("returns 409 when session already has 2 participants", async () => {
     // First findOne: pre-fetch the session (full slot, user not in).
     sessionsCol.findOne.mockResolvedValueOnce({
@@ -175,6 +197,8 @@ describe("POST /api/sessions/:id/join", () => {
 
     const [filter, update, options] = sessionsCol.findOneAndUpdate.mock.calls[0];
 
+    // Must not allow booking after the session has started
+    expect(filter.start_time).toEqual({ $gt: expect.any(Date) });
     // Must check user not already in
     expect(filter["session_participants.user_id"]).toEqual({ $ne: USER_ID });
     // Must check < 2 participants (participant_count or legacy array)
@@ -191,6 +215,28 @@ describe("POST /api/sessions/:id/join", () => {
     const pushed = update.$push.session_participants;
     expect(pushed.quiet).toBe(true);
     expect(update.$set.participant_count).toBe(2);
+  });
+
+  it("returns 400 when session has already started", async () => {
+    const started = new Date(Date.now() - 5 * 60 * 1000);
+    const stillRunning = new Date(started.getTime() + 50 * 60 * 1000);
+    sessionsCol.findOne.mockResolvedValueOnce({
+      _id: SESSION_ID,
+      owner_id: "owner1",
+      start_time: started,
+      end_time: stillRunning,
+      session_participants: [{ user_id: "owner1", joined_at: new Date() }],
+    });
+
+    const req = mockRequest(`/api/sessions/${SESSION_ID}/join`, {
+      body: {},
+    });
+    const { status, json } = await parseResponse(
+      await POST(req, makeParams(String(SESSION_ID)))
+    );
+    expect(status).toBe(400);
+    expect(json.error).toBe("This session has already started");
+    expect(sessionsCol.findOneAndUpdate).not.toHaveBeenCalled();
   });
 
   it("returns 400 when session has already ended", async () => {

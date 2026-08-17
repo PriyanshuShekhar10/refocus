@@ -9,6 +9,7 @@ import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { areUsersBlocked } from "@/lib/blocking";
 import { notifySessionMatched } from "@/lib/notifySessionMatched";
+import { hasSessionStarted } from "@/lib/sessionWindow";
 
 export async function POST(
   req: NextRequest,
@@ -66,11 +67,20 @@ export async function POST(
   );
   if (alreadyIn) return NextResponse.json({ ok: true });
 
-  // Don't allow joining sessions that have already ended.
+  const startTime = new Date(existing.start_time);
   const endTime = new Date(existing.end_time);
-  if (endTime.getTime() <= Date.now()) {
+  const now = Date.now();
+
+  if (endTime.getTime() <= now) {
     return NextResponse.json(
       { error: "This session has already ended" },
+      { status: 400 },
+    );
+  }
+
+  if (hasSessionStarted(startTime, new Date(now))) {
+    return NextResponse.json(
+      { error: "This session has already started" },
       { status: 400 },
     );
   }
@@ -83,7 +93,6 @@ export async function POST(
   }
 
   // Don't allow joining a session that would conflict with the user's calendar.
-  const startTime = new Date(existing.start_time);
   if (await hasSessionOverlap(db, userId, startTime, endTime, sessionId)) {
     return NextResponse.json(
       { error: "You already have a session during this time" },
@@ -96,6 +105,7 @@ export async function POST(
   const result = await col.findOneAndUpdate(
     {
       _id: new ObjectId(sessionId),
+      start_time: { $gt: new Date() },
       "session_participants.user_id": { $ne: userId },
       $or: [
         { participant_count: { $lt: 2 } },
@@ -127,6 +137,12 @@ export async function POST(
     if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (s.session_participants?.some((p: { user_id: string }) => p.user_id === userId)) {
       return NextResponse.json({ ok: true });
+    }
+    if (hasSessionStarted(s.start_time)) {
+      return NextResponse.json(
+        { error: "This session has already started" },
+        { status: 400 },
+      );
     }
     return NextResponse.json({ error: "Session already has 2 participants" }, { status: 409 });
   }

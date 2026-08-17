@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/types/calendar";
 import { getResolvedSessionColor } from "@/constants/calendar";
 import { getLocalSessionColor } from "@/lib/sessionColors";
-import { isCallJoinable } from "@/lib/sessionWindow";
+import { isCallJoinable, hasSessionStarted } from "@/lib/sessionWindow";
 import { formatLocalTime } from "@/lib/localTime";
 import { VerifiedName } from "@/components/verified-tag";
 
@@ -184,6 +184,9 @@ export function CalendarEventCard({
   };
 
   if (isCompact) {
+    if (hasSessionStarted(event.start)) {
+      return null;
+    }
     const stackTotal = Math.max(1, Math.min(compactStackTotal, 3));
     const stackIndex = Math.max(0, Math.min(compactStackIndex, stackTotal - 1));
     const laneWidthPx =
@@ -312,6 +315,7 @@ export function CalendarEventCard({
   const isShortCard = height < 70;
 
   const isJoinableNow = isBooked && canJoin;
+  const canBookSlot = !isBooked && !isOwner && !hasSessionStarted(event.start);
 
   return (
     <div className="absolute inset-x-2 z-20" style={{ top }}>
@@ -338,7 +342,7 @@ export function CalendarEventCard({
         }
         onClick={(evt) => {
           evt.stopPropagation();
-          if (!isBooked && !isOwner) onBook(evt);
+          if (canBookSlot) onBook(evt);
           else onDetails(evt);
         }}
       >
@@ -365,7 +369,7 @@ export function CalendarEventCard({
               />
             </svg>
           </button>
-        ) : !isBooked ? (
+        ) : canBookSlot ? (
           <button
             className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#5D1C6A] text-white hover:bg-[#CA5995] transition-colors"
             onClick={(e) => {

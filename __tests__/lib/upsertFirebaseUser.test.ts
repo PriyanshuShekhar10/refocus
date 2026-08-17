@@ -15,6 +15,12 @@ vi.mock("@/lib/welcomeAnnouncements", () => ({
   createWelcomeAnnouncement: vi.fn().mockResolvedValue(undefined),
 }));
 
+const notifyOpsSignup = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+vi.mock("@/lib/email/opsNotify", () => ({
+  notifyOpsSignup,
+  notifyOpsSessionMatched: vi.fn(),
+}));
+
 function makeDecodedToken(
   overrides: Partial<DecodedIdToken> = {},
 ): DecodedIdToken {
@@ -71,6 +77,13 @@ describe("upsertFirebaseUser", () => {
     expect(insertedDoc.username).toBeTruthy();
     expect(insertedDoc.hashedPassword).toBeUndefined();
     expect(insertedDoc.canonicalEmail).toBe("user@example.com");
+    expect(notifyOpsSignup).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: String(insertedId),
+        email: "user@example.com",
+        method: "google",
+      }),
+    );
   });
 
   it("auto-links an existing email/password account", async () => {

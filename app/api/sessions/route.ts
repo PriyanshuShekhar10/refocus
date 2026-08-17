@@ -12,6 +12,7 @@ import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { requireNotCommunityBanned } from "@/lib/communityModeration";
 import { getBlockedUserIds } from "@/lib/blocking";
 import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
+import { scheduleRecordAccessIp } from "@/lib/userIps";
 
 // GET /api/sessions?from=ISO&to=ISO
 /** Soft cap on open (bookable) slots returned per range request. */
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest) {
   const userId = (session?.user as AuthUser | undefined)?.id;
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  scheduleRecordAccessIp(req, userId);
 
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
@@ -68,36 +70,41 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  const now = new Date();
+  const bookableFrom = new Date(Math.max(fromDate.getTime(), now.getTime()));
+
   // Two index-friendly queries:
-  // A) open bookable slots (participant_count < 2), capped
-  // B) current user's sessions (including fully booked)
+  // A) open bookable slots that have not started yet (participant_count < 2)
+  // B) current user's sessions (including fully booked / in-progress)
   const db = await getDb();
   const col = db.collection<DbSession>("sessions");
-  const rangeFilter = { start_time: { $gte: fromDate, $lt: toDate } };
+  const myRangeFilter = { start_time: { $gte: fromDate, $lt: toDate } };
 
   const [openSlots, mySessions] = await Promise.all([
-    col
-      .find({
-        ...rangeFilter,
-        // Prefer participant_count; include legacy docs missing the field
-        // that still have fewer than 2 participants.
-        $or: [
-          { participant_count: { $lt: 2 } },
-          {
-            participant_count: { $exists: false },
+    bookableFrom < toDate
+      ? col
+          .find({
+            start_time: { $gt: now, $gte: fromDate, $lt: toDate },
+            // Prefer participant_count; include legacy docs missing the field
+            // that still have fewer than 2 participants.
             $or: [
-              { session_participants: { $exists: false } },
-              { "session_participants.1": { $exists: false } },
+              { participant_count: { $lt: 2 } },
+              {
+                participant_count: { $exists: false },
+                $or: [
+                  { session_participants: { $exists: false } },
+                  { "session_participants.1": { $exists: false } },
+                ],
+              },
             ],
-          },
-        ],
-      })
-      .sort({ start_time: 1 })
-      .limit(MAX_OPEN_SLOTS)
-      .toArray(),
+          })
+          .sort({ start_time: 1 })
+          .limit(MAX_OPEN_SLOTS)
+          .toArray()
+      : Promise.resolve([]),
     col
       .find({
-        ...rangeFilter,
+        ...myRangeFilter,
         $or: [
           { owner_id: userId },
           { "session_participants.user_id": userId },
@@ -202,7 +209,6 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const now = new Date();
   const mapped = sessions.map((s) => {
     const start = new Date(s.start_time);
     const end = new Date(s.end_time);

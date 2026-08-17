@@ -2,6 +2,7 @@
 
 import { formatLocalDate } from "@/lib/localTime";
 import { useUserTimezone } from "@/components/user-timezone-provider";
+import { PageRefreshButton } from "@/components/page-refresh";
 
 type ViewDays = 3 | 5 | 7;
 
@@ -68,7 +69,9 @@ export function CalendarHeader({
       </div>
 
       {/* View selector */}
-      <div className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-600 p-1 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center gap-2">
+        <PageRefreshButton />
+        <div className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-600 p-1 bg-gray-50 dark:bg-gray-800">
         {VIEW_OPTIONS.map((option) => (
           <button
             key={option.value}
@@ -82,6 +85,7 @@ export function CalendarHeader({
             {option.label}
           </button>
         ))}
+        </div>
       </div>
     </div>
   );

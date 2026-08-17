@@ -32,7 +32,7 @@ import { CalendarSidebar } from "./Calendar/CalendarSidebar";
 import { CalendarHeader } from "./Calendar/CalendarHeader";
 import { CalendarEventCard } from "./Calendar/CalendarEventCard";
 import { CalendarRightSidebar } from "./Calendar/CalendarRightSidebar";
-import { isCallJoinable } from "@/lib/sessionWindow";
+import { isCallJoinable, hasSessionStarted } from "@/lib/sessionWindow";
 
 // ============================================
 // Types
@@ -381,10 +381,16 @@ export default function Calendar({
   );
 
   // Booking flow
-  const handleBookSlot = useCallback(
-    (event: CalendarEvent) => dispatch({ type: "OPEN_BOOKING_MODAL", event }),
-    [],
-  );
+  const handleBookSlot = useCallback((event: CalendarEvent) => {
+    if (hasSessionStarted(event.start)) {
+      dispatch({
+        type: "SHOW_TOAST",
+        message: "This session has already started",
+      });
+      return;
+    }
+    dispatch({ type: "OPEN_BOOKING_MODAL", event });
+  }, []);
 
   const handleConfirmBooking = useCallback(async () => {
     if (ui.modal.type !== "booking") return;
@@ -505,7 +511,16 @@ export default function Calendar({
         onCreateDurationChange={handleSetCreateDuration}
         events={events}
         currentUserId={currentUserId}
-        onJoinSession={(ev) => dispatch({ type: "OPEN_BOOKING_MODAL", event: ev })}
+        onJoinSession={(ev) => {
+          if (hasSessionStarted(ev.start)) {
+            dispatch({
+              type: "SHOW_TOAST",
+              message: "This session has already started",
+            });
+            return;
+          }
+          dispatch({ type: "OPEN_BOOKING_MODAL", event: ev });
+        }}
         onDetailsSession={(ev) => dispatch({ type: "OPEN_DETAILS_MODAL", event: ev })}
         onLeaveSession={(ev) => dispatch({ type: "OPEN_LEAVE_CONFIRM", event: ev })}
         onDeleteSession={(ev) => dispatch({ type: "OPEN_DELETE_CONFIRM", event: ev })}

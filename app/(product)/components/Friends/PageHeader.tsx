@@ -3,6 +3,7 @@
 import { ChangeEvent } from "react";
 import { Search } from "lucide-react";
 import { designStyles } from "@/components/design";
+import { PageRefreshButton } from "@/components/page-refresh";
 
 interface PageHeaderProps {
   query: string;
@@ -29,7 +30,9 @@ export default function PageHeader({ query, onQueryChange }: PageHeaderProps) {
             focus sessions together.
           </p>
         </div>
-        <label
+        <div className="flex w-full max-w-md flex-col items-stretch gap-2 sm:items-end">
+          <PageRefreshButton className="self-end" />
+          <label
           className="flex h-10 w-full max-w-xs items-center gap-2 rounded-lg px-3"
           style={{
             border: "1px solid var(--line)",
@@ -53,6 +56,7 @@ export default function PageHeader({ query, onQueryChange }: PageHeaderProps) {
             style={{ color: "var(--ink)" }}
           />
         </label>
+        </div>
       </div>
     </header>
   );

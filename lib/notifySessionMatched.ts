@@ -1,5 +1,6 @@
 import { ObjectId, type Db } from "mongodb";
 import { sendMatchedSessionEmail } from "@/lib/email/sendMatchedSessionEmail";
+import { notifyOpsSessionMatched } from "@/lib/email/opsNotify";
 import {
   formatSessionTimeIST,
   markReminderSent,
@@ -134,6 +135,17 @@ export async function notifySessionMatched(
         });
       }),
     );
+
+    const host = byId.get(ownerId);
+    const joinerId = participants.find((id) => id !== ownerId);
+    const joiner = joinerId ? byId.get(joinerId) : null;
+    await notifyOpsSessionMatched({
+      sessionTitle: sessionTitleFor(session, ownerId),
+      startsAtLabel: formatSessionTimeIST(start, "Asia/Kolkata"),
+      host: { name: displayName(host), email: host?.email },
+      joiner: { name: displayName(joiner), email: joiner?.email },
+      joinUrl: sessionJoinUrl(sessionId),
+    });
   } catch (err) {
     console.error("[email] notifySessionMatched failed:", err);
   }

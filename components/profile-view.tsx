@@ -17,6 +17,7 @@ import {
   EmailVerifiedBadge,
 } from "@/components/email-verification-banner";
 import { AvatarCropModal } from "@/components/avatar-crop-modal";
+import { PageRefreshButton } from "@/components/page-refresh";
 
 const ABOUT_ME_PROMPTS = [
   "My most important project today",
@@ -571,6 +572,9 @@ export function ProfileView({ embedded = false }: Props) {
               </DButton>
             </div>
           )}
+        </div>
+        <div style={{ marginLeft: "auto", flexShrink: 0 }}>
+          <PageRefreshButton onRefresh={loadUser} />
         </div>
       </header>
 

@@ -40,6 +40,7 @@ import { listTimeZones } from "@/lib/zonedTime";
 import { TIMEZONE_PREF_EVENT } from "@/components/user-timezone-provider";
 import { notifyWallpaperPref } from "@/hooks/useDashboardWallpaper";
 import { useWallpaperActive } from "@/components/wallpaper-context";
+import { PageRefreshButton, useOnPageRefreshEvent, dispatchPageRefreshEvent, PAGE_REFRESH_EVENTS } from "@/components/page-refresh";
 
 type Prefs = {
   defaultSessionLength: 25 | 50 | 75;
@@ -73,20 +74,35 @@ export default function Settings() {
   return (
     <Shell transparent={wallpaperActive}>
       <div style={{ padding: "8px 4px", maxWidth: 720, margin: "0 auto" }}>
-        <header style={{ marginBottom: 32 }}>
-          <span className={designStyles.eyebrow}>Account</span>
-          <h1
-            className={designStyles.pageTitle}
-            style={{ fontSize: "clamp(24px, 4vw, 32px)" }}
-          >
-            Settings
-          </h1>
-          <p
-            className={designStyles.pageSub}
-            style={{ fontSize: 14, marginTop: 10 }}
-          >
-            Tune Refocus to your rhythm. Changes save instantly where indicated.
-          </p>
+        <header
+          style={{
+            marginBottom: 32,
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 16,
+          }}
+        >
+          <div>
+            <span className={designStyles.eyebrow}>Account</span>
+            <h1
+              className={designStyles.pageTitle}
+              style={{ fontSize: "clamp(24px, 4vw, 32px)" }}
+            >
+              Settings
+            </h1>
+            <p
+              className={designStyles.pageSub}
+              style={{ fontSize: 14, marginTop: 10 }}
+            >
+              Tune Refocus to your rhythm. Changes save instantly where indicated.
+            </p>
+          </div>
+          <PageRefreshButton
+            onRefresh={() =>
+              dispatchPageRefreshEvent(PAGE_REFRESH_EVENTS.settings)
+            }
+          />
         </header>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -113,24 +129,23 @@ function EmailVerificationSection() {
   const [verified, setVerified] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/users/me");
-        if (!res.ok) return;
-        const data = await res.json();
-        if (cancelled) return;
-        setEmail(data?.user?.email ?? null);
-        setVerified(data?.user?.emailVerified ?? false);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const loadEmail = useCallback(async () => {
+    try {
+      const res = await fetch("/api/users/me");
+      if (!res.ok) return;
+      const data = await res.json();
+      setEmail(data?.user?.email ?? null);
+      setVerified(data?.user?.emailVerified ?? false);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadEmail();
+  }, [loadEmail]);
+
+  useOnPageRefreshEvent(PAGE_REFRESH_EVENTS.settings, loadEmail);
 
   if (loading || verified) return null;
 
@@ -159,25 +174,24 @@ function UsernameSection() {
     "idle",
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/users/me");
-        if (!res.ok) return;
-        const data = await res.json();
-        if (cancelled) return;
-        const value = data?.user?.username ?? "";
-        setCurrentUsername(value || null);
-        setUsername(value);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const loadUsername = useCallback(async () => {
+    try {
+      const res = await fetch("/api/users/me");
+      if (!res.ok) return;
+      const data = await res.json();
+      const value = data?.user?.username ?? "";
+      setCurrentUsername(value || null);
+      setUsername(value);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadUsername();
+  }, [loadUsername]);
+
+  useOnPageRefreshEvent(PAGE_REFRESH_EVENTS.settings, loadUsername);
 
   useEffect(() => {
     const trimmed = username.trim().toLowerCase();
@@ -517,24 +531,23 @@ function AppearanceSection() {
 
   useEffect(() => setMounted(true), []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/users/preferences");
-        if (!res.ok) return;
-        const data = await res.json().catch(() => ({}));
-        if (cancelled) return;
-        const url = data?.preferences?.dashboardWallpaperUrl;
-        setWallpaperUrl(typeof url === "string" && url.trim() ? url.trim() : null);
-      } catch {
-        // keep default
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const loadWallpaper = useCallback(async () => {
+    try {
+      const res = await fetch("/api/users/preferences");
+      if (!res.ok) return;
+      const data = await res.json().catch(() => ({}));
+      const url = data?.preferences?.dashboardWallpaperUrl;
+      setWallpaperUrl(typeof url === "string" && url.trim() ? url.trim() : null);
+    } catch {
+      // keep default
+    }
   }, []);
+
+  useEffect(() => {
+    void loadWallpaper();
+  }, [loadWallpaper]);
+
+  useOnPageRefreshEvent(PAGE_REFRESH_EVENTS.settings, loadWallpaper);
 
   const active = mounted ? theme ?? resolvedTheme ?? "system" : "system";
 
@@ -1180,24 +1193,24 @@ function usePrefs() {
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/users/preferences");
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!cancelled && data?.preferences) {
-          setPrefs({ ...DEFAULT_PREFS, ...data.preferences });
-        }
-      } catch {
-        // keep defaults on failure
+  const loadPrefs = useCallback(async () => {
+    try {
+      const res = await fetch("/api/users/preferences");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data?.preferences) {
+        setPrefs({ ...DEFAULT_PREFS, ...data.preferences });
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    } catch {
+      // keep defaults on failure
+    }
   }, []);
+
+  useEffect(() => {
+    void loadPrefs();
+  }, [loadPrefs]);
+
+  useOnPageRefreshEvent(PAGE_REFRESH_EVENTS.settings, loadPrefs);
 
   const setPref = useCallback(
     async <K extends keyof Prefs>(key: K, value: Prefs[K]) => {

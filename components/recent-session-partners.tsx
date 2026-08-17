@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import type { ReportTargetType } from "@/lib/reportConstants";
+import { useOnPageRefreshEvent, PAGE_REFRESH_EVENTS } from "@/components/page-refresh";
 
 type Partner = {
   userId: string;
@@ -69,6 +70,8 @@ export function RecentSessionPartners() {
   useEffect(() => {
     loadPartners();
   }, [loadPartners]);
+
+  useOnPageRefreshEvent(PAGE_REFRESH_EVENTS.sessions, loadPartners);
 
   const sendFriendRequest = async (partner: Partner) => {
     if (!canInteract || partner.isFriend || partner.friendRequestPending !== "none") {

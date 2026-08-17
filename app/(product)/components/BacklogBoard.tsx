@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { PageRefreshButton } from "@/components/page-refresh";
 
 type IssueStatus = "todo" | "in_progress" | "done";
 type IssuePriority = "low" | "medium" | "high";
@@ -44,26 +45,27 @@ export default function BacklogBoard() {
     };
   }, [issues]);
 
-  useEffect(() => {
-    const loadIssues = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/backlog/issues");
-        if (!res.ok) {
-          const payload = await res.json().catch(() => ({}));
-          throw new Error(payload?.error || "Failed to fetch backlog issues");
-        }
-        const data = await res.json();
-        setIssues((data.issues || []) as BacklogIssue[]);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unable to load backlog");
-      } finally {
-        setLoading(false);
+  const loadIssues = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/backlog/issues");
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload?.error || "Failed to fetch backlog issues");
       }
-    };
-
-    loadIssues();
+      const data = await res.json();
+      setIssues((data.issues || []) as BacklogIssue[]);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to load backlog");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadIssues();
+  }, [loadIssues]);
 
   const handleCreateIssue = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -153,13 +155,16 @@ export default function BacklogBoard() {
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Backlog Board
-          </h1>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Track priorities and move issues as you start and finish work.
-          </p>
+        <header className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+              Backlog Board
+            </h1>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Track priorities and move issues as you start and finish work.
+            </p>
+          </div>
+          <PageRefreshButton onRefresh={loadIssues} />
         </header>
 
         <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">

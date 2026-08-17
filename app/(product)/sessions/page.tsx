@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SessionsTabs } from "./SessionsTabs";
+import { PageRefreshButton } from "@/components/page-refresh";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 
@@ -180,15 +181,18 @@ export default async function MySessionsPage() {
               Upcoming bookings and everything you’ve completed.
             </p>
           </div>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Calendar
-          </Link>
+          <div className="flex items-center gap-2">
+            <PageRefreshButton />
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Calendar
+            </Link>
+          </div>
         </div>
 
         <SessionsTabs

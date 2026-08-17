@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, UserPlus, Zap } from "lucide-react";
+import { PageRefreshButton } from "@/components/page-refresh";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { swrKeys } from "@/lib/swr/keys";
 
@@ -74,33 +75,58 @@ export default function Matchmaking() {
 
   if (error) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-        <p className="text-red-500">Error: {(error as Error).message}</p>
-        <Button onClick={fetchMatches}>Try Again</Button>
+      <div className="mx-auto flex h-full max-w-5xl flex-col gap-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-2xl font-bold tracking-tight">AI Recommended Partners</h2>
+            <p className="text-gray-500">
+              We found these users based on your goals, working style, and interests.
+            </p>
+          </div>
+          <PageRefreshButton />
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+          <p className="text-red-500">Error: {(error as Error).message}</p>
+          <Button onClick={fetchMatches}>Try Again</Button>
+        </div>
       </div>
     );
   }
 
   if (matches.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-        <Zap className="h-10 w-10 text-yellow-500" />
-        <h3 className="text-lg font-semibold">No AI Matches Yet</h3>
-        <p className="max-w-md text-sm text-gray-500">
-          Try updating your profile bio and interests to get better recommendations. 
-          The AI needs to know you to match you!
-        </p>
+      <div className="mx-auto flex h-full max-w-5xl flex-col gap-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-2xl font-bold tracking-tight">AI Recommended Partners</h2>
+            <p className="text-gray-500">
+              We found these users based on your goals, working style, and interests.
+            </p>
+          </div>
+          <PageRefreshButton />
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
+          <Zap className="h-10 w-10 text-yellow-500" />
+          <h3 className="text-lg font-semibold">No AI Matches Yet</h3>
+          <p className="max-w-md text-sm text-gray-500">
+            Try updating your profile bio and interests to get better recommendations. 
+            The AI needs to know you to match you!
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold tracking-tight">AI Recommended Partners</h2>
-        <p className="text-gray-500">
-          We found these users based on your goals, working style, and interests.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-bold tracking-tight">AI Recommended Partners</h2>
+          <p className="text-gray-500">
+            We found these users based on your goals, working style, and interests.
+          </p>
+        </div>
+        <PageRefreshButton />
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

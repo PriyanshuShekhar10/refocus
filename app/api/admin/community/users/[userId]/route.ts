@@ -74,6 +74,7 @@ export async function POST(
       email: target.email,
       signupIp: ips.signupIp,
       lastLoginIp: ips.lastLoginIp,
+      knownIps: ips.knownIps,
     });
     await logAdminAction({
       actorId: guard.admin.userId,

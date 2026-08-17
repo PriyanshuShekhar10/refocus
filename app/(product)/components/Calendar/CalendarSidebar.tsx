@@ -7,6 +7,7 @@ import type { CalendarEvent } from "@/types/calendar";
 import { formatLocalTimeRange } from "@/lib/localTime";
 import { VerifiedName } from "@/components/verified-tag";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { hasSessionStarted } from "@/lib/sessionWindow";
 
 function toYmd(d: Date) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
@@ -217,7 +218,9 @@ export function CalendarSidebar({
                           >
                             Join
                           </a>
-                        ) : !isOwner && onJoinSession ? (
+                        ) : !isOwner &&
+                          onJoinSession &&
+                          !hasSessionStarted(ev.start) ? (
                           <button
                             type="button"
                             onClick={() => onJoinSession(ev)}

@@ -67,6 +67,14 @@ describe("GET /api/admin/users/[userId]/activity", () => {
       signupIp: "203.0.113.10",
       lastLoginIp: "203.0.113.11",
       lastLoginAt: new Date("2026-08-01T12:00:00.000Z"),
+      knownIps: [
+        {
+          ip: "203.0.113.11",
+          firstSeenAt: new Date("2026-08-01T12:00:00.000Z"),
+          lastSeenAt: new Date("2026-08-01T12:00:00.000Z"),
+          count: 2,
+        },
+      ],
     });
     loginEventsCol.find.mockReturnValue(
       fluentFind([
@@ -119,6 +127,9 @@ describe("GET /api/admin/users/[userId]/activity", () => {
     expect(status).toBe(200);
     expect(json.user.email).toBe("user@example.com");
     expect(json.user.signupIp).toBe("203.0.113.10");
+    expect(json.user.knownIps.map((row: { ip: string }) => row.ip)).toEqual(
+      expect.arrayContaining(["203.0.113.10", "203.0.113.11"]),
+    );
     const types = json.events.map((e: { type: string }) => e.type);
     expect(types).toContain("signup");
     expect(types).toContain("login");

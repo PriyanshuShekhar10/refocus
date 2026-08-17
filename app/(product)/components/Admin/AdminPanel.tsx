@@ -9,8 +9,8 @@ import {
   Flag,
   History,
   LayoutDashboard,
+  Mail,
   MoreHorizontal,
-  RefreshCw,
   Shield,
   ShieldOff,
   Trash2,
@@ -26,8 +26,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PageRefreshButton } from "@/components/page-refresh";
+import AdminMailbox, {
+  type MailRecipient,
+} from "./AdminMailbox";
 
-type AdminSection = "overview" | "users" | "reports" | "history" | "ip-activity";
+type AdminSection =
+  | "overview"
+  | "users"
+  | "mailbox"
+  | "reports"
+  | "history"
+  | "ip-activity";
 
 type Stats = {
   users: { total: number; newThisWeek: number; verified: number };
@@ -63,6 +73,8 @@ type AdminUser = {
   communityMuted: boolean;
   signupIp: string | null;
   lastLoginIp: string | null;
+  lastSeenIp: string | null;
+  knownIps: string[];
   lastLoginAt: string | null;
 };
 
@@ -90,7 +102,14 @@ type UserActivityPayload = {
     name: string | null;
     signupIp: string | null;
     lastLoginIp: string | null;
+    lastSeenIp: string | null;
     lastLoginAt: string | null;
+    knownIps: Array<{
+      ip: string;
+      firstSeenAt: string | null;
+      lastSeenAt: string | null;
+      count: number;
+    }>;
     createdAt: string | null;
     emailVerified: boolean;
     communityBanned: boolean;
@@ -166,6 +185,7 @@ const SECTIONS: {
 }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "users", label: "Users", icon: Users },
+  { id: "mailbox", label: "Mailbox", icon: Mail },
   { id: "ip-activity", label: "Banned IP activity", icon: Activity },
   { id: "reports", label: "Reports", icon: Flag },
   { id: "history", label: "History", icon: History },
@@ -184,6 +204,7 @@ const ACTION_LABELS: Record<string, string> = {
   "friend_message.delete": "Deleted friend message",
   "report.dismiss": "Dismissed report",
   "report.resolve": "Resolved report",
+  "user.email": "Emailed users",
 };
 
 function StatCard({
@@ -404,6 +425,141 @@ function formatAuditDetails(entry: AuditEntry): string | null {
   return null;
 }
 
+function OpsNotifySettings() {
+  const [email, setEmail] = useState("priyanshushekhar100@gmail.com");
+  const [signup, setSignup] = useState(true);
+  const [sessionMatched, setSessionMatched] = useState(true);
+  const [saving, setSaving] = useState<"signup" | "sessionMatched" | null>(
+    null,
+  );
+
+  const applyPayload = (data: {
+    email?: string | null;
+    signup?: boolean;
+    sessionMatched?: boolean;
+  }) => {
+    if (data.email) setEmail(data.email);
+    setSignup(data.signup !== false);
+    setSessionMatched(data.sessionMatched !== false);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/ops-notify")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data && typeof data.signup === "boolean") {
+          applyPayload(data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const setFlag = async (
+    key: "signup" | "sessionMatched",
+    value: boolean,
+  ) => {
+    const previous = key === "signup" ? signup : sessionMatched;
+    if (key === "signup") setSignup(value);
+    else setSessionMatched(value);
+    setSaving(key);
+    try {
+      const res = await fetch("/api/admin/ops-notify", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: value }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Save failed");
+      applyPayload(data);
+    } catch {
+      if (key === "signup") setSignup(previous);
+      else setSessionMatched(previous);
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 rounded-lg bg-[#5D1C6A]/10 p-2 text-[#5D1C6A]">
+          <Mail className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+            Founder emails
+          </p>
+          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            Sent to {email}. Turn either off anytime.
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 divide-y divide-gray-100 dark:divide-gray-800">
+        <OpsNotifyRow
+          label="New signups"
+          hint="Email and Google accounts."
+          checked={signup}
+          disabled={saving !== null}
+          onChange={(v) => void setFlag("signup", v)}
+        />
+        <OpsNotifyRow
+          label="Session bookings"
+          hint="When a posted session gets a match."
+          checked={sessionMatched}
+          disabled={saving !== null}
+          onChange={(v) => void setFlag("sessionMatched", v)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function OpsNotifyRow({
+  label,
+  hint,
+  checked,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+      <div>
+        <p className="text-sm font-medium text-gray-900 dark:text-white">
+          {label}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{hint}</p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
+          checked ? "bg-[#5D1C6A]" : "bg-gray-300 dark:bg-gray-700"
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+            checked ? "translate-x-5" : "translate-x-0"
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
 export default function AdminPanel() {
   const [section, setSection] = useState<AdminSection>("overview");
   const [stats, setStats] = useState<Stats | null>(null);
@@ -440,6 +596,8 @@ export default function AdminPanel() {
   const [pendingFriendRequestsTotal, setPendingFriendRequestsTotal] =
     useState(0);
   const [friendRequestsLoading, setFriendRequestsLoading] = useState(false);
+  const [mailPrefill, setMailPrefill] = useState<MailRecipient[] | null>(null);
+  const [mailEpoch, setMailEpoch] = useState(0);
 
   useEffect(() => {
     fetch("/api/admin/me")
@@ -559,6 +717,7 @@ export default function AdminPanel() {
         if (doneExpanded) await loadDoneSessions();
         if (friendRequestsExpanded) await loadPendingFriendRequests();
       } else if (section === "users") await loadUsers();
+      else if (section === "mailbox") setMailEpoch((n) => n + 1);
       else if (section === "reports") await loadReports();
       else if (section === "history") await loadAuditLog();
       else if (section === "ip-activity") await loadIpActivity();
@@ -658,15 +817,7 @@ export default function AdminPanel() {
               Community.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={refresh}
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
+          <PageRefreshButton onRefresh={refresh} />
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -695,6 +846,7 @@ export default function AdminPanel() {
 
         {section === "overview" && stats ? (
           <div className="space-y-4">
+            <OpsNotifySettings />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 label="Users"
@@ -942,14 +1094,16 @@ export default function AdminPanel() {
                             ) : null}
                           </div>
                           <div className="text-xs text-gray-500">{u.email}</div>
-                          {u.lastLoginIp || u.signupIp ? (
+                          {u.knownIps?.length || u.lastLoginIp || u.signupIp ? (
                             <div className="mt-0.5 font-mono text-[10px] text-gray-400">
-                              {u.lastLoginIp || u.signupIp}
-                              {u.signupIp &&
-                              u.lastLoginIp &&
-                              u.signupIp !== u.lastLoginIp
-                                ? ` · signup ${u.signupIp}`
-                                : ""}
+                              {u.lastSeenIp || u.lastLoginIp || u.signupIp}
+                              {u.knownIps && u.knownIps.length > 1
+                                ? ` · ${u.knownIps.length} IPs`
+                                : u.signupIp &&
+                                    u.lastLoginIp &&
+                                    u.signupIp !== u.lastLoginIp
+                                  ? ` · signup ${u.signupIp}`
+                                  : ""}
                             </div>
                           ) : null}
                         </td>
@@ -1007,7 +1161,7 @@ export default function AdminPanel() {
                           className="px-4 py-3 text-right"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {isSelf ? (
+                          {isSelf && !u.email ? (
                             <span className="text-xs text-gray-400">—</span>
                           ) : (
                             <DropdownMenu>
@@ -1022,7 +1176,28 @@ export default function AdminPanel() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-52">
-                                {u.isAdmin ? (
+                                {u.email ? (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setMailPrefill([
+                                        {
+                                          id: u.id,
+                                          email: u.email as string,
+                                          name: u.name,
+                                          username: u.username,
+                                        },
+                                      ]);
+                                      setSection("mailbox");
+                                    }}
+                                  >
+                                    <Mail className="h-4 w-4" />
+                                    Email user
+                                  </DropdownMenuItem>
+                                ) : null}
+                                {u.email && !isSelf ? (
+                                  <DropdownMenuSeparator />
+                                ) : null}
+                                {isSelf ? null : u.isAdmin ? (
                                   <DropdownMenuItem
                                     className="text-destructive focus:text-destructive"
                                     onClick={() => {
@@ -1123,6 +1298,14 @@ export default function AdminPanel() {
               </table>
             </div>
           </div>
+        ) : null}
+
+        {section === "mailbox" ? (
+          <AdminMailbox
+            key={mailEpoch}
+            prefill={mailPrefill}
+            onPrefillConsumed={() => setMailPrefill(null)}
+          />
         ) : null}
 
         {section === "ip-activity" ? (
@@ -1454,13 +1637,33 @@ export default function AdminPanel() {
                 {activity?.user.email}
                 {activity?.user.username ? ` · @${activity.user.username}` : ""}
               </p>
-              {activity?.user.lastLoginIp || activity?.user.signupIp ? (
-                <p className="mt-1 font-mono text-[10px] text-gray-400">
-                  last {activity.user.lastLoginIp || "—"}
-                  {activity.user.signupIp
-                    ? ` · signup ${activity.user.signupIp}`
-                    : ""}
-                </p>
+              {activity?.user.knownIps?.length ||
+              activity?.user.lastLoginIp ||
+              activity?.user.signupIp ? (
+                <div className="mt-1 space-y-0.5">
+                  {(activity.user.knownIps ?? []).length > 0 ? (
+                    activity.user.knownIps.map((row) => (
+                      <p
+                        key={row.ip}
+                        className="font-mono text-[10px] text-gray-400"
+                      >
+                        {row.ip}
+                        {row.lastSeenAt &&
+                        new Date(row.lastSeenAt).getTime() > 0
+                          ? ` · last ${new Date(row.lastSeenAt).toLocaleString()}`
+                          : ""}
+                        {row.count > 1 ? ` · ×${row.count}` : ""}
+                      </p>
+                    ))
+                  ) : (
+                    <p className="font-mono text-[10px] text-gray-400">
+                      last {activity.user.lastLoginIp || "—"}
+                      {activity.user.signupIp
+                        ? ` · signup ${activity.user.signupIp}`
+                        : ""}
+                    </p>
+                  )}
+                </div>
               ) : null}
             </div>
             <button

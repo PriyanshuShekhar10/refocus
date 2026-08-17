@@ -182,6 +182,7 @@ export async function applyUserModeration(
       email: reportedUserEmail,
       signupIp: ips.signupIp,
       lastLoginIp: ips.lastLoginIp,
+      knownIps: ips.knownIps,
     });
     await logAdminAction({
       actorId: admin.userId,

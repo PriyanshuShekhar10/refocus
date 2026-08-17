@@ -15,6 +15,8 @@ import {
   type DurationMin,
 } from "@/constants/calendar";
 import { formatLocalDateTime } from "@/lib/localTime";
+import { hasSessionStarted } from "@/lib/sessionWindow";
+import { PageRefreshButton } from "@/components/page-refresh";
 import {
   addDaysInTimeZone,
   minutesOfDayInTimeZone,
@@ -325,10 +327,16 @@ export default function MobileCalendar() {
   );
 
   // Booking flow
-  const handleBookSlot = useCallback(
-    (event: CalendarEvent) => dispatch({ type: "OPEN_BOOKING_MODAL", event }),
-    []
-  );
+  const handleBookSlot = useCallback((event: CalendarEvent) => {
+    if (hasSessionStarted(event.start)) {
+      dispatch({
+        type: "SHOW_TOAST",
+        message: "This session has already started",
+      });
+      return;
+    }
+    dispatch({ type: "OPEN_BOOKING_MODAL", event });
+  }, []);
 
   const handleConfirmBooking = useCallback(async () => {
     if (ui.modal.type !== "booking") return;
@@ -495,6 +503,7 @@ export default function MobileCalendar() {
             <ChevronDown className="h-4 w-4 text-gray-500" />
           </button>
           <div className="flex items-center gap-2">
+            <PageRefreshButton compact />
             <button onClick={goPrev} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -580,6 +589,7 @@ export default function MobileCalendar() {
               !isMySession &&
               mySessionsOnDay.some((e) => e.id !== ev.id && ev.startMs < e.endMs && ev.endMs > e.startMs);
             if (ineligible) return null;
+            if (!isMySession && hasSessionStarted(ev.start)) return null;
 
             const other = ev.participants?.find((p) => p.user_id !== currentUserId);
             const otherName = other

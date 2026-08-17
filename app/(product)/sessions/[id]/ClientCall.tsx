@@ -7,6 +7,8 @@ import { useTheme } from "next-themes";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { formatLocalDateTime } from "@/lib/localTime";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
+import { WRAP_UP_MINUTES } from "@/lib/sessionWindow";
+import { playSessionCompleteSound } from "@/lib/sessionCompleteSound";
 
 type Phase = "loading" | "ready" | "in-call" | "ended" | "error";
 
@@ -52,6 +54,8 @@ const CONFETTI_COLORS = [
 // If the user leaves within this many ms of the official end, we treat the
 // session as completed and celebrate.
 const COMPLETION_GRACE_MS = 60_000;
+const WRAP_UP_MS = WRAP_UP_MINUTES * 60_000;
+const COMPLETE_BANNER_MS = 10_000;
 
 function formatRemaining(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -101,9 +105,16 @@ export default function ClientCall({
   const [remainingMs, setRemainingMs] = useState<number>(() =>
     Math.max(0, endMs - Date.now()),
   );
+  const [wrapUpRemainingMs, setWrapUpRemainingMs] = useState<number>(() =>
+    Math.max(0, endMs + WRAP_UP_MS - Date.now()),
+  );
   const [completedNaturally, setCompletedNaturally] = useState<boolean>(false);
-  const [showTimesUp, setShowTimesUp] = useState<boolean>(false);
+  const [wrapUpBanner, setWrapUpBanner] = useState<"complete" | "ending" | null>(
+    null,
+  );
   const timesUpAcknowledgedRef = useRef<boolean>(false);
+  const wrapUpEndingShownRef = useRef<boolean>(false);
+  const completeSoundPlayedRef = useRef<boolean>(false);
   const attendanceReportedRef = useRef<boolean>(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
@@ -232,6 +243,10 @@ export default function ClientCall({
       if (action === "left-meeting") {
         if (endMs - Date.now() < COMPLETION_GRACE_MS) {
           setCompletedNaturally(true);
+          if (!completeSoundPlayedRef.current) {
+            completeSoundPlayedRef.current = true;
+            playSessionCompleteSound();
+          }
         }
         reportAttendance();
         setPhase("ended");
@@ -247,19 +262,40 @@ export default function ClientCall({
     if (phase !== "in-call") return;
     const tick = () => {
       const remaining = Math.max(0, endMs - Date.now());
+      const wrapRemaining = Math.max(0, endMs + WRAP_UP_MS - Date.now());
       setRemainingMs(remaining);
+      setWrapUpRemainingMs(wrapRemaining);
       if (remaining === 0 && !timesUpAcknowledgedRef.current) {
+        timesUpAcknowledgedRef.current = true;
         setCompletedNaturally(true);
-        setShowTimesUp(true);
-        // Record completion now — even if the user lingers on the call,
-        // they've earned the credit.
+        setWrapUpBanner("complete");
         reportAttendance();
+        if (!completeSoundPlayedRef.current) {
+          completeSoundPlayedRef.current = true;
+          playSessionCompleteSound();
+        }
+      }
+      if (
+        remaining === 0 &&
+        wrapRemaining === 0 &&
+        !wrapUpEndingShownRef.current
+      ) {
+        wrapUpEndingShownRef.current = true;
+        setWrapUpBanner("ending");
       }
     };
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, [phase, endMs, reportAttendance]);
+
+  useEffect(() => {
+    if (wrapUpBanner !== "complete") return;
+    const timeout = window.setTimeout(() => {
+      setWrapUpBanner((current) => (current === "complete" ? null : current));
+    }, COMPLETE_BANNER_MS);
+    return () => window.clearTimeout(timeout);
+  }, [wrapUpBanner]);
 
   const startCall = useCallback(() => {
     setPhase("in-call");
@@ -294,18 +330,27 @@ export default function ClientCall({
   const leaveCall = useCallback(() => {
     if (endMs - Date.now() < COMPLETION_GRACE_MS) {
       setCompletedNaturally(true);
+      if (!completeSoundPlayedRef.current) {
+        completeSoundPlayedRef.current = true;
+        playSessionCompleteSound();
+      }
     }
     reportAttendance();
     sendDailyMessage({ action: "leave" });
     setPhase("ended");
   }, [endMs, reportAttendance, sendDailyMessage]);
 
+  const inWrapUp = remainingMs === 0 && wrapUpRemainingMs > 0;
   const urgency: "normal" | "warning" | "critical" =
-    remainingMs <= 60_000
-      ? "critical"
-      : remainingMs <= 5 * 60_000
-        ? "warning"
-        : "normal";
+    inWrapUp
+      ? wrapUpRemainingMs <= 60_000
+        ? "critical"
+        : "warning"
+      : remainingMs <= 60_000
+        ? "critical"
+        : remainingMs <= 5 * 60_000
+          ? "warning"
+          : "normal";
 
   const elapsedRatio = useMemo(() => {
     if (phase !== "in-call") return 0;
@@ -656,6 +701,7 @@ export default function ClientCall({
         </div>
         <TimerPill
           remainingMs={remainingMs}
+          wrapUpRemainingMs={wrapUpRemainingMs}
           urgency={urgency}
           reducedMotion={prefersReducedMotion}
         />
@@ -694,73 +740,90 @@ export default function ClientCall({
       />
 
       <AnimatePresence>
-        {showTimesUp && (
+        {wrapUpBanner && (
           <motion.div
-            key="times-up"
-            className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            key={wrapUpBanner}
+            className="pointer-events-none absolute inset-x-0 top-16 z-20 flex justify-center px-4"
+            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: prefersReducedMotion ? 0 : -6 }}
             transition={{ duration: prefersReducedMotion ? 0 : 0.25 }}
           >
-            <Confetti active reducedMotion={prefersReducedMotion} burst="center" />
-            <motion.div
-              className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[#5D1C6A]/30 bg-gradient-to-br from-white via-[#FFF7E6] to-[#FFE2EF] p-6 text-center shadow-2xl dark:from-slate-900 dark:via-slate-900 dark:to-slate-950"
-              initial={{ scale: prefersReducedMotion ? 1 : 0.85, opacity: 0, y: prefersReducedMotion ? 0 : 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: prefersReducedMotion ? 1 : 0.95, opacity: 0 }}
-              transition={{
-                type: prefersReducedMotion ? "tween" : "spring",
-                stiffness: 280,
-                damping: 22,
-              }}
-            >
-              <TrophyBadge reducedMotion={prefersReducedMotion} />
-              <h2 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
-                Session complete!
-              </h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                {partner
-                  ? `Nice work with ${partnerDisplayName}. That was ${prejoin.durationMin} focused minutes.`
-                  : `That was ${prejoin.durationMin} focused minutes. Nicely done.`}
-              </p>
-              <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    timesUpAcknowledgedRef.current = true;
-                    setShowTimesUp(false);
-                    leaveCall();
-                  }}
-                  className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#CA5995]"
-                >
-                  Wrap up
-                </button>
-                {partner ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      timesUpAcknowledgedRef.current = true;
-                      setShowTimesUp(false);
-                      setShowReportDialog(true);
-                    }}
-                    className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/30"
-                  >
-                    Report user
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => {
-                    timesUpAcknowledgedRef.current = true;
-                    setShowTimesUp(false);
-                  }}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                >
-                  Keep chatting
-                </button>
-              </div>
-            </motion.div>
+            <div className="pointer-events-auto w-full max-w-lg overflow-hidden rounded-2xl border border-[#5D1C6A]/25 bg-white/95 p-4 text-center shadow-2xl backdrop-blur-md dark:border-[#CA5995]/30 dark:bg-slate-900/95">
+              {wrapUpBanner === "complete" ? (
+                <>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Session complete — {WRAP_UP_MINUTES} minutes to say goodbye
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                    {partner
+                      ? `Stay on with ${partnerDisplayName} to wrap up. The call stays open.`
+                      : "The call stays open for a short wrap-up."}
+                    {muted ? " Unmute if you want to check in." : ""}
+                  </p>
+                  <div className="mt-3 flex flex-wrap justify-center gap-2">
+                    {muted ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          toggleMute();
+                          setWrapUpBanner(null);
+                        }}
+                        className="rounded-lg bg-[#5D1C6A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CA5995]"
+                      >
+                        Unmute to say goodbye
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setWrapUpBanner(null)}
+                        className="rounded-lg bg-[#5D1C6A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CA5995]"
+                      >
+                        Stay on the call
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWrapUpBanner(null);
+                        leaveCall();
+                      }}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      Leave
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Wrap-up is over
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                    Thanks for focusing. You can leave now, or linger a moment more.
+                  </p>
+                  <div className="mt-3 flex flex-wrap justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWrapUpBanner(null);
+                        leaveCall();
+                      }}
+                      className="rounded-lg bg-[#5D1C6A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CA5995]"
+                    >
+                      Leave session
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWrapUpBanner(null)}
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      Stay a bit longer
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -858,29 +921,35 @@ function Spinner() {
 
 function TimerPill({
   remainingMs,
+  wrapUpRemainingMs,
   urgency,
   reducedMotion,
 }: {
   remainingMs: number;
+  wrapUpRemainingMs: number;
   urgency: "normal" | "warning" | "critical";
   reducedMotion: boolean;
 }) {
-  const isOver = remainingMs <= 0;
+  const inWrapUp = remainingMs <= 0 && wrapUpRemainingMs > 0;
+  const isOver = remainingMs <= 0 && wrapUpRemainingMs <= 0;
   const palette = isOver
     ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
-    : urgency === "critical"
-      ? "border-red-400/50 bg-red-500/15 text-red-100"
+    : inWrapUp || urgency === "critical"
+      ? "border-amber-400/50 bg-amber-500/15 text-amber-100"
       : urgency === "warning"
         ? "border-amber-400/50 bg-amber-500/15 text-amber-100"
         : "border-white/15 bg-white/5 text-slate-100";
   const label = isOver
     ? "Time’s up"
-    : urgency === "critical"
-      ? "Wrapping up"
-      : urgency === "warning"
-        ? "Final stretch"
-        : "Time left";
-  const shouldPulse = !reducedMotion && (urgency === "critical" || isOver);
+    : inWrapUp
+      ? "Say goodbye"
+      : urgency === "critical"
+        ? "Wrapping up"
+        : urgency === "warning"
+          ? "Final stretch"
+          : "Time left";
+  const displayMs = remainingMs > 0 ? remainingMs : wrapUpRemainingMs;
+  const shouldPulse = !reducedMotion && (urgency === "critical" || inWrapUp || isOver);
 
   return (
     <motion.div
@@ -889,7 +958,9 @@ function TimerPill({
       aria-label={
         isOver
           ? "Session time is up"
-          : `${Math.ceil(remainingMs / 60000)} minutes remaining`
+          : inWrapUp
+            ? `${Math.ceil(wrapUpRemainingMs / 60000)} minutes left to say goodbye`
+            : `${Math.ceil(remainingMs / 60000)} minutes remaining`
       }
       animate={
         shouldPulse
@@ -918,7 +989,7 @@ function TimerPill({
       </svg>
       <span className="uppercase tracking-wide opacity-80">{label}</span>
       <span className="font-mono text-sm tabular-nums tracking-tight">
-        {isOver ? "00:00" : formatRemaining(remainingMs)}
+        {isOver ? "00:00" : formatRemaining(displayMs)}
       </span>
     </motion.div>
   );

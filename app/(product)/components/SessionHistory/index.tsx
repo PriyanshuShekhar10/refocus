@@ -6,6 +6,7 @@ import { Shell } from "@/components/design";
 import { useWallpaperActive } from "@/components/wallpaper-context";
 import { RecentSessionPartners } from "@/components/recent-session-partners";
 import { SessionStatsDashboard } from "@/components/session-stats/dashboard";
+import { PageRefreshButton, dispatchPageRefreshEvent, PAGE_REFRESH_EVENTS } from "@/components/page-refresh";
 
 interface SessionHistoryProps {
   compact?: boolean;
@@ -27,6 +28,24 @@ export default function SessionHistory({ compact = false }: SessionHistoryProps)
           gap: compact ? 12 : 20,
         }}
       >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1
+              className="text-xl font-semibold text-gray-900 dark:text-white"
+              style={{ fontSize: compact ? 20 : "clamp(24px, 4vw, 32px)" }}
+            >
+              Sessions
+            </h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Recent partners and your focus history.
+            </p>
+          </div>
+          <PageRefreshButton
+            onRefresh={() =>
+              dispatchPageRefreshEvent(PAGE_REFRESH_EVENTS.sessions)
+            }
+          />
+        </div>
         <RecentSessionPartners />
         {compact ? (
           <section className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">

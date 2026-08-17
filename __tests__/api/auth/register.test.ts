@@ -28,6 +28,11 @@ vi.mock("@/lib/email/sendWelcomeEmail", () => ({
   sendWelcomeVerificationEmail: vi.fn().mockResolvedValue({ sent: true }),
 }));
 
+vi.mock("@/lib/email/opsNotify", () => ({
+  notifyOpsSignup: vi.fn().mockResolvedValue(undefined),
+  notifyOpsSessionMatched: vi.fn(),
+}));
+
 vi.mock("@/lib/ably-server", () => ({
   publishAbly: vi.fn().mockResolvedValue(undefined),
 }));
@@ -42,6 +47,7 @@ vi.mock("next/server", async (importOriginal) => {
 
 import { POST } from "@/app/api/auth/register/route";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { notifyOpsSignup } from "@/lib/email/opsNotify";
 
 describe("POST /api/auth/register", () => {
   beforeEach(() => {
@@ -179,6 +185,14 @@ describe("POST /api/auth/register", () => {
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(200);
     expect(json.id).toBe(String(insertedId));
+    expect(notifyOpsSignup).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: String(insertedId),
+        email: "new@example.com",
+        firstName: "John",
+        method: "email",
+      }),
+    );
   });
 
   it("returns 409 on duplicate email (MongoDB error 11000)", async () => {

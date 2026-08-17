@@ -21,8 +21,13 @@ export async function addBannedIpWatches(params: {
   email: string | null;
   signupIp?: string | null;
   lastLoginIp?: string | null;
+  knownIps?: Array<string | null | undefined> | null;
 }): Promise<void> {
-  const ips = uniqueIps(params.signupIp, params.lastLoginIp);
+  const ips = uniqueIps(
+    params.signupIp,
+    params.lastLoginIp,
+    ...(params.knownIps ?? []),
+  );
   if (ips.length === 0) return;
 
   const db = await getDb();
@@ -88,17 +93,30 @@ export async function logBannedIpSignupAttempt(params: {
 export async function getBannedUserIps(userId: string): Promise<{
   signupIp: string | null;
   lastLoginIp: string | null;
+  knownIps: string[];
 }> {
   if (!ObjectId.isValid(userId)) {
-    return { signupIp: null, lastLoginIp: null };
+    return { signupIp: null, lastLoginIp: null, knownIps: [] };
   }
   const db = await getDb();
   const user = (await db.collection("users").findOne(
     { _id: new ObjectId(userId) },
-    { projection: { signupIp: 1, lastLoginIp: 1 } },
-  )) as { signupIp?: string | null; lastLoginIp?: string | null } | null;
+    { projection: { signupIp: 1, lastLoginIp: 1, lastSeenIp: 1, knownIps: 1 } },
+  )) as {
+    signupIp?: string | null;
+    lastLoginIp?: string | null;
+    lastSeenIp?: string | null;
+    knownIps?: Array<{ ip?: string | null }>;
+  } | null;
+  const knownIps = uniqueIps(
+    user?.signupIp,
+    user?.lastLoginIp,
+    user?.lastSeenIp,
+    ...(user?.knownIps ?? []).map((row) => row.ip),
+  );
   return {
     signupIp: user?.signupIp ?? null,
     lastLoginIp: user?.lastLoginIp ?? null,
+    knownIps,
   };
 }

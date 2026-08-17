@@ -5,10 +5,18 @@ import { mockCollection, mockDb } from "../helpers";
 const sendMatchedSessionEmail = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ sent: true }),
 );
+const notifyOpsSessionMatched = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined),
+);
 const markReminderSent = vi.hoisted(() => vi.fn().mockResolvedValue(true));
 
 vi.mock("@/lib/email/sendMatchedSessionEmail", () => ({
   sendMatchedSessionEmail,
+}));
+
+vi.mock("@/lib/email/opsNotify", () => ({
+  notifyOpsSessionMatched,
+  notifyOpsSignup: vi.fn(),
 }));
 
 vi.mock("@/lib/sessionReminders", async (importOriginal) => {
@@ -99,6 +107,13 @@ describe("notifySessionMatched", () => {
         isHost: false,
       }),
     );
+    expect(notifyOpsSessionMatched).toHaveBeenCalledTimes(1);
+    expect(notifyOpsSessionMatched).toHaveBeenCalledWith(
+      expect.objectContaining({
+        host: expect.objectContaining({ email: "host@example.com" }),
+        joiner: expect.objectContaining({ email: "joiner@example.com" }),
+      }),
+    );
   });
 
   it("still emails the host when session reminders are turned off", async () => {
@@ -147,5 +162,6 @@ describe("notifySessionMatched", () => {
     });
 
     expect(sendMatchedSessionEmail).not.toHaveBeenCalled();
+    expect(notifyOpsSessionMatched).not.toHaveBeenCalled();
   });
 });

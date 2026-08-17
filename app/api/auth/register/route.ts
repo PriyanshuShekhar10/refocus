@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/ratelimit";
 import { validatePassword } from "@/lib/validatePassword";
 import { sendWelcomeVerificationEmail } from "@/lib/email/sendWelcomeEmail";
+import { notifyOpsSignup } from "@/lib/email/opsNotify";
 import { generateUsername } from "@/lib/users/generateUsername";
 import {
   DISPOSABLE_EMAIL_ERROR,
@@ -140,15 +141,23 @@ export async function POST(req: NextRequest) {
       console.error("[register] Welcome board announcement failed:", err);
     }
 
-    after(() =>
+    after(() => {
       sendWelcomeVerificationEmail({
         userId,
         email: doc.email,
         firstName: doc.firstname,
       }).catch((emailErr) => {
         console.error("[register] Welcome email failed:", emailErr);
-      }),
-    );
+      });
+      notifyOpsSignup({
+        userId,
+        email: doc.email,
+        firstName: doc.firstname,
+        method: "email",
+      }).catch((err) => {
+        console.error("[register] Ops signup email failed:", err);
+      });
+    });
 
     return NextResponse.json({ id: userId });
   } catch (e: unknown) {

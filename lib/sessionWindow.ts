@@ -33,3 +33,27 @@ export function isCallJoinable(
 ): boolean {
   return isWithinCallWindow(startTime, endTime, now, CALL_JOIN_VISIBLE_MINUTES);
 }
+
+/** Minutes after official end that partners can stay on the call to say goodbye. */
+export const WRAP_UP_MINUTES = 5;
+
+/** True once the scheduled start has been reached (in-progress or finished). */
+export function hasSessionStarted(
+  startTime: Date | string,
+  now = new Date(),
+): boolean {
+  return new Date(startTime).getTime() <= now.getTime();
+}
+
+/** Remaining wrap-up time after the scheduled end. 0 before the session ends. */
+export function wrapUpRemainingMs(
+  endTime: Date | string,
+  now = new Date(),
+  wrapUpMinutes = WRAP_UP_MINUTES,
+): number {
+  const end = new Date(endTime).getTime();
+  const current = now.getTime();
+  if (current < end) return 0;
+  const wrapUpEnd = end + wrapUpMinutes * 60 * 1000;
+  return Math.max(0, wrapUpEnd - current);
+}

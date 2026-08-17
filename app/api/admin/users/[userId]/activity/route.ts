@@ -7,6 +7,7 @@ import {
   isCommunityMuted,
 } from "@/lib/communityModeration";
 import { isEmailVerified } from "@/lib/emailVerification";
+import { mergeKnownIps } from "@/lib/userIps";
 
 const PER_SOURCE = 30;
 
@@ -64,6 +65,8 @@ export async function GET(
         signupIp: 1,
         lastLoginIp: 1,
         lastLoginAt: 1,
+        lastSeenIp: 1,
+        knownIps: 1,
         communityBannedAt: 1,
         communityMutedUntil: 1,
         emailVerified: 1,
@@ -179,12 +182,15 @@ export async function GET(
 
   for (const row of logins) {
     const ip = row.ip ? ` from ${row.ip}` : "";
+    const method = row.method ?? "credentials";
     pushEvent(
       events,
-      "login",
+      method === "access" ? "ip_seen" : "login",
       row.at,
-      `Signed in (${row.method ?? "credentials"})${ip}`,
-      { ip: row.ip ?? null, method: row.method },
+      method === "access"
+        ? `Accessed from a new IP${ip}`
+        : `Signed in (${method})${ip}`,
+      { ip: row.ip ?? null, method },
     );
   }
 
@@ -283,6 +289,25 @@ export async function GET(
         null,
       signupIp: user.signupIp ?? null,
       lastLoginIp: user.lastLoginIp ?? null,
+      lastSeenIp: user.lastSeenIp ?? null,
+      knownIps: mergeKnownIps({
+        signupIp: (user.signupIp as string | undefined) ?? null,
+        lastLoginIp: (user.lastLoginIp as string | undefined) ?? null,
+        lastSeenIp: (user.lastSeenIp as string | undefined) ?? null,
+        knownIps: user.knownIps as
+          | Array<{
+              ip?: string | null;
+              firstSeenAt?: Date;
+              lastSeenAt?: Date;
+              count?: number;
+            }>
+          | undefined,
+      }).map((row) => ({
+        ip: row.ip,
+        firstSeenAt: iso(row.firstSeenAt),
+        lastSeenAt: iso(row.lastSeenAt),
+        count: row.count,
+      })),
       lastLoginAt: iso(user.lastLoginAt),
       createdAt: iso(user.createdAt),
       emailVerified: isEmailVerified(user.emailVerified),

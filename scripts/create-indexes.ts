@@ -162,6 +162,11 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
         keys: { canonicalEmail: 1 },
         options: { unique: true, sparse: true },
       },
+      {
+        name: "users_known_ips",
+        keys: { "knownIps.ip": 1 },
+        options: { sparse: true },
+      },
     ],
   },
   {

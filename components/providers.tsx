@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { SWRConfig } from "swr";
 import { defaultSwrConfig } from "@/lib/swr/config";
 import { PostHogProvider } from "@/components/posthog-provider";
+import { PageRefreshProvider } from "@/components/page-refresh";
 
 type ProvidersProps = {
   children: React.ReactNode;
@@ -14,14 +15,16 @@ export default function Providers({ children }: ProvidersProps) {
     <SessionProvider>
       <PostHogProvider>
         <SWRConfig value={defaultSwrConfig}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+          <PageRefreshProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </PageRefreshProvider>
         </SWRConfig>
       </PostHogProvider>
     </SessionProvider>

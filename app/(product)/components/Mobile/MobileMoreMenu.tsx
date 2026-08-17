@@ -11,8 +11,10 @@ import {
 } from "react-icons/hi";
 import { BsGearFill } from "react-icons/bs";
 import { FiLogOut } from "react-icons/fi";
+import { RefreshCw } from "lucide-react";
 import type { TabKey } from "../Sidebar/sidebar";
 import { MOBILE_MORE_TABS } from "./MobileBottomNav";
+import { usePageRefresh } from "@/components/page-refresh";
 
 interface MobileMoreMenuProps {
   open: boolean;
@@ -61,6 +63,7 @@ export function MobileMoreMenu({
   isAdmin = false,
 }: MobileMoreMenuProps) {
   const { resolvedTheme, setTheme } = useTheme();
+  const { refresh, refreshing } = usePageRefresh();
 
   if (!open) return null;
 
@@ -117,6 +120,20 @@ export function MobileMoreMenu({
               </li>
             );
           })}
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                void refresh();
+                onClose();
+              }}
+              disabled={refreshing}
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-gray-700 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
+              <span className="font-medium">Refresh</span>
+            </button>
+          </li>
           <li>
             <button
               type="button"

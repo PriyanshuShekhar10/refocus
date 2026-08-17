@@ -1,0 +1,3 @@
+export const ADMIN_MAIL_MAX_RECIPIENTS = 25;
+export const ADMIN_MAIL_SUBJECT_MAX = 200;
+export const ADMIN_MAIL_BODY_MAX = 8000;

@@ -6,6 +6,7 @@ import {
   isCommunityBanned,
   isCommunityMuted,
 } from "@/lib/communityModeration";
+import { mergeKnownIps } from "@/lib/userIps";
 
 export async function GET(req: NextRequest) {
   const guard = await requireAdmin();
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest) {
       { lastname: { $regex: q, $options: "i" } },
       { signupIp: { $regex: q, $options: "i" } },
       { lastLoginIp: { $regex: q, $options: "i" } },
+      { lastSeenIp: { $regex: q, $options: "i" } },
+      { "knownIps.ip": { $regex: q, $options: "i" } },
     ];
   }
 
@@ -51,6 +54,8 @@ export async function GET(req: NextRequest) {
         signupIp: 1,
         lastLoginIp: 1,
         lastLoginAt: 1,
+        lastSeenIp: 1,
+        knownIps: 1,
       })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -78,6 +83,20 @@ export async function GET(req: NextRequest) {
       communityMuted: isCommunityMuted(u),
       signupIp: (u.signupIp as string | undefined) ?? null,
       lastLoginIp: (u.lastLoginIp as string | undefined) ?? null,
+      lastSeenIp: (u.lastSeenIp as string | undefined) ?? null,
+      knownIps: mergeKnownIps({
+        signupIp: (u.signupIp as string | undefined) ?? null,
+        lastLoginIp: (u.lastLoginIp as string | undefined) ?? null,
+        lastSeenIp: (u.lastSeenIp as string | undefined) ?? null,
+        knownIps: u.knownIps as
+          | Array<{
+              ip?: string | null;
+              firstSeenAt?: Date;
+              lastSeenAt?: Date;
+              count?: number;
+            }>
+          | undefined,
+      }).map((row) => row.ip),
       lastLoginAt: u.lastLoginAt
         ? new Date(u.lastLoginAt as Date).toISOString()
         : null,

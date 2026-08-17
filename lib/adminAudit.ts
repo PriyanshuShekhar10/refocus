@@ -13,7 +13,8 @@ export type AdminAuditAction =
   | "chat.delete"
   | "friend_message.delete"
   | "report.dismiss"
-  | "report.resolve";
+  | "report.resolve"
+  | "user.email";
 
 export type AdminAuditEntry = {
   _id?: ObjectId;
