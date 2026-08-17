@@ -157,13 +157,13 @@ function SessionWaitTasks({
 }) {
   const tasks = useSessionTasks(sessionId, currentUserId);
   return (
-    <div className="mt-4 max-h-[420px] overflow-hidden rounded-xl border border-gray-200 bg-white text-left dark:border-gray-700 dark:bg-gray-900">
-      <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-800">
-        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+    <div className="mt-4 max-h-[420px] overflow-hidden rounded-xl border border-gray-100 bg-white text-left dark:border-white/10 dark:bg-gray-950">
+      <div className="px-4 pt-4">
+        <p className="text-sm font-medium text-gray-900 dark:text-white">
           Prep your list
         </p>
-        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-          Your partner can see these when they join. They can’t check them off for you.
+        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+          Your partner can see these. They can’t check them off for you.
         </p>
       </div>
       <SessionTaskPanel
