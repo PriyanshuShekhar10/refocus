@@ -4,7 +4,8 @@ import { mockCollection, mockDb } from "../helpers";
 import type { DecodedIdToken } from "firebase-admin/auth";
 
 const usersCol = mockCollection();
-const db = mockDb({ users: usersCol });
+const bannedEmailsCol = mockCollection();
+const db = mockDb({ users: usersCol, banned_emails: bannedEmailsCol });
 
 vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
@@ -43,6 +44,7 @@ describe("upsertFirebaseUser", () => {
     usersCol.findOne.mockResolvedValue(null);
     usersCol.insertOne.mockResolvedValue({ insertedId: new ObjectId() });
     usersCol.updateOne.mockResolvedValue({ modifiedCount: 1 });
+    bannedEmailsCol.findOne.mockResolvedValue(null);
   });
 
   it("creates a new user with image and emailVerified", async () => {
@@ -68,6 +70,7 @@ describe("upsertFirebaseUser", () => {
     expect(insertedDoc.emailVerified).toBeInstanceOf(Date);
     expect(insertedDoc.username).toBeTruthy();
     expect(insertedDoc.hashedPassword).toBeUndefined();
+    expect(insertedDoc.canonicalEmail).toBe("user@example.com");
   });
 
   it("auto-links an existing email/password account", async () => {
@@ -195,6 +198,22 @@ describe("upsertFirebaseUser", () => {
         makeDecodedToken({ email: "temp@mailinator.com" }),
       ),
     ).rejects.toThrow(/disposable/i);
+    expect(usersCol.insertOne).not.toHaveBeenCalled();
+  });
+
+  it("rejects new accounts with a banned canonical email", async () => {
+    bannedEmailsCol.findOne.mockResolvedValue({
+      canonicalEmail: "user@gmail.com",
+    });
+    const { upsertFirebaseUser } = await import(
+      "@/lib/users/upsertFirebaseUser"
+    );
+
+    await expect(
+      upsertFirebaseUser(
+        makeDecodedToken({ email: "u.s.er+x@gmail.com" }),
+      ),
+    ).rejects.toThrow(/cannot be used/i);
     expect(usersCol.insertOne).not.toHaveBeenCalled();
   });
 

@@ -17,7 +17,8 @@ vi.mock("@/lib/ratelimit", () => ({
 }));
 
 const usersCol = mockCollection();
-const db = mockDb({ users: usersCol });
+const bannedEmailsCol = mockCollection();
+const db = mockDb({ users: usersCol, banned_emails: bannedEmailsCol });
 
 vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
@@ -47,6 +48,8 @@ describe("POST /api/auth/register", () => {
     vi.clearAllMocks();
     usersCol.insertOne.mockResolvedValue({ insertedId: new ObjectId() });
     usersCol.createIndex.mockResolvedValue("email_1");
+    usersCol.findOne.mockResolvedValue(null);
+    bannedEmailsCol.findOne.mockResolvedValue(null);
     (checkRateLimit as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       limit: 5,
@@ -121,6 +124,46 @@ describe("POST /api/auth/register", () => {
     expect(usersCol.insertOne).not.toHaveBeenCalled();
   });
 
+  it("returns 403 for banned canonical emails", async () => {
+    bannedEmailsCol.findOne.mockResolvedValue({ canonicalEmail: "user@gmail.com" });
+    const req = mockRequest("/api/auth/register", {
+      body: { email: "u.s.er+tag@gmail.com", password: "StrongP@ss1" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(403);
+    expect(json.error).toMatch(/cannot be used/i);
+    expect(usersCol.insertOne).not.toHaveBeenCalled();
+  });
+
+  it("returns 409 when another user has the same Gmail canonical email", async () => {
+    usersCol.findOne.mockResolvedValueOnce({
+      _id: new ObjectId(),
+      email: "ab@gmail.com",
+      canonicalEmail: "ab@gmail.com",
+    });
+    const req = mockRequest("/api/auth/register", {
+      body: { email: "a.b+spam@gmail.com", password: "StrongP@ss1" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(409);
+    expect(json.error).toBe("User already exists");
+    expect(usersCol.insertOne).not.toHaveBeenCalled();
+  });
+
+  it("does not reject signup because of IP", async () => {
+    const { getClientIp } = await import("@/lib/ratelimit");
+    (getClientIp as ReturnType<typeof vi.fn>).mockReturnValue("203.0.113.10");
+    const insertedId = new ObjectId();
+    usersCol.insertOne.mockResolvedValue({ insertedId });
+
+    const req = mockRequest("/api/auth/register", {
+      body: { email: "campus@example.com", password: "StrongP@ss1" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(200);
+    expect(json.id).toBe(String(insertedId));
+  });
+
   it("successfully registers a new user with valid input", async () => {
     const insertedId = new ObjectId();
     usersCol.insertOne.mockResolvedValue({ insertedId });
@@ -162,6 +205,7 @@ describe("POST /api/auth/register", () => {
 
     const insertedDoc = usersCol.insertOne.mock.calls[0][0];
     expect(insertedDoc.email).toBe("test@example.com");
+    expect(insertedDoc.canonicalEmail).toBe("test@example.com");
   });
 
   it("builds fullName from firstName and lastName", async () => {

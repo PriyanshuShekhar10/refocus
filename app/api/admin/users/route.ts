@@ -26,6 +26,8 @@ export async function GET(req: NextRequest) {
       { name: { $regex: q, $options: "i" } },
       { firstname: { $regex: q, $options: "i" } },
       { lastname: { $regex: q, $options: "i" } },
+      { signupIp: { $regex: q, $options: "i" } },
+      { lastLoginIp: { $regex: q, $options: "i" } },
     ];
   }
 
@@ -46,6 +48,9 @@ export async function GET(req: NextRequest) {
         role: 1,
         communityBannedAt: 1,
         communityMutedUntil: 1,
+        signupIp: 1,
+        lastLoginIp: 1,
+        lastLoginAt: 1,
       })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -71,6 +76,11 @@ export async function GET(req: NextRequest) {
       isAdmin: u.role === ADMIN_ROLE,
       communityBanned: isCommunityBanned(u),
       communityMuted: isCommunityMuted(u),
+      signupIp: (u.signupIp as string | undefined) ?? null,
+      lastLoginIp: (u.lastLoginIp as string | undefined) ?? null,
+      lastLoginAt: u.lastLoginAt
+        ? new Date(u.lastLoginAt as Date).toISOString()
+        : null,
     })),
     total,
     skip,

@@ -10,6 +10,14 @@ import {
   DISPOSABLE_EMAIL_ERROR,
   isDisposableEmail,
 } from "@/lib/disposableEmail";
+import {
+  BANNED_EMAIL_ERROR,
+  canonicalEmail,
+  displayEmail,
+} from "@/lib/normalizeEmail";
+import { findUserByEmailIdentity, isEmailBanned } from "@/lib/bannedEmails";
+import { logBannedIpSignupAttempt } from "@/lib/bannedIpWatch";
+import { recordSignupIp } from "@/lib/userIps";
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -30,12 +38,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  const normalizedEmail = String(email).trim().toLowerCase();
+  const normalizedEmail = displayEmail(String(email));
   if (!normalizedEmail || !normalizedEmail.includes("@")) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
 
   if (await isDisposableEmail(normalizedEmail)) {
+    void logBannedIpSignupAttempt({
+      ip,
+      attemptedEmail: normalizedEmail,
+      outcome: "rejected_other",
+    });
     return NextResponse.json(
       { error: DISPOSABLE_EMAIL_ERROR },
       { status: 400 },
@@ -54,6 +67,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (await isEmailBanned(normalizedEmail)) {
+    void logBannedIpSignupAttempt({
+      ip,
+      attemptedEmail: normalizedEmail,
+      outcome: "rejected_email",
+    });
+    return NextResponse.json({ error: BANNED_EMAIL_ERROR }, { status: 403 });
+  }
+
+  const existing = await findUserByEmailIdentity(normalizedEmail);
+  if (existing) {
+    void logBannedIpSignupAttempt({
+      ip,
+      attemptedEmail: normalizedEmail,
+      outcome: "rejected_other",
+    });
+    return NextResponse.json({ error: "User already exists" }, { status: 409 });
+  }
+
   const db = await getDb();
   const usersCol = db.collection("users");
 
@@ -68,6 +100,7 @@ export async function POST(req: NextRequest) {
 
   const doc = {
     email: normalizedEmail,
+    canonicalEmail: canonicalEmail(normalizedEmail),
     username,
     name: fullName,
     firstname,
@@ -81,6 +114,14 @@ export async function POST(req: NextRequest) {
   try {
     const res = await db.collection("users").insertOne(doc);
     const userId = String(res.insertedId);
+
+    void recordSignupIp(userId, ip);
+    void logBannedIpSignupAttempt({
+      ip,
+      attemptedEmail: normalizedEmail,
+      outcome: "created",
+      createdUserId: userId,
+    });
 
     // Create welcome board announcement before responding so it exists
     // when the new user (or others) open Community.

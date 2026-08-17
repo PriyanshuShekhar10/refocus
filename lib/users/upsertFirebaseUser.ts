@@ -7,6 +7,14 @@ import {
   DISPOSABLE_EMAIL_ERROR,
   isDisposableEmail,
 } from "@/lib/disposableEmail";
+import {
+  BANNED_EMAIL_ERROR,
+  canonicalEmail,
+  displayEmail,
+} from "@/lib/normalizeEmail";
+import { findUserByEmailIdentity, isEmailBanned } from "@/lib/bannedEmails";
+import { logBannedIpSignupAttempt } from "@/lib/bannedIpWatch";
+import { recordSignupIp } from "@/lib/userIps";
 
 export type AuthProviderKey = "google";
 
@@ -21,6 +29,7 @@ export type UpsertFirebaseUserResult = {
 type UserDoc = {
   _id: ObjectId;
   email: string;
+  canonicalEmail?: string;
   username?: string;
   name?: string | null;
   firstname?: string | null;
@@ -71,8 +80,9 @@ function splitDisplayName(displayName?: string | null): {
 export async function upsertFirebaseUser(
   decoded: DecodedIdToken,
   displayName?: string | null,
+  clientIp?: string | null,
 ): Promise<UpsertFirebaseUserResult> {
-  const email = decoded.email?.trim().toLowerCase();
+  const email = decoded.email ? displayEmail(decoded.email) : "";
   if (!email) {
     throw new Error(
       "No email returned from the sign-in provider. Try another method or contact support.",
@@ -96,7 +106,7 @@ export async function upsertFirebaseUser(
   const db = await getDb();
   const usersCol = db.collection<UserDoc>("users");
 
-  const existing = await usersCol.findOne({ email });
+  const existing = (await findUserByEmailIdentity(email)) as UserDoc | null;
 
   if (existing) {
     const providerPatch: Partial<Record<AuthProviderKey, string>> = {
@@ -121,6 +131,9 @@ export async function upsertFirebaseUser(
     if (emailVerified && !existing.emailVerified) {
       $set.emailVerified = emailVerified;
     }
+    if (!existing.canonicalEmail) {
+      $set.canonicalEmail = canonicalEmail(existing.email || email);
+    }
 
     await usersCol.updateOne({ _id: existing._id }, { $set });
 
@@ -141,7 +154,21 @@ export async function upsertFirebaseUser(
   }
 
   if (await isDisposableEmail(email)) {
+    void logBannedIpSignupAttempt({
+      ip: clientIp,
+      attemptedEmail: email,
+      outcome: "rejected_other",
+    });
     throw new Error(DISPOSABLE_EMAIL_ERROR);
+  }
+
+  if (await isEmailBanned(email)) {
+    void logBannedIpSignupAttempt({
+      ip: clientIp,
+      attemptedEmail: email,
+      outcome: "rejected_email",
+    });
+    throw new Error(BANNED_EMAIL_ERROR);
   }
 
   const username = await generateUsername(usersCol, email);
@@ -153,6 +180,7 @@ export async function upsertFirebaseUser(
 
   const doc = {
     email,
+    canonicalEmail: canonicalEmail(email),
     username,
     name: fullName,
     firstname,
@@ -167,6 +195,14 @@ export async function upsertFirebaseUser(
 
   const res = await usersCol.insertOne(doc as never);
   const userId = String(res.insertedId);
+
+  void recordSignupIp(userId, clientIp);
+  void logBannedIpSignupAttempt({
+    ip: clientIp,
+    attemptedEmail: email,
+    outcome: "created",
+    createdUserId: userId,
+  });
 
   try {
     const { createWelcomeAnnouncement } = await import(

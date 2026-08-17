@@ -23,6 +23,7 @@ export async function GET() {
     pendingFriendRequests,
     pendingSessionRequests,
     pendingReports,
+    bannedIpActivityWeek,
   ] = await Promise.all([
     db.collection("users").countDocuments(),
     db.collection("users").countDocuments({ createdAt: { $gte: weekAgo } }),
@@ -42,6 +43,9 @@ export async function GET() {
     db.collection("friend_requests").countDocuments({ status: "pending" }),
     db.collection("session_requests").countDocuments({ status: "pending" }),
     db.collection("content_reports").countDocuments({ status: "pending" }),
+    db.collection("banned_ip_activity").countDocuments({
+      createdAt: { $gte: weekAgo },
+    }),
   ]);
 
   return NextResponse.json({
@@ -66,6 +70,7 @@ export async function GET() {
       pendingFriendRequests,
       pendingSessionRequests,
       pendingReports,
+      bannedIpActivityWeek,
     },
   });
 }

@@ -40,6 +40,8 @@ export function mockCollection(overrides: Record<string, unknown> = {}) {
     updateOne: vi.fn().mockResolvedValue({ modifiedCount: 1 }),
     updateMany: vi.fn().mockResolvedValue({ modifiedCount: 0 }),
     deleteOne: vi.fn().mockResolvedValue({ deletedCount: 1 }),
+    deleteMany: vi.fn().mockResolvedValue({ deletedCount: 0 }),
+    countDocuments: vi.fn().mockResolvedValue(0),
     findOneAndUpdate: vi.fn().mockResolvedValue(null),
     createIndex: vi.fn().mockResolvedValue("email_1"),
     find: vi.fn().mockReturnValue({

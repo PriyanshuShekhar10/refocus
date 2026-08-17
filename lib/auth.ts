@@ -83,7 +83,16 @@ export const authOptions: NextAuthOptions = {
               "@/lib/users/upsertFirebaseUser"
             );
             const displayName = credentials?.displayName?.trim() || null;
-            const user = await upsertFirebaseUser(decoded, displayName);
+            const user = await upsertFirebaseUser(decoded, displayName, ip);
+            if (user.id) {
+              const { recordLoginIp } = await import("@/lib/userIps");
+              void recordLoginIp({
+                userId: user.id,
+                ip,
+                method: "google",
+                email: user.email,
+              });
+            }
             return {
               id: user.id,
               email: user.email,
@@ -135,8 +144,16 @@ export const authOptions: NextAuthOptions = {
         );
         if (!ok) return null;
         const image = user.avatar_url ?? user.image ?? undefined;
+        const userId = String(user._id);
+        const { recordLoginIp } = await import("@/lib/userIps");
+        void recordLoginIp({
+          userId,
+          ip,
+          method: "credentials",
+          email: user.email,
+        });
         return {
-          id: String(user._id),
+          id: userId,
           email: user.email,
           name: user.name || undefined,
           image: image || undefined,

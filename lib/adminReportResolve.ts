@@ -155,6 +155,12 @@ export async function applyUserModeration(
 ): Promise<void> {
   const now = new Date();
   if (resolution === "ban") {
+    const { banEmail } = await import("@/lib/bannedEmails");
+    const {
+      addBannedIpWatches,
+      getBannedUserIps,
+    } = await import("@/lib/bannedIpWatch");
+    const ips = await getBannedUserIps(reportedUserId);
     await db.collection("users").updateOne(
       { _id: new ObjectId(reportedUserId) },
       {
@@ -166,6 +172,17 @@ export async function applyUserModeration(
         },
       },
     );
+    await banEmail({
+      email: reportedUserEmail,
+      userId: reportedUserId,
+      bannedBy: admin.userId,
+    });
+    await addBannedIpWatches({
+      userId: reportedUserId,
+      email: reportedUserEmail,
+      signupIp: ips.signupIp,
+      lastLoginIp: ips.lastLoginIp,
+    });
     await logAdminAction({
       actorId: admin.userId,
       actorEmail: admin.email,

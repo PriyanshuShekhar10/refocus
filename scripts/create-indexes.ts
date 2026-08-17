@@ -157,6 +157,11 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
         keys: { username: 1 },
         options: { unique: true, sparse: true },
       },
+      {
+        name: "users_canonical_email_unique",
+        keys: { canonicalEmail: 1 },
+        options: { unique: true, sparse: true },
+      },
     ],
   },
   {
@@ -233,6 +238,52 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
         // Index for sent requests
         name: "friend_requests_sent",
         keys: { from_user_id: 1, status: 1, created_at: -1 },
+      },
+    ],
+  },
+  {
+    collection: "banned_emails",
+    indexes: [
+      {
+        name: "banned_emails_canonical_unique",
+        keys: { canonicalEmail: 1 },
+        options: { unique: true },
+      },
+    ],
+  },
+  {
+    collection: "banned_ip_watches",
+    indexes: [
+      {
+        name: "banned_ip_watches_ip_user_unique",
+        keys: { ip: 1, bannedUserId: 1 },
+        options: { unique: true },
+      },
+      {
+        name: "banned_ip_watches_ip",
+        keys: { ip: 1 },
+      },
+    ],
+  },
+  {
+    collection: "banned_ip_activity",
+    indexes: [
+      {
+        name: "banned_ip_activity_created",
+        keys: { createdAt: -1 },
+      },
+      {
+        name: "banned_ip_activity_created_user",
+        keys: { createdUserId: 1, createdAt: -1 },
+      },
+    ],
+  },
+  {
+    collection: "user_login_events",
+    indexes: [
+      {
+        name: "user_login_events_user_at",
+        keys: { userId: 1, at: -1 },
       },
     ],
   },

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  Activity,
   Ban,
   Flag,
   History,
@@ -15,6 +16,7 @@ import {
   Users,
   Volume2,
   VolumeX,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type AdminSection = "overview" | "users" | "reports" | "history";
+type AdminSection = "overview" | "users" | "reports" | "history" | "ip-activity";
 
 type Stats = {
   users: { total: number; newThisWeek: number; verified: number };
@@ -35,6 +37,7 @@ type Stats = {
     pendingFriendRequests: number;
     pendingSessionRequests: number;
     pendingReports: number;
+    bannedIpActivityWeek: number;
   };
 };
 
@@ -49,6 +52,42 @@ type AdminUser = {
   isAdmin: boolean;
   communityBanned: boolean;
   communityMuted: boolean;
+  signupIp: string | null;
+  lastLoginIp: string | null;
+  lastLoginAt: string | null;
+};
+
+type IpActivityEntry = {
+  id: string;
+  ip: string | null;
+  attemptedEmail: string | null;
+  outcome: string;
+  createdUserId: string | null;
+  matchedBannedUsers: { id: string; email: string | null; label: string }[];
+  createdAt: string | null;
+};
+
+type UserActivityEvent = {
+  type: string;
+  at: string;
+  summary: string;
+};
+
+type UserActivityPayload = {
+  user: {
+    id: string;
+    email: string | null;
+    username: string | null;
+    name: string | null;
+    signupIp: string | null;
+    lastLoginIp: string | null;
+    lastLoginAt: string | null;
+    createdAt: string | null;
+    emailVerified: boolean;
+    communityBanned: boolean;
+    communityMuted: boolean;
+  };
+  events: UserActivityEvent[];
 };
 
 type AuditEntry = {
@@ -88,6 +127,7 @@ const SECTIONS: {
 }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "users", label: "Users", icon: Users },
+  { id: "ip-activity", label: "Banned IP activity", icon: Activity },
   { id: "reports", label: "Reports", icon: Flag },
   { id: "history", label: "History", icon: History },
 ];
@@ -154,6 +194,10 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [ipEntries, setIpEntries] = useState<IpActivityEntry[]>([]);
+  const [activityUserId, setActivityUserId] = useState<string | null>(null);
+  const [activity, setActivity] = useState<UserActivityPayload | null>(null);
+  const [activityLoading, setActivityLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/me")
@@ -201,6 +245,28 @@ export default function AdminPanel() {
     setReportsTotal(data.total ?? 0);
   }, [reportFilter]);
 
+  const loadIpActivity = useCallback(async () => {
+    const res = await fetch("/api/admin/banned-ip-activity?limit=80");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to load IP activity");
+    setIpEntries(data.entries || []);
+  }, []);
+
+  const loadUserActivity = useCallback(async (userId: string) => {
+    setActivityLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/activity`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load activity");
+      setActivity(data);
+    } catch (e) {
+      setActivity(null);
+      alert((e as Error).message);
+    } finally {
+      setActivityLoading(false);
+    }
+  }, []);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -209,12 +275,13 @@ export default function AdminPanel() {
       else if (section === "users") await loadUsers();
       else if (section === "reports") await loadReports();
       else if (section === "history") await loadAuditLog();
+      else if (section === "ip-activity") await loadIpActivity();
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setLoading(false);
     }
-  }, [section, loadStats, loadUsers, loadReports, loadAuditLog]);
+  }, [section, loadStats, loadUsers, loadReports, loadAuditLog, loadIpActivity]);
 
   useEffect(() => {
     refresh();
@@ -375,6 +442,17 @@ export default function AdminPanel() {
                   hint="Open reports queue"
                 />
               </button>
+              <button
+                type="button"
+                onClick={() => setSection("ip-activity")}
+                className="text-left"
+              >
+                <StatCard
+                  label="Banned IP signups"
+                  value={stats.moderation.bannedIpActivityWeek ?? 0}
+                  hint="Last 7 days · watch only, not blocked"
+                />
+              </button>
             </div>
           </div>
         ) : null}
@@ -392,7 +470,7 @@ export default function AdminPanel() {
                 type="search"
                 value={userQuery}
                 onChange={(e) => setUserQuery(e.target.value)}
-                placeholder="Search email, username, or name…"
+                placeholder="Search email, username, name, or IP…"
                 className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
               />
               <button
@@ -421,7 +499,14 @@ export default function AdminPanel() {
                     const busy = actionId === u.id;
 
                     return (
-                      <tr key={u.id}>
+                      <tr
+                        key={u.id}
+                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60"
+                        onClick={() => {
+                          setActivityUserId(u.id);
+                          void loadUserActivity(u.id);
+                        }}
+                      >
                         <td className="px-4 py-3">
                           <div className="font-medium text-gray-900 dark:text-white">
                             {u.name || "—"}
@@ -432,6 +517,16 @@ export default function AdminPanel() {
                             ) : null}
                           </div>
                           <div className="text-xs text-gray-500">{u.email}</div>
+                          {u.lastLoginIp || u.signupIp ? (
+                            <div className="mt-0.5 font-mono text-[10px] text-gray-400">
+                              {u.lastLoginIp || u.signupIp}
+                              {u.signupIp &&
+                              u.lastLoginIp &&
+                              u.signupIp !== u.lastLoginIp
+                                ? ` · signup ${u.signupIp}`
+                                : ""}
+                            </div>
+                          ) : null}
                         </td>
                         <td className="px-4 py-3">
                           {u.username ? (
@@ -439,6 +534,7 @@ export default function AdminPanel() {
                               href={`/u/${u.username}`}
                               className="text-[#5D1C6A] hover:underline"
                               target="_blank"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               @{u.username}
                             </Link>
@@ -482,7 +578,10 @@ export default function AdminPanel() {
                             ? new Date(u.createdAt).toLocaleDateString()
                             : "—"}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td
+                          className="px-4 py-3 text-right"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {isSelf ? (
                             <span className="text-xs text-gray-400">—</span>
                           ) : (
@@ -595,6 +694,62 @@ export default function AdminPanel() {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : null}
+
+        {section === "ip-activity" ? (
+          <div className="space-y-4">
+            <p className="text-xs text-gray-500">
+              Signup attempts from IPs used by banned accounts. Signups are not
+              blocked.
+            </p>
+            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                  <tr>
+                    <th className="px-4 py-3">When</th>
+                    <th className="px-4 py-3">IP</th>
+                    <th className="px-4 py-3">Attempted email</th>
+                    <th className="px-4 py-3">Result</th>
+                    <th className="px-4 py-3">Matches banned</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                  {ipEntries.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-4 py-8 text-center text-gray-500"
+                      >
+                        No watched-IP signup attempts yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    ipEntries.map((row) => (
+                      <tr key={row.id}>
+                        <td className="px-4 py-3 text-gray-500">
+                          {row.createdAt
+                            ? new Date(row.createdAt).toLocaleString()
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs">
+                          {row.ip || "—"}
+                        </td>
+                        <td className="px-4 py-3">{row.attemptedEmail || "—"}</td>
+                        <td className="px-4 py-3 capitalize">
+                          {String(row.outcome).replace(/_/g, " ")}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-300">
+                          {row.matchedBannedUsers
+                            .map((u) => u.label)
+                            .join(", ") || "—"}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -862,6 +1017,60 @@ export default function AdminPanel() {
           <p className="text-sm text-gray-500">Loading…</p>
         ) : null}
       </div>
+
+      {activityUserId ? (
+        <div className="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-950">
+          <div className="flex items-start justify-between gap-3 border-b border-gray-200 px-4 py-3 dark:border-gray-800">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                {activity?.user.name || activity?.user.email || "User activity"}
+              </p>
+              <p className="truncate text-xs text-gray-500">
+                {activity?.user.email}
+                {activity?.user.username ? ` · @${activity.user.username}` : ""}
+              </p>
+              {activity?.user.lastLoginIp || activity?.user.signupIp ? (
+                <p className="mt-1 font-mono text-[10px] text-gray-400">
+                  last {activity.user.lastLoginIp || "—"}
+                  {activity.user.signupIp
+                    ? ` · signup ${activity.user.signupIp}`
+                    : ""}
+                </p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setActivityUserId(null);
+                setActivity(null);
+              }}
+              className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Close activity"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+            {activityLoading ? (
+              <p className="text-sm text-gray-500">Loading activity…</p>
+            ) : (
+              <ul className="space-y-3">
+                {(activity?.events ?? []).map((ev, i) => (
+                  <li key={`${ev.type}-${ev.at}-${i}`} className="text-sm">
+                    <p className="text-[11px] text-gray-400">
+                      {new Date(ev.at).toLocaleString()} · {ev.type.replace(/_/g, " ")}
+                    </p>
+                    <p className="text-gray-800 dark:text-gray-200">{ev.summary}</p>
+                  </li>
+                ))}
+                {!activityLoading && (activity?.events.length ?? 0) === 0 ? (
+                  <li className="text-sm text-gray-500">No activity yet.</li>
+                ) : null}
+              </ul>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

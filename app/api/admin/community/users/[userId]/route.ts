@@ -47,6 +47,12 @@ export async function POST(
   const now = new Date();
 
   if (action === "ban") {
+    const { banEmail } = await import("@/lib/bannedEmails");
+    const {
+      addBannedIpWatches,
+      getBannedUserIps,
+    } = await import("@/lib/bannedIpWatch");
+    const ips = await getBannedUserIps(userId);
     await db.collection("users").updateOne(
       { _id: new ObjectId(userId) },
       {
@@ -58,6 +64,17 @@ export async function POST(
         },
       },
     );
+    await banEmail({
+      email: target.email,
+      userId,
+      bannedBy: guard.admin.userId,
+    });
+    await addBannedIpWatches({
+      userId,
+      email: target.email,
+      signupIp: ips.signupIp,
+      lastLoginIp: ips.lastLoginIp,
+    });
     await logAdminAction({
       actorId: guard.admin.userId,
       actorEmail: guard.admin.email,
@@ -70,6 +87,8 @@ export async function POST(
   }
 
   if (action === "unban") {
+    const { unbanEmail } = await import("@/lib/bannedEmails");
+    const { removeBannedIpWatchesForUser } = await import("@/lib/bannedIpWatch");
     await db.collection("users").updateOne(
       { _id: new ObjectId(userId) },
       {
@@ -80,6 +99,8 @@ export async function POST(
         },
       },
     );
+    await unbanEmail(target.email);
+    await removeBannedIpWatchesForUser(userId);
     await logAdminAction({
       actorId: guard.admin.userId,
       actorEmail: guard.admin.email,
