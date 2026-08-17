@@ -155,8 +155,13 @@ export async function join(
  */
 export async function leave(
   id: string,
+  message?: string,
 ): Promise<ApiResult<Record<string, never>>> {
-  const res = await fetch(`${BASE}/${id}/leave`, { method: "POST" });
+  const res = await fetch(`${BASE}/${id}/leave`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(message ? { message } : {}),
+  });
   const data = await parseJson(res);
 
   if (!res.ok) {
@@ -173,8 +178,13 @@ export async function leave(
  */
 export async function deleteSession(
   id: string,
+  message?: string,
 ): Promise<ApiResult<Record<string, never>>> {
-  const res = await fetch(`${BASE}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${BASE}/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(message ? { message } : {}),
+  });
   const data = await parseJson(res);
 
   if (!res.ok) {

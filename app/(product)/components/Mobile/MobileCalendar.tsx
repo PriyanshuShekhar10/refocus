@@ -29,7 +29,7 @@ import { useCalendarSessions } from "@/hooks/useCalendarSessions";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 import { BookingModal } from "../Calendar/Modals/BookingModal";
 import { Toast } from "../Calendar/Modals/Toast";
-import { ConfirmModal } from "../Calendar/Modals/ConfirmModal";
+import { ConfirmModal, partnerNoteField } from "../Calendar/Modals/ConfirmModal";
 import { SessionDetailsModal } from "../Calendar/Modals/SessionDetailsModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -362,23 +362,23 @@ export default function MobileCalendar() {
   );
 
   // Delete flow
-  const handleDeleteSession = useCallback(async () => {
+  const handleDeleteSession = useCallback(async (message?: string) => {
     if (ui.modal.type !== "confirm-delete") return;
     const { event } = ui.modal;
     try {
-      await deleteSession(event.id);
+      await deleteSession(event.id, message);
     } catch (e) {
       dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
     }
   }, [ui.modal, deleteSession]);
 
   // Leave flow
-  const handleLeaveSession = useCallback(async () => {
+  const handleLeaveSession = useCallback(async (message?: string) => {
     if (ui.modal.type !== "confirm-leave") return;
     const { event } = ui.modal;
     dispatch({ type: "CLOSE_MODAL" });
     try {
-      await leaveSession(event.id);
+      await leaveSession(event.id, message);
     } catch (e) {
       dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
     }
@@ -834,6 +834,7 @@ export default function MobileCalendar() {
           confirmText="Delete"
           cancelText="Cancel"
           confirmVariant="danger"
+          messageField={partnerNoteField(ui.modal.event, currentUserId)}
           onCancel={() => dispatch({ type: "CLOSE_MODAL" })}
           onConfirm={handleDeleteSession}
         />
@@ -846,6 +847,7 @@ export default function MobileCalendar() {
           confirmText="Leave"
           cancelText="Cancel"
           confirmVariant="danger"
+          messageField={partnerNoteField(ui.modal.event, currentUserId)}
           onCancel={() => dispatch({ type: "CLOSE_MODAL" })}
           onConfirm={handleLeaveSession}
         />

@@ -44,9 +44,9 @@ interface UseCalendarSessionsReturn {
     quietOwner?: boolean,
   ) => Promise<void>;
   /** Delete a session (owner: deletes or transfers to other person if booked) */
-  deleteSession: (id: string) => Promise<void>;
+  deleteSession: (id: string, message?: string) => Promise<void>;
   /** Leave a session (participant only; session stays available for owner) */
-  leaveSession: (id: string) => Promise<void>;
+  leaveSession: (id: string, message?: string) => Promise<void>;
   /** Join/book a session */
   joinSession: (id: string, quiet?: boolean) => Promise<void>;
   /** Update session metadata (name, color) */
@@ -353,13 +353,13 @@ export function useCalendarSessions({
   );
 
   const deleteSession = useCallback(
-    async (id: string) => {
+    async (id: string, message?: string) => {
       const existing = events.find((e) => e.id === id);
       if (!existing) return;
 
       setEvents((prev) => prev.filter((e) => e.id !== id));
 
-      const result = await sessionsApi.deleteSession(id);
+      const result = await sessionsApi.deleteSession(id, message);
 
       if (!result.ok) {
         setEvents((prev) => [...prev, existing]);
@@ -370,13 +370,13 @@ export function useCalendarSessions({
   );
 
   const leaveSession = useCallback(
-    async (id: string) => {
+    async (id: string, message?: string) => {
       const existing = events.find((e) => e.id === id);
       if (!existing) return;
 
       setEvents((prev) => prev.filter((e) => e.id !== id));
 
-      const result = await sessionsApi.leave(id);
+      const result = await sessionsApi.leave(id, message);
 
       if (!result.ok) {
         setEvents((prev) => [...prev, existing]);

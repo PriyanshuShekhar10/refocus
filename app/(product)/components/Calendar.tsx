@@ -26,7 +26,7 @@ import { useCalendarGrid } from "@/hooks/useCalendarGrid";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 import { BookingModal } from "./Calendar/Modals/BookingModal";
 import { Toast } from "./Calendar/Modals/Toast";
-import { ConfirmModal } from "./Calendar/Modals/ConfirmModal";
+import { ConfirmModal, partnerNoteField } from "./Calendar/Modals/ConfirmModal";
 import { SessionDetailsModal } from "./Calendar/Modals/SessionDetailsModal";
 import { CalendarSidebar } from "./Calendar/CalendarSidebar";
 import { CalendarHeader } from "./Calendar/CalendarHeader";
@@ -416,21 +416,21 @@ export default function Calendar({
   );
 
   // Delete flow
-  const handleDeleteSession = useCallback(async () => {
+  const handleDeleteSession = useCallback(async (message?: string) => {
     if (ui.modal.type !== "confirm-delete") return;
     const { event } = ui.modal;
     try {
-      await deleteSession(event.id);
+      await deleteSession(event.id, message);
     } catch (e) {
       dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
     }
   }, [ui.modal, deleteSession]);
 
-  const handleLeaveSession = useCallback(async () => {
+  const handleLeaveSession = useCallback(async (message?: string) => {
     if (ui.modal.type !== "confirm-leave") return;
     const { event } = ui.modal;
     try {
-      await leaveSession(event.id);
+      await leaveSession(event.id, message);
     } catch (e) {
       dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
     }
@@ -890,6 +890,7 @@ export default function Calendar({
           confirmText="Delete"
           cancelText="Cancel"
           confirmVariant="danger"
+          messageField={partnerNoteField(ui.modal.event, currentUserId)}
           onCancel={() => dispatch({ type: "CLOSE_MODAL" })}
           onConfirm={handleDeleteSession}
         />
@@ -906,6 +907,7 @@ export default function Calendar({
           confirmText="Leave session"
           cancelText="Cancel"
           confirmVariant="danger"
+          messageField={partnerNoteField(ui.modal.event, currentUserId)}
           onCancel={() => dispatch({ type: "CLOSE_MODAL" })}
           onConfirm={handleLeaveSession}
         />

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -6,6 +6,8 @@ import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import { normalizeCancelMessage } from "@/lib/sessionCancelMessage";
+import { notifySessionCancelled } from "@/lib/notifySessionCancelled";
 
 type SessionDoc = {
   _id: ObjectId;
@@ -26,7 +28,7 @@ type SessionDoc = {
 
 // POST /api/sessions/:id/leave – participant leaves; session stays, becomes available for owner
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await getServerSession(authOptions);
@@ -69,6 +71,9 @@ export async function POST(
     );
   }
 
+  const body = (await req.json().catch(() => ({}))) as { message?: unknown };
+  const message = normalizeCancelMessage(body.message);
+
   const newParticipants = participants.filter(
     (p) => String(p.user_id) !== String(userId),
   );
@@ -94,6 +99,19 @@ export async function POST(
       duration_min: updated.duration_min ?? 50,
       session_type: updated.session_type ?? "focus",
     });
+  }
+
+  if (message) {
+    after(() =>
+      notifySessionCancelled(db, {
+        session: s,
+        actorUserId: userId,
+        message,
+        kind: "leave",
+      }).catch((err) => {
+        console.error("[email] notifySessionCancelled failed:", err);
+      }),
+    );
   }
   return NextResponse.json({ ok: true });
 }

@@ -279,3 +279,69 @@ You'll also get a reminder before it starts if you have session emails enabled.
     bodyText,
   });
 }
+
+export function buildSessionCancelledEmail(params: {
+  firstName?: string | null;
+  fromName: string;
+  message: string;
+  sessionTitle: string;
+  startsAtLabel: string;
+  calendarUrl: string;
+  kind: "delete" | "leave";
+}): { subject: string; html: string; text: string } {
+  const greet = greeting(params.firstName);
+  const from = params.fromName.trim() || "Your partner";
+  const fromHtml = escapeHtml(from);
+  const titleHtml = escapeHtml(params.sessionTitle);
+  const startsHtml = escapeHtml(params.startsAtLabel);
+  const noteHtml = escapeHtml(params.message).replace(/\n/g, "<br />");
+
+  const verb = params.kind === "leave" ? "left" : "cancelled";
+  const subject = `${from} ${verb} your session`;
+  const intro =
+    params.kind === "leave"
+      ? `<strong style="color:${emailBrand.ink};">${fromHtml}</strong> left the session you had together and sent a note.`
+      : `<strong style="color:${emailBrand.ink};">${fromHtml}</strong> cancelled the session you had together and sent a note.`;
+  const introText =
+    params.kind === "leave"
+      ? `${from} left the session you had together and sent a note.`
+      : `${from} cancelled the session you had together and sent a note.`;
+
+  const bodyText = `${greet}
+
+${introText}
+
+"${params.message}"
+
+${params.sessionTitle}
+${params.startsAtLabel}
+
+${params.calendarUrl}
+
+— The Refocus team`;
+
+  const bodyHtml = `
+    <p style="margin:0 0 16px;font-size:17px;line-height:1.5;color:${emailBrand.ink};font-weight:500;">${greet}</p>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">${intro}</p>
+    <blockquote style="margin:0 0 24px;padding:14px 16px;border-left:3px solid ${emailBrand.accent};background:${emailBrand.bg};border-radius:0 12px 12px 0;">
+      <p style="margin:0;font-size:15px;line-height:1.65;color:${emailBrand.ink};">${noteHtml}</p>
+    </blockquote>
+    <div style="margin:0 0 24px;padding:16px;border-radius:12px;border:1px solid ${emailBrand.line};background:${emailBrand.bg};">
+      <p style="margin:0 0 6px;font-size:16px;font-weight:600;color:${emailBrand.ink};">${titleHtml}</p>
+      <p style="margin:0;font-size:14px;color:${emailBrand.inkSoft};">${startsHtml}</p>
+    </div>
+    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 8px;">
+      <tr>
+        <td style="border-radius:10px;background:${emailBrand.ink};">
+          <a href="${params.calendarUrl}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:${emailBrand.accentInk};text-decoration:none;">Open calendar</a>
+        </td>
+      </tr>
+    </table>`;
+
+  return emailShell({
+    eyebrow: params.kind === "leave" ? "Session left" : "Session cancelled",
+    subject,
+    bodyHtml,
+    bodyText,
+  });
+}

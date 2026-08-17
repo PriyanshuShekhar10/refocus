@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -15,6 +15,8 @@ import {
   normalizeSessionLabel,
   type SessionParticipantDoc,
 } from "@/lib/sessionPersonalization";
+import { normalizeCancelMessage } from "@/lib/sessionCancelMessage";
+import { notifySessionCancelled } from "@/lib/notifySessionCancelled";
 
 // Shared session document type for this file
 type SessionDoc = {
@@ -117,7 +119,7 @@ export async function GET(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
@@ -148,6 +150,11 @@ export async function DELETE(
   const otherParticipant = participants.find(
     (p) => String(p.user_id) !== String(userId),
   );
+  const body = (await req.json().catch(() => ({}))) as { message?: unknown };
+  const message =
+    participants.length >= 2 && otherParticipant
+      ? normalizeCancelMessage(body.message)
+      : null;
 
   if (participants.length >= 2 && otherParticipant) {
     // Transfer ownership to the other person so they can be matched again.
@@ -179,6 +186,19 @@ export async function DELETE(
   } else {
     await col.deleteOne({ _id: new ObjectId(sessionId) });
     await publishSessionRemoved(sessionId);
+  }
+
+  if (message && otherParticipant) {
+    after(() =>
+      notifySessionCancelled(db, {
+        session: s,
+        actorUserId: userId,
+        message,
+        kind: "delete",
+      }).catch((err) => {
+        console.error("[email] notifySessionCancelled failed:", err);
+      }),
+    );
   }
   return NextResponse.json({ ok: true });
 }
