@@ -101,10 +101,11 @@ export async function POST(
     });
   }
 
-  if (message) {
+  if (message && s.start_time) {
+    const snapshot = { ...s, start_time: s.start_time };
     after(() =>
       notifySessionCancelled(db, {
-        session: s,
+        session: snapshot,
         actorUserId: userId,
         message,
         kind: "leave",
