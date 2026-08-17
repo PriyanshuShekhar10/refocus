@@ -18,3 +18,7 @@ export function sessionsChannel() {
 export function welcomeBoardChannel() {
   return "community:welcome";
 }
+
+export function sessionTasksChannel(sessionId: string) {
+  return `session:${sessionId}:tasks`;
+}

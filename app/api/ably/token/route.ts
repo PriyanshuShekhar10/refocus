@@ -19,6 +19,7 @@ export async function GET() {
       "chat:*": ["subscribe", "publish", "history"],
       [sessionsChannel()]: ["subscribe"],
       [welcomeBoardChannel()]: ["subscribe"],
+      "session:*:tasks": ["subscribe"],
     });
     const tokenRequest = await createAblyTokenRequest({
       clientId: userId,

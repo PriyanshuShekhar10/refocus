@@ -4,13 +4,22 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { formatLocalDateTime } from "@/lib/localTime";
 import { CALL_JOIN_GRACE_MINUTES } from "@/lib/sessionWindow";
+import { useSessionTasks } from "@/hooks/useSessionTasks";
+import { SessionTaskPanel } from "./SessionTaskRail";
 
 interface SessionCountdownProps {
   startTime: string;
   sessionId: string;
+  currentUserId: string;
+  partnerName: string | null;
 }
 
-export default function SessionCountdown({ startTime }: SessionCountdownProps) {
+export default function SessionCountdown({
+  startTime,
+  sessionId,
+  currentUserId,
+  partnerName,
+}: SessionCountdownProps) {
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState<{
     hours: number;
@@ -55,6 +64,7 @@ export default function SessionCountdown({ startTime }: SessionCountdownProps) {
   const formatTime = (value: number) => value.toString().padStart(2, "0");
 
   return (
+    <>
     <div className="mt-6 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-6 text-center">
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
         <svg
@@ -126,6 +136,41 @@ export default function SessionCountdown({ startTime }: SessionCountdownProps) {
           })}
         </span>
       </p>
+    </div>
+    <SessionWaitTasks
+      sessionId={sessionId}
+      currentUserId={currentUserId}
+      partnerName={partnerName}
+    />
+    </>
+  );
+}
+
+function SessionWaitTasks({
+  sessionId,
+  currentUserId,
+  partnerName,
+}: {
+  sessionId: string;
+  currentUserId: string;
+  partnerName: string | null;
+}) {
+  const tasks = useSessionTasks(sessionId, currentUserId);
+  return (
+    <div className="mt-4 max-h-[420px] overflow-hidden rounded-xl border border-gray-200 bg-white text-left dark:border-gray-700 dark:bg-gray-900">
+      <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+          Prep your list
+        </p>
+        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          Your partner can see these when they join. They can’t check them off for you.
+        </p>
+      </div>
+      <SessionTaskPanel
+        tasks={tasks}
+        partnerName={partnerName}
+        tone="page"
+      />
     </div>
   );
 }

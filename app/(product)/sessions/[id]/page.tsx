@@ -87,6 +87,7 @@ export default async function SessionJoinPage({
     return (
       <ClientCall
         sessionId={id}
+        currentUserId={currentUserId}
         prejoin={{
           partnerName,
           partnerInitial,
@@ -189,6 +190,8 @@ export default async function SessionJoinPage({
         <SessionCountdown
           startTime={s.start_time.toISOString()}
           sessionId={id}
+          currentUserId={currentUserId}
+          partnerName={partnerName}
         />
       )}
     </div>

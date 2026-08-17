@@ -9,6 +9,12 @@ import { formatLocalDateTime } from "@/lib/localTime";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
 import { WRAP_UP_MINUTES } from "@/lib/sessionWindow";
 import { playSessionCompleteSound } from "@/lib/sessionCompleteSound";
+import { useSessionTasks } from "@/hooks/useSessionTasks";
+import {
+  SessionTaskPill,
+  SessionTaskRail,
+  SessionTaskSheet,
+} from "./SessionTaskRail";
 
 type Phase = "loading" | "ready" | "in-call" | "ended" | "error";
 
@@ -69,9 +75,11 @@ function formatRemaining(ms: number) {
 
 export default function ClientCall({
   sessionId,
+  currentUserId,
   prejoin,
 }: {
   sessionId: string;
+  currentUserId: string;
   prejoin: PrejoinInfo;
 }) {
   const router = useRouter();
@@ -86,6 +94,8 @@ export default function ClientCall({
   const [videoOff, setVideoOff] = useState<boolean>(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState<boolean>(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [tasksOpen, setTasksOpen] = useState(false);
+  const sessionTasks = useSessionTasks(sessionId, currentUserId);
   const [partner, setPartner] = useState<SessionPartner | null>(() =>
     partnerFromPrejoin(prejoin),
   );
@@ -705,6 +715,15 @@ export default function ClientCall({
           urgency={urgency}
           reducedMotion={prefersReducedMotion}
         />
+        <SessionTaskPill
+          youDone={sessionTasks.youProgress.done}
+          youTotal={sessionTasks.youProgress.total}
+          partnerDone={sessionTasks.partnerProgress.done}
+          partnerTotal={sessionTasks.partnerProgress.total}
+          partnerName={partnerDisplayName}
+          open={tasksOpen}
+          onToggle={() => setTasksOpen((v) => !v)}
+        />
         {partner ? (
           <button
             type="button"
@@ -731,13 +750,29 @@ export default function ClientCall({
         />
       </div>
 
-      <iframe
-        ref={iframeRef}
-        src={iframeUrl}
-        allow="camera *; microphone *; fullscreen *; display-capture *; autoplay *; clipboard-read *; clipboard-write *"
-        title="Refocus session"
-        className="flex-1 w-full border-0"
-      />
+      <div className="relative flex min-h-0 flex-1">
+        <iframe
+          ref={iframeRef}
+          src={iframeUrl}
+          allow="camera *; microphone *; fullscreen *; display-capture *; autoplay *; clipboard-read *; clipboard-write *"
+          title="Refocus session"
+          className="min-w-0 flex-1 border-0"
+        />
+        {tasksOpen ? (
+          <SessionTaskRail
+            tasks={sessionTasks}
+            partnerName={partnerDisplayName}
+            onClose={() => setTasksOpen(false)}
+          />
+        ) : null}
+        {tasksOpen ? (
+          <SessionTaskSheet
+            tasks={sessionTasks}
+            partnerName={partnerDisplayName}
+            onClose={() => setTasksOpen(false)}
+          />
+        ) : null}
+      </div>
 
       <AnimatePresence>
         {wrapUpBanner && (
