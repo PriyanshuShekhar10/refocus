@@ -16,6 +16,10 @@ export async function GET() {
     usersVerified,
     sessionsTotal,
     sessionsUpcoming,
+    sessionsDone,
+    sessionsMatchedDone,
+    sessionsFullyCompleted,
+    sessionsPartiallyCompleted,
     postsActive,
     postsDeleted,
     chatMessages,
@@ -32,6 +36,48 @@ export async function GET() {
     }),
     db.collection("sessions").countDocuments(),
     db.collection("sessions").countDocuments({ end_time: { $gte: now } }),
+    db.collection("sessions").countDocuments({ end_time: { $lt: now } }),
+    db.collection("sessions").countDocuments({
+      end_time: { $lt: now },
+      $or: [
+        { participant_count: { $gte: 2 } },
+        { "session_participants.1": { $exists: true } },
+      ],
+    }),
+    db.collection("sessions").countDocuments({
+      end_time: { $lt: now },
+      $expr: {
+        $gte: [
+          {
+            $size: {
+              $filter: {
+                input: { $ifNull: ["$session_participants", []] },
+                as: "p",
+                cond: { $eq: ["$$p.call_completed", true] },
+              },
+            },
+          },
+          2,
+        ],
+      },
+    }),
+    db.collection("sessions").countDocuments({
+      end_time: { $lt: now },
+      $expr: {
+        $gte: [
+          {
+            $size: {
+              $filter: {
+                input: { $ifNull: ["$session_participants", []] },
+                as: "p",
+                cond: { $eq: ["$$p.call_completed", true] },
+              },
+            },
+          },
+          1,
+        ],
+      },
+    }),
     db.collection("community_posts").countDocuments({
       deletedAt: { $exists: false },
     }),
@@ -57,6 +103,14 @@ export async function GET() {
     sessions: {
       total: sessionsTotal,
       upcoming: sessionsUpcoming,
+      done: sessionsDone,
+      matchedDone: sessionsMatchedDone,
+      fullyCompleted: sessionsFullyCompleted,
+      partiallyCompleted: sessionsPartiallyCompleted,
+      completionRate:
+        sessionsMatchedDone > 0
+          ? sessionsFullyCompleted / sessionsMatchedDone
+          : 0,
     },
     community: {
       postsActive,

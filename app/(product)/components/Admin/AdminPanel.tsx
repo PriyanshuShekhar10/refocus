@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Activity,
   Ban,
+  ChevronDown,
   Flag,
   History,
   LayoutDashboard,
@@ -30,7 +31,15 @@ type AdminSection = "overview" | "users" | "reports" | "history" | "ip-activity"
 
 type Stats = {
   users: { total: number; newThisWeek: number; verified: number };
-  sessions: { total: number; upcoming: number };
+  sessions: {
+    total: number;
+    upcoming: number;
+    done: number;
+    matchedDone: number;
+    fullyCompleted: number;
+    partiallyCompleted: number;
+    completionRate: number;
+  };
   community: { postsActive: number; postsDeleted: number };
   globalChat: { messagesActive: number; messagesDeleted: number };
   moderation: {
@@ -103,6 +112,36 @@ type AuditEntry = {
   createdAt: string | null;
 };
 
+type AdminPerson = {
+  id: string;
+  label: string;
+  username: string | null;
+  email: string | null;
+};
+
+type AdminSessionRow = {
+  id: string;
+  startTime: string | null;
+  endTime: string | null;
+  durationMin: number | null;
+  sessionType: string;
+  status: string;
+  inProgress: boolean;
+  between: string;
+  completion: string;
+  completedCount: number;
+  attendedCount: number;
+  participants: (AdminPerson & { attended?: boolean; completed?: boolean })[];
+};
+
+type PendingFriendRequest = {
+  id: string;
+  createdAt: string | null;
+  summary: string;
+  from: AdminPerson;
+  to: AdminPerson;
+};
+
 type ReportEntry = {
   id: string;
   reporterEmail: string | null;
@@ -171,6 +210,192 @@ function StatCard({
   );
 }
 
+function formatSessionWhen(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatPercent(rate: number): string {
+  return `${Math.round(rate * 100)}%`;
+}
+
+function completionLabel(kind: string): string {
+  switch (kind) {
+    case "completed":
+      return "Both finished";
+    case "partial":
+      return "One finished";
+    case "left-early":
+      return "Left early";
+    case "missed":
+      return "No shows";
+    case "unmatched":
+      return "Unmatched";
+    case "in-progress":
+      return "In progress";
+    case "matched":
+      return "Matched";
+    default:
+      return "Open slot";
+  }
+}
+
+function completionClass(kind: string): string {
+  switch (kind) {
+    case "completed":
+      return "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-300";
+    case "partial":
+      return "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300";
+    case "in-progress":
+      return "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-300";
+    case "matched":
+      return "bg-[#5D1C6A]/10 text-[#5D1C6A]";
+    default:
+      return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300";
+  }
+}
+
+function SessionsExpandTable({
+  rows,
+  loading,
+  total,
+  empty,
+  past,
+}: {
+  rows: AdminSessionRow[];
+  loading: boolean;
+  total: number;
+  empty: string;
+  past?: boolean;
+}) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+      <table className="w-full text-sm">
+        <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+          <tr>
+            <th className="px-4 py-3">When</th>
+            <th className="px-4 py-3">Between</th>
+            <th className="px-4 py-3">Type</th>
+            <th className="px-4 py-3">{past ? "Completed" : "Status"}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+          {loading ? (
+            <tr>
+              <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                Loading sessions…
+              </td>
+            </tr>
+          ) : rows.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                {empty}
+              </td>
+            </tr>
+          ) : (
+            rows.map((s) => (
+              <tr key={s.id}>
+                <td className="px-4 py-3 align-top">
+                  <p className="text-gray-900 dark:text-white">
+                    {formatSessionWhen(s.startTime)}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    until {formatSessionWhen(s.endTime)}
+                    {s.durationMin ? ` · ${s.durationMin} min` : ""}
+                  </p>
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {s.between}
+                  </p>
+                  <ul className="mt-1 space-y-0.5 text-xs text-gray-500">
+                    {s.participants.map((p) => (
+                      <li key={p.id}>
+                        {p.username ? (
+                          <Link
+                            href={`/u/${p.username}`}
+                            className="text-[#5D1C6A] hover:underline"
+                            target="_blank"
+                          >
+                            @{p.username}
+                          </Link>
+                        ) : (
+                          <span>{p.label}</span>
+                        )}
+                        {p.email ? ` · ${p.email}` : ""}
+                        {past ? (
+                          <span className="ml-1 text-gray-400">
+                            {p.completed
+                              ? "· finished"
+                              : p.attended
+                                ? "· left early"
+                                : "· no show"}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </td>
+                <td className="px-4 py-3 align-top capitalize text-gray-700 dark:text-gray-300">
+                  {String(s.sessionType).replace(/-/g, " ")}
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${completionClass(s.completion)}`}
+                  >
+                    {completionLabel(s.completion)}
+                  </span>
+                  {past && s.participants.length >= 2 ? (
+                    <p className="mt-1 text-[11px] text-gray-400">
+                      {s.completedCount}/{s.participants.length} finished
+                    </p>
+                  ) : null}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+      {!loading && total > rows.length ? (
+        <p className="border-t border-gray-100 px-4 py-2 text-xs text-gray-500 dark:border-gray-800">
+          Showing {rows.length} of {total}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function PersonLine({ person }: { person: AdminPerson }) {
+  return (
+    <span>
+      <span className="font-medium text-gray-900 dark:text-white">
+        {person.label}
+      </span>
+      {person.username ? (
+        <>
+          {" "}
+          <Link
+            href={`/u/${person.username}`}
+            className="text-[#5D1C6A] hover:underline"
+            target="_blank"
+          >
+            @{person.username}
+          </Link>
+        </>
+      ) : null}
+      {person.email ? (
+        <span className="text-gray-500"> · {person.email}</span>
+      ) : null}
+    </span>
+  );
+}
+
 function formatAuditDetails(entry: AuditEntry): string | null {
   if (!entry.details) return null;
   if (entry.action === "user.mute" && entry.details.muteDays) {
@@ -198,6 +423,23 @@ export default function AdminPanel() {
   const [activityUserId, setActivityUserId] = useState<string | null>(null);
   const [activity, setActivity] = useState<UserActivityPayload | null>(null);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [sessionsExpanded, setSessionsExpanded] = useState(false);
+  const [upcomingSessions, setUpcomingSessions] = useState<AdminSessionRow[]>(
+    [],
+  );
+  const [upcomingSessionsTotal, setUpcomingSessionsTotal] = useState(0);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [doneExpanded, setDoneExpanded] = useState(false);
+  const [doneSessions, setDoneSessions] = useState<AdminSessionRow[]>([]);
+  const [doneSessionsTotal, setDoneSessionsTotal] = useState(0);
+  const [doneLoading, setDoneLoading] = useState(false);
+  const [friendRequestsExpanded, setFriendRequestsExpanded] = useState(false);
+  const [pendingFriendRequests, setPendingFriendRequests] = useState<
+    PendingFriendRequest[]
+  >([]);
+  const [pendingFriendRequestsTotal, setPendingFriendRequestsTotal] =
+    useState(0);
+  const [friendRequestsLoading, setFriendRequestsLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/me")
@@ -252,6 +494,46 @@ export default function AdminPanel() {
     setIpEntries(data.entries || []);
   }, []);
 
+  const loadUpcomingSessions = useCallback(async () => {
+    setSessionsLoading(true);
+    try {
+      const res = await fetch("/api/admin/sessions?limit=80");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load sessions");
+      setUpcomingSessions(data.sessions || []);
+      setUpcomingSessionsTotal(data.total ?? 0);
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
+
+  const loadDoneSessions = useCallback(async () => {
+    setDoneLoading(true);
+    try {
+      const res = await fetch("/api/admin/sessions?scope=done&limit=80");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load sessions");
+      setDoneSessions(data.sessions || []);
+      setDoneSessionsTotal(data.total ?? 0);
+    } finally {
+      setDoneLoading(false);
+    }
+  }, []);
+
+  const loadPendingFriendRequests = useCallback(async () => {
+    setFriendRequestsLoading(true);
+    try {
+      const res = await fetch("/api/admin/friend-requests?limit=80");
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.error || "Failed to load friend requests");
+      setPendingFriendRequests(data.requests || []);
+      setPendingFriendRequestsTotal(data.total ?? 0);
+    } finally {
+      setFriendRequestsLoading(false);
+    }
+  }, []);
+
   const loadUserActivity = useCallback(async (userId: string) => {
     setActivityLoading(true);
     try {
@@ -271,8 +553,12 @@ export default function AdminPanel() {
     setLoading(true);
     setError(null);
     try {
-      if (section === "overview") await loadStats();
-      else if (section === "users") await loadUsers();
+      if (section === "overview") {
+        await loadStats();
+        if (sessionsExpanded) await loadUpcomingSessions();
+        if (doneExpanded) await loadDoneSessions();
+        if (friendRequestsExpanded) await loadPendingFriendRequests();
+      } else if (section === "users") await loadUsers();
       else if (section === "reports") await loadReports();
       else if (section === "history") await loadAuditLog();
       else if (section === "ip-activity") await loadIpActivity();
@@ -281,7 +567,20 @@ export default function AdminPanel() {
     } finally {
       setLoading(false);
     }
-  }, [section, loadStats, loadUsers, loadReports, loadAuditLog, loadIpActivity]);
+  }, [
+    section,
+    sessionsExpanded,
+    doneExpanded,
+    friendRequestsExpanded,
+    loadStats,
+    loadUpcomingSessions,
+    loadDoneSessions,
+    loadPendingFriendRequests,
+    loadUsers,
+    loadReports,
+    loadAuditLog,
+    loadIpActivity,
+  ]);
 
   useEffect(() => {
     refresh();
@@ -406,27 +705,76 @@ export default function AdminPanel() {
                 label="Verified emails"
                 value={stats.users.verified}
               />
-              <StatCard
-                label="Upcoming sessions"
-                value={stats.sessions.upcoming}
-                hint={`${stats.sessions.total} total`}
-              />
+              <button
+                type="button"
+                onClick={() => setSessionsExpanded((open) => !open)}
+                className="text-left"
+                aria-expanded={sessionsExpanded}
+              >
+                <StatCard
+                  label="Upcoming sessions"
+                  value={stats.sessions.upcoming}
+                  hint={`${stats.sessions.total} total · click to ${sessionsExpanded ? "hide" : "expand"}`}
+                />
+                <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-400">
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 transition-transform ${sessionsExpanded ? "rotate-180" : ""}`}
+                  />
+                  {sessionsExpanded ? "Hide details" : "Show who and when"}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDoneExpanded((open) => !open)}
+                className="text-left"
+                aria-expanded={doneExpanded}
+              >
+                <StatCard
+                  label="Done sessions"
+                  value={stats.sessions.done ?? 0}
+                  hint={
+                    (stats.sessions.matchedDone ?? 0) > 0
+                      ? `${formatPercent(stats.sessions.completionRate ?? 0)} both finished · ${stats.sessions.fullyCompleted ?? 0}/${stats.sessions.matchedDone} matched`
+                      : "Click to see who finished"
+                  }
+                />
+                <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-400">
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 transition-transform ${doneExpanded ? "rotate-180" : ""}`}
+                  />
+                  {doneExpanded ? "Hide details" : "Show who finished"}
+                </span>
+              </button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 label="Active posts"
                 value={stats.community.postsActive}
                 hint={`${stats.community.postsDeleted} removed`}
               />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 label="Chat messages"
                 value={stats.globalChat.messagesActive}
                 hint={`${stats.globalChat.messagesDeleted} removed`}
               />
-              <StatCard
-                label="Pending friend requests"
-                value={stats.moderation.pendingFriendRequests}
-              />
+              <button
+                type="button"
+                onClick={() => setFriendRequestsExpanded((open) => !open)}
+                className="text-left"
+                aria-expanded={friendRequestsExpanded}
+              >
+                <StatCard
+                  label="Pending friend requests"
+                  value={stats.moderation.pendingFriendRequests}
+                  hint={`Click to ${friendRequestsExpanded ? "hide" : "see from → to"}`}
+                />
+                <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-400">
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 transition-transform ${friendRequestsExpanded ? "rotate-180" : ""}`}
+                  />
+                  {friendRequestsExpanded ? "Hide details" : "Show from and to"}
+                </span>
+              </button>
               <StatCard
                 label="Pending session requests"
                 value={stats.moderation.pendingSessionRequests}
@@ -454,6 +802,83 @@ export default function AdminPanel() {
                 />
               </button>
             </div>
+
+            {sessionsExpanded ? (
+              <SessionsExpandTable
+                rows={upcomingSessions}
+                loading={sessionsLoading}
+                total={upcomingSessionsTotal}
+                empty="No upcoming sessions."
+              />
+            ) : null}
+
+            {doneExpanded ? (
+              <SessionsExpandTable
+                rows={doneSessions}
+                loading={doneLoading}
+                total={doneSessionsTotal}
+                empty="No finished sessions yet."
+                past
+              />
+            ) : null}
+
+            {friendRequestsExpanded ? (
+              <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                    <tr>
+                      <th className="px-4 py-3">When</th>
+                      <th className="px-4 py-3">From</th>
+                      <th className="px-4 py-3">To</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                    {friendRequestsLoading ? (
+                      <tr>
+                        <td
+                          colSpan={3}
+                          className="px-4 py-8 text-center text-gray-500"
+                        >
+                          Loading friend requests…
+                        </td>
+                      </tr>
+                    ) : pendingFriendRequests.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={3}
+                          className="px-4 py-8 text-center text-gray-500"
+                        >
+                          No pending friend requests.
+                        </td>
+                      </tr>
+                    ) : (
+                      pendingFriendRequests.map((r) => (
+                        <tr key={r.id}>
+                          <td className="px-4 py-3 align-top text-gray-500">
+                            {r.createdAt
+                              ? new Date(r.createdAt).toLocaleString()
+                              : "—"}
+                          </td>
+                          <td className="px-4 py-3 align-top text-sm">
+                            <PersonLine person={r.from} />
+                          </td>
+                          <td className="px-4 py-3 align-top text-sm">
+                            <PersonLine person={r.to} />
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+                {!friendRequestsLoading &&
+                pendingFriendRequestsTotal > pendingFriendRequests.length ? (
+                  <p className="border-t border-gray-100 px-4 py-2 text-xs text-gray-500 dark:border-gray-800">
+                    Showing {pendingFriendRequests.length} of{" "}
+                    {pendingFriendRequestsTotal}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         ) : null}
 
