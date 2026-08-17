@@ -23,6 +23,16 @@ vi.mock("@/lib/sse", () => ({
   sessionsChannel: vi.fn(() => "sessions"),
 }));
 
+vi.mock("next/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/server")>();
+  return {
+    ...actual,
+    after: (fn: () => unknown) => {
+      void fn();
+    },
+  };
+});
+
 vi.mock("@/lib/requireVerifiedEmail", () => ({
   EMAIL_NOT_VERIFIED_CODE: "EMAIL_NOT_VERIFIED",
   EMAIL_VERIFICATION_REQUIRED_MESSAGE:

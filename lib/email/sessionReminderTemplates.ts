@@ -198,6 +198,14 @@ ${joinNote}
   return emailShell({ eyebrow, subject, bodyHtml, bodyText });
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export function buildMatchedSessionEmail(params: {
   firstName?: string | null;
   partnerLabel: string | null;
@@ -205,20 +213,35 @@ export function buildMatchedSessionEmail(params: {
   startsAtLabel: string;
   joinUrl: string;
   isFirstMatch: boolean;
+  /** Host of a calendar slot that someone else just joined. */
+  isHost?: boolean;
 }): { subject: string; html: string; text: string } {
   const greet = greeting(params.firstName);
   const partner = params.partnerLabel?.trim() || "a focus partner";
-  const subject = params.isFirstMatch
-    ? "You're matched — your first Refocus session awaits"
-    : `You're matched with ${partner}`;
+  const partnerHtml = escapeHtml(partner);
+  const titleHtml = escapeHtml(params.sessionTitle);
+  const startsHtml = escapeHtml(params.startsAtLabel);
 
-  const intro = params.isFirstMatch
-    ? `Congratulations — you've been matched with <strong style="color:${emailBrand.ink};">${partner}</strong>. We can't wait for you to have your first focus session together.`
-    : `You're matched with <strong style="color:${emailBrand.ink};">${partner}</strong> for an upcoming focus session. Quiet company, shared timer — you've got this.`;
+  const isHost = Boolean(params.isHost);
+  const subject = isHost
+    ? partner === "a focus partner"
+      ? "Someone joined your session"
+      : `${partner} joined your session`
+    : params.isFirstMatch
+      ? "You're matched — your first Refocus session awaits"
+      : `You're matched with ${partner}`;
 
-  const introText = params.isFirstMatch
-    ? `Congratulations — you've been matched with ${partner}. We can't wait for you to have your first focus session together.`
-    : `You're matched with ${partner} for an upcoming focus session. Quiet company, shared timer — you've got this.`;
+  const intro = isHost
+    ? `<strong style="color:${emailBrand.ink};">${partnerHtml}</strong> just joined the session on your calendar. You're booked.`
+    : params.isFirstMatch
+      ? `Congratulations — you've been matched with <strong style="color:${emailBrand.ink};">${partnerHtml}</strong>. We can't wait for you to have your first focus session together.`
+      : `You're matched with <strong style="color:${emailBrand.ink};">${partnerHtml}</strong> for an upcoming focus session. Quiet company, shared timer — you've got this.`;
+
+  const introText = isHost
+    ? `${partner} just joined the session on your calendar. You're booked.`
+    : params.isFirstMatch
+      ? `Congratulations — you've been matched with ${partner}. We can't wait for you to have your first focus session together.`
+      : `You're matched with ${partner} for an upcoming focus session. Quiet company, shared timer — you've got this.`;
 
   const bodyText = `${greet}
 
@@ -237,8 +260,8 @@ You'll also get a reminder before it starts if you have session emails enabled.
     <p style="margin:0 0 16px;font-size:17px;line-height:1.5;color:${emailBrand.ink};font-weight:500;">${greet}</p>
     <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">${intro}</p>
     <div style="margin:0 0 24px;padding:16px;border-radius:12px;border:1px solid ${emailBrand.line};background:${emailBrand.bg};">
-      <p style="margin:0 0 6px;font-size:16px;font-weight:600;color:${emailBrand.ink};">${params.sessionTitle}</p>
-      <p style="margin:0;font-size:14px;color:${emailBrand.inkSoft};">${params.startsAtLabel}</p>
+      <p style="margin:0 0 6px;font-size:16px;font-weight:600;color:${emailBrand.ink};">${titleHtml}</p>
+      <p style="margin:0;font-size:14px;color:${emailBrand.inkSoft};">${startsHtml}</p>
     </div>
     <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 20px;">
       <tr>
@@ -250,7 +273,7 @@ You'll also get a reminder before it starts if you have session emails enabled.
     <p style="margin:0;font-size:12px;line-height:1.55;color:${emailBrand.inkMute};">You'll also get a reminder before it starts if you have session emails enabled.</p>`;
 
   return emailShell({
-    eyebrow: "You're matched",
+    eyebrow: isHost ? "Session booked" : "You're matched",
     subject,
     bodyHtml,
     bodyText,

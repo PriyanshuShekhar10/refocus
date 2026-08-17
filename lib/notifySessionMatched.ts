@@ -25,7 +25,7 @@ type UserRow = {
   email?: string | null;
   firstname?: string | null;
   name?: string | null;
-  preferences?: { emailSessionReminders?: boolean; timezone?: string };
+  preferences?: { timezone?: string };
 };
 
 function displayName(user: UserRow | null | undefined): string | null {
@@ -68,6 +68,7 @@ async function hasPriorMatchedSession(
 
 /**
  * Email both participants when a session becomes booked (2 people).
+ * Join notifications are transactional (not gated on reminder prefs).
  * Fire-and-forget safe: never throws to the request path.
  */
 export async function notifySessionMatched(
@@ -76,6 +77,7 @@ export async function notifySessionMatched(
 ): Promise<void> {
   try {
     const sessionId = String(session._id);
+    const ownerId = String(session.owner_id);
     const participants = (session.session_participants ?? []).map((p) =>
       String(p.user_id),
     );
@@ -99,7 +101,6 @@ export async function notifySessionMatched(
         const user = byId.get(userId);
         const email = user?.email?.trim();
         if (!email) return;
-        if (user?.preferences?.emailSessionReminders === false) return;
 
         const marked = await markReminderSent({
           userId,
@@ -129,6 +130,7 @@ export async function notifySessionMatched(
           startsAtLabel: formatSessionTimeIST(start, tz),
           joinUrl: sessionJoinUrl(sessionId),
           isFirstMatch,
+          isHost: userId === ownerId,
         });
       }),
     );

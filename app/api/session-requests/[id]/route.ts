@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -195,18 +195,22 @@ export async function POST(
       ],
     });
 
-    void notifySessionMatched(db, {
-      _id: insert.insertedId,
-      owner_id: reqDoc.from_user_id,
-      start_time: start,
-      end_time: end,
-      duration_min: duration,
-      session_type: "focus",
-      session_participants: [
-        { user_id: reqDoc.from_user_id, joined_at: joinedAt, quiet: false },
-        { user_id: reqDoc.to_user_id, joined_at: joinedAt, quiet: false },
-      ],
-    });
+    after(() =>
+      notifySessionMatched(db, {
+        _id: insert.insertedId,
+        owner_id: reqDoc.from_user_id,
+        start_time: start,
+        end_time: end,
+        duration_min: duration,
+        session_type: "focus",
+        session_participants: [
+          { user_id: reqDoc.from_user_id, joined_at: joinedAt, quiet: false },
+          { user_id: reqDoc.to_user_id, joined_at: joinedAt, quiet: false },
+        ],
+      }).catch((err) => {
+        console.error("[email] notifySessionMatched failed:", err);
+      }),
+    );
   }
 
   // Best-effort: update any chat message payload that references this request

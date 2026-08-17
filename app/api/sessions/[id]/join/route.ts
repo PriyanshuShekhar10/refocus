@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -131,18 +131,20 @@ export async function POST(
     return NextResponse.json({ error: "Session already has 2 participants" }, { status: 409 });
   }
 
-  await publishSessionDocUpserted(db, {
+  const booked = {
     ...result,
     duration_min: result.duration_min ?? 50,
     session_type: result.session_type ?? "focus",
-  });
+  };
 
-  // Fire-and-forget match congratulations for both participants.
-  void notifySessionMatched(db, {
-    ...result,
-    duration_min: result.duration_min ?? 50,
-    session_type: result.session_type ?? "focus",
-  });
+  await publishSessionDocUpserted(db, booked);
+
+  // Keep the isolate alive after the response so the host actually gets mail.
+  after(() =>
+    notifySessionMatched(db, booked).catch((err) => {
+      console.error("[email] notifySessionMatched failed:", err);
+    }),
+  );
 
   return NextResponse.json({ ok: true });
 }

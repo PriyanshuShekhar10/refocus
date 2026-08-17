@@ -404,7 +404,7 @@ function NotificationsSection() {
       <RowGroup>
         <Row
           label="Session reminders"
-          hint="Get an email before your sessions based on the timing below."
+          hint="Get an email before your sessions based on the timing below. You'll still be emailed when someone joins a session you posted."
         >
           <Toggle
             checked={prefs.emailSessionReminders}
