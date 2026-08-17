@@ -140,7 +140,7 @@ export async function upsertFirebaseUser(
     };
   }
 
-  if (isDisposableEmail(email)) {
+  if (await isDisposableEmail(email)) {
     throw new Error(DISPOSABLE_EMAIL_ERROR);
   }
 

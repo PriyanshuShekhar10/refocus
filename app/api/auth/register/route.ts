@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
 
-  if (isDisposableEmail(normalizedEmail)) {
+  if (await isDisposableEmail(normalizedEmail)) {
     return NextResponse.json(
       { error: DISPOSABLE_EMAIL_ERROR },
       { status: 400 },

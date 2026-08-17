@@ -2,20 +2,57 @@ import exactDomains from "disposable-email-domains";
 import wildcardDomains from "disposable-email-domains/wildcard.json";
 
 /**
- * Extra domains we want blocked even if a public list is stale.
- * Keep this small — the npm list covers the long tail.
+ * High-traffic temp-mail hosts missing from the npm snapshot.
+ * Keep this list for services people actually use (mail.tm, etc.).
  */
-const EXTRA_BLOCKED_DOMAINS = new Set<string>([
-  // Add one-offs here if abuse shows up before the package updates.
-]);
+const EXTRA_BLOCKED_DOMAINS = [
+  "mail.tm",
+  "mail.gw",
+  "tempmail.com",
+  "tempmailo.net",
+  "moemail.net",
+  "minmail.app",
+  "emailnator.com",
+  "inboxes.com",
+  "tmpnator.live",
+  "freedl.email",
+  "rteet.com",
+] as const;
 
-const exactSet: Set<string> = new Set(
-  (exactDomains as string[]).map((d) => d.toLowerCase()),
-);
+const LIVE_LIST_URL =
+  "https://cdn.jsdelivr.net/gh/disposable/disposable-email-domains@master/domains.txt";
+const LIVE_LIST_TTL_MS = 6 * 60 * 60 * 1000;
+const LIVE_LIST_TIMEOUT_MS = 2500;
 
-const wildcardSet: Set<string> = new Set(
-  (wildcardDomains as string[]).map((d) => d.toLowerCase()),
-);
+function toDomainArray(mod: unknown): string[] {
+  if (Array.isArray(mod)) {
+    return mod.filter((d): d is string => typeof d === "string");
+  }
+  if (mod && typeof mod === "object" && "default" in mod) {
+    const inner = (mod as { default: unknown }).default;
+    if (Array.isArray(inner)) {
+      return inner.filter((d): d is string => typeof d === "string");
+    }
+  }
+  return [];
+}
+
+function toDomainSet(values: readonly string[]): Set<string> {
+  const set = new Set<string>();
+  for (const value of values) {
+    const domain = value.trim().toLowerCase();
+    if (domain) set.add(domain);
+  }
+  return set;
+}
+
+const exactSet = toDomainSet(toDomainArray(exactDomains));
+const wildcardSet = toDomainSet(toDomainArray(wildcardDomains));
+const extraSet = toDomainSet(EXTRA_BLOCKED_DOMAINS);
+
+let liveSet: Set<string> | null = null;
+let liveFetchedAt = 0;
+let liveInflight: Promise<Set<string> | null> | null = null;
 
 export const DISPOSABLE_EMAIL_ERROR =
   "Temporary or disposable email addresses aren't allowed. Please use a permanent email.";
@@ -30,27 +67,73 @@ export function emailDomain(email: string): string | null {
   return domain;
 }
 
-/**
- * True if this email uses a known disposable / temp-mail domain.
- * Checks the exact domain list and wildcard suffixes (e.g. *.tk temp hosts).
- */
-export function isDisposableEmail(email: string): boolean {
-  const domain = emailDomain(email);
-  if (!domain) return false;
-
-  if (exactSet.has(domain) || EXTRA_BLOCKED_DOMAINS.has(domain)) {
-    return true;
-  }
-
-  // Wildcard list: domain itself or any parent suffix matches.
-  // e.g. domain "foo.10mail.org" matches wildcard "10mail.org"
+function matchesDisposableSets(
+  domain: string,
+  sets: Array<Set<string> | null | undefined>,
+): boolean {
   const labels = domain.split(".");
   for (let i = 0; i < labels.length - 1; i++) {
     const suffix = labels.slice(i).join(".");
-    if (wildcardSet.has(suffix) || EXTRA_BLOCKED_DOMAINS.has(suffix)) {
-      return true;
+    for (const set of sets) {
+      if (set?.has(suffix)) return true;
     }
   }
-
   return false;
+}
+
+/** Sync check against bundled lists (no network). */
+export function isListedDisposableEmail(email: string): boolean {
+  const domain = emailDomain(email);
+  if (!domain) return false;
+  return matchesDisposableSets(domain, [exactSet, wildcardSet, extraSet]);
+}
+
+async function getLiveDisposableSet(): Promise<Set<string> | null> {
+  if (process.env.NODE_ENV === "test" || process.env.VITEST) return null;
+  if (liveSet && Date.now() - liveFetchedAt < LIVE_LIST_TTL_MS) return liveSet;
+  if (liveInflight) return liveInflight;
+
+  liveInflight = (async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), LIVE_LIST_TIMEOUT_MS);
+    try {
+      const res = await fetch(LIVE_LIST_URL, {
+        signal: controller.signal,
+        cache: "no-store",
+      });
+      if (!res.ok) return liveSet;
+      const text = await res.text();
+      const next = toDomainSet(
+        text
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter((line) => line && !line.startsWith("#")),
+      );
+      if (next.size > 1000) {
+        liveSet = next;
+        liveFetchedAt = Date.now();
+      }
+      return liveSet;
+    } catch (err) {
+      console.warn("[email] live disposable-domain list fetch failed:", err);
+      return liveSet;
+    } finally {
+      clearTimeout(timer);
+      liveInflight = null;
+    }
+  })();
+
+  return liveInflight;
+}
+
+/**
+ * True if this email uses a known disposable / temp-mail domain.
+ * Uses the bundled list plus a periodically refreshed public blocklist.
+ */
+export async function isDisposableEmail(email: string): Promise<boolean> {
+  if (isListedDisposableEmail(email)) return true;
+  const domain = emailDomain(email);
+  if (!domain) return false;
+  const live = await getLiveDisposableSet();
+  return matchesDisposableSets(domain, [live]);
 }

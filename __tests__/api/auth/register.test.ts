@@ -111,6 +111,16 @@ describe("POST /api/auth/register", () => {
     expect(usersCol.insertOne).not.toHaveBeenCalled();
   });
 
+  it("returns 400 for current temp-mail hosts like mail.tm", async () => {
+    const req = mockRequest("/api/auth/register", {
+      body: { email: "throwaway@mail.tm", password: "StrongP@ss1" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(400);
+    expect(json.error).toMatch(/disposable|temporary/i);
+    expect(usersCol.insertOne).not.toHaveBeenCalled();
+  });
+
   it("successfully registers a new user with valid input", async () => {
     const insertedId = new ObjectId();
     usersCol.insertOne.mockResolvedValue({ insertedId });

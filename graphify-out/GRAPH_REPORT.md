@@ -1,16 +1,16 @@
 # Graph Report - refocus  (2026-08-17)
 
 ## Corpus Check
-- 347 files · ~142,072 words
+- 353 files · ~144,948 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1942 nodes · 4399 edges · 132 communities (121 shown, 11 thin omitted)
-- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 17 edges (avg confidence: 0.8)
+- 1980 nodes · 4533 edges · 133 communities (121 shown, 12 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 25 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b5867028`
+- Built from commit: `c839ba3c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -130,48 +130,49 @@
 - [[_COMMUNITY_Community 129|Community 129]]
 - [[_COMMUNITY_Community 130|Community 130]]
 - [[_COMMUNITY_Community 131|Community 131]]
+- [[_COMMUNITY_Community 132|Community 132]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `getDb()` - 186 edges
+1. `getDb()` - 203 edges
 2. `checkRateLimit()` - 70 edges
 3. `requireVerifiedEmail()` - 66 edges
 4. `rateLimitedResponse()` - 65 edges
 5. `authOptions` - 60 edges
 6. `publish()` - 40 edges
 7. `resolveAvatarUrl()` - 35 edges
-8. `publishAbly()` - 32 edges
-9. `requireAdmin()` - 29 edges
+8. `requireAdmin()` - 33 edges
+9. `publishAbly()` - 32 edges
 10. `Avatar()` - 27 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Matchmaking()` --calls--> `useEmailVerified()`  [EXTRACTED]
-  app/(product)/components/Matchmaking.tsx → hooks/useEmailVerified.ts
+- `Settings()` --calls--> `useWallpaperActive()`  [EXTRACTED]
+  app/(product)/components/settings.tsx → components/wallpaper-context.tsx
+- `formatRelativeDay()` --calls--> `startOfDay()`  [INFERRED]
+  app/(product)/sessions/PastSessionsList.tsx → lib/utils.ts
 - `MySessionsPage()` --calls--> `getDb()`  [EXTRACTED]
   app/(product)/sessions/page.tsx → lib/mongodb.ts
 - `formatRemaining()` --calls--> `pad()`  [INFERRED]
   app/(product)/sessions/[id]/ClientCall.tsx → lib/utils.ts
-- `GET()` --calls--> `getDb()`  [EXTRACTED]
-  app/api/backlog/issues/route.ts → lib/mongodb.ts
-- `POST()` --calls--> `requireNotCommunityBanned()`  [INFERRED]
-  app/api/sessions/[id]/daily/token/route.ts → lib/communityModeration.ts
+- `POST()` --calls--> `getBannedUserIps()`  [INFERRED]
+  app/api/admin/community/users/[userId]/route.ts → lib/bannedIpWatch.ts
 
-## Communities (132 total, 11 thin omitted)
+## Communities (133 total, 12 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.15
-Nodes (15): CalendarEventCard(), CALENDAR_LAYOUT, DEFAULT_DURATION_FILTER, getResolvedSessionColor(), getSessionColorPresetIndex(), SESSION_COLOR_PRESETS, SESSION_STATUSES, SESSION_TYPES (+7 more)
+Cohesion: 0.11
+Nodes (20): CalendarEventCard(), CALENDAR_LAYOUT, DEFAULT_DURATION_FILTER, getResolvedSessionColor(), getSessionColorPresetIndex(), SESSION_COLOR_PRESETS, SESSION_STATUSES, SESSION_TYPES (+12 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.12
-Nodes (19): HoverState, UseCalendarGridReturn, UseCalendarSessionsOptions, UseCalendarSessionsReturn, addDays(), addMinutes(), clamp(), formatHour() (+11 more)
+Cohesion: 0.10
+Nodes (22): useCalendarSessions(), UseCalendarSessionsOptions, UseCalendarSessionsReturn, addDays(), addMinutes(), clamp(), formatHour(), minutesBetween() (+14 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.17
 Nodes (12): CalendarSidebarProps, DurationSelectorBaseProps, DurationSelectorProps, MultiSelectProps, SingleSelectProps, VARIANT_STYLES, UIState, DurationMin (+4 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.20
-Nodes (6): RevealProps, REASONS, Reveal(), RevealProps, REASONS, WhyItWorks()
+Cohesion: 0.12
+Nodes (11): RevealProps, Length, LENGTHS, REASONS, Reveal(), RevealProps, Length, LENGTHS (+3 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.07
@@ -179,27 +180,27 @@ Nodes (29): AllValuesOf, AnyEntryMap, CollectionEntry, CollectionKey, ContentCol
 
 ### Community 5 - "Community 5"
 Cohesion: 0.12
-Nodes (20): isJoinable(), PostCard(), LocalDateTime(), Props, formatRecentTime(), SessionCountdown(), SessionCountdownProps, formatLocalDate() (+12 more)
+Nodes (28): CalendarHeader(), CalendarHeaderProps, VIEW_OPTIONS, ViewDays, LocalDateTime(), Props, formatRecentTime(), applyPreference() (+20 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.08
-Nodes (34): DELETE(), PATCH(), GET(), DELETE(), deleteManagedAvatar(), extensionForMime(), POST(), GET() (+26 more)
+Cohesion: 0.12
+Nodes (21): DELETE(), deleteManagedAvatar(), extensionForMime(), POST(), SessionJoinPage(), authOptions, useSecureCookies, AVATAR_ALLOWED_TYPES (+13 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.10
-Nodes (17): ProfilePreviewPayload, Props, STEPS, WelcomeResponse, ChatDock(), Friend, OpenChat, useFriendsList() (+9 more)
+Cohesion: 0.23
+Nodes (11): ChatDock(), Friend, OpenChat, useFriendsList(), createAblyTokenRequest(), chatChannel(), globalChatChannel(), sessionsChannel() (+3 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.11
-Nodes (18): CalendarRightSidebar(), formatDate(), getGreeting(), CalendarSidebar(), Calendar(), CalendarProps, ModalState, ProcessedEvent (+10 more)
+Nodes (20): CalendarSidebar(), BookSessionButton(), CreatedSession, Props, BookSessionModal(), Calendar(), CalendarProps, ModalState (+12 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.06
 Nodes (36): dependencies, ably, ai, @ai-sdk/google, @ai-sdk/openai, @auth/mongodb-adapter, bcryptjs, child_process (+28 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.17
-Nodes (24): createInitialState(), uiReducer(), useCalendarSessions(), startOfDay(), addDaysInTimeZone(), getTimeZoneOffsetMs(), getZonedParts(), minutesOfDayInTimeZone() (+16 more)
+Cohesion: 0.25
+Nodes (16): createInitialState(), uiReducer(), HoverState, UseCalendarGridReturn, startOfDay(), addDaysInTimeZone(), getTimeZoneOffsetMs(), getZonedParts() (+8 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.06
@@ -214,12 +215,12 @@ Cohesion: 0.09
 Nodes (22): compilerOptions, allowJs, esModuleInterop, forceConsistentCasingInFileNames, incremental, isolatedModules, jsx, lib (+14 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.16
-Nodes (13): SessionStatus, SessionType, publishSessionUpserted(), SessionRealtimeDoc, toFetchedSession(), UserSnippet, CalendarEvent, CalendarProps (+5 more)
+Cohesion: 0.13
+Nodes (21): baseOptions, closeRedisConnections(), getRedisState(), getSubscriber(), isMessageHandlerAttached(), isRedisConfigured(), isSubscriberReady(), RedisState (+13 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.21
-Nodes (11): GET(), GET(), GET(), GlobalMessageDoc, isEmailVerified(), getUserEmailVerified(), fetchAvatarUrlMap(), POST() (+3 more)
+Cohesion: 0.12
+Nodes (29): GET(), iso(), pushEvent(), TimelineEvent, GET(), GET(), GET(), GET() (+21 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.19
@@ -235,23 +236,23 @@ Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 mor
 
 ### Community 19 - "Community 19"
 Cohesion: 0.08
-Nodes (49): POST(), GET(), POST(), SessionDoc, POST(), POST(), detachDeletedUserFromSessions(), FocusSessionDoc (+41 more)
+Nodes (42): POST(), GET(), POST(), SessionDoc, POST(), detachDeletedUserFromSessions(), FocusSessionDoc, POST() (+34 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.09
-Nodes (22): NotFound(), Hero(), HeroProps, LogoutButton(), Matchmaking(), MatchUser, ThemeSwitcher(), VideoModal() (+14 more)
+Cohesion: 0.11
+Nodes (17): Hero(), HeroProps, LogoutButton(), MatchUser, VideoModal(), Badge(), BadgeProps, badgeVariants (+9 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.16
-Nodes (18): GET(), POST(), POST(), CommunityModerationFields, getCommunityModerationStatus(), isCommunityBanned(), isCommunityMuted(), requireCommunityAccess() (+10 more)
+Cohesion: 0.11
+Nodes (27): GET(), GET(), DURATION_OPTIONS, GET(), MessageDoc, POST(), POST(), areUsersBlocked() (+19 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.11
-Nodes (13): MinimalNav(), MinimalNavProps, NavCta, Shell(), ShellProps, FEATURES, ABOUT_ME_PROMPTS, generateMetadata() (+5 more)
+Cohesion: 0.12
+Nodes (11): MinimalNav(), MinimalNavProps, NavCta, FEATURES, ABOUT_ME_PROMPTS, generateMetadata(), getPublicUser(), getUser() (+3 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.16
-Nodes (4): AuthShell(), AuthShellProps, DetailsForm(), Props
+Cohesion: 0.10
+Nodes (7): AuthShell(), AuthShellProps, DetailsForm(), LoginForm(), SignUpForm(), Props, Props
 
 ### Community 24 - "Community 24"
 Cohesion: 0.19
@@ -262,40 +263,40 @@ Cohesion: 0.16
 Nodes (16): ApiError, ApiResult, create(), CreateSessionPayload, deleteSession(), getErrorMessage(), join(), leave() (+8 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.06
-Nodes (76): DELETE(), DELETE(), DELETE(), GET(), DELETE(), DELETE(), PATCH(), DELETE() (+68 more)
+Cohesion: 0.11
+Nodes (36): AdminPage(), metadata, DELETE(), GET(), DELETE(), DELETE(), GET(), DELETE() (+28 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.13
-Nodes (7): DEFAULT_PREFS, FocusPreferences(), NotificationsSection(), Prefs, PrivacySection(), usePrefs(), listTimeZones()
+Cohesion: 0.08
+Nodes (17): POST(), PasswordStrengthMeter(), Props, STRENGTH_LABELS, ChangePasswordSection(), DEFAULT_PREFS, FocusPreferences(), NotificationsSection() (+9 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.12
 Nodes (16): devDependencies, autoprefixer, dotenv, eslint, eslint-config-next, @eslint/eslintrc, postcss, tailwindcss (+8 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.07
-Nodes (23): formatPercent(), formatTotalMinutes(), ProfileStats(), RecentSession, Stats, StatsSummaryLine(), TrendDay, RecentSession (+15 more)
+Cohesion: 0.13
+Nodes (16): RecentSession, SessionStats, StatsResponse, TrendDay, useSessionStats(), SessionStatsDashboard(), ProfileStats(), ActivityHeatmap() (+8 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.13
-Nodes (16): Community(), CommunityProps, MobileCommunityView, PINNED_ADMIN_POST, ProfilePreviewPayload, AuthorLike, Comment, Post (+8 more)
+Cohesion: 0.12
+Nodes (18): Community(), CommunityProps, MobileCommunityView, PINNED_ADMIN_POST, ProfilePreviewPayload, AuthorLike, Comment, Post (+10 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.13
-Nodes (12): EmailVerificationBanner(), EmailVerifiedBadge(), Props, ABOUT_ME_PROMPTS, AboutMeKey, EditableFields, emptyAboutMe(), ProfileView() (+4 more)
+Cohesion: 0.17
+Nodes (10): EmailVerificationBanner(), EmailVerifiedBadge(), Props, ABOUT_ME_PROMPTS, AboutMeKey, EditableFields, emptyAboutMe(), ProfileView() (+2 more)
 
 ### Community 32 - "Community 32"
 Cohesion: 0.07
 Nodes (30): Architecture (read this first), Blog (SEO), Chat & Realtime, CI / CD, code:block1 (refocus.co.in          →  Astro (marketing/, branch: landing), code:bash (git checkout test-dash   # this repo clone on the default br), code:bash (git checkout test-dash), code:block4 (MONGODB_URI=mongodb+srv://...) (+22 more)
 
 ### Community 33 - "Community 33"
-Cohesion: 0.17
-Nodes (9): DInput, DInputProps, DPasswordInput, DPasswordInputProps, DTextarea, Field(), FieldShellProps, PageHeaderProps (+1 more)
+Cohesion: 0.22
+Nodes (12): AuthLoadingOverlay(), AuthLoadingOverlayProps, AuthDivider(), DButton, DInput, DInputProps, DPasswordInput, DPasswordInputProps (+4 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.18
-Nodes (16): emailAssetBaseUrl(), emailBrand, getEmailLogoDataUri(), getEmailLogoUrl(), buildMatchedSessionEmail(), buildMorningSessionDigestEmail(), buildTimedSessionReminderEmail(), emailShell() (+8 more)
+Cohesion: 0.28
+Nodes (10): buildMatchedSessionEmail(), buildMorningSessionDigestEmail(), buildTimedSessionReminderEmail(), emailShell(), escapeHtml(), greeting(), sessionListHtml(), sessionListText() (+2 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.21
@@ -310,16 +311,16 @@ Cohesion: 0.15
 Nodes (13): scripts, build, db:backfill-attendance, db:backfill-participant-count, db:backfill-usernames, db:indexes, db:set-admin, dev (+5 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.26
-Nodes (15): logResendFailure(), sendMatchedSessionEmail(), logResendFailure(), sendMorningSessionDigestEmail(), sendTimedSessionReminderEmail(), SendWelcomeEmailInput, sendWelcomeVerificationEmail(), buildWelcomeVerifyEmail() (+7 more)
+Cohesion: 0.21
+Nodes (20): logResendFailure(), sendMatchedSessionEmail(), logResendFailure(), sendPasswordResetEmail(), SendPasswordResetEmailInput, logResendFailure(), sendMorningSessionDigestEmail(), sendTimedSessionReminderEmail() (+12 more)
 
 ### Community 39 - "Community 39"
 Cohesion: 0.20
 Nodes (8): db, FUTURE_END, FUTURE_START, pastEnd, pastStart, req, SESSION_ID, sessionsCol
 
 ### Community 40 - "Community 40"
-Cohesion: 0.10
-Nodes (19): ACTION_LABELS, AdminChatMessage, AdminPost, AdminSection, AdminUser, AuditEntry, ReportEntry, SECTIONS (+11 more)
+Cohesion: 0.09
+Nodes (22): ACTION_LABELS, AdminChatMessage, AdminPost, AdminSection, AdminUser, AuditEntry, IpActivityEntry, ReportEntry (+14 more)
 
 ### Community 41 - "Community 41"
 Cohesion: 0.22
@@ -330,8 +331,8 @@ Cohesion: 0.16
 Nodes (13): getMobileNavTab(), MOBILE_MORE_TABS, MobileBottomNav(), MobileBottomNavProps, MobileNavTab, MobileTab, MENU_ITEMS, MenuItem (+5 more)
 
 ### Community 43 - "Community 43"
-Cohesion: 0.11
-Nodes (23): DELETE(), PATCH(), DELETE(), IssuePriority, IssueStatus, serializeIssue(), VALID_PRIORITIES, VALID_STATUSES (+15 more)
+Cohesion: 0.12
+Nodes (24): DELETE(), PATCH(), DELETE(), DELETE(), IssuePriority, IssueStatus, serializeIssue(), VALID_PRIORITIES (+16 more)
 
 ### Community 44 - "Community 44"
 Cohesion: 0.29
@@ -342,8 +343,8 @@ Cohesion: 0.14
 Nodes (16): BacklogPage(), Dashboard(), EmailVerificationStrip(), WallpaperProvider(), DASHBOARD_TABS, DashboardContent(), ProfilePreviewPayload, TOUR_STEPS (+8 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.19
-Nodes (9): PasswordStrengthMeter(), Props, STRENGTH_LABELS, ChangePasswordSection(), SignUpForm(), PasswordStrength, PasswordValidationResult, result (+1 more)
+Cohesion: 0.12
+Nodes (18): AvatarProps, AvatarTint, Presence, tintClass, tintForKey(), FriendRequestCard(), FriendRequestCardProps, FriendRequestData (+10 more)
 
 ### Community 47 - "Community 47"
 Cohesion: 0.36
@@ -358,16 +359,16 @@ Cohesion: 0.18
 Nodes (10): Code of Conduct, Contact, Contributing to Refocus, Creating Issues, Getting Help, Issue Guidelines, Issue Labels, Recognition (+2 more)
 
 ### Community 50 - "Community 50"
-Cohesion: 0.29
-Nodes (11): logResendFailure(), sendPasswordResetEmail(), SendPasswordResetEmailInput, buildPasswordResetEmail(), hashVerificationToken(), createPasswordResetToken(), isPasswordResetTokenValid(), resetPasswordWithToken() (+3 more)
+Cohesion: 0.33
+Nodes (9): emailAssetBaseUrl(), emailBrand, getEmailLogoDataUri(), getEmailLogoUrl(), buildPasswordResetEmail(), buildWelcomeVerifyEmail(), greeting(), PasswordResetEmailParams (+1 more)
 
 ### Community 51 - "Community 51"
 Cohesion: 0.25
 Nodes (7): db, past, req, rl, sessionsCol, start, tooFar
 
 ### Community 52 - "Community 52"
-Cohesion: 0.22
-Nodes (7): mocks, ownerReq, participantReq, req, SESSION_ID, tokenReq, mockSession()
+Cohesion: 0.25
+Nodes (6): mocks, ownerReq, participantReq, req, SESSION_ID, tokenReq
 
 ### Community 53 - "Community 53"
 Cohesion: 0.09
@@ -390,8 +391,8 @@ Cohesion: 0.15
 Nodes (11): CURRENT_USER, db, FRIEND_ID, friendRequestsCol, insertedId, messagesCol, req, sessionRequestsCol (+3 more)
 
 ### Community 58 - "Community 58"
-Cohesion: 0.11
-Nodes (36): mocks, req, unauthorizedCronResponse(), verifyCronSecret(), ReminderRunResult, runMorningSessionReminders(), runTimedSessionReminders(), sendTimedReminderForSession() (+28 more)
+Cohesion: 0.14
+Nodes (30): ReminderRunResult, runMorningSessionReminders(), runTimedSessionReminders(), sendTimedReminderForSession(), SESSION_REMINDER_TIMINGS, SessionReminderTiming, bulkLoadReminderRecipients(), displayName() (+22 more)
 
 ### Community 59 - "Community 59"
 Cohesion: 0.33
@@ -402,8 +403,8 @@ Cohesion: 0.40
 Nodes (5): CollectionIndexes, createCollectionIndexes(), INDEX_DEFINITIONS, IndexDefinition, runMigration()
 
 ### Community 62 - "Community 62"
-Cohesion: 0.11
-Nodes (18): FriendChatInputProps, CommunityChat(), CommunityChatProps, GlobalMessage, ChatMessage, FriendChat(), FriendChatProps, SessionRequestPayload (+10 more)
+Cohesion: 0.12
+Nodes (17): FriendChatInputProps, CommunityChat(), CommunityChatProps, GlobalMessage, ChatMessage, FriendChat(), FriendChatProps, SessionRequestPayload (+9 more)
 
 ### Community 63 - "Community 63"
 Cohesion: 0.40
@@ -434,8 +435,8 @@ Cohesion: 0.40
 Nodes (4): modified, now, response, result
 
 ### Community 70 - "Community 70"
-Cohesion: 0.11
-Nodes (28): AdminPage(), metadata, GET(), GET(), GET(), GET(), GET(), GET() (+20 more)
+Cohesion: 0.12
+Nodes (19): GET(), GET(), GET(), GET(), GET(), IssuePriority, IssueStatus, POST() (+11 more)
 
 ### Community 72 - "Community 72"
 Cohesion: 0.50
@@ -454,8 +455,8 @@ Cohesion: 0.40
 Nodes (6): code:block6 (refocus/), code:block7 (refocus/), Key Technologies, `landing` — marketing site, Project Structure, `test-dash` — product app (this branch by default)
 
 ### Community 78 - "Community 78"
-Cohesion: 0.20
-Nodes (15): CalendarHeader(), CalendarHeaderProps, VIEW_OPTIONS, ViewDays, applyPreference(), resolveEffective(), TimezoneContext, TimezoneContextValue (+7 more)
+Cohesion: 0.15
+Nodes (7): formatPercent(), formatTotalMinutes(), ProfileStats(), RecentSession, Stats, StatsSummaryLine(), TrendDay
 
 ### Community 93 - "Community 93"
 Cohesion: 0.15
@@ -466,12 +467,12 @@ Cohesion: 0.18
 Nodes (7): FAQ_ITEMS, FaqItem, Faq(), FAQ_ITEMS, FaqItem, Footer(), Homepage()
 
 ### Community 97 - "Community 97"
-Cohesion: 0.13
-Nodes (7): Modes, FAQ_ITEMS, FaqItem, RevealProps, Length, LENGTHS, REASONS
+Cohesion: 0.09
+Nodes (9): Modes, FAQ_ITEMS, FaqItem, Mode, Modes, RevealProps, Length, LENGTHS (+1 more)
 
 ### Community 98 - "Community 98"
-Cohesion: 0.18
-Nodes (5): CommunityChatPanel(), Props, ProfilePreviewPayload, Props, CommunityLayoutMode
+Cohesion: 0.11
+Nodes (8): ProfilePreviewPayload, Props, STEPS, WelcomeResponse, ProfilePreviewPayload, Props, CommunityLayoutMode, WelcomeAnnouncement
 
 ### Community 99 - "Community 99"
 Cohesion: 0.22
@@ -486,20 +487,20 @@ Cohesion: 0.18
 Nodes (9): db, JOINER_ID, markReminderSent, OWNER_ID, sendMatchedSessionEmail, SESSION_ID, sessionsCol, START (+1 more)
 
 ### Community 103 - "Community 103"
-Cohesion: 0.17
-Nodes (12): db, dupError, insertedId, req, usersCol, db, friendRequestsCol, req (+4 more)
+Cohesion: 0.21
+Nodes (9): db, dupError, insertedId, req, usersCol, mocks, req, mockRequest() (+1 more)
 
 ### Community 105 - "Community 105"
-Cohesion: 0.29
-Nodes (5): Length, LENGTHS, Length, LENGTHS, Sessions()
+Cohesion: 0.27
+Nodes (8): formatBookTime(), getDefaultBookTime(), ModalState, normalizeBookTime(), ProcessedEvent, snapBookTimeMinutes(), UIAction, Toast()
 
 ### Community 106 - "Community 106"
 Cohesion: 0.29
 Nodes (5): db, existingId, insertedId, usersCol, mockDb()
 
 ### Community 107 - "Community 107"
-Cohesion: 0.07
-Nodes (37): AdminChatMessage, AdminPost, AdminSection, AdminUser, NAV, Stats, CalendarEventCardProps, COMPACT_PASTEL_COLORS_DARK (+29 more)
+Cohesion: 0.08
+Nodes (31): AdminChatMessage, AdminPost, AdminSection, AdminUser, NAV, Stats, CalendarEventCardProps, COMPACT_PASTEL_COLORS_DARK (+23 more)
 
 ### Community 108 - "Community 108"
 Cohesion: 0.14
@@ -510,12 +511,12 @@ Cohesion: 0.17
 Nodes (3): Mode, Modes, Mode
 
 ### Community 110 - "Community 110"
-Cohesion: 0.12
-Nodes (22): emailDomain(), exactSet, EXTRA_BLOCKED_DOMAINS, isDisposableEmail(), wildcardSet, backfillWelcomeAnnouncementsIfEmpty(), createWelcomeAnnouncement(), listWelcomeAnnouncements() (+14 more)
+Cohesion: 0.08
+Nodes (44): applyUserModeration(), banEmail(), findUserByEmailIdentity(), isEmailBanned(), unbanEmail(), addBannedIpWatches(), BannedIpActivityOutcome, getBannedUserIps() (+36 more)
 
 ### Community 111 - "Community 111"
-Cohesion: 0.27
-Nodes (6): POST(), POST(), SessionDoc, loadUsersById(), publishSessionDocUpserted(), sessionsChannel()
+Cohesion: 0.15
+Nodes (20): DELETE(), PATCH(), POST(), SessionType, GET(), SessionDoc, POST(), SessionDoc (+12 more)
 
 ### Community 112 - "Community 112"
 Cohesion: 0.29
@@ -526,44 +527,44 @@ Cohesion: 0.19
 Nodes (6): AVATAR_COLORS, ArrowIcon(), FinalCTA(), AVATAR_COLORS, Hero(), LiveCount()
 
 ### Community 115 - "Community 115"
-Cohesion: 0.31
-Nodes (7): BookSessionButton(), CreatedSession, Props, BookSessionModal(), BookSessionModalProps, isValidDuration(), useCommunityModeration()
+Cohesion: 0.32
+Nodes (3): NotFound(), ThemeSwitcher(), NavbarLogo()
 
 ### Community 116 - "Community 116"
-Cohesion: 0.35
-Nodes (8): SessionJoinPage(), createDailyMeetingToken(), createOrGetDailyRoom(), isOwnerOrParticipant(), toObjectId(), isWithinCallWindow(), POST(), SessionDoc
+Cohesion: 0.08
+Nodes (33): isJoinable(), Props, AdminContext, deleteReportedContent(), resolveContentReport(), createDailyMeetingToken(), createOrGetDailyRoom(), isValidReportReason() (+25 more)
 
 ### Community 117 - "Community 117"
-Cohesion: 0.09
-Nodes (22): Profile(), Settings(), useWallpaperActive(), WallpaperContext, EmptyCardProps, FriendRequestData, FriendData, Friends() (+14 more)
+Cohesion: 0.10
+Nodes (17): CommunityChatPanel(), Props, Profile(), useWallpaperActive(), WallpaperContext, Shell(), EmptyCardProps, Friends() (+9 more)
 
 ### Community 118 - "Community 118"
 Cohesion: 0.29
 Nodes (5): BacklogIssue, IssuePriority, IssueStatus, PRIORITY_STYLES, STATUS_COLUMNS
 
 ### Community 119 - "Community 119"
-Cohesion: 0.32
-Nodes (4): AuthLoadingOverlay(), AuthLoadingOverlayProps, AuthDivider(), LoginForm()
+Cohesion: 0.67
+Nodes (4): unauthorizedCronResponse(), verifyCronSecret(), GET(), GET()
 
 ### Community 120 - "Community 120"
-Cohesion: 0.25
-Nodes (5): Participant, SessionLike, sessionTitleFor(), UserRow, sessionJoinUrl()
+Cohesion: 0.15
+Nodes (10): GET(), Participant, SessionLike, sessionTitleFor(), UserRow, resolveSessionDisplayName(), legacy, session (+2 more)
 
 ### Community 121 - "Community 121"
 Cohesion: 0.29
 Nodes (6): compilerOptions, jsx, jsxImportSource, exclude, extends, include
 
 ### Community 126 - "Community 126"
-Cohesion: 0.33
-Nodes (6): GET(), IssuePriority, IssueStatus, POST(), serializeIssue(), VALID_PRIORITIES
+Cohesion: 0.29
+Nodes (5): db, friendRequestsCol, req, REQUEST_ID, mockSession()
 
 ### Community 128 - "Community 128"
-Cohesion: 0.33
-Nodes (5): db, err, userId, usersCol, welcomeCol
+Cohesion: 0.29
+Nodes (6): db, err, userId, usersCol, welcomeCol, mockCollection()
 
 ### Community 129 - "Community 129"
-Cohesion: 0.15
-Nodes (10): formatTotalMinutes(), PastParticipant, PastSession, PastSessionsList(), PastSessionsListProps, StatsRow(), SessionsList(), SessionsTabs() (+2 more)
+Cohesion: 0.12
+Nodes (13): MySessionsPage(), RawSession, UserDoc, formatRelativeDay(), formatTotalMinutes(), PastParticipant, PastSession, PastSessionsList() (+5 more)
 
 ### Community 130 - "Community 130"
 Cohesion: 0.22
@@ -574,24 +575,24 @@ Cohesion: 0.25
 Nodes (4): Message, Proposal, SUGGESTIONS, typeColors
 
 ## Knowledge Gaps
-- **695 isolated node(s):** `MUTATING_METHODS`, `PROTECTED_PREFIXES`, `config`, `crons`, `config` (+690 more)
+- **704 isolated node(s):** `MUTATING_METHODS`, `PROTECTED_PREFIXES`, `config`, `crons`, `config` (+699 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getDb()` connect `Community 70` to `Community 58`, `Community 101`, `Community 6`, `Community 38`, `Community 43`, `Community 110`, `Community 15`, `Community 111`, `Community 50`, `Community 19`, `Community 116`, `Community 21`, `Community 22`, `Community 26`, `Community 126`?**
-  _High betweenness centrality (0.108) - this node is a cross-community bridge._
-- **Why does `getSiteUrl()` connect `Community 101` to `Community 34`, `Community 99`, `Community 38`, `Community 50`, `Community 22`, `Community 120`, `Community 58`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
-- **Why does `authOptions` connect `Community 19` to `Community 6`, `Community 7`, `Community 70`, `Community 43`, `Community 110`, `Community 15`, `Community 111`, `Community 116`, `Community 20`, `Community 21`, `Community 119`, `Community 26`, `Community 126`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+- **Why does `getDb()` connect `Community 70` to `Community 129`, `Community 58`, `Community 101`, `Community 6`, `Community 38`, `Community 43`, `Community 110`, `Community 15`, `Community 111`, `Community 19`, `Community 116`, `Community 21`, `Community 22`, `Community 120`, `Community 26`, `Community 27`?**
+  _High betweenness centrality (0.132) - this node is a cross-community bridge._
+- **Why does `getSiteUrl()` connect `Community 101` to `Community 99`, `Community 38`, `Community 50`, `Community 22`, `Community 120`, `Community 58`?**
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+- **Why does `authOptions` connect `Community 6` to `Community 129`, `Community 70`, `Community 7`, `Community 43`, `Community 14`, `Community 15`, `Community 111`, `Community 110`, `Community 115`, `Community 19`, `Community 21`, `Community 116`, `Community 23`, `Community 20`, `Community 26`, `Community 27`?**
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **What connects `MUTATING_METHODS`, `PROTECTED_PREFIXES`, `config` to the rest of the system?**
-  _695 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _704 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.14761904761904762 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10826210826210826 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.11965811965811966 - nodes in this community are weakly interconnected._
-- **Should `Community 4` be split into smaller, more focused modules?**
-  _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10344827586206896 - nodes in this community are weakly interconnected._
+- **Should `Community 3` be split into smaller, more focused modules?**
+  _Cohesion score 0.12280701754385964 - nodes in this community are weakly interconnected._
