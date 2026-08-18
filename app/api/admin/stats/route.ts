@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { requireAdmin } from "@/lib/admin";
+import { DELETED_USERS_COLLECTION } from "@/lib/deletedUsers";
 
 export async function GET() {
   const guard = await requireAdmin();
@@ -14,6 +15,7 @@ export async function GET() {
     usersTotal,
     usersNewWeek,
     usersVerified,
+    usersDeleted,
     sessionsTotal,
     sessionsUpcoming,
     sessionsDone,
@@ -34,6 +36,7 @@ export async function GET() {
     db.collection("users").countDocuments({
       emailVerified: { $exists: true, $ne: null },
     }),
+    db.collection(DELETED_USERS_COLLECTION).countDocuments(),
     db.collection("sessions").countDocuments(),
     db.collection("sessions").countDocuments({ end_time: { $gte: now } }),
     db.collection("sessions").countDocuments({ end_time: { $lt: now } }),
@@ -99,6 +102,7 @@ export async function GET() {
       total: usersTotal,
       newThisWeek: usersNewWeek,
       verified: usersVerified,
+      deleted: usersDeleted,
     },
     sessions: {
       total: sessionsTotal,

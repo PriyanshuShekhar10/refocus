@@ -14,6 +14,7 @@ import {
   Shield,
   ShieldOff,
   Trash2,
+  UserX,
   Users,
   Volume2,
   VolumeX,
@@ -34,13 +35,19 @@ import AdminMailbox, {
 type AdminSection =
   | "overview"
   | "users"
+  | "deleted"
   | "mailbox"
   | "reports"
   | "history"
   | "ip-activity";
 
 type Stats = {
-  users: { total: number; newThisWeek: number; verified: number };
+  users: {
+    total: number;
+    newThisWeek: number;
+    verified: number;
+    deleted: number;
+  };
   sessions: {
     total: number;
     upcoming: number;
@@ -76,6 +83,25 @@ type AdminUser = {
   lastSeenIp: string | null;
   knownIps: string[];
   lastLoginAt: string | null;
+};
+
+type DeletedProfile = {
+  id: string;
+  userId: string;
+  email: string | null;
+  username: string | null;
+  name: string | null;
+  emailVerified: boolean;
+  createdAt: string | null;
+  deletedAt: string | null;
+  lastLoginAt: string | null;
+  signupIp: string | null;
+  lastLoginIp: string | null;
+  lastSeenIp: string | null;
+  knownIps: string[];
+  wasAdmin: boolean;
+  communityBanned: boolean;
+  communityMuted: boolean;
 };
 
 type IpActivityEntry = {
@@ -185,6 +211,7 @@ const SECTIONS: {
 }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "users", label: "Users", icon: Users },
+  { id: "deleted", label: "Deleted", icon: UserX },
   { id: "mailbox", label: "Mailbox", icon: Mail },
   { id: "ip-activity", label: "Banned IP activity", icon: Activity },
   { id: "reports", label: "Reports", icon: Flag },
@@ -566,6 +593,9 @@ export default function AdminPanel() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [userTotal, setUserTotal] = useState(0);
   const [userQuery, setUserQuery] = useState("");
+  const [deletedUsers, setDeletedUsers] = useState<DeletedProfile[]>([]);
+  const [deletedTotal, setDeletedTotal] = useState(0);
+  const [deletedQuery, setDeletedQuery] = useState("");
   const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([]);
   const [auditTotal, setAuditTotal] = useState(0);
   const [reports, setReports] = useState<ReportEntry[]>([]);
@@ -626,6 +656,20 @@ export default function AdminPanel() {
       setUserTotal(data.total ?? 0);
     },
     [userQuery],
+  );
+
+  const loadDeletedUsers = useCallback(
+    async (q = deletedQuery) => {
+      const params = new URLSearchParams({ limit: "40" });
+      if (q.trim()) params.set("q", q.trim());
+      const res = await fetch(`/api/admin/deleted-users?${params}`);
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.error || "Failed to load deleted profiles");
+      setDeletedUsers(data.users || []);
+      setDeletedTotal(data.total ?? 0);
+    },
+    [deletedQuery],
   );
 
   const loadAuditLog = useCallback(async () => {
@@ -717,6 +761,7 @@ export default function AdminPanel() {
         if (doneExpanded) await loadDoneSessions();
         if (friendRequestsExpanded) await loadPendingFriendRequests();
       } else if (section === "users") await loadUsers();
+      else if (section === "deleted") await loadDeletedUsers();
       else if (section === "mailbox") setMailEpoch((n) => n + 1);
       else if (section === "reports") await loadReports();
       else if (section === "history") await loadAuditLog();
@@ -736,6 +781,7 @@ export default function AdminPanel() {
     loadDoneSessions,
     loadPendingFriendRequests,
     loadUsers,
+    loadDeletedUsers,
     loadReports,
     loadAuditLog,
     loadIpActivity,
@@ -853,6 +899,17 @@ export default function AdminPanel() {
                 value={stats.users.total}
                 hint={`+${stats.users.newThisWeek} this week`}
               />
+              <button
+                type="button"
+                onClick={() => setSection("deleted")}
+                className="text-left"
+              >
+                <StatCard
+                  label="Deleted profiles"
+                  value={stats.users.deleted}
+                  hint="People who deleted their account"
+                />
+              </button>
               <StatCard
                 label="Verified emails"
                 value={stats.users.verified}
@@ -1294,6 +1351,119 @@ export default function AdminPanel() {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : null}
+
+        {section === "deleted" ? (
+          <div className="space-y-4">
+            <form
+              className="flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void loadDeletedUsers();
+              }}
+            >
+              <input
+                type="search"
+                value={deletedQuery}
+                onChange={(e) => setDeletedQuery(e.target.value)}
+                placeholder="Search deleted email, username, name, or IP…"
+                className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+              <button
+                type="submit"
+                className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995]"
+              >
+                Search
+              </button>
+            </form>
+            <p className="text-xs text-gray-500">
+              {deletedTotal} deleted profile{deletedTotal === 1 ? "" : "s"}.
+              Only accounts deleted after this feature shipped appear here.
+            </p>
+            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                  <tr>
+                    <th className="px-4 py-3">User</th>
+                    <th className="px-4 py-3">Username</th>
+                    <th className="px-4 py-3">Verified</th>
+                    <th className="px-4 py-3">Joined</th>
+                    <th className="px-4 py-3">Deleted</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                  {deletedUsers.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-4 py-8 text-center text-sm text-gray-500"
+                      >
+                        No deleted profiles yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    deletedUsers.map((u) => (
+                      <tr key={u.id}>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            {u.name || "—"}
+                          </div>
+                          <div className="text-xs text-gray-500">{u.email || "—"}</div>
+                          {u.knownIps?.length || u.lastLoginIp || u.signupIp ? (
+                            <div className="mt-0.5 font-mono text-[10px] text-gray-400">
+                              {u.lastSeenIp || u.lastLoginIp || u.signupIp}
+                              {u.knownIps && u.knownIps.length > 1
+                                ? ` · ${u.knownIps.length} IPs`
+                                : ""}
+                            </div>
+                          ) : null}
+                          {u.wasAdmin || u.communityBanned || u.communityMuted ? (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {u.wasAdmin ? (
+                                <span className="rounded-full bg-[#5D1C6A]/10 px-2 py-0.5 text-[10px] font-medium text-[#5D1C6A]">
+                                  Was admin
+                                </span>
+                              ) : null}
+                              {u.communityBanned ? (
+                                <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
+                                  Banned
+                                </span>
+                              ) : null}
+                              {u.communityMuted ? (
+                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                                  Muted
+                                </span>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500">
+                          {u.username ? `@${u.username}` : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          {u.emailVerified ? (
+                            <span className="text-green-600">Yes</span>
+                          ) : (
+                            <span className="text-amber-600">No</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500">
+                          {u.createdAt
+                            ? new Date(u.createdAt).toLocaleDateString()
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500">
+                          {u.deletedAt
+                            ? new Date(u.deletedAt).toLocaleString()
+                            : "—"}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

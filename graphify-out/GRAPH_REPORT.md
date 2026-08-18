@@ -1,16 +1,16 @@
-# Graph Report - refocus  (2026-08-17)
+# Graph Report - refocus  (2026-08-18)
 
 ## Corpus Check
-- 392 files · ~162,880 words
+- 515 files · ~232,435 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2222 nodes · 5161 edges · 139 communities (129 shown, 10 thin omitted)
-- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 25 edges (avg confidence: 0.8)
+- 3033 nodes · 6158 edges · 210 communities (196 shown, 14 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 28 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `fa9798ee`
+- Built from commit: `b22104ab`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -136,145 +136,216 @@
 - [[_COMMUNITY_Community 135|Community 135]]
 - [[_COMMUNITY_Community 136|Community 136]]
 - [[_COMMUNITY_Community 137|Community 137]]
+- [[_COMMUNITY_Community 138|Community 138]]
+- [[_COMMUNITY_Community 139|Community 139]]
 - [[_COMMUNITY_Community 140|Community 140]]
+- [[_COMMUNITY_Community 141|Community 141]]
+- [[_COMMUNITY_Community 142|Community 142]]
+- [[_COMMUNITY_Community 143|Community 143]]
+- [[_COMMUNITY_Community 144|Community 144]]
+- [[_COMMUNITY_Community 145|Community 145]]
+- [[_COMMUNITY_Community 146|Community 146]]
+- [[_COMMUNITY_Community 147|Community 147]]
+- [[_COMMUNITY_Community 148|Community 148]]
+- [[_COMMUNITY_Community 149|Community 149]]
+- [[_COMMUNITY_Community 150|Community 150]]
+- [[_COMMUNITY_Community 151|Community 151]]
+- [[_COMMUNITY_Community 152|Community 152]]
+- [[_COMMUNITY_Community 153|Community 153]]
+- [[_COMMUNITY_Community 154|Community 154]]
+- [[_COMMUNITY_Community 155|Community 155]]
+- [[_COMMUNITY_Community 156|Community 156]]
+- [[_COMMUNITY_Community 157|Community 157]]
+- [[_COMMUNITY_Community 158|Community 158]]
+- [[_COMMUNITY_Community 159|Community 159]]
+- [[_COMMUNITY_Community 160|Community 160]]
+- [[_COMMUNITY_Community 161|Community 161]]
+- [[_COMMUNITY_Community 162|Community 162]]
+- [[_COMMUNITY_Community 163|Community 163]]
+- [[_COMMUNITY_Community 164|Community 164]]
+- [[_COMMUNITY_Community 165|Community 165]]
+- [[_COMMUNITY_Community 166|Community 166]]
+- [[_COMMUNITY_Community 167|Community 167]]
+- [[_COMMUNITY_Community 168|Community 168]]
+- [[_COMMUNITY_Community 169|Community 169]]
+- [[_COMMUNITY_Community 170|Community 170]]
+- [[_COMMUNITY_Community 171|Community 171]]
+- [[_COMMUNITY_Community 172|Community 172]]
+- [[_COMMUNITY_Community 173|Community 173]]
+- [[_COMMUNITY_Community 174|Community 174]]
+- [[_COMMUNITY_Community 175|Community 175]]
+- [[_COMMUNITY_Community 176|Community 176]]
+- [[_COMMUNITY_Community 177|Community 177]]
+- [[_COMMUNITY_Community 178|Community 178]]
+- [[_COMMUNITY_Community 179|Community 179]]
+- [[_COMMUNITY_Community 180|Community 180]]
+- [[_COMMUNITY_Community 181|Community 181]]
+- [[_COMMUNITY_Community 182|Community 182]]
+- [[_COMMUNITY_Community 183|Community 183]]
+- [[_COMMUNITY_Community 184|Community 184]]
+- [[_COMMUNITY_Community 185|Community 185]]
+- [[_COMMUNITY_Community 186|Community 186]]
+- [[_COMMUNITY_Community 187|Community 187]]
+- [[_COMMUNITY_Community 188|Community 188]]
+- [[_COMMUNITY_Community 189|Community 189]]
+- [[_COMMUNITY_Community 190|Community 190]]
+- [[_COMMUNITY_Community 191|Community 191]]
+- [[_COMMUNITY_Community 192|Community 192]]
+- [[_COMMUNITY_Community 193|Community 193]]
+- [[_COMMUNITY_Community 194|Community 194]]
+- [[_COMMUNITY_Community 195|Community 195]]
+- [[_COMMUNITY_Community 196|Community 196]]
+- [[_COMMUNITY_Community 197|Community 197]]
+- [[_COMMUNITY_Community 198|Community 198]]
+- [[_COMMUNITY_Community 199|Community 199]]
+- [[_COMMUNITY_Community 200|Community 200]]
+- [[_COMMUNITY_Community 201|Community 201]]
+- [[_COMMUNITY_Community 202|Community 202]]
+- [[_COMMUNITY_Community 203|Community 203]]
+- [[_COMMUNITY_Community 204|Community 204]]
+- [[_COMMUNITY_Community 205|Community 205]]
+- [[_COMMUNITY_Community 206|Community 206]]
+- [[_COMMUNITY_Community 207|Community 207]]
+- [[_COMMUNITY_Community 208|Community 208]]
+- [[_COMMUNITY_Community 209|Community 209]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `getDb()` - 217 edges
+1. `getDb()` - 219 edges
 2. `checkRateLimit()` - 76 edges
 3. `rateLimitedResponse()` - 71 edges
 4. `requireVerifiedEmail()` - 66 edges
 5. `authOptions` - 61 edges
-6. `requireAdmin()` - 48 edges
+6. `requireAdmin()` - 51 edges
 7. `publish()` - 40 edges
 8. `resolveAvatarUrl()` - 35 edges
 9. `publishAbly()` - 35 edges
 10. `Avatar()` - 27 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `FeaturesPage()` --calls--> `getAppUrl()`  [EXTRACTED]
+  app/features/page.tsx → lib/site.ts
 - `Settings()` --calls--> `useWallpaperActive()`  [EXTRACTED]
   app/(product)/components/settings.tsx → components/wallpaper-context.tsx
 - `Matchmaking()` --calls--> `useEmailVerified()`  [EXTRACTED]
   app/(product)/components/Matchmaking.tsx → hooks/useEmailVerified.ts
-- `BookSessionModal()` --calls--> `useCommunityModeration()`  [EXTRACTED]
-  app/(product)/components/BookSessionModal.tsx → hooks/useCommunityModeration.ts
 - `SessionHistory()` --calls--> `useWallpaperActive()`  [EXTRACTED]
   app/(product)/components/SessionHistory/index.tsx → components/wallpaper-context.tsx
-- `formatRemaining()` --calls--> `pad()`  [INFERRED]
-  app/(product)/sessions/[id]/ClientCall.tsx → lib/utils.ts
+- `MySessionsPage()` --calls--> `getDb()`  [EXTRACTED]
+  app/(product)/sessions/page.tsx → lib/mongodb.ts
 
-## Communities (139 total, 10 thin omitted)
+## Communities (210 total, 14 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.08
-Nodes (37): AdminChatMessage, AdminPost, AdminSection, AdminUser, NAV, Stats, BookSessionModal(), BookSessionModalProps (+29 more)
+Cohesion: 0.10
+Nodes (23): ChatDock(), AvatarProps, AvatarTint, Presence, tintClass, tintForKey(), FriendRequestCard(), FriendRequestCardProps (+15 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.05
-Nodes (47): useSessionTasks(), ClientCall(), CONFETTI_COLORS, ConfettiBurst, formatRemaining(), Phase, PrejoinInfo, SessionPartner (+39 more)
+Cohesion: 0.15
+Nodes (8): CONFETTI_COLORS, ConfettiBurst, formatRemaining(), Phase, PrejoinInfo, SessionPartner, TimerPill(), playSessionCompleteSound()
 
 ### Community 2 - "Community 2"
-Cohesion: 0.13
-Nodes (16): UseCalendarSessionsOptions, UseCalendarSessionsReturn, addMinutes(), clamp(), formatHour(), minutesBetween(), pad(), a (+8 more)
+Cohesion: 0.21
+Nodes (14): Props, isValidReportReason(), isValidReportTargetType(), REPORT_REASON_LABELS, REPORT_REASONS, REPORT_TARGET_LABELS, ReportReason, ReportStatus (+6 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.12
-Nodes (11): FAQ_ITEMS, FaqItem, RevealProps, REASONS, Faq(), FAQ_ITEMS, FaqItem, Reveal() (+3 more)
+Cohesion: 0.05
+Nodes (27): FAQ_ITEMS, FaqItem, AVATAR_COLORS, Mode, Modes, RevealProps, Length, LENGTHS (+19 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.07
 Nodes (29): AllValuesOf, AnyEntryMap, CollectionEntry, CollectionKey, ContentCollectionKey, ContentConfig, ContentEntryMap, DataCollectionKey (+21 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.12
-Nodes (23): DELETE(), PATCH(), POST(), GET(), SessionDoc, POST(), POST(), SessionDoc (+15 more)
+Cohesion: 0.14
+Nodes (21): DELETE(), PATCH(), POST(), SessionDoc, POST(), POST(), SessionDoc, normalizeCancelMessage() (+13 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.10
-Nodes (19): BacklogIssue, IssuePriority, IssueStatus, PRIORITY_STYLES, STATUS_COLUMNS, dispatchPageRefreshEvent(), PAGE_REFRESH_EVENTS, PageRefreshButton() (+11 more)
+Cohesion: 0.12
+Nodes (15): BacklogIssue, IssuePriority, IssueStatus, PRIORITY_STYLES, STATUS_COLUMNS, dispatchPageRefreshEvent(), PAGE_REFRESH_EVENTS, PageRefreshButton() (+7 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.10
-Nodes (24): GET(), DELETE(), deleteManagedAvatar(), extensionForMime(), POST(), authOptions, useSecureCookies, client (+16 more)
+Nodes (24): GET(), DELETE(), deleteManagedAvatar(), extensionForMime(), POST(), SessionJoinPage(), GET(), isBlockedByMe() (+16 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.15
-Nodes (19): CalendarEventCard(), CalendarEventCardProps, COMPACT_PASTEL_COLORS_DARK, COMPACT_PASTEL_COLORS_LIGHT, isJoinable(), getResolvedSessionColor(), getSessionColorPresetIndex(), SESSION_COLOR_PRESETS (+11 more)
+Cohesion: 0.08
+Nodes (31): BacklogPage(), Dashboard(), EmailVerificationStrip(), usePageRefresh(), WallpaperProvider(), DASHBOARD_TABS, DashboardContent(), ProfilePreviewPayload (+23 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.06
 Nodes (36): dependencies, ably, ai, @ai-sdk/google, @ai-sdk/openai, @auth/mongodb-adapter, bcryptjs, child_process (+28 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.12
-Nodes (20): displayName(), notifySessionCancelled(), Participant, SessionLike, sessionTitleFor(), UserRow, displayName(), notifySessionMatched() (+12 more)
+Cohesion: 0.11
+Nodes (19): UseCalendarSessionsOptions, UseCalendarSessionsReturn, addMinutes(), clamp(), formatHour(), minutesBetween(), pad(), a (+11 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.06
 Nodes (33): default, type, additionalProperties, properties, required, type, default, enum (+25 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.14
-Nodes (12): Career(), openRoles, AuthButtons(), cn(), Navbar(), navItems, ArrowIcon(), url() (+4 more)
+Cohesion: 0.22
+Nodes (6): Career(), openRoles, AuthButtons(), cn(), Navbar(), navItems
 
 ### Community 13 - "Community 13"
 Cohesion: 0.09
 Nodes (22): compilerOptions, allowJs, esModuleInterop, forceConsistentCasingInFileNames, incremental, isolatedModules, jsx, lib (+14 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.18
-Nodes (15): baseOptions, closeRedisConnections(), getPublisher(), getRedisState(), getSubscriber(), isMessageHandlerAttached(), isRedisConfigured(), isSubscriberReady() (+7 more)
+Cohesion: 0.12
+Nodes (22): baseOptions, closeRedisConnections(), getPublisher(), getRedisState(), getSubscriber(), isMessageHandlerAttached(), isRedisConfigured(), isSubscriberReady() (+14 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.11
-Nodes (29): GET(), GET(), GET(), GET(), POST(), GET(), GlobalMessageDoc, POST() (+21 more)
+Cohesion: 0.08
+Nodes (40): GET(), iso(), pushEvent(), TimelineEvent, GET(), GET(), GET(), GET() (+32 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.19
-Nodes (12): completeFirebaseSignIn(), extractDisplayName(), FirebaseOAuthButtons(), FirebaseOAuthButtonsProps, OAuthProvider, appleAuthProvider, firebaseConfig, getFirebaseApp() (+4 more)
+Cohesion: 0.18
+Nodes (13): AuthLoadingOverlay(), AuthLoadingOverlayProps, AuthDivider(), LoginForm(), DButton, DInput, DInputProps, DPasswordInput (+5 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.33
-Nodes (7): AvatarCropModal(), Props, clampCropOffset(), cropAvatarToBlob(), CropTransform, loadImage(), result
+Cohesion: 0.17
+Nodes (10): db, JOINER_ID, markReminderSent, notifyOpsSessionMatched, OWNER_ID, sendMatchedSessionEmail, SESSION_ID, sessionsCol (+2 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.11
 Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.08
-Nodes (41): GET(), POST(), SessionDoc, POST(), detachDeletedUserFromSessions(), FocusSessionDoc, POST(), SessionParticipant (+33 more)
+Cohesion: 0.07
+Nodes (47): POST(), GET(), GET(), POST(), POST(), POST(), SessionType, detachDeletedUserFromSessions() (+39 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.32
-Nodes (4): metadata, siteUrl, LandingLightLock(), Homepage()
+Cohesion: 0.33
+Nodes (4): isDashboard, marketingUrl, metadata, siteUrl
 
 ### Community 21 - "Community 21"
-Cohesion: 0.09
-Nodes (31): GET(), DELETE(), GET(), POST(), GET(), POST(), GET(), GET() (+23 more)
+Cohesion: 0.22
+Nodes (6): ButtonAsAnchor, ButtonAsButton, CommonProps, DButtonProps, Size, Variant
 
 ### Community 22 - "Community 22"
-Cohesion: 0.11
-Nodes (10): metadata, openRoles, siteUrl, MinimalNav(), MinimalNavProps, NavCta, Shell(), ShellProps (+2 more)
+Cohesion: 0.14
+Nodes (7): MinimalNav(), MinimalNavProps, NavCta, FEATURES, FeaturesPage(), metadata, siteUrl
 
 ### Community 23 - "Community 23"
-Cohesion: 0.16
-Nodes (4): AuthShell(), AuthShellProps, SignUpForm(), Props
+Cohesion: 0.12
+Nodes (6): AuthShell(), AuthShellProps, DetailsForm(), SignUpForm(), Props, Props
 
 ### Community 24 - "Community 24"
 Cohesion: 0.18
 Nodes (7): PageRefreshProvider(), key, PostHogProvider(), ProvidersProps, defaultSwrConfig, FetchError, jsonFetcher()
 
 ### Community 25 - "Community 25"
-Cohesion: 0.16
-Nodes (16): ApiError, ApiResult, create(), CreateSessionPayload, deleteSession(), getErrorMessage(), join(), leave() (+8 more)
+Cohesion: 0.07
+Nodes (44): ApiError, ApiResult, create(), CreateSessionPayload, deleteSession(), getErrorMessage(), join(), leave() (+36 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.46
-Nodes (6): isManagedWallpaperUrl(), WALLPAPER_ALLOWED_TYPES, DELETE(), deleteManagedWallpaper(), extensionForMime(), POST()
+Cohesion: 0.08
+Nodes (37): DELETE(), PATCH(), DELETE(), GET(), SessionDoc, GET(), IssuePriority, IssueStatus (+29 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.09
-Nodes (20): useOnPageRefreshEvent(), PasswordStrengthMeter(), Props, STRENGTH_LABELS, AppearanceSection(), ChangePasswordSection(), DEFAULT_PREFS, EmailVerificationSection() (+12 more)
+Cohesion: 0.14
+Nodes (12): useOnPageRefreshEvent(), AppearanceSection(), DEFAULT_PREFS, EmailVerificationSection(), FocusPreferences(), NotificationsSection(), Prefs, PrivacySection() (+4 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.12
@@ -285,12 +356,12 @@ Cohesion: 0.07
 Nodes (23): formatPercent(), formatTotalMinutes(), ProfileStats(), RecentSession, Stats, StatsSummaryLine(), TrendDay, RecentSession (+15 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.06
-Nodes (23): CommunityProps, MobileCommunityView, PINNED_ADMIN_POST, ProfilePreviewPayload, AuthorLike, Comment, Post, PostCardProps (+15 more)
+Cohesion: 0.08
+Nodes (37): CalendarEventCardProps, COMPACT_PASTEL_COLORS_DARK, COMPACT_PASTEL_COLORS_LIGHT, formatUpcomingDate(), toYmd(), CommunityChat(), CommunityChatProps, GlobalMessage (+29 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.13
-Nodes (12): EmailVerificationBanner(), EmailVerifiedBadge(), Props, ABOUT_ME_PROMPTS, AboutMeKey, EditableFields, emptyAboutMe(), ProfileView() (+4 more)
+Cohesion: 0.17
+Nodes (10): EmailVerificationBanner(), EmailVerifiedBadge(), Props, ABOUT_ME_PROMPTS, AboutMeKey, EditableFields, emptyAboutMe(), ProfileView() (+2 more)
 
 ### Community 32 - "Community 32"
 Cohesion: 0.07
@@ -301,8 +372,8 @@ Cohesion: 0.20
 Nodes (15): CalendarHeader(), CalendarHeaderProps, VIEW_OPTIONS, ViewDays, applyPreference(), resolveEffective(), TimezoneContext, TimezoneContextValue (+7 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.22
-Nodes (13): buildMatchedSessionEmail(), buildMorningSessionDigestEmail(), buildSessionCancelledEmail(), buildTimedSessionReminderEmail(), emailShell(), escapeHtml(), greeting(), sessionListHtml() (+5 more)
+Cohesion: 0.15
+Nodes (23): abs(), articleJsonLd(), breadcrumbJsonLd(), faqJsonLd(), organizationJsonLd(), publisherJsonLd(), SAME_AS, ../layouts/LandingPage.astro (+15 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.21
@@ -313,12 +384,12 @@ Cohesion: 0.18
 Nodes (8): db, FUTURE_START, messagesCol, req, REQUEST_ID, rl, sessionRequestsCol, sessionsCol
 
 ### Community 37 - "Community 37"
-Cohesion: 0.15
-Nodes (13): scripts, build, db:backfill-attendance, db:backfill-participant-count, db:backfill-usernames, db:indexes, db:set-admin, dev (+5 more)
+Cohesion: 0.12
+Nodes (17): scripts, build, db:backfill-attendance, db:backfill-participant-count, db:backfill-usernames, db:bin-sessions, db:indexes, db:set-admin (+9 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.22
-Nodes (18): sendAdminUserEmail(), logResendFailure(), sendMatchedSessionEmail(), logResendFailure(), sendSessionCancelledEmail(), logResendFailure(), sendMorningSessionDigestEmail(), sendTimedSessionReminderEmail() (+10 more)
+Cohesion: 0.05
+Nodes (75): bodyToHtml(), buildAdminUserEmail(), escapeHtml(), greeting(), emailAssetBaseUrl(), emailBrand, getEmailLogoDataUri(), getEmailLogoUrl() (+67 more)
 
 ### Community 39 - "Community 39"
 Cohesion: 0.17
@@ -326,31 +397,31 @@ Nodes (10): db, FUTURE_END, FUTURE_START, pastEnd, pastStart, req, SESSION_ID, s
 
 ### Community 40 - "Community 40"
 Cohesion: 0.05
-Nodes (31): MailRecipient, SearchHit, SentMessage, ACTION_LABELS, AdminChatMessage, AdminPanel(), AdminPerson, AdminPost (+23 more)
+Nodes (32): MailRecipient, SearchHit, SentMessage, ACTION_LABELS, AdminChatMessage, AdminPanel(), AdminPerson, AdminPost (+24 more)
 
 ### Community 41 - "Community 41"
 Cohesion: 0.22
 Nodes (8): Audit Log - Codebase Review, Audit Process, Findings & Conclusion, Fixes Applied, Phase 2: Deep Scalability Audit (Memory & Realtime), Phase 4: DRY Code & Logic Consolidation, Phase 5: Deep Scalability Audit (Cron & Reminders), Production Infrastructure & Scaling Fixes
 
 ### Community 42 - "Community 42"
-Cohesion: 0.12
-Nodes (11): NotFound(), Hero(), HeroProps, LogoutButton(), ThemeSwitcher(), VideoModal(), SessionJoinPage(), NavbarLogo() (+3 more)
+Cohesion: 0.10
+Nodes (21): blogJsonLd, posts, blogPostingJsonLd, breadcrumb, minutes, breadcrumb, { category, posts }, collectionJsonLd (+13 more)
 
 ### Community 43 - "Community 43"
-Cohesion: 0.29
-Nodes (7): DELETE(), PATCH(), IssuePriority, IssueStatus, serializeIssue(), VALID_PRIORITIES, VALID_STATUSES
+Cohesion: 0.09
+Nodes (21): FAQ_ITEMS, FaqItem, faqPageJsonLd(), FAQ_ITEMS, FaqItem, faqJsonLd, heroImage, heroWidths (+13 more)
 
 ### Community 44 - "Community 44"
 Cohesion: 0.29
 Nodes (8): Before Submitting, code:bash (git add .), code:bash (git push origin feature/your-feature-name), code:bash (git fetch upstream), code:bash (git checkout -b feature/your-feature-name), PR Requirements, PR Template, Pull Request Process
 
 ### Community 45 - "Community 45"
-Cohesion: 0.08
-Nodes (30): BacklogPage(), Dashboard(), EmailVerificationStrip(), usePageRefresh(), WallpaperProvider(), DASHBOARD_TABS, DashboardContent(), ProfilePreviewPayload (+22 more)
+Cohesion: 0.17
+Nodes (12): CalendarSidebarProps, DurationSelectorBaseProps, DurationSelectorProps, MultiSelectProps, SingleSelectProps, VARIANT_STYLES, UIState, DurationMin (+4 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.09
-Nodes (21): CalendarSidebarProps, DurationSelectorBaseProps, DurationSelectorProps, MultiSelectProps, SingleSelectProps, VARIANT_STYLES, UIState, DEFAULT_DURATION_FILTER (+13 more)
+Cohesion: 0.11
+Nodes (19): CalendarEventCard(), CALENDAR_LAYOUT, DEFAULT_DURATION_FILTER, getResolvedSessionColor(), getSessionColorPresetIndex(), SESSION_COLOR_PRESETS, SESSION_STATUSES, SESSION_TYPES (+11 more)
 
 ### Community 47 - "Community 47"
 Cohesion: 0.36
@@ -365,20 +436,20 @@ Cohesion: 0.18
 Nodes (10): Code of Conduct, Contact, Contributing to Refocus, Creating Issues, Getting Help, Issue Guidelines, Issue Labels, Recognition (+2 more)
 
 ### Community 50 - "Community 50"
-Cohesion: 0.06
-Nodes (51): db, fromId, requestsCol, toId, usersCol, AdminPage(), metadata, GET() (+43 more)
+Cohesion: 0.08
+Nodes (45): AdminPage(), metadata, GET(), DELETE(), DELETE(), GET(), GET(), GET() (+37 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.11
-Nodes (24): FriendChatInputProps, Community(), CommunityChat(), CommunityChatProps, GlobalMessage, ChatMessage, FriendChat(), FriendChatProps (+16 more)
+Cohesion: 0.10
+Nodes (15): BASELINE, countries, data, decision, __dirname, idn, ind, nonEnglish (+7 more)
 
 ### Community 52 - "Community 52"
 Cohesion: 0.25
 Nodes (4): Message, Proposal, SUGGESTIONS, typeColors
 
 ### Community 53 - "Community 53"
-Cohesion: 0.09
-Nodes (21): dependencies, astro, @astrojs/react, @fontsource/geist-mono, @fontsource-variable/bricolage-grotesque, jose, react, react-dom (+13 more)
+Cohesion: 0.07
+Nodes (29): dependencies, astro, astro-og-canvas, @astrojs/react, @astrojs/rss, @fontsource/geist-mono, @fontsource-variable/bricolage-grotesque, jose (+21 more)
 
 ### Community 54 - "Community 54"
 Cohesion: 0.29
@@ -397,8 +468,8 @@ Cohesion: 0.15
 Nodes (11): CURRENT_USER, db, FRIEND_ID, friendRequestsCol, insertedId, messagesCol, req, sessionRequestsCol (+3 more)
 
 ### Community 58 - "Community 58"
-Cohesion: 0.15
-Nodes (28): ReminderRunResult, runMorningSessionReminders(), runTimedSessionReminders(), sendTimedReminderForSession(), SESSION_REMINDER_TIMINGS, SessionReminderTiming, bulkLoadReminderRecipients(), displayName() (+20 more)
+Cohesion: 0.07
+Nodes (55): unauthorizedCronResponse(), verifyCronSecret(), handleTimedSessionReminderCron(), displayName(), notifySessionCancelled(), Participant, SessionLike, sessionTitleFor() (+47 more)
 
 ### Community 59 - "Community 59"
 Cohesion: 0.33
@@ -444,6 +515,10 @@ Nodes (4): modified, now, response, result
 Cohesion: 0.13
 Nodes (13): auditCol, commentsCol, db, friendRequestsCol, ipActivityCol, loginEventsCol, postsCol, reportsCol (+5 more)
 
+### Community 71 - "Community 71"
+Cohesion: 0.16
+Nodes (10): metadata, openRoles, siteUrl, LandingLightLock(), freeFeatures, paidFeatures, Pricing(), metadata (+2 more)
+
 ### Community 72 - "Community 72"
 Cohesion: 0.50
 Nodes (4): Branch Naming, Contribution Workflow, How to Contribute, Types of Contributions
@@ -461,96 +536,96 @@ Cohesion: 0.40
 Nodes (6): code:block6 (refocus/), code:block7 (refocus/), Key Technologies, `landing` — marketing site, Project Structure, `test-dash` — product app (this branch by default)
 
 ### Community 78 - "Community 78"
-Cohesion: 0.14
-Nodes (12): bricolage, geistMono, geistSans, metadata, quicksandSans, siteUrl, siteUrl, siteUrl (+4 more)
+Cohesion: 0.34
+Nodes (11): robots(), siteUrl, sitemap(), siteUrl, verifyEmailWithToken(), getAppUrl(), getMarketingSiteUrl(), getSiteUrl() (+3 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.22
-Nodes (14): bodyToHtml(), buildAdminUserEmail(), escapeHtml(), greeting(), emailAssetBaseUrl(), emailBrand, getEmailLogoDataUri(), getEmailLogoUrl() (+6 more)
+Cohesion: 0.11
+Nodes (18): 1. Verify the site in Search Console, 2. Create a Google Cloud project, 3. Choose auth method, 4. Create config file, 5. Verify, code:bash ("$HOME/.cursor/skills/seo/bin/claude-seo" run google_auth.py), code:bash (mkdir -p ~/.config/claude-seo), code:json ({) (+10 more)
 
 ### Community 94 - "Community 94"
-Cohesion: 0.14
-Nodes (13): CalendarRightSidebar(), CalendarRightSidebarProps, DetailedProfile, formatDate(), getGreeting(), CalendarSidebar(), formatUpcomingDate(), toYmd() (+5 more)
+Cohesion: 0.11
+Nodes (18): Blog, code:bash (git checkout landing), code:bash (gh variable set PUBLIC_POSTHOG_KEY --body "phc_YOUR_KEY"), code:yaml (---), code:bash (npm run blog:exams), code:bash (# manual deploy from your machine (after npm run build)), Deploy, Environment (+10 more)
 
 ### Community 97 - "Community 97"
 Cohesion: 0.10
-Nodes (8): FAQ_ITEMS, FaqItem, Mode, Modes, RevealProps, Length, LENGTHS, REASONS
+Nodes (15): ArrowIcon(), HeroImage, Reason, url(), FinalCTA(), Footer(), AVATAR_COLORS, Hero() (+7 more)
 
 ### Community 98 - "Community 98"
-Cohesion: 0.08
-Nodes (26): PostCard(), LocalDateTime(), Props, formatRecentTime(), SessionCountdown(), formatLocalDate(), formatLocalDateTime(), formatLocalTime() (+18 more)
+Cohesion: 0.16
+Nodes (10): isJoinable(), hasSessionStarted(), isCallJoinable(), now, wrapUpRemainingMs(), isJoinable(), Participant, Session (+2 more)
 
 ### Community 99 - "Community 99"
-Cohesion: 0.16
-Nodes (7): Length, LENGTHS, FinalCTA(), Footer(), Length, LENGTHS, Sessions()
+Cohesion: 0.22
+Nodes (14): sessionTasksChannel(), normalizeTaskTitle(), serializeSessionTasks(), db, req, SESSION_ID, sessionsCol, DELETE() (+6 more)
 
 ### Community 101 - "Community 101"
-Cohesion: 0.31
-Nodes (10): logResendFailure(), sendPasswordResetEmail(), SendPasswordResetEmailInput, createVerificationToken(), hashVerificationToken(), createPasswordResetToken(), isPasswordResetTokenValid(), resetPasswordWithToken() (+2 more)
+Cohesion: 0.14
+Nodes (13): 1. **Plan Your Work**, 2. **Time Block**, 3. **Take a Break**, 4. **Reflect and Adjust**, Conclusion, Digital Distractions, Interruptions by Clients or Colleagues, Overcoming Common Interruptions (+5 more)
 
 ### Community 102 - "Community 102"
-Cohesion: 0.26
-Nodes (12): GET(), iso(), pushEvent(), TimelineEvent, KnownIpEntry, LoginMethod, mergeKnownIps(), persistableIp() (+4 more)
+Cohesion: 0.09
+Nodes (19): Community(), CommunityProps, MobileCommunityView, PINNED_ADMIN_POST, ProfilePreviewPayload, AuthorLike, Comment, Post (+11 more)
 
 ### Community 103 - "Community 103"
-Cohesion: 0.12
-Nodes (21): BookSessionButton(), CreatedSession, Props, Calendar(), CalendarProps, ModalState, ProcessedEvent, SidebarProfilePreview (+13 more)
+Cohesion: 0.14
+Nodes (12): useSessionTasks(), ClientCall(), SessionCountdownProps, SessionWaitTasks(), SessionTaskPanel(), SessionTaskPill(), SessionTaskRail(), SessionTaskSheet() (+4 more)
 
 ### Community 105 - "Community 105"
-Cohesion: 0.33
-Nodes (6): GET(), IssuePriority, IssueStatus, POST(), serializeIssue(), VALID_PRIORITIES
+Cohesion: 0.31
+Nodes (8): NotFound(), ABOUT_ME_PROMPTS, generateMetadata(), getPublicUser(), getUser(), Props, PublicProfilePage(), siteUrl
 
 ### Community 106 - "Community 106"
-Cohesion: 0.10
-Nodes (18): bannedEmailsCol, db, activityCol, db, usersCol, watchesCol, db, ips (+10 more)
+Cohesion: 0.12
+Nodes (15): db, deletedCol, bannedEmailsCol, db, activityCol, db, usersCol, watchesCol (+7 more)
 
 ### Community 107 - "Community 107"
 Cohesion: 0.29
 Nodes (6): bannedEmailsCol, db, dupError, insertedId, req, usersCol
 
 ### Community 108 - "Community 108"
-Cohesion: 0.14
-Nodes (12): @fontsource/geist-mono/400.css, @fontsource/geist-mono/500.css, @fontsource-variable/bricolage-grotesque, ../layouts/Base.astro, careerJsonLd, jobPostingJsonLd, openRoles, orgJsonLd (+4 more)
+Cohesion: 0.11
+Nodes (13): @fontsource/geist-mono/400.css, @fontsource/geist-mono/500.css, @fontsource-variable/bricolage-grotesque, ../../../layouts/Base.astro, ../layouts/ContentPage.astro, careerJsonLd, jobPostingJsonLd, openRoles (+5 more)
 
 ### Community 109 - "Community 109"
-Cohesion: 0.15
-Nodes (4): Mode, Modes, Mode, Modes
+Cohesion: 0.17
+Nodes (11): 1. Leverage Virtual Study Groups, 2. Set Specific Study Times with Friends, 3. Use Online Platforms for Accountability, 4. Establish a Quiet Study Routine, 5. Balance Solo and Group Study Sessions, Combating the Effects of Loneliness on Learning, Differentiating Loneliness from the Need for Interaction, Further reading (+3 more)
 
 ### Community 110 - "Community 110"
-Cohesion: 0.22
-Nodes (18): banEmail(), findUserByEmailIdentity(), isEmailBanned(), unbanEmail(), logBannedIpSignupAttempt(), canonicalEmail(), displayEmail(), GMAIL_DOMAINS (+10 more)
+Cohesion: 0.08
+Nodes (47): applyUserModeration(), banEmail(), findUserByEmailIdentity(), isEmailBanned(), unbanEmail(), addBannedIpWatches(), BannedIpActivityOutcome, getBannedUserIps() (+39 more)
 
 ### Community 111 - "Community 111"
-Cohesion: 0.27
-Nodes (9): emailDomain(), exactSet, EXTRA_BLOCKED_DOMAINS, extraSet, getLiveDisposableSet(), isDisposableEmail(), isListedDisposableEmail(), matchesDisposableSets() (+1 more)
+Cohesion: 0.17
+Nodes (11): 1. Set Artificial Deadlines, 2. Break Tasks into Smaller Chunks, 3. Incorporate Body Doubling, 4. Use Time Blocks Effectively, 5. Prioritize Self-Care, Conclusion, Example:, Example: (+3 more)
 
 ### Community 112 - "Community 112"
-Cohesion: 0.29
-Nodes (9): deriveKey(), Env, hasValidSession(), onRequest(), PagesContext, parseCookies(), readSessionToken(), REDIRECT_PATHS (+1 more)
+Cohesion: 0.27
+Nodes (10): deriveKey(), Env, guardIndexing(), hasValidSession(), onRequest(), PagesContext, parseCookies(), readSessionToken() (+2 more)
 
 ### Community 114 - "Community 114"
-Cohesion: 0.25
-Nodes (4): AVATAR_COLORS, AVATAR_COLORS, Hero(), LiveCount()
+Cohesion: 0.13
+Nodes (18): CalendarSidebar(), BookSessionModal(), Calendar(), CalendarProps, ModalState, ProcessedEvent, SidebarProfilePreview, UIAction (+10 more)
 
 ### Community 115 - "Community 115"
-Cohesion: 0.24
-Nodes (12): getOpsNotifyEmail(), DEFAULT_OPS_NOTIFY_PREFS, getOpsNotifyPrefs(), normalizePrefs(), OpsNotifyDoc, OpsNotifyKind, OpsNotifyPrefs, setOpsNotifyPrefs() (+4 more)
+Cohesion: 0.17
+Nodes (11): 1. Flashcards, 2. Self-Quizzing, 3. Teach Back Method, 4. Practice Questions, 5. Concept Mapping, Conclusion, Further reading, Incorporating Virtual Study Sessions (+3 more)
 
 ### Community 116 - "Community 116"
 Cohesion: 0.17
 Nodes (9): db, END, JOINER_ID, notifySessionCancelled, OWNER_ID, req, SESSION_ID, sessionsCol (+1 more)
 
 ### Community 117 - "Community 117"
-Cohesion: 0.22
-Nodes (6): ButtonAsAnchor, ButtonAsButton, CommonProps, DButtonProps, Size, Variant
+Cohesion: 0.17
+Nodes (11): 1. Break It Down, 2. Set Time Limits, 3. Prioritize, 4. Limit Your List, 5. Review and Reflect, Finding Balance, Strategies for Managing Anxiety, The Burden of Expectations (+3 more)
 
 ### Community 118 - "Community 118"
-Cohesion: 0.27
-Nodes (8): backfillWelcomeAnnouncementsIfEmpty(), createWelcomeAnnouncement(), listWelcomeAnnouncements(), mapDoc(), syncMissingWelcomeAnnouncements(), UserSeed, WelcomeDoc, GET()
+Cohesion: 0.18
+Nodes (10): 1. Time Blocking, 2. Use the Pomodoro Technique, 3. Limit Distractions, 4. Practice Single-Tasking, 5. Accountable Work Partners, Building a Focus-Friendly Environment, Conclusion, Strategies to Protect Your Attention (+2 more)
 
 ### Community 119 - "Community 119"
-Cohesion: 0.17
-Nodes (10): db, JOINER_ID, markReminderSent, notifyOpsSessionMatched, OWNER_ID, sendMatchedSessionEmail, SESSION_ID, sessionsCol (+2 more)
+Cohesion: 0.18
+Nodes (10): 1. Flashcards, 2. Practice Quizzes, 3. Mind Mapping, 4. Teach What You’ve Learned, 5. Use the Pomodoro Technique, Closing Thoughts, Further reading, Techniques for Active Recall in NEET Biology (+2 more)
 
 ### Community 120 - "Community 120"
 Cohesion: 0.20
@@ -561,76 +636,340 @@ Cohesion: 0.29
 Nodes (6): compilerOptions, jsx, jsxImportSource, exclude, extends, include
 
 ### Community 126 - "Community 126"
-Cohesion: 0.10
-Nodes (19): adminId, db, req, settingsCol, mocks, req, db, friendRequestsCol (+11 more)
+Cohesion: 0.09
+Nodes (24): adminId, db, req, settingsCol, mocks, req, db, friendRequestsCol (+16 more)
 
 ### Community 127 - "Community 127"
-Cohesion: 0.36
-Nodes (7): ABOUT_ME_PROMPTS, generateMetadata(), getPublicUser(), getUser(), Props, PublicProfilePage(), siteUrl
+Cohesion: 0.18
+Nodes (10): 1. **Time Blocking**, 2. **Prioritize Your Tasks**, 3. **Engage in Virtual Coworking**, 4. **Reflect and Plan**, Additional Strategies to Maintain Focus, Conclusion, Crafting a Morning Session Structure, Further reading (+2 more)
 
 ### Community 128 - "Community 128"
-Cohesion: 0.15
-Nodes (34): DELETE(), DELETE(), DELETE(), DELETE(), PATCH(), DELETE(), POST(), DURATION_OPTIONS (+26 more)
+Cohesion: 0.14
+Nodes (34): DELETE(), GET(), DELETE(), DELETE(), PATCH(), DELETE(), POST(), GET() (+26 more)
 
 ### Community 129 - "Community 129"
-Cohesion: 0.22
-Nodes (11): Matchmaking(), MatchUser, Badge(), BadgeProps, badgeVariants, Card, CardContent, CardDescription (+3 more)
+Cohesion: 0.09
+Nodes (21): Hero(), HeroProps, LogoutButton(), Matchmaking(), MatchUser, ThemeSwitcher(), VideoModal(), cn() (+13 more)
 
 ### Community 130 - "Community 130"
-Cohesion: 0.15
-Nodes (12): AuthLoadingOverlay(), AuthLoadingOverlayProps, DetailsForm(), AuthDivider(), LoginForm(), DInput, DInputProps, DPasswordInput (+4 more)
+Cohesion: 0.29
+Nodes (7): TasksResponse, SessionTask, SessionTaskDTO, SessionTasksUpdatedEvent, taskProgress(), tasksForOwner(), tasks
 
 ### Community 131 - "Community 131"
 Cohesion: 0.25
 Nodes (6): bannedEmailsCol, db, existingId, insertedId, notifyOpsSignup, usersCol
 
 ### Community 132 - "Community 132"
-Cohesion: 0.37
-Nodes (10): notifyOpsSessionMatched(), notifyOpsSignup(), sendOpsEmail(), isOpsNotifyKindEnabled(), buildOpsSessionMatchedEmail(), buildOpsSignupEmail(), escapeHtml(), opsShell() (+2 more)
+Cohesion: 0.42
+Nodes (7): createDailyMeetingToken(), createOrGetDailyRoom(), isOwnerOrParticipant(), toObjectId(), isWithinCallWindow(), POST(), SessionDoc
 
 ### Community 133 - "Community 133"
 Cohesion: 0.29
 Nodes (5): db, guestId, hostId, sessionsCol, usersCol
 
 ### Community 134 - "Community 134"
-Cohesion: 0.14
-Nodes (28): createInitialState(), uiReducer(), CALENDAR_LAYOUT, TIME_CONFIG, HoverState, UseCalendarGridReturn, addDays(), startOfDay() (+20 more)
+Cohesion: 0.16
+Nodes (23): uiReducer(), TIME_CONFIG, HoverState, UseCalendarGridReturn, addDays(), addDaysInTimeZone(), getTimeZoneOffsetMs(), getZonedParts() (+15 more)
 
 ### Community 135 - "Community 135"
-Cohesion: 0.18
-Nodes (9): adminId, auditCol, db, mailCol, req, sendAdminUserEmail, userId, usersCol (+1 more)
+Cohesion: 0.20
+Nodes (8): adminId, auditCol, db, mailCol, req, sendAdminUserEmail, userId, usersCol
 
 ### Community 136 - "Community 136"
-Cohesion: 0.67
-Nodes (4): unauthorizedCronResponse(), verifyCronSecret(), GET(), GET()
+Cohesion: 0.20
+Nodes (9): Conclusion, Create a Detailed Study Schedule, Further reading, Incorporate Active Revision Techniques, Mock Tests and Final Reviews, Prioritize Mental and Physical Well-Being, Sample Weekly Schedule:, Stay Accountable with Study Groups (+1 more)
 
 ### Community 137 - "Community 137"
-Cohesion: 0.48
-Nodes (6): applyUserModeration(), addBannedIpWatches(), BannedIpActivityOutcome, getBannedUserIps(), removeBannedIpWatchesForUser(), uniqueIps()
+Cohesion: 0.20
+Nodes (9): Avoiding Burnout, Conclusion, Continuous Improvement, Further reading, Study With Others for Accountability, The Three-Target Strategy, Time for Reflection, Time Management and Scheduling (+1 more)
+
+### Community 138 - "Community 138"
+Cohesion: 0.20
+Nodes (9): Benefits of Silent Accountability Partners, Conclusion: The Power of Quiet Company, Further reading, How to Find the Right Partners, Maintaining Connection Without Conversation, Setting Up a Productive Study Routine, The Challenge of Studying Alone, Understanding the Need for Co-Presence (+1 more)
+
+### Community 139 - "Community 139"
+Cohesion: 0.20
+Nodes (9): Acknowledge Your Feelings, Analyze, Don’t Dwell, Conclusion: Focus on Progress, Not Perfection, Create a Support System, Further reading, Maintain a Balanced Routine, Practice Mindfulness Techniques, Set Actionable Goals (+1 more)
 
 ### Community 140 - "Community 140"
 Cohesion: 0.11
-Nodes (14): CommunityChatPanel(), Props, Profile(), useWallpaperActive(), WallpaperContext, EmptyCardProps, Friends(), FriendsProps (+6 more)
+Nodes (15): CommunityChatPanel(), Props, Profile(), useWallpaperActive(), WallpaperContext, Shell(), EmptyCardProps, Friends() (+7 more)
+
+### Community 141 - "Community 141"
+Cohesion: 0.20
+Nodes (9): 1. Body Doubling, 2. Set Up Structured Tasks, 3. Optimize Your Environment, 4. Routines and Schedules, Final Thoughts, Further reading, The Challenge with 'Just Focus', The Importance of Accountability (+1 more)
+
+### Community 143 - "Community 143"
+Cohesion: 0.20
+Nodes (9): 1. Recognize Your Feelings, 2. Analyze Your Performance, 3. Set Realistic Goals, 4. Engage in Constructive Activities, 5. Seek Support from Peers, 6. Reframe Your Mindset, Conclusion, Further reading (+1 more)
+
+### Community 144 - "Community 144"
+Cohesion: 0.20
+Nodes (9): 1. Set a Morning Routine, 2. Create a Distraction-Free Environment, 3. Use the Pomodoro Technique, 4. Engage in Body Doubling, 5. Pre-Plan Your Tasks, Conclusion, Tactics to Protect Your Focus Hour, The Challenge of Morning Focus (+1 more)
+
+### Community 145 - "Community 145"
+Cohesion: 0.20
+Nodes (9): Combining Focus and Co-Presence, Embracing Silent Co-Studying, Further reading, How to Start Silent Co-Studying, Signs Your Study Group Is Becoming a Hangout, The Benefits of Silent Co-Studying, The Challenge of Study Groups, Tips for Better Silent Co-Studying (+1 more)
+
+### Community 146 - "Community 146"
+Cohesion: 0.20
+Nodes (9): 1. Set Clear, Personal Goals, 2. Create a Realistic Schedule, 3. Use Active Study Techniques, 4. Regularly Reflect on Your Progress, Conclusion, Establish Your Own Study Plan, Find Your Study Buddy, Not Your Comparison Rival, The Draw of Telegram Groups (+1 more)
+
+### Community 147 - "Community 147"
+Cohesion: 0.22
+Nodes (8): Creating a Productive Environment, Finding Virtual Body Doubling Opportunities, Further reading, Putting It All Together, The Challenge of Task Initiation, The Mechanics of Body Doubling, The Science Behind Body Doubling, What is Body Doubling?
+
+### Community 148 - "Community 148"
+Cohesion: 0.22
+Nodes (8): Conclusion, Design a Structured Evening Routine, Keep Your Goals Visible, Leverage Study Techniques That Work for You, Remove Potential Distractions, Stay Flexible and Adjust, Understanding the Challenge of Evening Study Hours, Utilize Online Study Rooms
+
+### Community 149 - "Community 149"
+Cohesion: 0.22
+Nodes (8): Conclusion: Track Your Progress, Establish a Structured Study Schedule, Further reading, Implement Focus Techniques, Leverage Online Co-Studying Platforms, Practice Active Reading Strategies, The Problem with Phone Distractions, Understanding the Challenge of GRE/GMAT Verbal Prep
+
+### Community 150 - "Community 150"
+Cohesion: 0.22
+Nodes (8): Break Tasks into Manageable Steps, Create a Conducive Environment, Engage in Body Doubling, Practice Mindfulness, Recap: Focus is Multifaceted, Strategies to Cultivate Focus, Understanding the Limitations of 'Just Focus', Why 'Just Focus' Can Be Counterproductive
+
+### Community 151 - "Community 151"
+Cohesion: 0.22
+Nodes (8): Conclusion, Create a Structured End-of-Day Ritual, Further reading, Manage Distractions Effectively, Reflect and Iterate, Set Clear Daily Goals, Use Virtual Coworking for Accountability, Why Shipping Matters for Indie Makers
+
+### Community 152 - "Community 152"
+Cohesion: 0.22
+Nodes (8): Conclusion: Tackle the Last 60 Days Strategically, Create a Realistic Study Schedule, Further reading, Maintain Your Health and Well-Being, Prioritize Rest and Sleep, Take Advantage of Study Groups, Understanding the Pressure of the Last 60 Days, Utilize Active Learning Techniques
+
+### Community 153 - "Community 153"
+Cohesion: 0.22
+Nodes (8): Engage with Accountability Partners, Enhance Your Study Environment, Final Thoughts, Further reading, The Challenge of Studying Alone for Extended Periods, The Importance of Self-Care, The Power of Quiet Company, Understanding Loneliness vs. Seeking Connection
+
+### Community 154 - "Community 154"
+Cohesion: 0.22
+Nodes (8): Body Doubling for Focus, Conclusion, Creating a Distraction-Free Environment, Implementing Focus Techniques, Managing Study Time Wisely, Reflect on Your Progress and Strategies, Understanding the Challenge of Focus, Utilize Online Resources Wisely
+
+### Community 155 - "Community 155"
+Cohesion: 0.22
+Nodes (8): Create a Morning Ritual, Find an Accountability Partner, Further reading, Limit Interruptions, The Importance of Your First Focus Hour, The Role of Sleep, Time-Box Your Focus Session, Tools for Virtual Body Doubling
+
+### Community 156 - "Community 156"
+Cohesion: 0.22
+Nodes (8): Combatting Isolation with Online Communities, Conclusion: Quiet Company Over Forced Socializing, Create a Study Playlist, Establish a Study Ritual, Focus on Accountability Groups, Further reading, Incorporate Virtual Co-Presence, Missing the Vibe: Hostels and Libraries
+
+### Community 157 - "Community 157"
+Cohesion: 0.22
+Nodes (8): 1. Set Up Your Work Space, 2. Implement Structured Work Sessions, 3. Embrace Virtual Coworking, Crafting a Quiet Office Atmosphere, Engage with Online Communities, Establish Regular Check-Ins, Tackle Distractions Effectively, The Challenge of Working Alone
+
+### Community 158 - "Community 158"
+Cohesion: 0.22
+Nodes (8): Example Session Plan, Further reading, Overcoming Home Distractions, Recognizing and Addressing Mental Fatigue, Setting Up Your Environment, Structuring Your Work Sessions, Understanding the Need for Office Energy, Utilizing Virtual Coworking for Accountability
+
+### Community 159 - "Community 159"
+Cohesion: 0.22
+Nodes (8): Conclusion: Transforming Your Study Experience, Finding Your Study Buddy, Quiet Company vs. Socializing, Setting Up Your Virtual Study Sessions, The Power of Virtual Co-Presence, Understanding Loneliness in Remote Studying, Using Virtual Coworking Platforms, What is Body Doubling?
+
+### Community 160 - "Community 160"
+Cohesion: 0.22
+Nodes (8): Conclusion, Embracing Imperfection, Setting Boundaries, Signs of Ambiguous Tasks, The Burden of Endless Tasks, The Impact of Ambiguity, The Need for Accountability, The Paradox of Choice
+
+### Community 161 - "Community 161"
+Cohesion: 0.22
+Nodes (8): Conclusion, Creating a Temporary Workspace, Establishing a Routine, Further reading, Handling Distractions, Implementing Co-Working Sessions, Leveraging Technology for Efficiency, The Challenges of Working from a One-Room Apartment
+
+### Community 162 - "Community 162"
+Cohesion: 0.25
+Nodes (6): bricolage, geistMono, geistSans, metadata, quicksandSans, siteUrl
+
+### Community 163 - "Community 163"
+Cohesion: 0.25
+Nodes (7): Creating Boundaries with Async Messaging, Finding Balance in a Remote Work Environment, Further reading, Structuring Your Work Sessions, The Importance of Async Norms in Team Culture, The Reality of Async Culture, Understanding Async Communication in Remote Work
+
+### Community 164 - "Community 164"
+Cohesion: 0.25
+Nodes (7): Additional Resources, Building Sustainable Habits, Further reading, Practical Strategies for Effective Body Doubling, The Impact on Starting Tasks, The Power of Presence, Understanding Body Doubling in ADHD
+
+### Community 165 - "Community 165"
+Cohesion: 0.25
+Nodes (7): Conclusion, Define Your Focus Room's Purpose, Design Your Space, Foster Accountability, Further reading, Implement a Focus Routine, The Problem of Distraction at Home
+
+### Community 166 - "Community 166"
+Cohesion: 0.25
+Nodes (7): Further reading, Identifying the Need for a Focus Room, Step 1: Choose the Right Space, Step 2: Set Up the Environment, Step 3: Establish a Routine, Step 4: Incorporate Accountability Tools, Step 5: Personalize the Space
+
+### Community 167 - "Community 167"
+Cohesion: 0.25
+Nodes (7): Body Doubling: A Unique Approach to Focus, Designing Your Focus Environment, Establishing a Routine, Final Thoughts, Further reading, The Spectrum of Sound, Understanding Noise and Silence in ADHD
+
+### Community 168 - "Community 168"
+Cohesion: 0.25
+Nodes (7): Conclusion, Designing Your Environment for Focus, Further reading, Implementing Body Doubling for Enhanced Focus, The Challenges of Focus and Environmental Support, Understanding the Need for Environmental Scaffolding, Utilizing External Structures
+
+### Community 169 - "Community 169"
+Cohesion: 0.25
+Nodes (7): Creating Quiet Company: The Power of Body Doubling, Final Thoughts, Further reading, Missing Hostel Energy: The Shift Back to Home, Tactics for Staying Engaged and Connected, Understanding Loneliness vs. Needing a Chat, Virtual Coworking: Finding Your Study Community
+
+### Community 170 - "Community 170"
+Cohesion: 0.25
+Nodes (7): Conclusion, Further reading, Incorporating Virtual Body Doubling, The Practical Steps: A Shutdown Ritual Template, The Problem: Starting Without Finishing, What is a Shutdown Ritual?, Why This Matters
+
+### Community 171 - "Community 171"
+Cohesion: 0.25
+Nodes (7): Conclusion: Make Evening Study Hours Count, Creating a Sacred Study Environment, Incorporating Accountability Techniques, Practicing Active Revision Techniques, Prioritizing Your Study Goals, Setting Time Blocks for Focused Study, Understanding the Evening Study Challenge
+
+### Community 172 - "Community 172"
+Cohesion: 0.25
+Nodes (7): Conclusion, Creative Ways to Find Co-Presence at Night, Embracing the Night: A Study Routine for Night Owls, Further reading, Overcoming the Nighttime Lull, The Importance of Social Connectedness, Understanding Loneliness at Night
+
+### Community 173 - "Community 173"
+Cohesion: 0.25
+Nodes (7): Creating Your Ideal Study Environment, Discord Servers: A Mixed Bag, Further reading, Online Coworking Spaces: A Quiet Retreat, The Struggle of Studying Alone, Understanding Co-Presence vs. Conversation, Which Is Right for You?
+
+### Community 174 - "Community 174"
+Cohesion: 0.25
+Nodes (7): Acknowledge Your Feelings, Create a Structured Environment, Implementing Micro-Restarts, Moving Forward with Kindness, Reflect and Adjust Your Goals, Understanding the Shame of a Wasted Study Day, Utilizing Body Doubling for Focus
+
+### Community 175 - "Community 175"
+Cohesion: 0.25
+Nodes (7): Benefits of an Evening Planning Routine, Conclusion, Example Planning Template, How to Plan Your Day in 10 Minutes: A Step-by-Step Routine, The Problem: Morning Decision Fatigue, Tips to Make It Stick, Why You Need a 10-Minute Planning Session
+
+### Community 176 - "Community 176"
+Cohesion: 0.25
+Nodes (7): Finding Your Balance, Further reading, Leveraging Accountability Through Co-Working, Structuring Your Study Sessions, The Case for Longer Focus Blocks, Understanding the Limitations of 25-Minute Blocks, When to Return to the Pomodoro Technique
+
+### Community 177 - "Community 177"
+Cohesion: 0.25
+Nodes (7): Break Tasks into Manageable Steps, Create a Structured Environment, Establish a Shutdown Ritual, Seek External Accountability, The Challenge of Executive Dysfunction, Understanding Task Transitions for ADHD, Utilize Body Doubling
+
+### Community 178 - "Community 178"
+Cohesion: 0.25
+Nodes (7): Conclusion, Integrating Timers into Daily Routines, Overcoming Common Timer Challenges, Pairing Timers with Body Doubling, Resources for Further Support, The Role of Timers in Time Management, Understanding ADHD and Working Memory
+
+### Community 179 - "Community 179"
+Cohesion: 0.25
+Nodes (7): Conclusion, Creating a Functional Workspace, Further reading, Incorporating Accountability Practices, Introduction, Overcoming Distractions at Home, Structuring Your Work Sessions
+
+### Community 180 - "Community 180"
+Cohesion: 0.15
+Nodes (11): ProfilePreviewPayload, Props, STEPS, WelcomeResponse, createAblyTokenRequest(), chatChannel(), globalChatChannel(), sessionsChannel() (+3 more)
+
+### Community 181 - "Community 181"
+Cohesion: 0.29
+Nodes (6): Batching Shallow Work: A Step-by-Step Routine, Conclusion: Start Today, Creating Space for Deep Work, Identifying the Problem: Shallow vs. Deep Work, The Role of Accountability in Deep Work, What is Shallow Work?
+
+### Community 182 - "Community 182"
+Cohesion: 0.29
+Nodes (6): Benefits of Having a Co-Worker, Final Thoughts: Embracing Imperfection, Further reading, Practical Ways to Implement Body Doubling, The Science Behind Body Doubling, Understanding Body Doubling for Task Initiation
+
+### Community 183 - "Community 183"
+Cohesion: 0.29
+Nodes (6): Finding Your Study Rhythm, Further reading, Recognizing Progress Without Comparison, Tactics for Quiet Co-Presence, The Difference Between Loneliness and Need for Connection, Understanding the Loneliness of Studying Alone
+
+### Community 184 - "Community 184"
+Cohesion: 0.29
+Nodes (6): Conclusion: Celebrate Your Small Wins, Daily Session Structure: A Focused Approach, Overcoming Common Obstacles, Strategies to Ensure You Ship Daily, The Challenge of Remote Work for Indie Makers, The Importance of Daily Shipping
+
+### Community 185 - "Community 185"
+Cohesion: 0.29
+Nodes (6): Conclusion, Embracing Urgency as a Strategy, Further reading, Recognizing the Signs of Burnout, Structuring Your Environment for Success, Understanding Interest-Based Nervous Systems
+
+### Community 186 - "Community 186"
+Cohesion: 0.29
+Nodes (6): Conclusion, Creating Your Longer Focus Routine, Identifying the Shortcomings of Short Bursts, Measuring Success Beyond the Timer, Strategies to Enhance Focus in Longer Blocks, The 25-Minute Trap
+
+### Community 187 - "Community 187"
+Cohesion: 0.29
+Nodes (6): Conclusion, Establish a Morning Routine, Find an Accountability Partner, Reflection and Adjustment, Set Up Your Environment, The Importance of the First Hour
+
+### Community 188 - "Community 188"
+Cohesion: 0.29
+Nodes (6): Combatting Distractions, Conclusion, Designing Your Work Environment, Establishing a Structured Work Routine, Introduction, Utilizing Virtual Coworking
+
+### Community 189 - "Community 189"
+Cohesion: 0.29
+Nodes (6): Combatting Doomscrolling, Conclusion: A Balanced Approach to Side Projects, Measuring Progress, Prioritizing Tasks, Setting Up a Structured Work Session, The Challenge of Side Projects Post-Work
+
+### Community 190 - "Community 190"
+Cohesion: 0.29
+Nodes (6): Combating Study Isolation with Peer Connection, Conclusion, Further reading, The Importance of Routine, The Journey of UPSC Preparation, Using Online Study Rooms Effectively
+
+### Community 191 - "Community 191"
+Cohesion: 0.29
+Nodes (6): code:bash (# 1. Complete one-time GSC setup (see GSC-SETUP.md)), Decision rules, How to generate this report, Refocus locale decision, Verdict (pending data), Why not translate now
+
+### Community 192 - "Community 192"
+Cohesion: 0.33
+Nodes (5): Conclusion, Strategies for Smooth Transitions, The Importance of Flexibility, Understanding Transition Trouble, Why Are Task Transitions So Hard?
+
+### Community 193 - "Community 193"
+Cohesion: 0.33
+Nodes (5): Acknowledge the Challenges, Creating an Environment for Success, Practical Techniques for Shrinking Your First Step, The Power of Tiny Steps, Understanding Task Initiation Paralysis
+
+### Community 194 - "Community 194"
+Cohesion: 0.33
+Nodes (5): Crafting Your Weekly Study Ritual, Recognizing the Value of Routine, Simple Strategies for Shared Focus, Understanding Loneliness While Studying Alone, Why Loneliness Matters in Study
+
+### Community 195 - "Community 195"
+Cohesion: 0.33
+Nodes (5): Borrow accountability from someone else, Lower the stakes of the start, Make stopping as clear as starting, The first five minutes carry all the weight, Willpower is a bad starting engine
+
+### Community 196 - "Community 196"
+Cohesion: 0.40
+Nodes (4): api_key, default_property, ga4_property_id, service_account_path
+
+### Community 198 - "Community 198"
+Cohesion: 0.16
+Nodes (18): PostCard(), createInitialState(), LocalDateTime(), Props, formatRecentTime(), SessionCountdown(), formatLocalDate(), formatLocalDateTime() (+10 more)
+
+### Community 200 - "Community 200"
+Cohesion: 0.19
+Nodes (12): completeFirebaseSignIn(), extractDisplayName(), FirebaseOAuthButtons(), FirebaseOAuthButtonsProps, OAuthProvider, appleAuthProvider, firebaseConfig, getFirebaseApp() (+4 more)
+
+### Community 201 - "Community 201"
+Cohesion: 0.16
+Nodes (9): formatTotalMinutes(), PastParticipant, PastSession, PastSessionsList(), PastSessionsListProps, StatsRow(), SessionsTabs(), SessionsTabsProps (+1 more)
+
+### Community 202 - "Community 202"
+Cohesion: 0.21
+Nodes (8): PasswordStrengthMeter(), Props, STRENGTH_LABELS, ChangePasswordSection(), PasswordStrength, PasswordValidationResult, result, validatePassword()
+
+### Community 203 - "Community 203"
+Cohesion: 0.33
+Nodes (7): AvatarCropModal(), Props, clampCropOffset(), cropAvatarToBlob(), CropTransform, loadImage(), result
+
+### Community 204 - "Community 204"
+Cohesion: 0.22
+Nodes (6): AdminChatMessage, AdminPost, AdminSection, AdminUser, NAV, Stats
+
+### Community 205 - "Community 205"
+Cohesion: 0.29
+Nodes (5): db, fromId, requestsCol, toId, usersCol
+
+### Community 206 - "Community 206"
+Cohesion: 0.38
+Nodes (5): CalendarRightSidebar(), CalendarRightSidebarProps, DetailedProfile, formatDate(), getGreeting()
+
+### Community 207 - "Community 207"
+Cohesion: 0.33
+Nodes (5): db, ips, loginEventsCol, userId, usersCol
 
 ## Knowledge Gaps
-- **810 isolated node(s):** `MUTATING_METHODS`, `PROTECTED_PREFIXES`, `config`, `crons`, `config` (+805 more)
+- **1385 isolated node(s):** `MUTATING_METHODS`, `PROTECTED_PREFIXES`, `config`, `crons`, `config` (+1380 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getDb()` connect `Community 21` to `Community 0`, `Community 128`, `Community 1`, `Community 5`, `Community 7`, `Community 135`, `Community 137`, `Community 15`, `Community 19`, `Community 26`, `Community 38`, `Community 42`, `Community 43`, `Community 50`, `Community 58`, `Community 78`, `Community 101`, `Community 102`, `Community 105`, `Community 110`, `Community 115`, `Community 118`, `Community 127`?**
-  _High betweenness centrality (0.142) - this node is a cross-community bridge._
-- **Why does `DurationMin` connect `Community 46` to `Community 0`, `Community 128`, `Community 2`, `Community 5`, `Community 134`, `Community 103`, `Community 15`, `Community 51`, `Community 21`, `Community 25`, `Community 94`?**
-  _High betweenness centrality (0.025) - this node is a cross-community bridge._
-- **Why does `authOptions` connect `Community 7` to `Community 0`, `Community 128`, `Community 130`, `Community 1`, `Community 5`, `Community 105`, `Community 42`, `Community 43`, `Community 14`, `Community 15`, `Community 50`, `Community 51`, `Community 19`, `Community 21`, `Community 118`, `Community 26`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **Why does `getDb()` connect `Community 50` to `Community 128`, `Community 2`, `Community 99`, `Community 132`, `Community 5`, `Community 58`, `Community 7`, `Community 38`, `Community 105`, `Community 110`, `Community 15`, `Community 78`, `Community 19`, `Community 26`?**
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+- **Why does `Homepage()` connect `Community 3` to `Community 43`, `Community 20`?**
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+- **Why does `getSiteUrl()` connect `Community 78` to `Community 162`, `Community 38`, `Community 71`, `Community 105`, `Community 20`, `Community 58`?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
 - **What connects `MUTATING_METHODS`, `PROTECTED_PREFIXES`, `config` to the rest of the system?**
-  _810 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1385 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.07510204081632653 - nodes in this community are weakly interconnected._
-- **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.05134575569358178 - nodes in this community are weakly interconnected._
-- **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.12648221343873517 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10344827586206896 - nodes in this community are weakly interconnected._
+- **Should `Community 3` be split into smaller, more focused modules?**
+  _Cohesion score 0.04779189352692075 - nodes in this community are weakly interconnected._
+- **Should `Community 4` be split into smaller, more focused modules?**
+  _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._

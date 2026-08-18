@@ -170,6 +170,24 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
     ],
   },
   {
+    collection: "deleted_users",
+    indexes: [
+      {
+        name: "deleted_users_deleted_at",
+        keys: { deletedAt: -1 },
+      },
+      {
+        name: "deleted_users_user_id",
+        keys: { userId: 1 },
+      },
+      {
+        name: "deleted_users_email",
+        keys: { email: 1 },
+        options: { sparse: true },
+      },
+    ],
+  },
+  {
     collection: "email_reminders",
     indexes: [
       {

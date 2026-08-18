@@ -5,6 +5,10 @@ import bcrypt from "bcryptjs";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import {
+  archiveDeletedUser,
+  type UserDeletionSnapshot,
+} from "@/lib/deletedUsers";
 
 type SessionParticipant = {
   user_id: string;
@@ -118,7 +122,7 @@ export async function POST(req: NextRequest) {
   }
   const _id = new ObjectId(userId);
   const user = await db
-    .collection<{ _id: ObjectId; hashedPassword?: string }>("users")
+    .collection<UserDeletionSnapshot & { _id: ObjectId }>("users")
     .findOne({ _id });
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -140,6 +144,16 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+  }
+
+  try {
+    await archiveDeletedUser(db, user, userId);
+  } catch (err) {
+    console.error("[account] failed to archive deleted profile:", err);
+    return NextResponse.json(
+      { error: "Could not delete account" },
+      { status: 500 },
+    );
   }
 
   const deleteResult = await db.collection("users").deleteOne({ _id });
