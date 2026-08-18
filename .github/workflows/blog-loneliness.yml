@@ -1,9 +1,7 @@
 name: "Blog: Loneliness & studying alone"
 
-# Loneliness / quiet co-presence niche — once daily at 15:00 UTC (~20:30 IST).
+# Manual only — scheduled publishing is the 3 rotating daily slots.
 on:
-  schedule:
-    - cron: "0 15 * * *"
   workflow_dispatch:
 
 permissions:

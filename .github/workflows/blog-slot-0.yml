@@ -1,0 +1,22 @@
+name: "Blog: morning slot"
+
+# First of three daily posts. Niche rotates across productivity / ADHD /
+# exams / loneliness / remote so each gets equal coverage over 5 days.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-slot-0
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      slot: "0"
+    secrets: inherit

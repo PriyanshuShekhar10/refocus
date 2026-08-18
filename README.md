@@ -20,7 +20,7 @@ dashboard.refocus.co.in →  Next.js app (branch: test-dash)         →  Vercel
 
 ### Why two branches?
 
-The blog auto-publishes **once per niche per day** (5 posts/day). Those commits must not touch `test-dash`, or Vercel would redeploy the dashboard on every blog push. Marketing lives only on `landing`; the dashboard branch has **no** `marketing/` folder.
+The blog auto-publishes **3 posts/day**, rotating through the 5 niches (productivity, ADHD, exams, loneliness, remote) so each niche gets equal coverage over a 5-day cycle. Those commits must not touch `test-dash`, or Vercel would redeploy the dashboard on every blog push. Marketing lives only on `landing`; the dashboard branch has **no** `marketing/` folder.
 
 ### Shared auth
 
@@ -146,14 +146,15 @@ Optional repo variable: `OPENAI_MODEL` (defaults to `gpt-4o-mini`).
 | --- | --- |
 | Push to `test-dash` | Vercel rebuilds the dashboard |
 | Push to `landing` under `marketing/` | GitHub Action builds Astro and deploys to Cloudflare Pages |
-| Daily niche crons (`Auto-generate blog post`) | Generates a post on `landing`, builds, deploys to Cloudflare — **does not** push to `test-dash` |
-| Manual: Actions → “Auto-generate blog post” → Run workflow | Same as cron; optional topic input |
+| Daily blog slots (3×/day, rotating niches) | Generates a post on `landing`, builds, deploys to Cloudflare — **does not** push to `test-dash` |
+| Manual: Actions → a niche workflow or a daily slot | Same as cron; niche workflows pin the category |
 
-The blog workflow file lives on the **default branch** (`test-dash`) because GitHub only schedules from the default branch. The job always **checks out and pushes to `landing`**.
+The blog workflow files live on the **default branch** (`test-dash`) because GitHub only schedules from the default branch. The job always **checks out and pushes to `landing`**.
 
 Workflow files:
 
-- `.github/workflows/blog-*.yml — daily niche generate + CF deploy
+- `.github/workflows/blog-slot-*.yml` — 3 daily rotating posts + CF deploy
+- `.github/workflows/blog-*.yml` — per-niche **manual** generate
 - `.github/workflows/deploy-marketing.yml` — on `landing` only; deploys marketing on push
 
 ---

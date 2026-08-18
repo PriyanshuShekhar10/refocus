@@ -1,9 +1,7 @@
 name: "Blog: ADHD & mental health"
 
-# ADHD / mental health niche — once daily at 09:00 UTC (~14:30 IST).
+# Manual only — scheduled publishing is the 3 rotating daily slots.
 on:
-  schedule:
-    - cron: "0 9 * * *"
   workflow_dispatch:
 
 permissions:

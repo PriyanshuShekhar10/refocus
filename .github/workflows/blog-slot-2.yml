@@ -1,19 +1,21 @@
-name: "Blog: Remote work & freelancing"
+name: "Blog: evening slot"
 
-# Manual only — scheduled publishing is the 3 rotating daily slots.
+# Third of three daily posts. Niche rotates across the five categories.
 on:
+  schedule:
+    - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: blog-niche-remote
+  group: blog-slot-2
   cancel-in-progress: false
 
 jobs:
   generate:
     uses: ./.github/workflows/blog-reusable.yml
     with:
-      category: remote
+      slot: "2"
     secrets: inherit

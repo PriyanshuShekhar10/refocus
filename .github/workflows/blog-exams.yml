@@ -1,9 +1,7 @@
 name: "Blog: Competitive exams"
 
-# UPSC / JEE / NEET / CAT / GATE / etc. — once daily at 12:00 UTC (~17:30 IST).
+# Manual only — scheduled publishing is the 3 rotating daily slots.
 on:
-  schedule:
-    - cron: "0 12 * * *"
   workflow_dispatch:
 
 permissions:
