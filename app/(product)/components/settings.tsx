@@ -63,7 +63,7 @@ const DEFAULT_PREFS: Prefs = {
   showInGlobalChat: true,
   emailSessionReminders: true,
   sessionReminderTiming: DEFAULT_SESSION_REMINDER_TIMING,
-  emailFriendRequests: true,
+  emailFriendRequests: false,
   emailWeeklyDigest: false,
   timezone: "auto",
 };
@@ -418,7 +418,7 @@ function NotificationsSection() {
       <RowGroup>
         <Row
           label="Session reminders"
-          hint="Get an email before your sessions based on the timing below. You'll still be emailed when someone joins a session you posted."
+          hint="Default is an email 1 hour before a booked session. You'll still be emailed when you match with a partner."
         >
           <Toggle
             checked={prefs.emailSessionReminders}
@@ -429,7 +429,7 @@ function NotificationsSection() {
         {prefs.emailSessionReminders && (
           <Row
             label="Reminder timing"
-            hint="Morning sends a summary of today's sessions. Join links work from 10 minutes before start."
+            hint="1 hour is the default. Morning and 10 min are optional. Join links work from 10 minutes before start."
           >
             <div className={designStyles.segmented}>
               {(

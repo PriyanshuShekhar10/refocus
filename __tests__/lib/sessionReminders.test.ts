@@ -34,7 +34,7 @@ describe("sessionReminders", () => {
     const oneHour = startWindowForTiming("1h", now);
     const tenMin = startWindowForTiming("10m", now);
 
-    // ±30m around the target (Hobby-safe hourly cron cadence)
+    // ±30m around the target (hourly cron cadence)
     expect(oneHour.from.getTime()).toBe(now.getTime() + 30 * 60 * 1000);
     expect(oneHour.to.getTime()).toBe(now.getTime() + 90 * 60 * 1000);
     expect(tenMin.from.getTime()).toBe(now.getTime() - 20 * 60 * 1000);

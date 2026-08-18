@@ -150,19 +150,21 @@ export function buildTimedSessionReminderEmail(params: {
   const partner = session.partnerLabel
     ? ` with ${session.partnerLabel}`
     : "";
-  const subject =
-    timing === "10m"
-      ? `Starting soon: ${session.title}`
-      : `In 1 hour: ${session.title}`;
+  const isHour = timing === "1h";
+  const subject = isHour
+    ? "Your session is in 1 hour — don't leave your partner hanging"
+    : `Starting soon: ${session.title}`;
 
-  const intro =
-    timing === "10m"
-      ? `Your session starts in about 10 minutes. Tap below to open Refocus and join when the call window opens.`
-      : `Your session starts in about an hour. You can open the session page now — ${joinNote.toLowerCase()}`;
+  const intro = isHour
+    ? "Your scheduled session is in 1 hour. Do not leave your partner hanging!"
+    : "Your session starts in about 10 minutes. Tap below to open Refocus and join when the call window opens.";
+  const signOff = isHour
+    ? "Have a productive session."
+    : joinNote;
 
-  const buttonLabel = timing === "10m" ? "Open session & join" : "View session";
-  const buttonBg = timing === "10m" ? emailBrand.ink : emailBrand.line;
-  const buttonFg = timing === "10m" ? emailBrand.accentInk : emailBrand.ink;
+  const buttonLabel = isHour ? "View session" : "Open session & join";
+  const buttonBg = isHour ? emailBrand.line : emailBrand.ink;
+  const buttonFg = isHour ? emailBrand.ink : emailBrand.accentInk;
 
   const bodyText = `${greet}
 
@@ -173,7 +175,7 @@ ${startsAtLabel}
 
 ${session.joinUrl}
 
-${joinNote}
+${signOff}
 
 — The Refocus team`;
 
@@ -191,9 +193,9 @@ ${joinNote}
         </td>
       </tr>
     </table>
-    <p style="margin:0;font-size:12px;line-height:1.55;color:${emailBrand.inkMute};">${joinNote}</p>`;
+    <p style="margin:0;font-size:15px;line-height:1.55;color:${isHour ? emailBrand.inkSoft : emailBrand.inkMute};">${signOff}</p>`;
 
-  const eyebrow = timing === "10m" ? "Starting soon" : "Upcoming session";
+  const eyebrow = isHour ? "Don't be late" : "Starting soon";
 
   return emailShell({ eyebrow, subject, bodyHtml, bodyText });
 }

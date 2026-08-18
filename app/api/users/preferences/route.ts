@@ -43,7 +43,7 @@ const DEFAULTS: Prefs = {
   showInGlobalChat: true,
   emailSessionReminders: true,
   sessionReminderTiming: DEFAULT_SESSION_REMINDER_TIMING,
-  emailFriendRequests: true,
+  emailFriendRequests: false,
   emailWeeklyDigest: false,
   timezone: "auto",
   dashboardWallpaperUrl: null,

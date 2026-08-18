@@ -1,24 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { unauthorizedCronResponse, verifyCronSecret } from "@/lib/cronAuth";
-import { runTimedSessionReminders } from "@/lib/sessionReminderJobs";
+import { handleTimedSessionReminderCron } from "@/lib/handleTimedSessionReminderCron";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Sends ~1-hour session reminders.
- * Scheduled hourly via 24 once-daily Vercel Hobby cron entries (see vercel.json).
- * 10-minute reminders stay in code but are not run here — they need a sub-hourly
- * cadence (Pro plan) to be reliable.
+ * Sends ~1-hour session reminders (the default reminder).
+ * vercel.json uses 24 unique once-daily paths (`/h/0` … `/h/23`) because Hobby
+ * only allows daily cron expressions — one shared path was not enough.
+ * Morning digest is a separate opt-in cron. 10-minute reminders are not run.
  */
-export async function GET(req: NextRequest) {
-  if (!verifyCronSecret(req)) return unauthorizedCronResponse();
-
-  try {
-    const oneHour = await runTimedSessionReminders("1h");
-    return NextResponse.json({ ok: true, results: { oneHour } });
-  } catch (err) {
-    console.error("[cron] timed session reminders failed:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
+export const GET = handleTimedSessionReminderCron;

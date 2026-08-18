@@ -5,99 +5,99 @@
       "schedule": "30 1 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/0",
       "schedule": "0 0 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/1",
       "schedule": "0 1 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/2",
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/3",
       "schedule": "0 3 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/4",
       "schedule": "0 4 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/5",
       "schedule": "0 5 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/6",
       "schedule": "0 6 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/7",
       "schedule": "0 7 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/8",
       "schedule": "0 8 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/9",
       "schedule": "0 9 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/10",
       "schedule": "0 10 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/11",
       "schedule": "0 11 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/12",
       "schedule": "0 12 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/13",
       "schedule": "0 13 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/14",
       "schedule": "0 14 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/15",
       "schedule": "0 15 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/16",
       "schedule": "0 16 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/17",
       "schedule": "0 17 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/18",
       "schedule": "0 18 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/19",
       "schedule": "0 19 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/20",
       "schedule": "0 20 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/21",
       "schedule": "0 21 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/22",
       "schedule": "0 22 * * *"
     },
     {
-      "path": "/api/cron/session-reminders",
+      "path": "/api/cron/session-reminders/h/23",
       "schedule": "0 23 * * *"
     }
   ]

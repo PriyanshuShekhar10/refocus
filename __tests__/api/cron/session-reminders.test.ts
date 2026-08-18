@@ -39,7 +39,7 @@ describe("GET /api/cron/session-reminders", () => {
 
     expect(status).toBe(200);
     expect(json.ok).toBe(true);
+    expect(mocks.runTimedSessionReminders).toHaveBeenCalledTimes(1);
     expect(mocks.runTimedSessionReminders).toHaveBeenCalledWith("1h");
-    expect(mocks.runTimedSessionReminders).toHaveBeenCalledWith("10m");
   });
 });
