@@ -51,7 +51,10 @@ export async function GET(
       name: user.name ?? null,
       firstname: user.firstname ?? null,
       lastname: user.lastname ?? null,
-      avatarUrl: resolveAvatarUrl(user),
+      avatarUrl: resolveAvatarUrl({
+        avatar_url: typeof user.avatar_url === "string" ? user.avatar_url : null,
+        image: typeof user.image === "string" ? user.image : null,
+      }),
       about: user.about ?? null,
       aboutMe: user.aboutMe ?? {},
       interests: user.interests ?? [],
