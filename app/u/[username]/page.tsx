@@ -189,12 +189,17 @@ export default async function PublicProfilePage({ params }: Props) {
               aria-hidden={!!avatarUrl}
             >
               {avatarUrl ? (
-                <Image
+                // User avatars come from Google or Vercel Blob. next/image
+                // rejects hosts that are not in remotePatterns (Google
+                // photos 400), so use a plain img like the dashboard.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
                   src={avatarUrl}
                   alt={displayName}
                   width={80}
                   height={80}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  referrerPolicy="no-referrer"
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                 />
               ) : (
                 initials

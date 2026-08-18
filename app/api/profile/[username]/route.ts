@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { isEmailVerified } from "@/lib/emailVerification";
+import { resolveAvatarUrl } from "@/lib/userAvatar";
 
 /** GET /api/users/profile/:username — public profile data */
 export async function GET(
@@ -50,7 +51,7 @@ export async function GET(
       name: user.name ?? null,
       firstname: user.firstname ?? null,
       lastname: user.lastname ?? null,
-      avatarUrl: user.avatar_url ?? user.image ?? null,
+      avatarUrl: resolveAvatarUrl(user),
       about: user.about ?? null,
       aboutMe: user.aboutMe ?? {},
       interests: user.interests ?? [],
