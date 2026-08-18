@@ -3,3 +3,7 @@
 # The careers page was removed — send any old links to the homepage.
 /career / 301
 /career/ / 301
+
+# Brand SERP for "Study Together" — fold into the exam-prep hub, not a thin clone.
+/study-together /study-with-me 301
+/study-together/ /study-with-me 301

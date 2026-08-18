@@ -14,7 +14,7 @@ For many students and remote learners, loneliness can creep in when studying alo
 
 Unlike study groups that often evolve into social hangouts, silent co-studying offers a unique solution for those who crave a calm environment while feeling connected to others. This quiet companionship can help provide motivation and focus without the distractions of casual conversation.
 
-For further reading, check out [our guide to virtual coworking](https://refocus.co.in/virtual-coworking) that explores how to create productive online study environments.
+For further reading, check out [how to study together online](https://refocus.co.in/study-with-me) — a live study room without turning it into a hangout.
 
 ## The Challenge of Study Groups
 

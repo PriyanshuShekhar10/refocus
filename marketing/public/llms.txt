@@ -1,0 +1,43 @@
+# Refocus
+
+> Virtual co-working, focus rooms, and body doubling for deep work — timed focus sessions with an accountability partner.
+
+Refocus pairs you with another person for 25, 50, or 75-minute focus sessions. Share your goal, work side by side with synced timers, and check in at the end. Built for students, remote workers, ADHD-friendly workflows, and anyone who struggles to show up alone.
+
+## Product
+
+- [Home](https://refocus.co.in/)
+- [Features](https://dashboard.refocus.co.in/features)
+- [Pricing](https://dashboard.refocus.co.in/pricing)
+- [Sign up (free)](https://dashboard.refocus.co.in/auth/sign-up)
+
+## Topic guides
+
+- [Body doubling](https://refocus.co.in/body-doubling)
+- [Virtual coworking](https://refocus.co.in/virtual-coworking)
+- [Study with me](https://refocus.co.in/study-with-me)
+- [Online focus room](https://refocus.co.in/focus-room)
+- [Study partner](https://refocus.co.in/study-partner)
+
+## Comparisons
+
+- [Focusmate alternative](https://refocus.co.in/focusmate-alternative)
+- [FLOWN alternative](https://refocus.co.in/flown-alternative)
+- [Cofocus alternative](https://refocus.co.in/cofocus-alternative)
+
+## Blog
+
+- [Blog index](https://refocus.co.in/blog)
+- Categories: productivity, ADHD, exams (JEE/NEET/UPSC/CA), loneliness, remote work
+
+## Company
+
+- [About](https://refocus.co.in/about)
+- [Careers](https://dashboard.refocus.co.in/career)
+- Contact: hello@refocus.co.in
+
+## Optional
+
+- [Privacy](https://refocus.co.in/privacy)
+- [Terms](https://refocus.co.in/terms)
+- [RSS](https://refocus.co.in/rss.xml)

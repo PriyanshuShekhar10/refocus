@@ -1,0 +1,112 @@
+---
+import LandingPage from "../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../lib/seo";
+import { APP_URL } from "../lib/config";
+
+const UPDATED = "2026-08-18";
+const canonical = "/focus-room";
+const title = "Online Focus Room: Quiet Timed Sessions With a Partner";
+const description =
+  "An online focus room is a timed, quiet session with a real person — not a 24/7 lofi lobby. Here's how virtual focus rooms work, how they differ from YouTube study-with-me, and how to join one.";
+
+const faqs = [
+  {
+    question: "What is an online focus room?",
+    answer:
+      "An online focus room is a live, time-boxed session where you and at least one other person work on your own tasks in parallel. You share a timer, stay quiet, and use the other person's presence as gentle accountability — the same idea as a library desk, without leaving home.",
+  },
+  {
+    question: "Is a focus room the same as a 24/7 study lobby?",
+    answer:
+      "No. Many apps run always-on rooms with dozens of people, ambient cafés, and open chat. A Refocus focus room is a matched 25, 50, or 75-minute session with one partner. It starts, it ends, and nobody is hanging around in a public lobby.",
+  },
+  {
+    question: "How is a focus room different from a YouTube study-with-me video?",
+    answer:
+      "A recording can't tell whether you actually sat down. In a live focus room you join with a real person, set a goal, and work against a shared timer. The other person is studying or working too — not performing on a livestream.",
+  },
+  {
+    question: "Do I need my camera on in a focus room?",
+    answer:
+      "No. Cameras are optional and mics stay quiet. You share one line about what you'll work on, then get to work. The point is co-presence, not being watched.",
+  },
+  {
+    question: "Who uses a virtual focus room?",
+    answer:
+      "Students grinding exam prep, remote workers who miss office energy, and anyone who focuses better around other people. If a library or café works for you but home doesn't, a focus room recreates that effect online.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Guide"
+  heading="Online focus room: quiet sessions with a real partner"
+  lead="A focus room isn't another aesthetic Pomodoro tab. It's a timed block with someone else who showed up to work — so you actually start, stay, and finish."
+  updated={UPDATED}
+  faqs={faqs}
+  ctaTitle="Join a focus room"
+  ctaText="Refocus matches you 1:1 for 25, 50, or 75 minutes. Share one line about your task, work quietly with a shared timer, and check in at the end. Free to start, no card required."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Start a free session"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <h2>What a focus room actually is</h2>
+  <p>
+    A <strong>focus room</strong> (sometimes called an online focus room or
+    virtual focus room) is a live session where you work on your own task while
+    someone else works on theirs. The structure is light: a one-line goal, a
+    shared timer, optional camera, muted mics. What makes it work is the same
+    thing that makes a library work — a present, focused person next to you.
+    That's <a href="/body-doubling">body doubling</a>, packaged as a room you
+    can join from a browser.
+  </p>
+
+  <h2>Focus room vs. always-on study lobbies</h2>
+  <p>
+    A lot of "focus room" products are 24/7 public spaces: lofi cafés, 100
+    avatars, chat that unlocks on break. Those can feel busy. They are not what
+    Refocus runs. Here a focus room is a <strong>matched session</strong> with
+    one partner and a defined start and end. You are not dropping into a crowd;
+    you are booking a block with someone who also came to focus.
+  </p>
+  <ul>
+    <li>
+      <strong>YouTube study-with-me</strong> is a recording. Nobody knows if
+      you showed up.
+    </li>
+    <li>
+      <strong>Discord or a giant lobby</strong> is always on — easy to lurk,
+      easy to chat.
+    </li>
+    <li>
+      <strong>A Refocus focus room</strong> is 1:1, timed, and quiet. When the
+      timer ends, the session ends.
+    </li>
+  </ul>
+
+  <h2>How a session runs</h2>
+  <ol>
+    <li>Pick 25, 50, or 75 minutes.</li>
+    <li>Get matched with someone who's also there to focus.</li>
+    <li>Say what you'll work on in one line.</li>
+    <li>Work side by side. Mics stay quiet; cameras stay optional.</li>
+    <li>Check in at the end — what got done.</li>
+  </ol>
+  <p>
+    Studying for an exam rather than desk work? See
+    <a href="/study-with-me">study together online</a> for exam-prep rooms, or
+    <a href="/study-partner">find a quiet study partner</a> if you want the
+    person, not the room metaphor. Remote workers who miss office energy can
+    start from <a href="/virtual-coworking">virtual coworking</a>.
+  </p>
+</LandingPage>

@@ -17,9 +17,9 @@ import { APP_URL } from "../lib/config";
 
 const site = SITE_URL;
 
-const title = "Refocus — Virtual co-working & body doubling for deep work";
+const title = "Refocus — Focus rooms & virtual coworking for deep work";
 const description =
-  "Refocus is a virtual co-working room for deep work. Pick a 25, 50, or 75 minute session and get the thing done — alone, with a friend, or with someone new.";
+  "A virtual focus room for deep work and study: 25, 50, or 75 minutes with a partner. Body doubling, not a group lobby — get the thing done.";
 
 const websiteJsonLd = {
   "@context": "https://schema.org",
@@ -27,7 +27,7 @@ const websiteJsonLd = {
   name: "Refocus",
   url: site,
   description:
-    "Virtual co-working room for deep work with synced timers, focus mode, friends, and global chat.",
+    "Focus rooms and virtual coworking with synced timers, a study partner if you want one, focus mode, friends, and global chat.",
 };
 
 const orgJsonLd = organizationJsonLd();
@@ -40,7 +40,7 @@ const softwareJsonLd = {
   applicationCategory: "ProductivityApplication",
   operatingSystem: "Web",
   description:
-    "A virtual co-working room for deep work. Pick a 25, 50, or 75 minute session, get matched with someone who's also there to focus, and work side by side with synced timers.",
+    "An online focus room for deep work and study. Pick a 25, 50, or 75 minute session, get matched with a partner, and work side by side with synced timers.",
   offers: {
     "@type": "Offer",
     price: "0",
@@ -85,7 +85,7 @@ const heroImage = {
   description={description}
   canonical="/"
   ogTitle={title}
-  ogDescription="A virtual co-working room for deep work. 25, 50, or 75 minute sessions. Focus mode mutes both mics so you're present, not performing."
+  ogDescription="A virtual focus room for deep work and study. 25, 50, or 75 minute sessions with a partner. Focus mode mutes both mics so you're present, not performing."
   jsonLd={[websiteJsonLd, orgJsonLd, softwareJsonLd, faqJsonLd]}
 >
   <link

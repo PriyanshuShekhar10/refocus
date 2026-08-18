@@ -1,0 +1,99 @@
+---
+import LandingPage from "../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../lib/seo";
+import { APP_URL } from "../lib/config";
+
+const UPDATED = "2026-08-18";
+const canonical = "/study-partner";
+const title = "Find a Study Partner Online: Quiet Accountability, Not Quizzes";
+const description =
+  "A study partner on Refocus is a silent accountability partner for a timed session — not a subject-matched tutor. Here's how to find a study partner online without turning it into a study group.";
+
+const faqs = [
+  {
+    question: "What kind of study partner is this?",
+    answer:
+      "A quiet accountability partner for the session: you each do your own work with someone present. You are not matched by syllabus, you don't swap notes, and you don't quiz each other. If you want a same-exam tutor buddy, that's a different kind of app.",
+  },
+  {
+    question: "How do I find a study partner online without chatting?",
+    answer:
+      "Join a timed session. Refocus matches you with someone who's also there to study or work. You share one line about your goal, then work quietly against a shared timer. No small talk required.",
+  },
+  {
+    question: "Is a study partner the same as a study buddy for my subject?",
+    answer:
+      "No. Subject-matched study buddies discuss the material. A Refocus study partner is parallel and silent — closer to sitting next to someone in a library than joining a revision group.",
+  },
+  {
+    question: "Can I keep the same study partner?",
+    answer:
+      "Yes. After a session you can add them as a friend and book again. You can also get matched with someone new each time if you just need company for this block.",
+  },
+  {
+    question: "Do we have to be on camera?",
+    answer:
+      "No. Cameras are optional. Mics stay quiet. The partner is there so you start and stay — not so they can watch you.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Guide"
+  heading="Find a study partner online — quiet company, not a study group"
+  lead="Most 'find a study partner' apps match you by subject so you can talk through the syllabus. That's useful. It isn't what Refocus is. Here a study partner is someone who sits with you for a timed block while you both work."
+  updated={UPDATED}
+  faqs={faqs}
+  ctaTitle="Get matched with a study partner"
+  ctaText="Pick 25, 50, or 75 minutes. Refocus pairs you with someone who's also there to focus. Share a one-line goal, work quietly, check in at the end. Free to start."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Start a free session"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <h2>The two kinds of study partner (don't mix them up)</h2>
+  <p>
+    Search "study partner" and you'll land on matching apps: same exam, same
+    chapter, chat and video to quiz each other. That's a <em>collaborative</em>
+    buddy. A <strong>quiet study partner</strong> is the other kind — someone
+    present so you actually sit down. They don't help with the problem set. They
+    don't need to be on your syllabus. Their job is to be there, working too.
+    That's <a href="/body-doubling">body doubling</a>, not tutoring.
+  </p>
+
+  <h2>Why silent partners work when groups don't</h2>
+  <p>
+    Study groups slide into conversation. Subject-matched buddies can become
+    another obligation. A silent partner keeps the social pressure that makes a
+    library work, without the discussion. You get accountability for showing up
+    — which is usually the hard part of long prep — and you keep your own plan.
+    We've written more about
+    <a href="/blog/silent-co-studying-vs-study-groups">silent co-studying vs study groups</a>
+    if that distinction is what you're after.
+  </p>
+
+  <h2>How matching works here</h2>
+  <ol>
+    <li>Book a 25, 50, or 75-minute session.</li>
+    <li>Get paired with someone else who booked the same window.</li>
+    <li>Say what you'll study or work on — one line.</li>
+    <li>Work in parallel. Optional camera, muted mics.</li>
+    <li>Check in at the end. Add them as a friend if you want a regular.</li>
+  </ol>
+  <p>
+    Want the room framing instead of the person? See
+    <a href="/focus-room">online focus room</a>. Grinding UPSC, JEE, NEET, or
+    CA? Use <a href="/study-with-me">study together online</a> for exam-prep
+    structure. Remote desk work is
+    <a href="/virtual-coworking">virtual coworking</a>.
+  </p>
+</LandingPage>

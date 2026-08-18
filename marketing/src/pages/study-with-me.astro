@@ -3,17 +3,22 @@ import LandingPage from "../layouts/LandingPage.astro";
 import { articleJsonLd, faqJsonLd } from "../lib/seo";
 import { APP_URL } from "../lib/config";
 
-const UPDATED = "2026-08-09";
+const UPDATED = "2026-08-18";
 const canonical = "/study-with-me";
-const title = "Study With Me, Online: Focus Rooms for Exam Prep";
+const title = "Study Together Online: Live Study Rooms for Exam Prep";
 const description =
-  "Study with me sessions turn solo exam prep into focused, accountable study time. Here's how online study rooms work and why they help for UPSC, JEE, NEET, and other long grinds.";
+  "Study together online in a live study room — not a YouTube video and not the Study Together app. Quiet, timed sessions with a real partner for UPSC, JEE, NEET, and other long grinds.";
 
 const faqs = [
   {
-    question: "What does 'study with me' mean?",
+    question: "What does study together online mean here?",
     answer:
-      "'Study with me' started as a genre of videos where you study alongside someone in real time. Online study rooms take it further: instead of watching a recording, you join a live, timed session and study in parallel with a real partner who's also preparing for something.",
+      "It means a live, timed study room with a real person — not a recording, and not a branded 24/7 lobby. You join a session, share what you'll study, and work in parallel. That's 'study with me' without the livestream performance.",
+  },
+  {
+    question: "Is this the Study Together app?",
+    answer:
+      "No. Study Together is a separate product with always-on group rooms. Refocus is 1:1 matched sessions: 25, 50, or 75 minutes, one partner, quiet mics. If you searched 'study together' and wanted a live partner for this block, you're in the right place.",
   },
   {
     question: "Why is studying alone so hard?",
@@ -24,11 +29,6 @@ const faqs = [
     question: "How is an online study room different from a study group?",
     answer:
       "A study group discusses material together. An online study room is quiet and parallel — everyone does their own work with someone present. That keeps sessions focused instead of turning into a discussion, which is better for solo syllabus grinding.",
-  },
-  {
-    question: "Can this help with exam anxiety and consistency?",
-    answer:
-      "It can help with consistency, which is often the real problem. Showing up daily to a timed session builds a routine, and finishing sessions gives you visible proof of work. It's not a substitute for rest or support, but it makes the daily grind less lonely and easier to sustain.",
   },
   {
     question: "Do I need to talk during a study session?",
@@ -50,12 +50,12 @@ const article = articleJsonLd({
   description={description}
   canonical={canonical}
   eyebrow="Guide"
-  heading="Study with me, online: focus rooms for exam prep"
+  heading="Study together online: live study rooms for exam prep"
   lead="Solo exam prep is a grind, and the loneliness is half the battle. An online study room lets you study alongside someone else in real time — quiet, timed, and accountable — so you actually sit down and start."
   updated={UPDATED}
   faqs={faqs}
   ctaTitle="Study with someone tonight"
-  ctaText="Refocus is a virtual study room: pick a session length, get matched with someone who's also studying, and work side by side with a shared timer. No talking, just company."
+  ctaText="Refocus is a virtual study room: pick a session length, get matched with a study partner who's also studying, and work side by side with a shared timer. No talking, just company."
   ctaHref={`${APP_URL}/auth/sign-up`}
   ctaLabel="Start a free session"
   jsonLd={[article, faqJsonLd(faqs)]}
@@ -69,6 +69,17 @@ const article = articleJsonLd({
     It's the study-specific form of
     <a href="/body-doubling">body doubling</a> — the presence of a working
     partner makes it far easier to begin.
+  </p>
+
+  <h2>Study together online — without the Study Together lobby</h2>
+  <p>
+    "Study together" is also the name of a popular always-on group room app.
+    This page is not that product. If you want to
+    <strong>study together online</strong> as in: one partner, a shared timer,
+    and a quiet block for UPSC, JEE, NEET, or CA, that's what Refocus runs.
+    Group lofi lobbies can wait. Your syllabus can't. For the room metaphor
+    itself, see <a href="/focus-room">online focus room</a>; for the person,
+    see <a href="/study-partner">quiet study partner</a>.
   </p>
 
   <h2>Why solo prep breaks people (and how co-study helps)</h2>
@@ -94,7 +105,8 @@ const article = articleJsonLd({
     For more exam-specific tactics — active recall, night-owl scheduling,
     restarting after a wasted day — browse our
     <a href="/blog/category/exams">competitive exam prep articles</a>. And when
-    you're ready to stop studying alone, Refocus matches you with a study partner
-    automatically, so there's no schedule to coordinate.
+    you're ready to stop studying alone, Refocus matches you with a
+    <a href="/study-partner">study partner</a> automatically, so there's no
+    schedule to coordinate.
   </p>
 </LandingPage>

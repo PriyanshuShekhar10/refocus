@@ -28,9 +28,9 @@ export function Hero({ image }: { image?: HeroImage }) {
         </Reveal>
 
         <Reveal as="p" className={styles.heroSub}>
-          Refocus pairs you with another person for a 25, 50, or 75-minute
-          focus session. Share your goal, work side by side, and check in at
-          the end.
+          Refocus is a quiet focus room: 25, 50, or 75 minutes with a partner
+          to study or get work done. Share your goal, work side by side, and
+          check in at the end.
         </Reveal>
 
         <Reveal className={styles.heroCta}>

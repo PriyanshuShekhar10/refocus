@@ -24,7 +24,7 @@ Research has shown that social connectedness can significantly improve emotional
 
 So how can you recreate that library atmosphere while you study alone? Here are some actionable steps:
 
-1. **Virtual Coworking**: Joining virtual study rooms allows you to connect with peers who are equally engaged in their work. This shared focus can help to ease the feeling of isolation. Consider [our guide to virtual coworking](https://refocus.co.in/virtual-coworking) for more strategies.
+1. **Online focus room**: Joining a timed study room with one partner lets you work alongside someone equally engaged. This shared focus can help to ease the feeling of isolation. Consider [what an online focus room is](https://refocus.co.in/focus-room) for more on how that works.
 
 2. **Set Up Regular Check-Ins**: Partner up with a fellow student or peer to establish weekly check-ins. You can exchange goals, progress, and challenges, providing a low-pressure environment to share your workload without the need for constant conversation.
 

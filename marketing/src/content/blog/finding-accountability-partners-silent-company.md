@@ -20,7 +20,7 @@ Loneliness is often misunderstood. Many people think they need to chat in order 
 
 Accountability partners are individuals who share similar goals and hold each other responsible for achieving them. In the context of studying, these partners can offer silent co-presence that fosters productivity. They create an atmosphere where you can work alongside someone else, enhancing your focus without the pressure of engagement. Here are a few formats to consider:
 - **Virtual coworking sessions**: Find a partner who’s also studying or working and agree to log on to a shared platform at the same time. 
-- **Body doubling**: Whether in person or online, having someone else present can significantly enhance concentration, especially for tasks that require deep focus. You can explore more about this in [our guide to virtual coworking](https://refocus.co.in/virtual-coworking).
+- **Body doubling**: Whether in person or online, having someone else present can significantly enhance concentration, especially for tasks that require deep focus. For silent accountability (not a tutor), see [how to find a study partner](https://refocus.co.in/study-partner).
 
 ### How to Find the Right Partners
 

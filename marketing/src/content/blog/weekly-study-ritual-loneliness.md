@@ -12,7 +12,7 @@ draft: false
 
 In today’s fast-paced, increasingly digital world, it’s common for students and remote learners to find themselves studying alone for extended periods. While solitude can foster concentration, it can also lead to feelings of loneliness, making those long study sessions seem endless. This article will guide you on how to build a weekly study ritual that addresses these feelings and utilizes quiet co-presence—an essential tool in combating isolation during study time.
 
-To further explore how virtual environments can assist in maintaining focus and company, check out [our guide to virtual coworking](https://refocus.co.in/virtual-coworking).
+To further explore how a quiet study partner can assist in maintaining focus and company, check out [how to find a study partner online](https://refocus.co.in/study-partner).
 
 ## Why Loneliness Matters in Study
 

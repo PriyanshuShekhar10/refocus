@@ -41,6 +41,8 @@ export const GET: APIRoute = async () => {
     { loc: `${site}/body-doubling`, changefreq: "monthly", priority: "0.8" },
     { loc: `${site}/virtual-coworking`, changefreq: "monthly", priority: "0.8" },
     { loc: `${site}/study-with-me`, changefreq: "monthly", priority: "0.8" },
+    { loc: `${site}/focus-room`, changefreq: "monthly", priority: "0.8" },
+    { loc: `${site}/study-partner`, changefreq: "monthly", priority: "0.8" },
     // Competitor comparison / alternative pages.
     { loc: `${site}/focusmate-alternative`, changefreq: "monthly", priority: "0.7" },
     { loc: `${site}/flown-alternative`, changefreq: "monthly", priority: "0.7" },

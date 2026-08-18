@@ -24,7 +24,7 @@ Recognizing this difference can help you seek out the right forms of connection 
 
 One effective method for addressing feelings of loneliness during solo study sessions is **body doubling**. This technique involves working alongside another person, either in person or virtually, to enhance focus and accountability. When you have someone else studying in the same space, even if it's just through a screen, it can create a powerful feeling of co-presence that reproduces the atmosphere of your previous study environments.
 
-For example, if you’re preparing for an upcoming exam like the **GRE** or **CA Intermediate**, consider joining or creating a study session with peers who are also studying for similar exams. You can find a virtual study space, such as [our guide to virtual coworking](https://refocus.co.in/virtual-coworking), where you can connect with others and maintain a shared atmosphere of focus.
+For example, if you’re preparing for an upcoming exam like the **GRE** or **CA Intermediate**, consider joining a timed session with a silent accountability partner — not a subject tutor. You can start from [how to find a study partner online](https://refocus.co.in/study-partner) and keep a shared atmosphere of focus without turning it into a study group.
 
 ## Virtual Coworking: Finding Your Study Community
 

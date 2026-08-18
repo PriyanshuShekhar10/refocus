@@ -24,7 +24,7 @@ Creating a study ritual can simulate the environment of a library or hostel. Her
 ## Incorporate Virtual Co-Presence
 
 One effective way to combat the loneliness of solo study sessions is through virtual co-presence. This concept involves working alongside others in a shared digital space, even if there’s no direct conversation.  
-You can explore options like **virtual coworking** spaces, where you can see others working quietly, helping you feel connected without the need for active communication. For more insights on this, check out [our guide to virtual coworking](https://refocus.co.in/virtual-coworking).
+You can explore options like an **online study room**, where you sit with someone else working quietly, helping you feel connected without the need for active communication. For more insights on this, check out [how to study together online](https://refocus.co.in/study-with-me).
 
 Another method is to use body doubling. This technique involves studying alongside someone else—virtually. Resources like *Refocus* provide environments where you can join others in a focused space, creating a sense of shared mission without needing to interact directly.  
 

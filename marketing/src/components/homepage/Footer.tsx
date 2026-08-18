@@ -11,6 +11,8 @@ export function Footer() {
         <div className={styles.footLinks}>
           <a href="/body-doubling">Body doubling</a>
           <a href="/virtual-coworking">Virtual coworking</a>
+          <a href="/focus-room">Focus room</a>
+          <a href="/study-partner">Study partner</a>
           <a href="/study-with-me">Study with me</a>
           <a href="/focusmate-alternative">vs Focusmate</a>
           <a href="/about">About</a>

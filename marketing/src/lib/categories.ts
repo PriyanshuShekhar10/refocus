@@ -55,7 +55,7 @@ export const CATEGORIES: Record<CategoryId, CategoryMeta> = {
       "Honest notes on the isolation of studying alone — and how quiet co-presence can bridge it.",
     intro:
       "For anyone grinding alone at home: the difference between needing company and needing conversation, and how to get silent co-focus.",
-    pillar: { path: "/virtual-coworking", label: "virtual coworking" },
+    pillar: { path: "/study-partner", label: "quiet study partner" },
   },
   remote: {
     id: "remote",

@@ -16,7 +16,7 @@ Many students and remote learners have faced the unique challenges of studying a
 
 It's important to distinguish between feeling lonely and simply wanting to chat. Loneliness is often characterized not just by a lack of social interaction but by a profound sense of disconnection from others, even if there are people around. You might find yourself yearning for quiet company instead of a conversation. 
 
-In this context, co-presence—a shared focus where the presence of others can motivate you without the need for interaction—can be immensely beneficial. This can be achieved through methods like body doubling or virtual coworking sessions, where you engage in your studies alongside others in a non-intrusive manner. For more insights on this, check out [our guide to virtual coworking](https://refocus.co.in/virtual-coworking).
+In this context, co-presence—a shared focus where the presence of others can motivate you without the need for interaction—can be immensely beneficial. This can be achieved through methods like body doubling or a quiet study partner for the session, where you engage in your studies alongside someone else in a non-intrusive manner. For more insights on this, check out [how to find a study partner online](https://refocus.co.in/study-partner).
 
 ### The Power of Quiet Company
 

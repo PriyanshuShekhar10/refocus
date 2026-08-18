@@ -16,7 +16,7 @@ When you're studying alone, especially during exam seasons, feelings of loneline
 
 Body doubling is a concept that can transform how you approach your study sessions. At its core, it involves being in the virtual presence of another person who is also working, creating a shared focus environment. This form of co-presence can significantly help with productivity, especially when you’re feeling the weight of solitude.
 
-For a deeper look into how body doubling works, check out [our guide to virtual coworking](https://refocus.co.in/virtual-coworking).
+For a deeper look into sitting with someone when friends are far away, check out [how to find a quiet study partner](https://refocus.co.in/study-partner).
 
 ### The Power of Virtual Co-Presence
 

@@ -25,7 +25,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Who am I working with?",
     answer:
-      "You're matched with another member who is also there to focus. Everyone in the room shares the same goal: show up, work, and help each other stay accountable.",
+      "You're matched with another member who is also there to focus — a quiet study partner for that session, not a subject tutor. Everyone in the room shares the same goal: show up, work, and help each other stay accountable.",
+  },
+  {
+    question: "Is this a 24/7 focus room or study lobby?",
+    answer:
+      "No. Refocus runs timed 1:1 sessions, not an always-on café with dozens of avatars. You pick 25, 50, or 75 minutes, get matched, and the session ends when the timer does.",
   },
   {
     question: "Do I have to download another video call app?",
