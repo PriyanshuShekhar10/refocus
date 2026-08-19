@@ -6,7 +6,7 @@ import {
   addMinutes,
   formatHour,
 } from "@/lib/utils";
-import { formatLocalDateTime } from "@/lib/localTime";
+import { formatLocalDate, formatLocalTimeRange } from "@/lib/localTime";
 import {
   addDaysInTimeZone,
   minutesOfDayInTimeZone,
@@ -490,7 +490,7 @@ export default function Calendar({
     }
 
     // Show creation confirmation modal (browser-local wall clock)
-    const whenLabel = formatLocalDateTime(start, {
+    const whenLabel = formatLocalDate(start, {
       weekday: "short",
       month: "short",
       day: "numeric",
@@ -570,11 +570,27 @@ export default function Calendar({
             className="grid flex-1"
             style={{ gridTemplateColumns: `repeat(${ui.visibleDays}, 1fr)` }}
           >
-            {days.map((d, dayIdx) => (
+            {days.map((d, dayIdx) => {
+              const isToday =
+                ymdInTimeZone(d, timeZone) === ymdInTimeZone(now, timeZone);
+              return (
               <div
                 key={ymdInTimeZone(d, timeZone)}
                 className="relative border-r dark:border-gray-700"
               >
+                <div
+                  className={`sticky top-0 z-20 flex h-12 items-center justify-center border-b backdrop-blur-sm text-sm font-medium ${
+                    isToday
+                      ? "bg-[#FFF1D3]/95 text-[#5D1C6A] dark:bg-[#5D1C6A]/35 dark:text-[#FFB090]"
+                      : "bg-white/95 text-gray-700 dark:bg-gray-900/95 dark:text-gray-300"
+                  }`}
+                >
+                  {formatLocalDate(d, {
+                    weekday: "short",
+                    day: "numeric",
+                    ...(ui.visibleDays <= 3 ? { month: "short" as const } : {}),
+                  })}
+                </div>
                 {/* Horizontal Lines */}
                 {Array.from({ length: endHour - startHour }).map((_, i) => (
                   <div
@@ -786,7 +802,8 @@ export default function Calendar({
                   })()}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       </section>
@@ -854,9 +871,16 @@ export default function Calendar({
           description={
             <div className="space-y-4">
               <div>
-                Create a <strong>{ui.modal.preferred}-minute</strong> session at
-                <br />
-                <strong>{ui.modal.whenLabel}</strong>?
+                Create a <strong>{ui.modal.preferred}-minute</strong> session on{" "}
+                <strong>{ui.modal.whenLabel}</strong> from{" "}
+                <strong>
+                  {formatLocalTimeRange(
+                    ui.modal.start,
+                    addMinutes(ui.modal.start, ui.modal.preferred),
+                    { hour: "numeric", minute: "2-digit", hour12: true },
+                  )}
+                </strong>
+                ?
               </div>
               <label className="flex items-center gap-3 text-sm text-gray-700">
                 <input

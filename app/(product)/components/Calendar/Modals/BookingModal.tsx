@@ -1,5 +1,5 @@
 import type { CalendarEvent } from "@/types/calendar";
-import { formatLocalDateTime } from "@/lib/localTime";
+import { formatLocalDate, formatLocalTimeRange } from "@/lib/localTime";
 import { ModalWrapper } from "./ModalWrapper";
 
 export function BookingModal({
@@ -24,6 +24,20 @@ export function BookingModal({
     }
   };
 
+  const startDate = new Date(event.start);
+  const endDate = new Date(event.end);
+  const dateLabel = formatLocalDate(startDate, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const timeRange = formatLocalTimeRange(startDate, endDate, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
   return (
     <ModalWrapper onClose={onClose}>
       <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
@@ -38,13 +52,8 @@ export function BookingModal({
           session for:
         </p>
         <div className="mt-4 rounded-md bg-gray-100 dark:bg-gray-900/60 p-3 text-center font-medium text-gray-900 dark:text-gray-100">
-          {formatLocalDateTime(event.start, {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          <p>{dateLabel}</p>
+          <p className="mt-1 text-[#5D1C6A] dark:text-[#FFB090]">{timeRange}</p>
         </div>
 
         {/* TODO: Add other booking options like partner selection, goal text box */}

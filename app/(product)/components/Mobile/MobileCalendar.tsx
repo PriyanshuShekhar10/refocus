@@ -14,7 +14,7 @@ import {
   isValidDuration,
   type DurationMin,
 } from "@/constants/calendar";
-import { formatLocalDateTime } from "@/lib/localTime";
+import { formatLocalDate, formatLocalTimeRange } from "@/lib/localTime";
 import { hasSessionStarted } from "@/lib/sessionWindow";
 import { PageRefreshButton } from "@/components/page-refresh";
 import {
@@ -441,13 +441,11 @@ export default function MobileCalendar() {
       return;
     }
 
-    const whenLabel = formatLocalDateTime(start, {
+    const whenLabel = formatLocalDate(start, {
       weekday: "short",
       month: "short",
       day: "numeric",
       year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
     });
     dispatch({
       type: "OPEN_CREATE_CONFIRM",
@@ -804,9 +802,16 @@ export default function MobileCalendar() {
           description={
             <div className="space-y-4">
               <div>
-                Create a <strong>{ui.modal.preferred}-minute</strong> session at
-                <br />
-                <strong>{ui.modal.whenLabel}</strong>?
+                Create a <strong>{ui.modal.preferred}-minute</strong> session on{" "}
+                <strong>{ui.modal.whenLabel}</strong> from{" "}
+                <strong>
+                  {formatLocalTimeRange(
+                    ui.modal.start,
+                    addMinutes(ui.modal.start, ui.modal.preferred),
+                    { hour: "numeric", minute: "2-digit", hour12: true },
+                  )}
+                </strong>
+                ?
               </div>
               <label className="flex items-center gap-3 text-sm text-gray-700">
                 <input
