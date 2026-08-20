@@ -161,7 +161,17 @@ export async function GET(req: NextRequest) {
     if (!u) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    const known = mergeKnownIps(u);
+    const known = mergeKnownIps({
+      signupIp: (u.signupIp as string | null | undefined) ?? null,
+      lastLoginIp: (u.lastLoginIp as string | null | undefined) ?? null,
+      lastSeenIp: (u.lastSeenIp as string | null | undefined) ?? null,
+      knownIps: (u.knownIps as Array<{
+        ip?: string | null;
+        firstSeenAt?: Date | string | null;
+        lastSeenAt?: Date | string | null;
+        count?: number | null;
+      }> | null) ?? null,
+    });
     userSummary = {
       id: resolvedUserId,
       email: (u.email as string | undefined) ?? null,
