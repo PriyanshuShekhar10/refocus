@@ -553,13 +553,13 @@ export default function Calendar({
                 className="relative text-right"
                 style={{ height: hourBlockHeight }}
               >
-                {/* Top boundary corresponds to :30 of previous hour */}
-                <span className="absolute right-2 top-0 text-[10px] text-gray-400 dark:text-gray-500">
-                  :30
+                {/* Top of hour block = hour start */}
+                <span className="absolute right-2 top-0 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
+                  {formatHour(startHour + i)}
                 </span>
-                {/* Midpoint corresponds to the start of the next hour */}
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
-                  {formatHour(startHour + i + 1)}
+                {/* Midpoint = :30 of this hour */}
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 dark:text-gray-500">
+                  :30
                 </span>
               </div>
             ))}
