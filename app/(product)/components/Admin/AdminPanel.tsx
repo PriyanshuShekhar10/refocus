@@ -9,6 +9,7 @@ import {
   Flag,
   History,
   LayoutDashboard,
+  LogIn,
   Mail,
   MoreHorizontal,
   Shield,
@@ -39,7 +40,8 @@ type AdminSection =
   | "mailbox"
   | "reports"
   | "history"
-  | "ip-activity";
+  | "ip-activity"
+  | "logins";
 
 type Stats = {
   users: {
@@ -112,6 +114,36 @@ type IpActivityEntry = {
   createdUserId: string | null;
   matchedBannedUsers: { id: string; email: string | null; label: string }[];
   createdAt: string | null;
+};
+
+type LoginRow = {
+  id: string;
+  at: string | null;
+  method: "credentials" | "google";
+  ip: string | null;
+  userId: string;
+  email: string | null;
+  username: string | null;
+  name: string | null;
+};
+
+type LoginUserSummary = {
+  id: string;
+  email: string | null;
+  username: string | null;
+  name: string | null;
+  createdAt: string | null;
+  signupIp: string | null;
+  lastLoginIp: string | null;
+  lastLoginAt: string | null;
+  lastSeenIp: string | null;
+  lastSeenAt: string | null;
+  knownIps: Array<{
+    ip: string;
+    firstSeenAt: string;
+    lastSeenAt: string;
+    count: number;
+  }>;
 };
 
 type UserActivityEvent = {
@@ -211,6 +243,7 @@ const SECTIONS: {
 }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "users", label: "Users", icon: Users },
+  { id: "logins", label: "Logins", icon: LogIn },
   { id: "deleted", label: "Deleted", icon: UserX },
   { id: "mailbox", label: "Mailbox", icon: Mail },
   { id: "ip-activity", label: "Banned IP activity", icon: Activity },
@@ -267,6 +300,27 @@ function formatSessionWhen(iso: string | null): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function localYmd(d = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function shiftLocalYmd(ymd: string, deltaDays: number): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const dt = new Date(y, m - 1, d + deltaDays);
+  return localYmd(dt);
+}
+
+/** Local calendar-day bounds as ISO for the admin logins API. */
+function localDayBounds(ymd: string): { from: string; to: string } {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const start = new Date(y, m - 1, d, 0, 0, 0, 0);
+  const end = new Date(y, m - 1, d + 1, 0, 0, 0, 0);
+  return { from: start.toISOString(), to: end.toISOString() };
 }
 
 function formatPercent(rate: number): string {
@@ -628,6 +682,16 @@ export default function AdminPanel() {
   const [friendRequestsLoading, setFriendRequestsLoading] = useState(false);
   const [mailPrefill, setMailPrefill] = useState<MailRecipient[] | null>(null);
   const [mailEpoch, setMailEpoch] = useState(0);
+  const [loginMode, setLoginMode] = useState<"day" | "user">("day");
+  const [loginDate, setLoginDate] = useState(() => localYmd());
+  const [loginUserQuery, setLoginUserQuery] = useState("");
+  const [loginUserId, setLoginUserId] = useState<string | null>(null);
+  const [loginRows, setLoginRows] = useState<LoginRow[]>([]);
+  const [loginCount, setLoginCount] = useState(0);
+  const [loginUniqueUsers, setLoginUniqueUsers] = useState(0);
+  const [loginUserSummary, setLoginUserSummary] =
+    useState<LoginUserSummary | null>(null);
+  const [loginMessage, setLoginMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/me")
@@ -695,6 +759,37 @@ export default function AdminPanel() {
     if (!res.ok) throw new Error(data.error || "Failed to load IP activity");
     setIpEntries(data.entries || []);
   }, []);
+
+  const loadLogins = useCallback(async () => {
+    const params = new URLSearchParams({ limit: "300" });
+    if (loginMode === "user") {
+      if (loginUserId) params.set("userId", loginUserId);
+      else if (loginUserQuery.trim()) params.set("q", loginUserQuery.trim());
+      else {
+        setLoginRows([]);
+        setLoginCount(0);
+        setLoginUniqueUsers(0);
+        setLoginUserSummary(null);
+        setLoginMessage("Search email or username to see that user’s logins.");
+        return;
+      }
+    } else {
+      const { from, to } = localDayBounds(loginDate);
+      params.set("from", from);
+      params.set("to", to);
+      params.set("date", loginDate);
+    }
+
+    const res = await fetch(`/api/admin/logins?${params}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to load logins");
+    setLoginRows(data.logins || []);
+    setLoginCount(data.count ?? 0);
+    setLoginUniqueUsers(data.uniqueUsers ?? 0);
+    setLoginUserSummary(data.user ?? null);
+    setLoginMessage(data.message ?? null);
+    if (data.user?.id) setLoginUserId(data.user.id);
+  }, [loginMode, loginDate, loginUserId, loginUserQuery]);
 
   const loadUpcomingSessions = useCallback(async () => {
     setSessionsLoading(true);
@@ -766,6 +861,7 @@ export default function AdminPanel() {
       else if (section === "reports") await loadReports();
       else if (section === "history") await loadAuditLog();
       else if (section === "ip-activity") await loadIpActivity();
+      else if (section === "logins") await loadLogins();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -785,6 +881,7 @@ export default function AdminPanel() {
     loadReports,
     loadAuditLog,
     loadIpActivity,
+    loadLogins,
   ]);
 
   useEffect(() => {
@@ -1476,6 +1573,278 @@ export default function AdminPanel() {
             prefill={mailPrefill}
             onPrefillConsumed={() => setMailPrefill(null)}
           />
+        ) : null}
+
+        {section === "logins" ? (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMode("day");
+                  setLoginUserId(null);
+                  setLoginUserSummary(null);
+                  setLoginMessage(null);
+                }}
+                className={`rounded-full px-3 py-1 text-sm ${
+                  loginMode === "day"
+                    ? "bg-[#5D1C6A] text-white"
+                    : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                }`}
+              >
+                By day
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMode("user");
+                  setLoginRows([]);
+                  setLoginCount(0);
+                  setLoginUniqueUsers(0);
+                  setLoginMessage(
+                    "Search email or username to see that user’s full login history.",
+                  );
+                }}
+                className={`rounded-full px-3 py-1 text-sm ${
+                  loginMode === "user"
+                    ? "bg-[#5D1C6A] text-white"
+                    : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                }`}
+              >
+                By user
+              </button>
+            </div>
+
+            {loginMode === "day" ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLoginDate(localYmd())}
+                  className={`rounded-full px-3 py-1 text-sm ${
+                    loginDate === localYmd()
+                      ? "bg-[#5D1C6A] text-white"
+                      : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginDate(shiftLocalYmd(localYmd(), -1))}
+                  className={`rounded-full px-3 py-1 text-sm ${
+                    loginDate === shiftLocalYmd(localYmd(), -1)
+                      ? "bg-[#5D1C6A] text-white"
+                      : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  Yesterday
+                </button>
+                <input
+                  type="date"
+                  value={loginDate}
+                  onChange={(e) => setLoginDate(e.target.value)}
+                  className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm"
+                />
+              </div>
+            ) : (
+              <form
+                className="flex flex-wrap gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setLoginUserId(null);
+                  void loadLogins();
+                }}
+              >
+                <input
+                  type="search"
+                  value={loginUserQuery}
+                  onChange={(e) => {
+                    setLoginUserQuery(e.target.value);
+                    setLoginUserId(null);
+                  }}
+                  placeholder="Email or username…"
+                  className="min-w-[16rem] flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+                />
+                <button
+                  type="submit"
+                  className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995]"
+                >
+                  Look up
+                </button>
+                {loginUserId ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginUserId(null);
+                      setLoginUserQuery("");
+                      setLoginUserSummary(null);
+                      setLoginRows([]);
+                      setLoginCount(0);
+                      setLoginMessage(
+                        "Search email or username to see that user’s full login history.",
+                      );
+                    }}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700"
+                  >
+                    Clear
+                  </button>
+                ) : null}
+              </form>
+            )}
+
+            <p className="text-xs text-gray-500">
+              {loginMode === "day"
+                ? `${loginCount} sign-ins · ${loginUniqueUsers} unique users · ${loginDate} (local day)`
+                : loginUserSummary
+                  ? `${loginCount} sign-ins for this user (all time, max 300)`
+                  : "Credentials and Google sign-ins only — not page refreshes."}
+            </p>
+            {loginMessage ? (
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                {loginMessage}
+              </p>
+            ) : null}
+
+            {loginUserSummary ? (
+              <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 text-sm space-y-2">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {loginUserSummary.name ||
+                      loginUserSummary.email ||
+                      loginUserSummary.username ||
+                      loginUserSummary.id}
+                  </span>
+                  {loginUserSummary.email ? (
+                    <span className="text-gray-500">{loginUserSummary.email}</span>
+                  ) : null}
+                  {loginUserSummary.username ? (
+                    <span className="text-gray-500">
+                      @{loginUserSummary.username}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="grid gap-1 text-xs text-gray-600 dark:text-gray-300 sm:grid-cols-2">
+                  <p>
+                    Joined:{" "}
+                    {loginUserSummary.createdAt
+                      ? new Date(loginUserSummary.createdAt).toLocaleString()
+                      : "—"}
+                  </p>
+                  <p>
+                    Last login:{" "}
+                    {loginUserSummary.lastLoginAt
+                      ? new Date(loginUserSummary.lastLoginAt).toLocaleString()
+                      : "—"}
+                  </p>
+                  <p className="font-mono">
+                    Signup IP: {loginUserSummary.signupIp || "—"}
+                  </p>
+                  <p className="font-mono">
+                    Last login IP: {loginUserSummary.lastLoginIp || "—"}
+                  </p>
+                  <p className="font-mono">
+                    Last seen IP: {loginUserSummary.lastSeenIp || "—"}
+                  </p>
+                  <p>
+                    Last seen:{" "}
+                    {loginUserSummary.lastSeenAt
+                      ? new Date(loginUserSummary.lastSeenAt).toLocaleString()
+                      : "—"}
+                  </p>
+                </div>
+                {loginUserSummary.knownIps.length > 0 ? (
+                  <div className="pt-1">
+                    <p className="text-xs font-medium text-gray-500 mb-1">
+                      Known IPs
+                    </p>
+                    <ul className="space-y-0.5 text-xs font-mono text-gray-600 dark:text-gray-300">
+                      {loginUserSummary.knownIps.map((row) => (
+                        <li key={row.ip}>
+                          {row.ip} · ×{row.count} · last{" "}
+                          {new Date(row.lastSeenAt).toLocaleString()}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                  <tr>
+                    <th className="px-4 py-3">When</th>
+                    {loginMode === "day" ? (
+                      <th className="px-4 py-3">User</th>
+                    ) : null}
+                    <th className="px-4 py-3">Method</th>
+                    <th className="px-4 py-3">IP</th>
+                    {loginMode === "day" ? (
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    ) : null}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                  {loginRows.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={loginMode === "day" ? 5 : 3}
+                        className="px-4 py-8 text-center text-gray-500"
+                      >
+                        {loginMode === "user" && !loginUserSummary
+                          ? "Search for a user to load history."
+                          : "No sign-ins in this range."}
+                      </td>
+                    </tr>
+                  ) : (
+                    loginRows.map((row) => (
+                      <tr key={row.id}>
+                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                          {row.at
+                            ? new Date(row.at).toLocaleString()
+                            : "—"}
+                        </td>
+                        {loginMode === "day" ? (
+                          <td className="px-4 py-3">
+                            <div className="font-medium text-gray-900 dark:text-white">
+                              {row.name || row.email || row.username || row.userId}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {[row.email, row.username ? `@${row.username}` : null]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </div>
+                          </td>
+                        ) : null}
+                        <td className="px-4 py-3 capitalize">{row.method}</td>
+                        <td className="px-4 py-3 font-mono text-xs">
+                          {row.ip || "—"}
+                        </td>
+                        {loginMode === "day" ? (
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setLoginMode("user");
+                                setLoginUserId(row.userId);
+                                setLoginUserQuery(
+                                  row.email || row.username || row.userId,
+                                );
+                              }}
+                              className="text-xs font-medium text-[#5D1C6A] hover:underline dark:text-[#FFB090]"
+                            >
+                              Full history
+                            </button>
+                          </td>
+                        ) : null}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : null}
 
         {section === "ip-activity" ? (
