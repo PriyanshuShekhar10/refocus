@@ -90,6 +90,8 @@ describe("crewStats", () => {
     const stats = await getCrewStats(7);
     expect(stats.days).toBe(7);
     expect(stats.todayKey).toBe("2026-08-21");
+    expect(stats.fromKey).toBe("2026-08-15");
+    expect(stats.toKey).toBe("2026-08-21");
     expect(stats.members).toHaveLength(2);
 
     const hire = stats.members.find((m) => m.email === "hire@example.com");

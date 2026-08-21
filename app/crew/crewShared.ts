@@ -19,6 +19,10 @@ export type CrewStatsPayload = {
   days: number;
   timezone: string;
   todayKey: string;
+  /** Inclusive IST range start (YYYY-MM-DD) */
+  fromKey: string;
+  /** Inclusive IST range end (YYYY-MM-DD), same as todayKey */
+  toKey: string;
   members: CrewMemberStats[];
 };
 
@@ -32,6 +36,15 @@ export const CREW_METRICS: { key: MetricKey; label: string }[] = [
   { key: "finished", label: "Finished" },
 ];
 
+/** Distinct stroke colors for the multi-metric crew chart. */
+export const CREW_METRIC_COLORS: Record<MetricKey, string> = {
+  created: "#2563eb", // blue
+  deleted: "#dc2626", // red
+  joined: "#d97706", // amber
+  attended: "#059669", // emerald
+  finished: "#7c3aed", // violet
+};
+
 export const CREW_RANGE_OPTIONS = [7, 14, 30] as const;
 
 export const CREW_DAYS_PAGE_SIZE = 7;
@@ -44,6 +57,47 @@ export function dayHasAnyActivity(day: DayCounts): boolean {
     day.attended > 0 ||
     day.finished > 0
   );
+}
+
+/** Sum metrics across a day series (used for list totals over the selected range). */
+export function sumCrewDays(days: DayCounts[]): Omit<DayCounts, "date"> {
+  const total = {
+    created: 0,
+    deleted: 0,
+    joined: 0,
+    attended: 0,
+    finished: 0,
+  };
+  for (const day of days) {
+    total.created += day.created;
+    total.deleted += day.deleted;
+    total.joined += day.joined;
+    total.attended += day.attended;
+    total.finished += day.finished;
+  }
+  return total;
+}
+
+/** Format an IST calendar day key (YYYY-MM-DD) for display. */
+export function formatCrewDayLabel(ymd: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+  if (!match) return ymd;
+  const y = Number(match[1]);
+  const m = Number(match[2]);
+  const d = Number(match[3]);
+  // Interpret as a pure calendar date (UTC noon avoids DST edge cases).
+  const date = new Date(Date.UTC(y, m - 1, d, 12));
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+export function formatCrewDateRange(fromKey: string, toKey: string): string {
+  if (fromKey === toKey) return formatCrewDayLabel(fromKey);
+  return `${formatCrewDayLabel(fromKey)} – ${formatCrewDayLabel(toKey)}`;
 }
 
 export function filterCrewDays(

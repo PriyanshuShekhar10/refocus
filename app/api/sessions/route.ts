@@ -15,6 +15,7 @@ import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 import { scheduleRecordAccessIp } from "@/lib/userIps";
 
 // GET /api/sessions?from=ISO&to=ISO
+// GET /api/sessions?mineUpcoming=1  — caller's future/in-progress sessions only
 /** Soft cap on open (bookable) slots returned per range request. */
 const MAX_OPEN_SLOTS = 200;
 /** Soft cap on booked sessions used for calendar occupancy chips. */
@@ -53,118 +54,142 @@ export async function GET(req: NextRequest) {
   scheduleRecordAccessIp(req, userId);
 
   const { searchParams } = new URL(req.url);
+  const mineUpcoming = searchParams.get("mineUpcoming") === "1";
   const from = searchParams.get("from");
   const to = searchParams.get("to");
 
-  // Basic validation
-  if (!from || !to) {
-    return NextResponse.json(
-      { error: "Missing from/to query params (ISO datetime)" },
-      { status: 400 },
-    );
-  }
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
-  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
-    return NextResponse.json(
-      { error: "Invalid from/to query params" },
-      { status: 400 },
-    );
-  }
-
   const now = new Date();
-  const bookableFrom = new Date(Math.max(fromDate.getTime(), now.getTime()));
-
-  // Two index-friendly queries:
-  // A) open bookable slots that have not started yet (participant_count < 2)
-  // B) current user's sessions (including fully booked / in-progress)
   const db = await getDb();
   const col = db.collection<DbSession>("sessions");
-  const myRangeFilter = { start_time: { $gte: fromDate, $lt: toDate } };
 
-  const [openSlots, mySessions, bookedSlots, binnedSlots] = await Promise.all([
-    bookableFrom < toDate
-      ? col
-          .find({
-            start_time: { $gt: now, $gte: fromDate, $lt: toDate },
-            // Prefer participant_count; include legacy docs missing the field
-            // that still have fewer than 2 participants.
-            $or: [
-              { participant_count: { $lt: 2 } },
-              {
-                participant_count: { $exists: false },
-                $or: [
-                  { session_participants: { $exists: false } },
-                  { "session_participants.1": { $exists: false } },
-                ],
-              },
-            ],
-          })
-          .sort({ start_time: 1 })
-          .limit(MAX_OPEN_SLOTS)
-          .toArray()
-      : Promise.resolve([]),
-    col
+  /** Soft cap for the dashboard "Upcoming" sidebar (all future sessions). */
+  const MAX_MINE_UPCOMING = 100;
+
+  let sessions: DbSession[];
+  let occupiedDocs: Array<DbSession & { _originalId?: ObjectId }> = [];
+
+  if (mineUpcoming) {
+    // User's own future/in-progress sessions across the full horizon (not
+    // scoped to the visible calendar week). Used by the left sidebar.
+    sessions = await col
       .find({
-        ...myRangeFilter,
+        end_time: { $gte: now },
         $or: [
           { owner_id: userId },
           { "session_participants.user_id": userId },
         ],
       })
       .sort({ start_time: 1 })
-      .toArray(),
-    // Booked sessions for occupancy chips (privacy-safe avatars only in response).
-    // Includes past completed matches so hours show "attended".
-    col
-      .find({
-        start_time: { $gte: fromDate, $lt: toDate },
-        $or: [
-          { participant_count: { $gte: 2 } },
-          { "session_participants.1": { $exists: true } },
-        ],
-      })
-      .sort({ start_time: 1 })
-      .limit(MAX_OCCUPIED_SLOTS)
-      .toArray(),
-    // Archived past sessions (moved out of live collection by bin script).
-    db
-      .collection<DbSession & { _originalId?: ObjectId }>("sessions_bin")
-      .find({
-        start_time: { $gte: fromDate, $lt: toDate },
-        $or: [
-          { participant_count: { $gte: 2 } },
-          { "session_participants.1": { $exists: true } },
-        ],
-      })
-      .sort({ start_time: 1 })
-      .limit(MAX_OCCUPIED_SLOTS)
-      .toArray(),
-  ]);
+      .limit(MAX_MINE_UPCOMING)
+      .toArray();
+  } else {
+    // Basic validation
+    if (!from || !to) {
+      return NextResponse.json(
+        { error: "Missing from/to query params (ISO datetime)" },
+        { status: 400 },
+      );
+    }
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid from/to query params" },
+        { status: 400 },
+      );
+    }
 
-  const byId = new Map<string, DbSession>();
-  for (const s of openSlots) byId.set(String(s._id), s);
-  for (const s of mySessions) byId.set(String(s._id), s);
-  let sessions = Array.from(byId.values()).sort(
-    (a, b) =>
-      new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
-  );
+    const bookableFrom = new Date(Math.max(fromDate.getTime(), now.getTime()));
 
-  const occupiedById = new Map<string, DbSession & { _originalId?: ObjectId }>();
-  for (const s of bookedSlots) {
-    if (participantCount(s) >= 2) occupiedById.set(String(s._id), s);
-  }
-  for (const s of binnedSlots) {
-    if (participantCount(s) < 2) continue;
-    const id = String(s._originalId ?? s._id);
-    if (!occupiedById.has(id)) occupiedById.set(id, s);
-  }
-  let occupiedDocs = Array.from(occupiedById.values())
-    .sort(
+    // Two index-friendly queries:
+    // A) open bookable slots that have not started yet (participant_count < 2)
+    // B) current user's sessions (including fully booked / in-progress)
+    const myRangeFilter = { start_time: { $gte: fromDate, $lt: toDate } };
+
+    const [openSlots, mySessions, bookedSlots, binnedSlots] = await Promise.all([
+      bookableFrom < toDate
+        ? col
+            .find({
+              start_time: { $gt: now, $gte: fromDate, $lt: toDate },
+              // Prefer participant_count; include legacy docs missing the field
+              // that still have fewer than 2 participants.
+              $or: [
+                { participant_count: { $lt: 2 } },
+                {
+                  participant_count: { $exists: false },
+                  $or: [
+                    { session_participants: { $exists: false } },
+                    { "session_participants.1": { $exists: false } },
+                  ],
+                },
+              ],
+            })
+            .sort({ start_time: 1 })
+            .limit(MAX_OPEN_SLOTS)
+            .toArray()
+        : Promise.resolve([]),
+      col
+        .find({
+          ...myRangeFilter,
+          $or: [
+            { owner_id: userId },
+            { "session_participants.user_id": userId },
+          ],
+        })
+        .sort({ start_time: 1 })
+        .toArray(),
+      // Booked sessions for occupancy chips (privacy-safe avatars only in response).
+      // Includes past completed matches so hours show "attended".
+      col
+        .find({
+          start_time: { $gte: fromDate, $lt: toDate },
+          $or: [
+            { participant_count: { $gte: 2 } },
+            { "session_participants.1": { $exists: true } },
+          ],
+        })
+        .sort({ start_time: 1 })
+        .limit(MAX_OCCUPIED_SLOTS)
+        .toArray(),
+      // Archived past sessions (moved out of live collection by bin script).
+      db
+        .collection<DbSession & { _originalId?: ObjectId }>("sessions_bin")
+        .find({
+          start_time: { $gte: fromDate, $lt: toDate },
+          $or: [
+            { participant_count: { $gte: 2 } },
+            { "session_participants.1": { $exists: true } },
+          ],
+        })
+        .sort({ start_time: 1 })
+        .limit(MAX_OCCUPIED_SLOTS)
+        .toArray(),
+    ]);
+
+    const byId = new Map<string, DbSession>();
+    for (const s of openSlots) byId.set(String(s._id), s);
+    for (const s of mySessions) byId.set(String(s._id), s);
+    sessions = Array.from(byId.values()).sort(
       (a, b) =>
         new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
-    )
-    .slice(0, MAX_OCCUPIED_SLOTS);
+    );
+
+    const occupiedById = new Map<string, DbSession & { _originalId?: ObjectId }>();
+    for (const s of bookedSlots) {
+      if (participantCount(s) >= 2) occupiedById.set(String(s._id), s);
+    }
+    for (const s of binnedSlots) {
+      if (participantCount(s) < 2) continue;
+      const id = String(s._originalId ?? s._id);
+      if (!occupiedById.has(id)) occupiedById.set(id, s);
+    }
+    occupiedDocs = Array.from(occupiedById.values())
+      .sort(
+        (a, b) =>
+          new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+      )
+      .slice(0, MAX_OCCUPIED_SLOTS);
+  }
 
   const blockedIds = await getBlockedUserIds(userId);
   if (blockedIds.size > 0) {

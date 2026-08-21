@@ -21,4 +21,6 @@ export const swrKeys = {
   communityMatch: "/api/community/match",
   sessions: (from: string, to: string) =>
     `/api/sessions?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+  /** Caller's future/in-progress sessions (calendar Upcoming sidebar). */
+  sessionsMineUpcoming: "/api/sessions?mineUpcoming=1",
 } as const;

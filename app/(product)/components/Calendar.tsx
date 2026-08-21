@@ -531,7 +531,6 @@ export default function Calendar({
       <CalendarSidebar
         createDuration={ui.createDuration}
         onCreateDurationChange={handleSetCreateDuration}
-        events={events}
         currentUserId={currentUserId}
         onJoinSession={(ev) => {
           if (hasSessionStarted(ev.start)) {

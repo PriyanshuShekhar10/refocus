@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import useSWR from "swr";
 import BookSessionButton from "../BookSessionButton";
 import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
-import type { CalendarEvent } from "@/types/calendar";
+import type { CalendarEvent, FetchedSession } from "@/types/calendar";
 import { formatLocalTimeRange } from "@/lib/localTime";
 import { VerifiedName } from "@/components/verified-tag";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { hasSessionStarted } from "@/lib/sessionWindow";
+import * as sessionsApi from "@/lib/api/sessionsApi";
+import { swrKeys } from "@/lib/swr/keys";
 
 function toYmd(d: Date) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
@@ -23,11 +26,26 @@ function formatUpcomingDate(d: Date) {
   return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
+function mapFetchedToEvent(s: FetchedSession): CalendarEvent {
+  return {
+    id: s.id,
+    start: s.start,
+    end: s.end,
+    durationMin: s.durationMin,
+    sessionType: s.sessionType,
+    status: s.status,
+    name: s.name ?? null,
+    color: s.color ?? null,
+    owner_id: s.owner_id,
+    owner: s.owner,
+    participants: s.participants,
+  };
+}
+
 interface CalendarSidebarProps {
   createDuration: DurationMin;
   onCreateDurationChange: (duration: DurationMin) => void;
-  /** For Upcoming section */
-  events?: CalendarEvent[];
+  /** For Upcoming section actions (fallback id when SWR has not loaded yet) */
   currentUserId?: string | null;
   onJoinSession?: (event: CalendarEvent) => void;
   onDetailsSession?: (event: CalendarEvent) => void;
@@ -38,8 +56,7 @@ interface CalendarSidebarProps {
 export function CalendarSidebar({
   createDuration,
   onCreateDurationChange,
-  events = [],
-  currentUserId,
+  currentUserId: currentUserIdProp,
   onJoinSession,
   onDetailsSession,
   onLeaveSession,
@@ -47,27 +64,26 @@ export function CalendarSidebar({
 }: CalendarSidebarProps) {
   const [settingsExpanded, setSettingsExpanded] = useState(true);
 
-  const upcomingSessions = useMemo(() => {
-    if (!currentUserId) return [];
-    const now = new Date();
-    return events
-      .filter((ev) => {
-        const start = new Date(ev.start);
-        if (start < now) return false;
-        const isMine =
-          (ev.owner_id && ev.owner_id === currentUserId) ||
-          (ev.participants ?? []).some((p) => p.user_id === currentUserId);
-        return isMine;
-      })
-      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
-      .slice(0, 5);
-  }, [events, currentUserId]);
+  const { data: upcomingData } = useSWR(
+    swrKeys.sessionsMineUpcoming,
+    () =>
+      sessionsApi.listMineUpcoming().then((result) => {
+        if (!result.ok) throw new Error(result.error);
+        return result.data;
+      }),
+    { revalidateOnFocus: true },
+  );
 
-  const upcomingSubtitle = useMemo(() => {
-    if (upcomingSessions.length === 0) return null;
-    const first = new Date(upcomingSessions[0].start);
-    return formatUpcomingDate(first);
-  }, [upcomingSessions]);
+  const currentUserId = upcomingData?.currentUserId ?? currentUserIdProp ?? null;
+
+  const upcomingSessions = useMemo(() => {
+    if (!upcomingData?.sessions) return [];
+    const now = Date.now();
+    return upcomingData.sessions
+      .map(mapFetchedToEvent)
+      .filter((ev) => new Date(ev.end).getTime() >= now)
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  }, [upcomingData]);
 
   return (
     <aside className="flex w-72 shrink-0 flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900 h-full overflow-hidden">
@@ -76,17 +92,6 @@ export function CalendarSidebar({
         <div className="flex-1">
           <BookSessionButton label="Book session" className="w-full rounded-lg bg-[#5D1C6A] px-4 py-3 text-sm font-semibold text-white hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]" />
         </div>
-        {/* <button
-          type="button"
-          onClick={() => document.querySelector<HTMLButtonElement>("[data-book-session-trigger]")?.click()}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#5D1C6A] text-white hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]"
-          title="Quick book"
-          aria-label="Quick book"
-        >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </button> */}
       </div>
 
       {/* Session Settings (collapsible) */}
@@ -148,12 +153,14 @@ export function CalendarSidebar({
         Tip: click an empty slot to create your own session.
       </p>
 
-      {/* Upcoming */}
+      {/* Upcoming — all future sessions, not limited to the visible week */}
       <section className="mt-auto flex flex-1 flex-col min-h-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="shrink-0 px-3 py-2.5">
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Upcoming</h3>
-          {upcomingSubtitle && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">{upcomingSubtitle}</p>
+          {upcomingSessions.length > 0 && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {upcomingSessions.length} session{upcomingSessions.length === 1 ? "" : "s"}
+            </p>
           )}
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-2">
@@ -200,8 +207,9 @@ export function CalendarSidebar({
                         </span>
                       </div>
                       <p className="mt-0.5 text-xs font-medium text-gray-900 dark:text-gray-100">
-                        {timeRange}
+                        {formatUpcomingDate(start)}
                       </p>
+                      <p className="text-xs text-gray-700 dark:text-gray-200">{timeRange}</p>
                       <p className="truncate text-xs text-gray-600 dark:text-gray-300">
                         <VerifiedName
                           name={otherName}

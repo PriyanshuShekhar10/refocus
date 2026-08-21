@@ -6,8 +6,11 @@ import { CrewSparkline } from "../../CrewSparkline";
 import {
   CREW_DAYS_PAGE_SIZE,
   CREW_METRICS,
+  CREW_METRIC_COLORS,
   CREW_RANGE_OPTIONS,
   filterCrewDays,
+  formatCrewDateRange,
+  sumCrewDays,
   type CrewMemberStats,
   type CrewStatsPayload,
   type DayCounts,
@@ -355,11 +358,18 @@ export default function CrewMemberClient({
   const [meta, setMeta] = useState<{
     timezone: string;
     todayKey: string;
+    fromKey: string;
+    toKey: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [metric, setMetric] = useState<MetricKey>("created");
   const [filterMode, setFilterMode] = useState<DayFilterMode>("activity");
+  const [summaryFrom, setSummaryFrom] = useState<string | null>(null);
+  const [summaryTo, setSummaryTo] = useState<string | null>(null);
+  const [chartMetrics, setChartMetrics] = useState<MetricKey[]>(
+    () => CREW_METRICS.map((m) => m.key),
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -377,7 +387,12 @@ export default function CrewMemberClient({
         setError("Person not on the crew roster");
       } else {
         setMember(found);
-        setMeta({ timezone: json.timezone, todayKey: json.todayKey });
+        setMeta({
+          timezone: json.timezone,
+          todayKey: json.todayKey,
+          fromKey: json.fromKey,
+          toKey: json.toKey,
+        });
       }
     } catch (e) {
       setError((e as Error).message);
@@ -391,6 +406,19 @@ export default function CrewMemberClient({
     void load();
   }, [load]);
 
+  // Keep summary range within the loaded window; default to the full window.
+  useEffect(() => {
+    if (!meta) return;
+    setSummaryFrom((prev) => {
+      if (prev && prev >= meta.fromKey && prev <= meta.toKey) return prev;
+      return meta.fromKey;
+    });
+    setSummaryTo((prev) => {
+      if (prev && prev >= meta.fromKey && prev <= meta.toKey) return prev;
+      return meta.toKey;
+    });
+  }, [meta]);
+
   const filteredDays = useMemo(() => {
     if (!member) return [];
     return filterCrewDays(member.days, filterMode, metric);
@@ -403,10 +431,54 @@ export default function CrewMemberClient({
 
   const sparklineDays = useMemo(() => {
     if (!member) return [];
-    // Chart: only days that matter for the selected view (no flat zero stretch)
-    if (filterMode === "all") return member.days;
-    return filterCrewDays(member.days, filterMode, metric);
-  }, [member, filterMode, metric]);
+    // Always chart the full selected window so all series share the same x-axis.
+    return member.days;
+  }, [member]);
+
+  const summaryTotals = useMemo(() => {
+    if (!member || !summaryFrom || !summaryTo) {
+      return { created: 0, deleted: 0, joined: 0, attended: 0, finished: 0 };
+    }
+    const from = summaryFrom <= summaryTo ? summaryFrom : summaryTo;
+    const to = summaryFrom <= summaryTo ? summaryTo : summaryFrom;
+    return sumCrewDays(
+      member.days.filter((d) => d.date >= from && d.date <= to),
+    );
+  }, [member, summaryFrom, summaryTo]);
+
+  const summaryRangeLabel = useMemo(() => {
+    if (!summaryFrom || !summaryTo) return null;
+    const from = summaryFrom <= summaryTo ? summaryFrom : summaryTo;
+    const to = summaryFrom <= summaryTo ? summaryTo : summaryFrom;
+    return formatCrewDateRange(from, to);
+  }, [summaryFrom, summaryTo]);
+
+  const setSummaryRange = (from: string, to: string) => {
+    if (from <= to) {
+      setSummaryFrom(from);
+      setSummaryTo(to);
+    } else {
+      setSummaryFrom(to);
+      setSummaryTo(from);
+    }
+  };
+
+  const onChartSelectDate = (date: string) => {
+    // Click a day → focus that single day; use the From/To inputs for a wider range.
+    setSummaryRange(date, date);
+  };
+
+  const toggleChartMetric = (key: MetricKey) => {
+    setChartMetrics((prev) => {
+      if (prev.includes(key)) {
+        // Keep at least one series visible.
+        if (prev.length === 1) return prev;
+        return prev.filter((k) => k !== key);
+      }
+      return [...prev, key];
+    });
+    setMetric(key);
+  };
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
@@ -439,7 +511,8 @@ export default function CrewMemberClient({
                 ) : null}
                 {meta ? (
                   <p className="mt-1 text-xs text-neutral-400">
-                    Today {meta.todayKey} · {meta.timezone}
+                    {formatCrewDateRange(meta.fromKey, meta.toKey)} ·{" "}
+                    {meta.timezone}
                   </p>
                 ) : null}
                 {!member.userId ? (
@@ -465,14 +538,73 @@ export default function CrewMemberClient({
             </header>
 
             <section className="mb-8 overflow-hidden rounded-xl border border-neutral-200 bg-white p-4">
-              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-neutral-500">
-                Today
-              </p>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                  Range totals
+                </p>
+                <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+                  <label className="flex items-center gap-1.5">
+                    <span className="text-xs uppercase tracking-wide text-neutral-400">
+                      From
+                    </span>
+                    <input
+                      type="date"
+                      value={summaryFrom ?? meta?.fromKey ?? ""}
+                      min={meta?.fromKey}
+                      max={summaryTo ?? meta?.toKey}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        if (!next) return;
+                        setSummaryFrom(next);
+                      }}
+                      className="rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm"
+                    />
+                  </label>
+                  <label className="flex items-center gap-1.5">
+                    <span className="text-xs uppercase tracking-wide text-neutral-400">
+                      To
+                    </span>
+                    <input
+                      type="date"
+                      value={summaryTo ?? meta?.toKey ?? ""}
+                      min={summaryFrom ?? meta?.fromKey}
+                      max={meta?.toKey}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        if (!next) return;
+                        setSummaryTo(next);
+                      }}
+                      className="rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm"
+                    />
+                  </label>
+                  {meta &&
+                  (summaryFrom !== meta.fromKey ||
+                    summaryTo !== meta.toKey) ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSummaryRange(meta.fromKey, meta.toKey)
+                      }
+                      className="rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50"
+                    >
+                      Full window
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+              {summaryRangeLabel ? (
+                <p className="mb-3 text-xs text-neutral-400">
+                  {summaryRangeLabel}
+                </p>
+              ) : null}
               <div className="grid grid-cols-5 gap-2 text-center">
                 {CREW_METRICS.map((m) => (
                   <div key={m.key}>
-                    <div className="text-lg font-semibold tabular-nums">
-                      {member.today[m.key]}
+                    <div
+                      className="text-lg font-semibold tabular-nums"
+                      style={{ color: CREW_METRIC_COLORS[m.key] }}
+                    >
+                      {summaryTotals[m.key]}
                     </div>
                     <div className="text-[11px] text-neutral-500">{m.label}</div>
                   </div>
@@ -482,30 +614,61 @@ export default function CrewMemberClient({
 
             <section className="mb-8">
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                {CREW_METRICS.map((opt) => (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => setMetric(opt.key)}
-                    className={`rounded-md px-2.5 py-1 text-xs ${
-                      metric === opt.key
-                        ? "bg-neutral-900 text-white"
-                        : "border border-neutral-200 bg-white text-neutral-600"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+                {CREW_METRICS.map((opt) => {
+                  const active = chartMetrics.includes(opt.key);
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => toggleChartMetric(opt.key)}
+                      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs border ${
+                        active
+                          ? "border-transparent text-white"
+                          : "border-neutral-200 bg-white text-neutral-500"
+                      }`}
+                      style={
+                        active
+                          ? { backgroundColor: CREW_METRIC_COLORS[opt.key] }
+                          : undefined
+                      }
+                      title={
+                        active
+                          ? `Hide ${opt.label} on chart`
+                          : `Show ${opt.label} on chart`
+                      }
+                    >
+                      <span
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{
+                          backgroundColor: active
+                            ? "#fff"
+                            : CREW_METRIC_COLORS[opt.key],
+                        }}
+                      />
+                      {opt.label}
+                    </button>
+                  );
+                })}
               </div>
               <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2">
                 {sparklineDays.length > 0 ? (
-                  <CrewSparkline days={sparklineDays} metric={metric} />
+                  <CrewSparkline
+                    days={sparklineDays}
+                    visibleMetrics={chartMetrics}
+                    selectedFrom={summaryFrom}
+                    selectedTo={summaryTo}
+                    onSelectDate={onChartSelectDate}
+                  />
                 ) : (
                   <p className="py-8 text-center text-sm text-neutral-500">
                     No points to chart yet
                   </p>
                 )}
               </div>
+              <p className="mt-2 text-[11px] text-neutral-400">
+                Y-axis = count · X-axis = date · shaded band = selected range ·
+                click a day to focus it
+              </p>
             </section>
 
             <section>

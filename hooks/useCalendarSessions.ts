@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import useSWR from "swr";
+import useSWR, { mutate as globalMutate } from "swr";
 import type { CalendarEvent, FetchedSession, OccupiedSession } from "@/types/calendar";
 import { toISO, addDays, addMinutes } from "@/lib/utils";
 import { type DurationMin } from "@/constants/calendar";
@@ -10,6 +10,10 @@ import { getAblyClient } from "@/lib/ably-client";
 import { sessionsChannel } from "@/lib/realtimeChannels";
 import type { SessionRealtimeEvent } from "@/types/sessionRealtime";
 import { swrKeys } from "@/lib/swr/keys";
+
+function refreshMineUpcoming() {
+  void globalMutate(swrKeys.sessionsMineUpcoming);
+}
 
 // ============================================
 // Types
@@ -229,6 +233,7 @@ export function useCalendarSessions({
       if (data.type === "session_removed") {
         setEvents((prev) => prev.filter((e) => e.id !== data.sessionId));
         setOccupied((prev) => prev.filter((e) => e.id !== data.sessionId));
+        refreshMineUpcoming();
         return;
       }
 
@@ -237,6 +242,15 @@ export function useCalendarSessions({
       const inRange = sessionOverlapsRange(session, rangeStart, rangeEnd);
       const visible = isSessionVisibleToUser(session, userId);
       const booked = (session.participants?.length ?? 0) >= 2;
+
+      // Keep the Upcoming sidebar in sync when the viewer is involved.
+      if (
+        userId &&
+        (session.owner_id === userId ||
+          (session.participants ?? []).some((p) => p.user_id === userId))
+      ) {
+        refreshMineUpcoming();
+      }
 
       // Occupancy layer: keep booked sessions visible as chips for everyone.
       if (inRange && booked) {
@@ -390,6 +404,7 @@ export function useCalendarSessions({
       setEvents((prev) =>
         prev.map((e) => (e.id === tempId ? { ...e, id: result.data.id } : e)),
       );
+      refreshMineUpcoming();
     },
     [currentUserId, setEvents],
   );
@@ -397,16 +412,17 @@ export function useCalendarSessions({
   const deleteSession = useCallback(
     async (id: string, message?: string) => {
       const existing = events.find((e) => e.id === id);
-      if (!existing) return;
-
-      setEvents((prev) => prev.filter((e) => e.id !== id));
+      if (existing) {
+        setEvents((prev) => prev.filter((e) => e.id !== id));
+      }
 
       const result = await sessionsApi.deleteSession(id, message);
 
       if (!result.ok) {
-        setEvents((prev) => [...prev, existing]);
+        if (existing) setEvents((prev) => [...prev, existing]);
         throw new sessionsApi.ApiError(result.error);
       }
+      refreshMineUpcoming();
     },
     [events, setEvents],
   );
@@ -414,16 +430,17 @@ export function useCalendarSessions({
   const leaveSession = useCallback(
     async (id: string, message?: string) => {
       const existing = events.find((e) => e.id === id);
-      if (!existing) return;
-
-      setEvents((prev) => prev.filter((e) => e.id !== id));
+      if (existing) {
+        setEvents((prev) => prev.filter((e) => e.id !== id));
+      }
 
       const result = await sessionsApi.leave(id, message);
 
       if (!result.ok) {
-        setEvents((prev) => [...prev, existing]);
+        if (existing) setEvents((prev) => [...prev, existing]);
         throw new sessionsApi.ApiError(result.error);
       }
+      refreshMineUpcoming();
     },
     [events, setEvents],
   );
@@ -444,6 +461,7 @@ export function useCalendarSessions({
         );
         throw new sessionsApi.ApiError(result.error);
       }
+      refreshMineUpcoming();
     },
     [setEvents],
   );

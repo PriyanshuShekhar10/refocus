@@ -96,6 +96,35 @@ export async function list(
 }
 
 /**
+ * GET /api/sessions?mineUpcoming=1 — all of the caller's future/in-progress sessions
+ */
+export async function listMineUpcoming(): Promise<ApiResult<ListSessionsPayload>> {
+  const res = await fetch(`${BASE}?mineUpcoming=1`);
+  const data = await parseJson(res);
+
+  if (!res.ok) {
+    return {
+      ok: false,
+      error: getErrorMessage(data, res.statusText || "Failed to load sessions"),
+    };
+  }
+
+  const payload = (data || {}) as {
+    currentUserId?: string | null;
+    sessions?: FetchedSession[];
+    occupied?: OccupiedSession[];
+  };
+  return {
+    ok: true,
+    data: {
+      currentUserId: payload.currentUserId ?? null,
+      sessions: payload.sessions ?? [],
+      occupied: payload.occupied ?? [],
+    },
+  };
+}
+
+/**
  * POST /api/sessions – create a session
  */
 export async function create(params: {

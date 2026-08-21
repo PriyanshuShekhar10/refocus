@@ -82,6 +82,8 @@ export async function getCrewStats(days = 14): Promise<{
   days: number;
   timezone: string;
   todayKey: string;
+  fromKey: string;
+  toKey: string;
   members: CrewMemberStats[];
 }> {
   const safeDays = Math.min(90, Math.max(1, Math.floor(days)));
@@ -245,6 +247,8 @@ export async function getCrewStats(days = 14): Promise<{
     days: safeDays,
     timezone: TIME_CONFIG.timezone,
     todayKey,
+    fromKey: dayKeys[0],
+    toKey: todayKey,
     members: result,
   };
 }

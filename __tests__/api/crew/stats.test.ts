@@ -16,6 +16,8 @@ describe("/api/crew/stats", () => {
       days: 14,
       timezone: "Asia/Kolkata",
       todayKey: "2026-08-21",
+      fromKey: "2026-08-08",
+      toKey: "2026-08-21",
       members: [],
     });
   });
