@@ -76,6 +76,10 @@ export async function POST(
       lastLoginIp: ips.lastLoginIp,
       knownIps: ips.knownIps,
     });
+    const { removeUserFromOngoingSessions } = await import(
+      "@/lib/removeUserFromOngoingSessions"
+    );
+    const sessionsCleared = await removeUserFromOngoingSessions(userId, db);
     await logAdminAction({
       actorId: guard.admin.userId,
       actorEmail: guard.admin.email,
@@ -83,8 +87,9 @@ export async function POST(
       targetUserId: userId,
       targetUserEmail: target.email,
       targetLabel: target.label,
+      details: { sessionsCleared },
     });
-    return NextResponse.json({ ok: true, action: "ban" });
+    return NextResponse.json({ ok: true, action: "ban", sessionsCleared });
   }
 
   if (action === "unban") {

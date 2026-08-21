@@ -23,6 +23,11 @@ export async function POST(
   const emailGate = await requireVerifiedEmail(userId);
   if (emailGate) return emailGate;
 
+  const { requireNotCommunityBanned } = await import(
+    "@/lib/communityModeration"
+  );
+  const banGate = await requireNotCommunityBanned(userId);
+  if (banGate) return banGate;
 
   // Rate limit join attempts (prevents probing/spam)
   const rl = await checkRateLimit(userId, "api");

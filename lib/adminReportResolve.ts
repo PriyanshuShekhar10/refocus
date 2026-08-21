@@ -184,6 +184,13 @@ export async function applyUserModeration(
       lastLoginIp: ips.lastLoginIp,
       knownIps: ips.knownIps,
     });
+    const { removeUserFromOngoingSessions } = await import(
+      "@/lib/removeUserFromOngoingSessions"
+    );
+    const sessionsCleared = await removeUserFromOngoingSessions(
+      reportedUserId,
+      db,
+    );
     await logAdminAction({
       actorId: admin.userId,
       actorEmail: admin.email,
@@ -191,7 +198,7 @@ export async function applyUserModeration(
       targetUserId: reportedUserId,
       targetUserEmail: reportedUserEmail,
       targetLabel: reportedUserLabel,
-      details: { via: "report" },
+      details: { via: "report", sessionsCleared },
     });
     return;
   }
