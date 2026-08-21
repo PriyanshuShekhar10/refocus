@@ -123,11 +123,11 @@ function CrewSessionsSection({ email }: { email: string }) {
   const slice = filtered.slice(start, start + pageSize);
 
   return (
-    <section className="mt-10">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+    <section className="mt-8 sm:mt-10">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
         <h2 className="text-sm font-medium text-neutral-800">Sessions</h2>
-        <label className="flex items-center gap-2 text-sm text-neutral-600">
-          <span className="text-xs uppercase tracking-wide text-neutral-400">
+        <label className="flex min-w-0 items-center gap-2 text-sm text-neutral-600">
+          <span className="shrink-0 text-xs uppercase tracking-wide text-neutral-400">
             Status
           </span>
           <select
@@ -137,7 +137,7 @@ function CrewSessionsSection({ email }: { email: string }) {
                 e.target.value as CrewSessionRow["status"] | "all",
               )
             }
-            className="rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm"
+            className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm sm:flex-none"
           >
             {SESSION_STATUS_FILTERS.map((s) => (
               <option key={s} value={s}>
@@ -156,7 +156,7 @@ function CrewSessionsSection({ email }: { email: string }) {
       {!loading && !error ? (
         <>
           <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[28rem] text-sm">
               <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
                 <tr>
                   <th className="px-4 py-3 font-medium">When</th>
@@ -262,10 +262,12 @@ function DayTable({
   return (
     <div>
       <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[28rem] text-sm">
           <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
             <tr>
-              <th className="px-4 py-3 font-medium">Day</th>
+              <th className="sticky left-0 z-10 bg-neutral-50 px-4 py-3 font-medium">
+                Day
+              </th>
               {showAllMetrics ? (
                 CREW_METRICS.map((m) => (
                   <th key={m.key} className="px-3 py-3 text-right font-medium">
@@ -282,7 +284,7 @@ function DayTable({
           <tbody>
             {slice.map((d) => (
               <tr key={d.date} className="border-t border-neutral-100">
-                <td className="px-4 py-2.5 tabular-nums text-neutral-700">
+                <td className="sticky left-0 z-10 bg-white px-4 py-2.5 tabular-nums text-neutral-700">
                   {d.date}
                 </td>
                 {showAllMetrics ? (
@@ -482,8 +484,8 @@ export default function CrewMemberClient({
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
-      <div className="mx-auto max-w-2xl px-4 py-10">
-        <div className="mb-6">
+      <div className="mx-auto max-w-2xl px-4 py-6 sm:py-10">
+        <div className="mb-5 sm:mb-6">
           <Link
             href="/crew"
             className="text-sm text-neutral-500 hover:text-neutral-800"
@@ -501,16 +503,18 @@ export default function CrewMemberClient({
 
         {member ? (
           <>
-            <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight">
+            <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+              <div className="min-w-0">
+                <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
                   {member.name || member.email}
                 </h1>
                 {member.name ? (
-                  <p className="mt-1 text-sm text-neutral-500">{member.email}</p>
+                  <p className="mt-1 break-all text-sm text-neutral-500">
+                    {member.email}
+                  </p>
                 ) : null}
                 {meta ? (
-                  <p className="mt-1 text-xs text-neutral-400">
+                  <p className="mt-1 text-xs text-neutral-400 break-words">
                     {formatCrewDateRange(meta.fromKey, meta.toKey)} ·{" "}
                     {meta.timezone}
                   </p>
@@ -519,13 +523,13 @@ export default function CrewMemberClient({
                   <p className="mt-1 text-xs text-amber-700">Not registered</p>
                 ) : null}
               </div>
-              <div className="flex gap-1 rounded-lg border border-neutral-200 bg-white p-1">
+              <div className="flex w-full shrink-0 gap-1 rounded-lg border border-neutral-200 bg-white p-1 sm:w-auto">
                 {CREW_RANGE_OPTIONS.map((n) => (
                   <button
                     key={n}
                     type="button"
                     onClick={() => setDays(n)}
-                    className={`rounded-md px-3 py-1.5 text-sm ${
+                    className={`flex-1 rounded-md px-3 py-1.5 text-sm sm:flex-none ${
                       days === n
                         ? "bg-neutral-900 text-white"
                         : "text-neutral-600 hover:bg-neutral-100"
@@ -537,14 +541,14 @@ export default function CrewMemberClient({
               </div>
             </header>
 
-            <section className="mb-8 overflow-hidden rounded-xl border border-neutral-200 bg-white p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <section className="mb-6 overflow-hidden rounded-xl border border-neutral-200 bg-white p-3 sm:mb-8 sm:p-4">
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                 <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
                   Range totals
                 </p>
-                <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-600">
-                  <label className="flex items-center gap-1.5">
-                    <span className="text-xs uppercase tracking-wide text-neutral-400">
+                <div className="flex flex-col gap-2 text-sm text-neutral-600 sm:flex-row sm:flex-wrap sm:items-center">
+                  <label className="flex min-w-0 items-center gap-1.5">
+                    <span className="w-10 shrink-0 text-xs uppercase tracking-wide text-neutral-400 sm:w-auto">
                       From
                     </span>
                     <input
@@ -557,11 +561,11 @@ export default function CrewMemberClient({
                         if (!next) return;
                         setSummaryFrom(next);
                       }}
-                      className="rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm"
+                      className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm sm:flex-none"
                     />
                   </label>
-                  <label className="flex items-center gap-1.5">
-                    <span className="text-xs uppercase tracking-wide text-neutral-400">
+                  <label className="flex min-w-0 items-center gap-1.5">
+                    <span className="w-10 shrink-0 text-xs uppercase tracking-wide text-neutral-400 sm:w-auto">
                       To
                     </span>
                     <input
@@ -574,7 +578,7 @@ export default function CrewMemberClient({
                         if (!next) return;
                         setSummaryTo(next);
                       }}
-                      className="rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm"
+                      className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm sm:flex-none"
                     />
                   </label>
                   {meta &&
@@ -597,22 +601,24 @@ export default function CrewMemberClient({
                   {summaryRangeLabel}
                 </p>
               ) : null}
-              <div className="grid grid-cols-5 gap-2 text-center">
+              <div className="grid grid-cols-3 gap-2 text-center sm:grid-cols-5">
                 {CREW_METRICS.map((m) => (
-                  <div key={m.key}>
+                  <div key={m.key} className="min-w-0">
                     <div
-                      className="text-lg font-semibold tabular-nums"
+                      className="text-base font-semibold tabular-nums sm:text-lg"
                       style={{ color: CREW_METRIC_COLORS[m.key] }}
                     >
                       {summaryTotals[m.key]}
                     </div>
-                    <div className="text-[11px] text-neutral-500">{m.label}</div>
+                    <div className="truncate text-[10px] text-neutral-500 sm:text-[11px]">
+                      {m.label}
+                    </div>
                   </div>
                 ))}
               </div>
             </section>
 
-            <section className="mb-8">
+            <section className="mb-6 sm:mb-8">
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 {CREW_METRICS.map((opt) => {
                   const active = chartMetrics.includes(opt.key);
@@ -650,15 +656,17 @@ export default function CrewMemberClient({
                   );
                 })}
               </div>
-              <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2">
+              <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white px-2 py-2 sm:px-3">
                 {sparklineDays.length > 0 ? (
-                  <CrewSparkline
-                    days={sparklineDays}
-                    visibleMetrics={chartMetrics}
-                    selectedFrom={summaryFrom}
-                    selectedTo={summaryTo}
-                    onSelectDate={onChartSelectDate}
-                  />
+                  <div className="min-w-[18rem]">
+                    <CrewSparkline
+                      days={sparklineDays}
+                      visibleMetrics={chartMetrics}
+                      selectedFrom={summaryFrom}
+                      selectedTo={summaryTo}
+                      onSelectDate={onChartSelectDate}
+                    />
+                  </div>
                 ) : (
                   <p className="py-8 text-center text-sm text-neutral-500">
                     No points to chart yet
@@ -666,16 +674,15 @@ export default function CrewMemberClient({
                 )}
               </div>
               <p className="mt-2 text-[11px] text-neutral-400">
-                Y-axis = count · X-axis = date · shaded band = selected range ·
-                click a day to focus it
+                Tap a day on the chart to focus that date
               </p>
             </section>
 
             <section>
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
                 <h2 className="text-sm font-medium text-neutral-800">By day</h2>
-                <label className="flex items-center gap-2 text-sm text-neutral-600">
-                  <span className="text-xs uppercase tracking-wide text-neutral-400">
+                <label className="flex min-w-0 items-center gap-2 text-sm text-neutral-600">
+                  <span className="shrink-0 text-xs uppercase tracking-wide text-neutral-400">
                     Filter
                   </span>
                   <select
@@ -683,7 +690,7 @@ export default function CrewMemberClient({
                     onChange={(e) =>
                       setFilterMode(e.target.value as DayFilterMode)
                     }
-                    className="rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm"
+                    className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm sm:flex-none"
                   >
                     <option value="activity">Days with any activity</option>
                     <option value="metric">
