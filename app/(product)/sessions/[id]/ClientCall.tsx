@@ -328,15 +328,22 @@ export default function ClientCall({
         const data = message.data as SessionCheerEvent | undefined;
         if (data?.type !== "session_cheer") return;
         if (data.sessionId !== sessionId) return;
-        if (data.fromUserId === currentUserId) return;
         unlockSessionCompleteSound();
         playSessionCompleteSound();
         setCheerBurstId((n) => n + 1);
-        setCheerToast(
-          partnerDisplayName
-            ? `${partnerDisplayName} sent a cheer`
-            : "Partner sent a cheer",
-        );
+        if (data.fromUserId === currentUserId) {
+          setCheerToast(
+            partner
+              ? `Cheer sent to ${partnerDisplayName}`
+              : "Cheer sent",
+          );
+        } else {
+          setCheerToast(
+            partnerDisplayName
+              ? `${partnerDisplayName} sent a cheer`
+              : "Partner sent a cheer",
+          );
+        }
       };
       channel.subscribe("event", onEvent);
       return () => {
@@ -349,7 +356,7 @@ export default function ClientCall({
     } catch {
       return undefined;
     }
-  }, [phase, sessionId, currentUserId, partnerDisplayName]);
+  }, [phase, sessionId, currentUserId, partnerDisplayName, partner]);
 
   useEffect(() => {
     if (cheerBurstId === 0) return;
@@ -385,18 +392,14 @@ export default function ClientCall({
         );
         return;
       }
-      setCheerToast(
-        partner
-          ? `Cheer sent to ${partnerDisplayName}`
-          : "Cheer sent",
-      );
+      // Sound + confetti also arrive via Ably for both sides (including sender).
     } catch {
       cheerCooldownUntilRef.current = Date.now();
       setCheerToast("Couldn’t send cheer");
     } finally {
       setCheerSending(false);
     }
-  }, [cheerSending, sessionId, partner, partnerDisplayName]);
+  }, [cheerSending, sessionId]);
 
   const startCall = useCallback(() => {
     // Unlock Web Audio during this click so the end-of-session chime can play
