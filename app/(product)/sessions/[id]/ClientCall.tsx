@@ -8,7 +8,10 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { formatLocalDateTime } from "@/lib/localTime";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
 import { WRAP_UP_MINUTES } from "@/lib/sessionWindow";
-import { playSessionCompleteSound } from "@/lib/sessionCompleteSound";
+import { playSessionCompleteSound, unlockSessionCompleteSound } from "@/lib/sessionCompleteSound";
+import { getAblyClient } from "@/lib/ably-client";
+import { sessionAlertsChannel } from "@/lib/realtimeChannels";
+import type { SessionCheerEvent } from "@/types/sessionCheer";
 import { useSessionTasks } from "@/hooks/useSessionTasks";
 import {
   SessionTaskPill,
@@ -62,6 +65,8 @@ const CONFETTI_COLORS = [
 const COMPLETION_GRACE_MS = 60_000;
 const WRAP_UP_MS = WRAP_UP_MINUTES * 60_000;
 const COMPLETE_BANNER_MS = 10_000;
+const CHEER_COOLDOWN_MS = 8_000;
+const CHEER_BURST_MS = 3_200;
 
 function formatRemaining(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -95,6 +100,10 @@ export default function ClientCall({
   const [showLeaveConfirm, setShowLeaveConfirm] = useState<boolean>(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
+  const [cheerBurstId, setCheerBurstId] = useState(0);
+  const [cheerToast, setCheerToast] = useState<string | null>(null);
+  const [cheerSending, setCheerSending] = useState(false);
+  const cheerCooldownUntilRef = useRef(0);
   const sessionTasks = useSessionTasks(sessionId, currentUserId);
   const [partner, setPartner] = useState<SessionPartner | null>(() =>
     partnerFromPrejoin(prejoin),
@@ -307,7 +316,92 @@ export default function ClientCall({
     return () => window.clearTimeout(timeout);
   }, [wrapUpBanner]);
 
+  // Partner cheer / alert via Ably (sound + confetti on the receiving side).
+  useEffect(() => {
+    if (phase !== "in-call") return;
+    let channel: ReturnType<ReturnType<typeof getAblyClient>["channels"]["get"]> | null =
+      null;
+    try {
+      const client = getAblyClient();
+      channel = client.channels.get(sessionAlertsChannel(sessionId));
+      const onEvent = (message: { data?: unknown }) => {
+        const data = message.data as SessionCheerEvent | undefined;
+        if (data?.type !== "session_cheer") return;
+        if (data.sessionId !== sessionId) return;
+        if (data.fromUserId === currentUserId) return;
+        unlockSessionCompleteSound();
+        playSessionCompleteSound();
+        setCheerBurstId((n) => n + 1);
+        setCheerToast(
+          partnerDisplayName
+            ? `${partnerDisplayName} sent a cheer`
+            : "Partner sent a cheer",
+        );
+      };
+      channel.subscribe("event", onEvent);
+      return () => {
+        try {
+          channel?.unsubscribe("event", onEvent);
+        } catch {
+          // ignore
+        }
+      };
+    } catch {
+      return undefined;
+    }
+  }, [phase, sessionId, currentUserId, partnerDisplayName]);
+
+  useEffect(() => {
+    if (cheerBurstId === 0) return;
+    const t = window.setTimeout(() => setCheerBurstId(0), CHEER_BURST_MS);
+    return () => window.clearTimeout(t);
+  }, [cheerBurstId]);
+
+  useEffect(() => {
+    if (!cheerToast) return;
+    const t = window.setTimeout(() => setCheerToast(null), 2800);
+    return () => window.clearTimeout(t);
+  }, [cheerToast]);
+
+  const sendCheer = useCallback(async () => {
+    if (cheerSending) return;
+    const now = Date.now();
+    if (now < cheerCooldownUntilRef.current) {
+      setCheerToast("Wait a moment before cheering again");
+      return;
+    }
+    unlockSessionCompleteSound();
+    setCheerSending(true);
+    cheerCooldownUntilRef.current = now + CHEER_COOLDOWN_MS;
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/alert`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        cheerCooldownUntilRef.current = Date.now();
+        setCheerToast(
+          typeof data.error === "string" ? data.error : "Couldn’t send cheer",
+        );
+        return;
+      }
+      setCheerToast(
+        partner
+          ? `Cheer sent to ${partnerDisplayName}`
+          : "Cheer sent",
+      );
+    } catch {
+      cheerCooldownUntilRef.current = Date.now();
+      setCheerToast("Couldn’t send cheer");
+    } finally {
+      setCheerSending(false);
+    }
+  }, [cheerSending, sessionId, partner, partnerDisplayName]);
+
   const startCall = useCallback(() => {
+    // Unlock Web Audio during this click so the end-of-session chime can play
+    // later when the timer fires (no user gesture then).
+    unlockSessionCompleteSound();
     setPhase("in-call");
   }, []);
 
@@ -322,6 +416,7 @@ export default function ClientCall({
   }, []);
 
   const toggleMute = useCallback(() => {
+    unlockSessionCompleteSound();
     setMuted((prev) => {
       const next = !prev;
       sendDailyMessage({ action: "set-audio", state: !next });
@@ -330,6 +425,7 @@ export default function ClientCall({
   }, [sendDailyMessage]);
 
   const toggleVideo = useCallback(() => {
+    unlockSessionCompleteSound();
     setVideoOff((prev) => {
       const next = !prev;
       sendDailyMessage({ action: "set-video", state: !next });
@@ -338,6 +434,7 @@ export default function ClientCall({
   }, [sendDailyMessage]);
 
   const leaveCall = useCallback(() => {
+    unlockSessionCompleteSound();
     if (endMs - Date.now() < COMPLETION_GRACE_MS) {
       setCompletedNaturally(true);
       if (!completeSoundPlayedRef.current) {
@@ -727,6 +824,17 @@ export default function ClientCall({
         {partner ? (
           <button
             type="button"
+            onClick={() => void sendCheer()}
+            disabled={cheerSending}
+            title="Send a cheer — partner hears a chime and sees confetti"
+            className="rounded-md border border-[#CA5995]/50 bg-[#5D1C6A]/40 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#CA5995]/40 disabled:opacity-60"
+          >
+            Cheer
+          </button>
+        ) : null}
+        {partner ? (
+          <button
+            type="button"
             onClick={() => setShowReportDialog(true)}
             className="rounded-md border border-white/20 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/10"
           >
@@ -758,6 +866,33 @@ export default function ClientCall({
           title="Refocus session"
           className="min-w-0 flex-1 border-0"
         />
+        {cheerBurstId > 0 ? (
+          <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+            <Confetti
+              key={cheerBurstId}
+              active
+              reducedMotion={prefersReducedMotion}
+              burst="center"
+              count={72}
+            />
+          </div>
+        ) : null}
+        <AnimatePresence>
+          {cheerToast ? (
+            <motion.div
+              key={cheerToast}
+              className="pointer-events-none absolute inset-x-0 top-4 z-40 flex justify-center px-4"
+              initial={{ opacity: 0, y: prefersReducedMotion ? 0 : -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: prefersReducedMotion ? 0 : -6 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
+            >
+              <div className="rounded-full border border-white/20 bg-slate-900/90 px-4 py-2 text-xs font-medium text-white shadow-lg backdrop-blur">
+                {cheerToast}
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
         {tasksOpen ? (
           <SessionTaskRail
             tasks={sessionTasks}

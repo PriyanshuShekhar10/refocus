@@ -12,7 +12,8 @@ export type RateLimitType =
   | "search" // Search operations
   | "ai" // AI / LLM calls (strict — external API cost)
   | "report" // User content reports
-  | "admin_mail"; // Admin mailbox sends
+  | "admin_mail" // Admin mailbox sends
+  | "session_cheer"; // In-call partner cheer / alert
 
 interface RateLimitConfig {
   requests: number;
@@ -27,6 +28,7 @@ const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
   ai: { requests: 10, window: "1 m" },
   report: { requests: 10, window: "1 h" },
   admin_mail: { requests: 20, window: "1 h" },
+  session_cheer: { requests: 8, window: "1 m" },
 };
 
 type BucketState = Map<string, number[]>;

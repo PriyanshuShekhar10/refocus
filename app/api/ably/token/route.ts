@@ -20,6 +20,7 @@ export async function GET() {
       [sessionsChannel()]: ["subscribe"],
       [welcomeBoardChannel()]: ["subscribe"],
       "session:*:tasks": ["subscribe"],
+      "session:*:alerts": ["subscribe"],
     });
     const tokenRequest = await createAblyTokenRequest({
       clientId: userId,

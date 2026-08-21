@@ -1,26 +1,74 @@
 /**
  * Short celebratory chime for session complete. Synthesized so we don't
- * ship an audio file; skipped when the tab is hidden.
+ * ship an audio file.
+ *
+ * Browsers suspend AudioContext until a user gesture. Session end is usually
+ * a timer (no gesture), so we unlock on call start and resume before playing.
  */
-export function playSessionCompleteSound(): void {
-  if (typeof window === "undefined") return;
-  if (typeof document !== "undefined" && document.hidden) return;
 
-  const AudioCtx =
+type AudioContextConstructor = typeof AudioContext;
+
+let sharedCtx: AudioContext | null = null;
+
+function getAudioContextConstructor(): AudioContextConstructor | null {
+  if (typeof window === "undefined") return null;
+  return (
     window.AudioContext ||
-    (window as unknown as { webkitAudioContext?: typeof AudioContext })
-      .webkitAudioContext;
-  if (!AudioCtx) return;
+    (window as unknown as { webkitAudioContext?: AudioContextConstructor })
+      .webkitAudioContext ||
+    null
+  );
+}
 
-  const ctx = new AudioCtx();
+function getOrCreateContext(): AudioContext | null {
+  const AudioCtx = getAudioContextConstructor();
+  if (!AudioCtx) return null;
+  if (!sharedCtx || sharedCtx.state === "closed") {
+    sharedCtx = new AudioCtx();
+  }
+  return sharedCtx;
+}
+
+/**
+ * Call from a user gesture (e.g. Start call) so the chime can play later
+ * when the session timer hits zero.
+ */
+export function unlockSessionCompleteSound(): void {
+  const ctx = getOrCreateContext();
+  if (!ctx) return;
+
+  const resume = () => {
+    if (ctx.state === "suspended") {
+      void ctx.resume().catch(() => undefined);
+    }
+  };
+  resume();
+
+  // iOS / strict autoplay: a tiny silent buffer during the gesture unlocks output.
+  try {
+    const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.connect(ctx.destination);
+    src.start(0);
+  } catch {
+    // ignore
+  }
+}
+
+function scheduleChime(ctx: AudioContext): void {
   const now = ctx.currentTime;
   const master = ctx.createGain();
-  // Louder celebratory chime — was 0.18 and easy to miss over call audio / OS volume.
   master.gain.setValueAtTime(0.55, now);
   master.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
   master.connect(ctx.destination);
 
-  const notes: Array<{ freq: number; at: number; dur: number; type: OscillatorType }> = [
+  const notes: Array<{
+    freq: number;
+    at: number;
+    dur: number;
+    type: OscillatorType;
+  }> = [
     { freq: 523.25, at: 0, dur: 0.22, type: "triangle" }, // C5
     { freq: 659.25, at: 0.11, dur: 0.22, type: "triangle" }, // E5
     { freq: 783.99, at: 0.22, dur: 0.28, type: "triangle" }, // G5
@@ -41,8 +89,28 @@ export function playSessionCompleteSound(): void {
     osc.start(now + note.at);
     osc.stop(now + note.at + note.dur + 0.02);
   }
+}
 
-  window.setTimeout(() => {
-    void ctx.close().catch(() => undefined);
-  }, 1800);
+export function playSessionCompleteSound(): void {
+  if (typeof window === "undefined") return;
+
+  const ctx = getOrCreateContext();
+  if (!ctx) return;
+
+  const play = () => {
+    try {
+      scheduleChime(ctx);
+    } catch {
+      // ignore — never break the leave/complete flow for audio
+    }
+  };
+
+  if (ctx.state === "suspended") {
+    void ctx
+      .resume()
+      .then(play)
+      .catch(() => undefined);
+    return;
+  }
+  play();
 }

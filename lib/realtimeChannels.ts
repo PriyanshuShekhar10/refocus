@@ -22,3 +22,7 @@ export function welcomeBoardChannel() {
 export function sessionTasksChannel(sessionId: string) {
   return `session:${sessionId}:tasks`;
 }
+
+export function sessionAlertsChannel(sessionId: string) {
+  return `session:${sessionId}:alerts`;
+}
