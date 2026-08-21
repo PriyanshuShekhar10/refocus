@@ -14,7 +14,9 @@ export type AdminAuditAction =
   | "friend_message.delete"
   | "report.dismiss"
   | "report.resolve"
-  | "user.email";
+  | "user.email"
+  | "crew.add"
+  | "crew.remove";
 
 export type AdminAuditEntry = {
   _id?: ObjectId;

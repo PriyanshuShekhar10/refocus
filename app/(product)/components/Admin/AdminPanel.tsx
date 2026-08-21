@@ -17,6 +17,7 @@ import {
   Trash2,
   UserX,
   Users,
+  UserPlus,
   Volume2,
   VolumeX,
   X,
@@ -32,6 +33,7 @@ import { PageRefreshButton } from "@/components/page-refresh";
 import AdminMailbox, {
   type MailRecipient,
 } from "./AdminMailbox";
+import AdminCrew from "./AdminCrew";
 
 type AdminSection =
   | "overview"
@@ -41,7 +43,8 @@ type AdminSection =
   | "reports"
   | "history"
   | "ip-activity"
-  | "logins";
+  | "logins"
+  | "crew";
 
 type Stats = {
   users: {
@@ -243,6 +246,7 @@ const SECTIONS: {
 }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "users", label: "Users", icon: Users },
+  { id: "crew", label: "Crew", icon: UserPlus },
   { id: "logins", label: "Logins", icon: LogIn },
   { id: "deleted", label: "Deleted", icon: UserX },
   { id: "mailbox", label: "Mailbox", icon: Mail },
@@ -265,6 +269,8 @@ const ACTION_LABELS: Record<string, string> = {
   "report.dismiss": "Dismissed report",
   "report.resolve": "Resolved report",
   "user.email": "Emailed users",
+  "crew.add": "Added crew member",
+  "crew.remove": "Removed crew member",
 };
 
 function StatCard({
@@ -1187,6 +1193,8 @@ export default function AdminPanel() {
             ) : null}
           </div>
         ) : null}
+
+        {section === "crew" ? <AdminCrew active /> : null}
 
         {section === "users" ? (
           <div className="space-y-4">

@@ -310,6 +310,25 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
       },
     ],
   },
+  {
+    collection: "engagement_crew",
+    indexes: [
+      {
+        name: "engagement_crew_canonical_unique",
+        keys: { canonicalEmail: 1 },
+        options: { unique: true },
+      },
+    ],
+  },
+  {
+    collection: "session_lifecycle_events",
+    indexes: [
+      {
+        name: "session_lifecycle_events_user_type_at",
+        keys: { userId: 1, type: 1, at: 1 },
+      },
+    ],
+  },
 ];
 
 /**

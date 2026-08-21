@@ -14,7 +14,11 @@ vi.mock("@/lib/sessionRealtime", () => ({
 }));
 
 const sessionsCol = mockCollection();
-const db = mockDb({ sessions: sessionsCol });
+const lifecycleCol = mockCollection();
+const db = mockDb({
+  sessions: sessionsCol,
+  session_lifecycle_events: lifecycleCol,
+});
 
 vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
@@ -48,6 +52,20 @@ function bookedSession() {
   };
 }
 
+function soloSession() {
+  return {
+    _id: SESSION_ID,
+    owner_id: String(OWNER_ID),
+    start_time: START,
+    end_time: END,
+    duration_min: 50,
+    session_type: "focus",
+    session_participants: [
+      { user_id: String(OWNER_ID), joined_at: new Date() },
+    ],
+  };
+}
+
 describe("session cancel notes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -55,6 +73,8 @@ describe("session cancel notes", () => {
     sessionsCol.findOne.mockResolvedValue(bookedSession());
     sessionsCol.updateOne.mockResolvedValue({ modifiedCount: 1 });
     sessionsCol.deleteOne.mockResolvedValue({ deletedCount: 1 });
+    lifecycleCol.insertOne.mockResolvedValue({ insertedId: new ObjectId() });
+    lifecycleCol.createIndex.mockResolvedValue("idx");
   });
 
   it("emails the partner when the owner deletes with a note", async () => {
@@ -74,6 +94,34 @@ describe("session cancel notes", () => {
         actorUserId: String(OWNER_ID),
         message: "Something came up",
         kind: "delete",
+      }),
+    );
+    expect(lifecycleCol.insertOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "session_deleted",
+        userId: String(OWNER_ID),
+        sessionId: String(SESSION_ID),
+        kind: "transfer",
+      }),
+    );
+  });
+
+  it("logs a hard-delete lifecycle event for solo cancel", async () => {
+    sessionsCol.findOne.mockResolvedValue(soloSession());
+    mockSession(String(OWNER_ID));
+    const req = mockRequest(`/api/sessions/${SESSION_ID}`, {
+      method: "DELETE",
+      body: {},
+    });
+    const { status } = await parseResponse(
+      await DELETE(req, makeParams(String(SESSION_ID))),
+    );
+    expect(status).toBe(200);
+    expect(sessionsCol.deleteOne).toHaveBeenCalled();
+    expect(lifecycleCol.insertOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "session_deleted",
+        kind: "hard",
       }),
     );
   });

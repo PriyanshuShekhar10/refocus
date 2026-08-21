@@ -17,6 +17,7 @@ import {
 } from "@/lib/sessionPersonalization";
 import { normalizeCancelMessage } from "@/lib/sessionCancelMessage";
 import { notifySessionCancelled } from "@/lib/notifySessionCancelled";
+import { logSessionDeleted } from "@/lib/sessionLifecycleEvents";
 
 // Shared session document type for this file
 type SessionDoc = {
@@ -175,6 +176,11 @@ export async function DELETE(
         },
       },
     );
+    await logSessionDeleted({
+      userId,
+      sessionId,
+      kind: "transfer",
+    });
     const updated = await col.findOne({ _id: new ObjectId(sessionId) });
     if (updated) {
       await publishSessionDocUpserted(db, {
@@ -185,6 +191,11 @@ export async function DELETE(
     }
   } else {
     await col.deleteOne({ _id: new ObjectId(sessionId) });
+    await logSessionDeleted({
+      userId,
+      sessionId,
+      kind: "hard",
+    });
     await publishSessionRemoved(sessionId);
   }
 
