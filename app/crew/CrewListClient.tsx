@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CrewSparkline } from "./CrewSparkline";
 import {
   CREW_METRICS,
   CREW_RANGE_OPTIONS,
