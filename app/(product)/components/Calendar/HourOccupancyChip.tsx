@@ -1,24 +1,42 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { OccupiedPerson } from "@/types/calendar";
+
+const emptySubscribe = () => () => {};
 
 export function HourOccupancyChip({
   people,
   total,
+  tense = "attending",
   className = "",
 }: {
   people: OccupiedPerson[];
   total: number;
+  /** Past hours use "attended"; current/future use "attending". */
+  tense?: "attending" | "attended";
   className?: string;
 }) {
+  // Avoid hydration mismatch: server has no reliable "now" vs hour boundary.
+  const hydrated = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
   if (total <= 0) return null;
   const shown = people.slice(0, 2);
   const extra = Math.max(0, total - shown.length);
+  const displayTense = hydrated ? tense : "attending";
+  const verb = displayTense === "attended" ? "attended" : "attending";
   const label =
     total === 1
-      ? "1 person in a session this hour"
-      : `${total} people in sessions this hour`;
+      ? displayTense === "attended"
+        ? "1 person attended this hour"
+        : "1 person in a session this hour"
+      : displayTense === "attended"
+        ? `${total} people attended this hour`
+        : `${total} people in sessions this hour`;
 
   return (
     <div
@@ -45,7 +63,7 @@ export function HourOccupancyChip({
         </span>
       ) : (
         <span className="pr-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-400">
-          attending
+          {verb}
         </span>
       )}
     </div>

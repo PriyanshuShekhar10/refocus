@@ -11,6 +11,7 @@ import {
   addDaysInTimeZone,
   minutesOfDayInTimeZone,
   startOfDayInTimeZone,
+  wallMinutesOnDayToUtc,
   ymdInTimeZone,
 } from "@/lib/zonedTime";
 import { useUserTimezone } from "@/components/user-timezone-provider";
@@ -591,6 +592,13 @@ export default function Calendar({
                   const hour = startHour + i;
                   const dayKey = ymdInTimeZone(d, timeZone);
                   const occ = hourOccupancy.get(occupancyKey(dayKey, hour));
+                  const hourEnd = wallMinutesOnDayToUtc(
+                    d,
+                    (hour + 1) * 60,
+                    timeZone,
+                  );
+                  const tense =
+                    hourEnd.getTime() <= now.getTime() ? "attended" : "attending";
                   return (
                   <div
                     key={i}
@@ -602,6 +610,7 @@ export default function Calendar({
                         <HourOccupancyChip
                           people={occ.people}
                           total={occ.total}
+                          tense={tense}
                         />
                       </div>
                     ) : null}

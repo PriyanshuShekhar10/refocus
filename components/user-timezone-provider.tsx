@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  canonicalizeTimeZone,
   getBrowserTimeZone,
   getDisplayTimeZone,
   setActiveDisplayTimeZone,
@@ -30,7 +31,7 @@ const TimezoneContext = createContext<TimezoneContextValue | null>(null);
 
 function resolveEffective(preference: string): string {
   if (preference && preference !== "auto" && isValidTimeZone(preference)) {
-    return preference;
+    return canonicalizeTimeZone(preference);
   }
   return getBrowserTimeZone();
 }

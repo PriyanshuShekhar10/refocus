@@ -10,6 +10,26 @@ import { isValidTimeZone } from "@/lib/zonedTime";
 /** Preferred IANA zone, or undefined for browser-local. */
 let activeDisplayTimeZone: string | undefined;
 
+/**
+ * Map legacy IANA aliases to the canonical id browsers typically report.
+ * Node and browsers disagree on a few (e.g. Asia/Calcutta vs Asia/Kolkata),
+ * which causes React hydration mismatches when the zone is rendered as text.
+ */
+const TIMEZONE_ALIASES: Record<string, string> = {
+  "Asia/Calcutta": "Asia/Kolkata",
+  "Asia/Saigon": "Asia/Ho_Chi_Minh",
+  "Asia/Katmandu": "Asia/Kathmandu",
+  "Asia/Rangoon": "Asia/Yangon",
+  "Europe/Kiev": "Europe/Kyiv",
+  "America/Buenos_Aires": "America/Argentina/Buenos_Aires",
+  "America/Indianapolis": "America/Indiana/Indianapolis",
+  "Pacific/Samoa": "Pacific/Pago_Pago",
+};
+
+export function canonicalizeTimeZone(timeZone: string): string {
+  return TIMEZONE_ALIASES[timeZone] ?? timeZone;
+}
+
 export function setActiveDisplayTimeZone(
   timeZone: string | null | undefined,
 ): void {
@@ -17,7 +37,7 @@ export function setActiveDisplayTimeZone(
     activeDisplayTimeZone = undefined;
     return;
   }
-  activeDisplayTimeZone = timeZone;
+  activeDisplayTimeZone = canonicalizeTimeZone(timeZone);
 }
 
 export function getActiveDisplayTimeZone(): string | undefined {
@@ -26,7 +46,8 @@ export function getActiveDisplayTimeZone(): string | undefined {
 
 export function getBrowserTimeZone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    return canonicalizeTimeZone(tz);
   } catch {
     return "UTC";
   }

@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
   const col = db.collection<DbSession>("sessions");
   const myRangeFilter = { start_time: { $gte: fromDate, $lt: toDate } };
 
-  const [openSlots, mySessions, bookedSlots] = await Promise.all([
+  const [openSlots, mySessions, bookedSlots, binnedSlots] = await Promise.all([
     bookableFrom < toDate
       ? col
           .find({
@@ -115,7 +115,21 @@ export async function GET(req: NextRequest) {
       .sort({ start_time: 1 })
       .toArray(),
     // Booked sessions for occupancy chips (privacy-safe avatars only in response).
+    // Includes past completed matches so hours show "attended".
     col
+      .find({
+        start_time: { $gte: fromDate, $lt: toDate },
+        $or: [
+          { participant_count: { $gte: 2 } },
+          { "session_participants.1": { $exists: true } },
+        ],
+      })
+      .sort({ start_time: 1 })
+      .limit(MAX_OCCUPIED_SLOTS)
+      .toArray(),
+    // Archived past sessions (moved out of live collection by bin script).
+    db
+      .collection<DbSession & { _originalId?: ObjectId }>("sessions_bin")
       .find({
         start_time: { $gte: fromDate, $lt: toDate },
         $or: [
@@ -136,7 +150,21 @@ export async function GET(req: NextRequest) {
       new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
   );
 
-  let occupiedDocs = bookedSlots.filter((s) => participantCount(s) >= 2);
+  const occupiedById = new Map<string, DbSession & { _originalId?: ObjectId }>();
+  for (const s of bookedSlots) {
+    if (participantCount(s) >= 2) occupiedById.set(String(s._id), s);
+  }
+  for (const s of binnedSlots) {
+    if (participantCount(s) < 2) continue;
+    const id = String(s._originalId ?? s._id);
+    if (!occupiedById.has(id)) occupiedById.set(id, s);
+  }
+  let occupiedDocs = Array.from(occupiedById.values())
+    .sort(
+      (a, b) =>
+        new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+    )
+    .slice(0, MAX_OCCUPIED_SLOTS);
 
   const blockedIds = await getBlockedUserIds(userId);
   if (blockedIds.size > 0) {
@@ -300,8 +328,9 @@ export async function GET(req: NextRequest) {
           initials,
         };
       });
+    const binned = s as DbSession & { _originalId?: ObjectId };
     return {
-      id: String(s._id),
+      id: String(binned._originalId ?? s._id),
       start: new Date(s.start_time).toISOString(),
       end: new Date(s.end_time).toISOString(),
       participantCount: participantCount(s),

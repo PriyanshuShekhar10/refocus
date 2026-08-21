@@ -556,6 +556,13 @@ export default function MobileCalendar() {
           {Array.from({ length: 24 }).map((_, hour) => {
             const dayKey = ymdInTimeZone(ui.startDate, timeZone);
             const occ = hourOccupancy.get(occupancyKey(dayKey, hour));
+            const hourEnd = wallMinutesOnDayToUtc(
+              ui.startDate,
+              (hour + 1) * 60,
+              timeZone,
+            );
+            const tense =
+              hourEnd.getTime() <= now.getTime() ? "attended" : "attending";
             return (
             <div
               key={hour}
@@ -567,7 +574,11 @@ export default function MobileCalendar() {
               </span>
               {occ && occ.total > 0 ? (
                 <div className="pointer-events-none absolute right-2 top-1 z-[15]">
-                  <HourOccupancyChip people={occ.people} total={occ.total} />
+                  <HourOccupancyChip
+                    people={occ.people}
+                    total={occ.total}
+                    tense={tense}
+                  />
                 </div>
               ) : null}
               <div className="absolute left-14 right-0 top-1/4 border-t border-dashed border-gray-100 dark:border-gray-800" />
