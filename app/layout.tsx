@@ -60,8 +60,9 @@ export default function RootLayout({
       <body
         className={`${quicksandSans.className} ${geistSans.variable} ${geistMono.variable} ${bricolage.variable} antialiased`}
       >
+        {/* beforeInteractive scripts must live in the root layout */}
+        <GoogleAnalytics />
         <Providers>
-          <GoogleAnalytics />
           <Analytics />
           <SpeedInsights />
           {children}

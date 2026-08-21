@@ -138,19 +138,13 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     // Post-cutover: marketing lives on the Astro site (apex refocus.co.in).
-    // These are host-scoped to the dashboard host so the dashboard never
-    // serves a landing page — its marketing routes bounce to the Astro site.
+    // Host-scoped so the dashboard never serves marketing content.
+    // NOTE: `/` is intentionally NOT redirected here — Google Tag / GA
+    // verification hits dashboard.refocus.co.in/ and must see G-QLK6MHDM07
+    // in the HTML. app/page.tsx soft-redirects browsers to the apex.
     const marketingHost = "dashboard.refocus.co.in";
     const toApex = (path: string) => `https://refocus.co.in${path}`;
     return [
-      {
-        source: "/",
-        has: [{ type: "host", value: marketingHost }],
-        destination: toApex("/"),
-        // 301: marketing permanently moved to the apex, so link equity and
-        // index signals from the old dashboard-host URLs consolidate there.
-        permanent: true,
-      },
       {
         // The careers page was removed from the marketing site, so old
         // dashboard-host /career links consolidate to the apex homepage.
