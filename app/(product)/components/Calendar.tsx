@@ -32,7 +32,12 @@ import { CalendarSidebar } from "./Calendar/CalendarSidebar";
 import { CalendarHeader } from "./Calendar/CalendarHeader";
 import { CalendarEventCard } from "./Calendar/CalendarEventCard";
 import { CalendarRightSidebar } from "./Calendar/CalendarRightSidebar";
+import { HourOccupancyChip } from "./Calendar/HourOccupancyChip";
 import { isCallJoinable, hasSessionStarted } from "@/lib/sessionWindow";
+import {
+  aggregateHourOccupancy,
+  occupancyKey,
+} from "@/lib/calendarOccupancy";
 
 // ============================================
 // Types
@@ -298,6 +303,7 @@ export default function Calendar({
   // Use the sessions hook for data management
   const {
     events,
+    occupied,
     currentUserId,
     createSession,
     deleteSession,
@@ -309,6 +315,11 @@ export default function Calendar({
     onEventsChange,
     eventsProp,
   });
+
+  const hourOccupancy = useMemo(
+    () => aggregateHourOccupancy(occupied, timeZone),
+    [occupied, timeZone],
+  );
 
   // Filter events by duration and precompute epoch ms for fast overlap checks
   const eventsByDay = useMemo(() => {
@@ -576,12 +587,24 @@ export default function Calendar({
                 className="relative border-r dark:border-gray-700"
               >
                 {/* Horizontal Lines */}
-                {Array.from({ length: endHour - startHour }).map((_, i) => (
+                {Array.from({ length: endHour - startHour }).map((_, i) => {
+                  const hour = startHour + i;
+                  const dayKey = ymdInTimeZone(d, timeZone);
+                  const occ = hourOccupancy.get(occupancyKey(dayKey, hour));
+                  return (
                   <div
                     key={i}
                     className="relative border-t border-gray-100 dark:border-gray-800"
                     style={{ height: hourBlockHeight }}
                   >
+                    {occ && occ.total > 0 ? (
+                      <div className="pointer-events-none absolute right-1 top-1 z-[15]">
+                        <HourOccupancyChip
+                          people={occ.people}
+                          total={occ.total}
+                        />
+                      </div>
+                    ) : null}
                     {/* 15/30/45 min minor lines */}
                     {minorLinePositions.map((yy, j) => (
                       <div
@@ -593,7 +616,8 @@ export default function Calendar({
                       </div>
                     ))}
                   </div>
-                ))}
+                  );
+                })}
                 {/* Now Line */}
                 {nowLine !== null &&
                   ymdInTimeZone(now, timeZone) === ymdInTimeZone(d, timeZone) && (

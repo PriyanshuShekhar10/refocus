@@ -31,7 +31,12 @@ import { BookingModal } from "../Calendar/Modals/BookingModal";
 import { Toast } from "../Calendar/Modals/Toast";
 import { ConfirmModal, partnerNoteField } from "../Calendar/Modals/ConfirmModal";
 import { SessionDetailsModal } from "../Calendar/Modals/SessionDetailsModal";
+import { HourOccupancyChip } from "../Calendar/HourOccupancyChip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  aggregateHourOccupancy,
+  occupancyKey,
+} from "@/lib/calendarOccupancy";
 
 const HOUR_HEIGHT = 60;
 const BOOK_TIME_STEP_MINUTES = 15;
@@ -278,6 +283,7 @@ export default function MobileCalendar() {
   // Sessions hook
   const {
     events,
+    occupied,
     currentUserId,
     createSession,
     deleteSession,
@@ -285,6 +291,11 @@ export default function MobileCalendar() {
     joinSession,
     updateSessionMeta,
   } = useCalendarSessions({ days, onEventsChange: undefined, eventsProp: undefined });
+
+  const hourOccupancy = useMemo(
+    () => aggregateHourOccupancy(occupied, timeZone),
+    [occupied, timeZone],
+  );
 
   // Filter and process events
   const eventsByDay = useMemo(() => {
@@ -542,7 +553,10 @@ export default function MobileCalendar() {
       >
         <div className="relative" style={{ height: 24 * HOUR_HEIGHT }}>
           {/* Hour lines */}
-          {Array.from({ length: 24 }).map((_, hour) => (
+          {Array.from({ length: 24 }).map((_, hour) => {
+            const dayKey = ymdInTimeZone(ui.startDate, timeZone);
+            const occ = hourOccupancy.get(occupancyKey(dayKey, hour));
+            return (
             <div
               key={hour}
               className="absolute left-0 right-0 border-t border-gray-100 dark:border-gray-800"
@@ -551,11 +565,17 @@ export default function MobileCalendar() {
               <span className="absolute left-3 -top-2.5 text-xs text-gray-400 bg-white dark:bg-gray-900 px-1">
                 {formatHour(hour)}
               </span>
+              {occ && occ.total > 0 ? (
+                <div className="pointer-events-none absolute right-2 top-1 z-[15]">
+                  <HourOccupancyChip people={occ.people} total={occ.total} />
+                </div>
+              ) : null}
               <div className="absolute left-14 right-0 top-1/4 border-t border-dashed border-gray-100 dark:border-gray-800" />
               <div className="absolute left-14 right-0 top-1/2 border-t border-dashed border-gray-100 dark:border-gray-800" />
               <div className="absolute left-14 right-0 top-3/4 border-t border-dashed border-gray-100 dark:border-gray-800" />
             </div>
-          ))}
+            );
+          })}
 
           {/* Now line */}
           {isToday && (

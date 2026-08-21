@@ -17,6 +17,8 @@ import { scheduleRecordAccessIp } from "@/lib/userIps";
 // GET /api/sessions?from=ISO&to=ISO
 /** Soft cap on open (bookable) slots returned per range request. */
 const MAX_OPEN_SLOTS = 200;
+/** Soft cap on booked sessions used for calendar occupancy chips. */
+const MAX_OCCUPIED_SLOTS = 200;
 
 type DbSession = {
   _id: ObjectId;
@@ -80,7 +82,7 @@ export async function GET(req: NextRequest) {
   const col = db.collection<DbSession>("sessions");
   const myRangeFilter = { start_time: { $gte: fromDate, $lt: toDate } };
 
-  const [openSlots, mySessions] = await Promise.all([
+  const [openSlots, mySessions, bookedSlots] = await Promise.all([
     bookableFrom < toDate
       ? col
           .find({
@@ -112,6 +114,18 @@ export async function GET(req: NextRequest) {
       })
       .sort({ start_time: 1 })
       .toArray(),
+    // Booked sessions for occupancy chips (privacy-safe avatars only in response).
+    col
+      .find({
+        start_time: { $gte: fromDate, $lt: toDate },
+        $or: [
+          { participant_count: { $gte: 2 } },
+          { "session_participants.1": { $exists: true } },
+        ],
+      })
+      .sort({ start_time: 1 })
+      .limit(MAX_OCCUPIED_SLOTS)
+      .toArray(),
   ]);
 
   const byId = new Map<string, DbSession>();
@@ -121,6 +135,8 @@ export async function GET(req: NextRequest) {
     (a, b) =>
       new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
   );
+
+  let occupiedDocs = bookedSlots.filter((s) => participantCount(s) >= 2);
 
   const blockedIds = await getBlockedUserIds(userId);
   if (blockedIds.size > 0) {
@@ -135,6 +151,11 @@ export async function GET(req: NextRequest) {
       }
       return !blockedIds.has(String(s.owner_id));
     });
+    occupiedDocs = occupiedDocs.filter((s) => {
+      if (blockedIds.has(String(s.owner_id))) return false;
+      const parts = s.session_participants ?? [];
+      return !parts.some((p) => blockedIds.has(String(p.user_id)));
+    });
   }
 
   // Collect unique user IDs (owner + participants) to hydrate with user profile info
@@ -145,6 +166,11 @@ export async function GET(req: NextRequest) {
       userIdSet.add(String(p.user_id)),
     );
   });
+  for (const s of occupiedDocs) {
+    (s.session_participants ?? []).forEach((p) =>
+      userIdSet.add(String(p.user_id)),
+    );
+  }
 
   type DbUser = {
     _id: ObjectId;
@@ -258,7 +284,36 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return NextResponse.json({ currentUserId: userId, sessions: mapped });
+  const occupied = occupiedDocs.map((s) => {
+    const people = (s.session_participants ?? [])
+      .slice(0, 2)
+      .map((p) => {
+        const u = usersById[p.user_id];
+        const first = u?.firstname?.trim() || u?.username?.trim() || "";
+        const last = u?.lastname?.trim() || "";
+        const initials =
+          `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() ||
+          (u?.username?.slice(0, 2).toUpperCase() ?? "?");
+        return {
+          id: p.user_id,
+          avatarUrl: u?.avatar_url ?? null,
+          initials,
+        };
+      });
+    return {
+      id: String(s._id),
+      start: new Date(s.start_time).toISOString(),
+      end: new Date(s.end_time).toISOString(),
+      participantCount: participantCount(s),
+      people,
+    };
+  });
+
+  return NextResponse.json({
+    currentUserId: userId,
+    sessions: mapped,
+    occupied,
+  });
 }
 
 // Maximum days in the future a session can be booked

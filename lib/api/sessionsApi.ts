@@ -3,7 +3,7 @@
  * Each method returns { ok, data?, error? }; callers can throw ApiError for consistent handling.
  */
 
-import type { FetchedSession } from "@/types/calendar";
+import type { FetchedSession, OccupiedSession } from "@/types/calendar";
 import type { DurationMin, SessionType } from "@/constants/calendar";
 
 // ============================================
@@ -28,6 +28,7 @@ export class ApiError extends Error {
 export type ListSessionsPayload = {
   currentUserId: string | null;
   sessions: FetchedSession[];
+  occupied: OccupiedSession[];
 };
 
 export type CreateSessionPayload = { id: string };
@@ -82,12 +83,14 @@ export async function list(
   const payload = (data || {}) as {
     currentUserId?: string | null;
     sessions?: FetchedSession[];
+    occupied?: OccupiedSession[];
   };
   return {
     ok: true,
     data: {
       currentUserId: payload.currentUserId ?? null,
       sessions: payload.sessions ?? [],
+      occupied: payload.occupied ?? [],
     },
   };
 }

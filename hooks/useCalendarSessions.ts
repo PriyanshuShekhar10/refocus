@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import useSWR from "swr";
-import type { CalendarEvent, FetchedSession } from "@/types/calendar";
+import type { CalendarEvent, FetchedSession, OccupiedSession } from "@/types/calendar";
 import { toISO, addDays, addMinutes } from "@/lib/utils";
 import { type DurationMin } from "@/constants/calendar";
 import * as sessionsApi from "@/lib/api/sessionsApi";
@@ -27,6 +27,8 @@ interface UseCalendarSessionsOptions {
 interface UseCalendarSessionsReturn {
   /** Current list of events */
   events: CalendarEvent[];
+  /** Booked sessions for occupancy chips (not bookable) */
+  occupied: OccupiedSession[];
   /** Set events (handles both controlled and uncontrolled modes) */
   setEvents: (
     next: CalendarEvent[] | ((prev: CalendarEvent[]) => CalendarEvent[]),
@@ -76,6 +78,28 @@ function mapFetchedToEvent(s: FetchedSession): CalendarEvent {
   };
 }
 
+function mapFetchedToOccupied(session: FetchedSession): OccupiedSession {
+  const people = (session.participants ?? []).slice(0, 2).map((p) => {
+    const first = p.firstname?.trim() || p.username?.trim() || "";
+    const last = p.lastname?.trim() || "";
+    const initials =
+      `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() ||
+      (p.username?.slice(0, 2).toUpperCase() ?? "?");
+    return {
+      id: p.user_id,
+      avatarUrl: p.avatar_url ?? null,
+      initials,
+    };
+  });
+  return {
+    id: session.id,
+    start: session.start,
+    end: session.end,
+    participantCount: session.participants?.length ?? people.length,
+    people,
+  };
+}
+
 function isSessionVisibleToUser(
   session: FetchedSession,
   userId: string | null,
@@ -115,6 +139,7 @@ export function useCalendarSessions({
   const [internalEvents, setInternalEvents] = useState<CalendarEvent[]>(
     () => eventsProp ?? [],
   );
+  const [occupied, setOccupied] = useState<OccupiedSession[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const daysRef = useRef(days);
@@ -167,6 +192,7 @@ export function useCalendarSessions({
     setCurrentUserId(uid);
     currentUserIdRef.current = uid;
     setEvents(sessionsData.sessions.map(mapFetchedToEvent));
+    setOccupied(sessionsData.occupied ?? []);
     setError(null);
   }, [sessionsData, setEvents]);
 
@@ -202,6 +228,7 @@ export function useCalendarSessions({
 
       if (data.type === "session_removed") {
         setEvents((prev) => prev.filter((e) => e.id !== data.sessionId));
+        setOccupied((prev) => prev.filter((e) => e.id !== data.sessionId));
         return;
       }
 
@@ -209,6 +236,21 @@ export function useCalendarSessions({
       const session = data.session;
       const inRange = sessionOverlapsRange(session, rangeStart, rangeEnd);
       const visible = isSessionVisibleToUser(session, userId);
+      const booked = (session.participants?.length ?? 0) >= 2;
+
+      // Occupancy layer: keep booked sessions visible as chips for everyone.
+      if (inRange && booked) {
+        const occ = mapFetchedToOccupied(session);
+        setOccupied((prev) => {
+          const idx = prev.findIndex((e) => e.id === occ.id);
+          if (idx === -1) return [...prev, occ];
+          const next = [...prev];
+          next[idx] = occ;
+          return next;
+        });
+      } else {
+        setOccupied((prev) => prev.filter((e) => e.id !== session.id));
+      }
 
       if (!inRange || !visible) {
         setEvents((prev) => prev.filter((e) => e.id !== session.id));
@@ -426,6 +468,7 @@ export function useCalendarSessions({
 
   return {
     events,
+    occupied,
     setEvents,
     currentUserId,
     isLoading,

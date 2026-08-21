@@ -78,6 +78,21 @@ export type FetchedSession = {
   }>;
 };
 
+export type OccupiedPerson = {
+  id: string;
+  avatarUrl: string | null;
+  initials: string;
+};
+
+/** Privacy-safe booked session for calendar occupancy chips (not bookable). */
+export type OccupiedSession = {
+  id: string;
+  start: string;
+  end: string;
+  participantCount: number;
+  people: OccupiedPerson[];
+};
+
 export type PresenceDot = {
   id: string;
   time: string; // ISO
