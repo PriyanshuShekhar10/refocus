@@ -49,6 +49,8 @@ interface PastSessionsListProps {
   };
 }
 
+type Attendance = "missed" | "left-early" | "completed";
+
 function getParticipantName(p: PastParticipant): string {
   if (p.firstname || p.lastname) {
     return [p.firstname, p.lastname].filter(Boolean).join(" ");
@@ -93,7 +95,7 @@ function formatRelativeDay(dateStr: string): string {
 
 function formatTime(dateStr: string): string {
   return formatLocalTime(dateStr, {
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
     hour12: true,
   });
@@ -107,6 +109,26 @@ function formatTotalMinutes(total: number): string {
   return `${hours}h ${mins}m`;
 }
 
+function attendanceOf(
+  me: PastParticipant | undefined,
+): Attendance {
+  if (!me?.attended) return "missed";
+  if (me.completed) return "completed";
+  return "left-early";
+}
+
+function attendanceLabel(a: Attendance): string {
+  if (a === "completed") return "Completed";
+  if (a === "missed") return "Missed";
+  return "Left early";
+}
+
+function dotClass(a: Attendance): string {
+  if (a === "completed") return "bg-[#5D1C6A] dark:bg-[#CA5995]";
+  if (a === "missed") return "bg-red-400";
+  return "bg-amber-400";
+}
+
 export function PastSessionsList({
   sessions,
   currentUserId,
@@ -118,34 +140,17 @@ export function PastSessionsList({
 
   if (attendedSessions.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-8 w-8 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-          No past sessions yet
-        </h3>
+      <div className="py-16 text-center">
+        <p className="text-sm font-medium text-gray-900 dark:text-white">
+          No focus history yet
+        </p>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Once you wrap up a session, it’ll show up here with all the details.
+          Finished sessions appear here as a quiet timeline — not booking cards.
         </p>
       </div>
     );
   }
 
-  // Group by day
   const grouped: { [key: string]: PastSession[] } = {};
   attendedSessions.forEach((s) => {
     const dateKey = formatRelativeDay(s.start);
@@ -154,131 +159,132 @@ export function PastSessionsList({
   });
 
   return (
-    <div className="space-y-8">
-      <StatsRow stats={stats} />
+    <div className="space-y-10">
+      <HistorySummary stats={stats} />
 
-      {Object.entries(grouped).map(([dateKey, daySessions]) => (
-        <div key={dateKey}>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-            {dateKey}
-          </h2>
-          <div className="space-y-3">
-            {daySessions.map((session) => {
-              const partner = session.participants.find(
-                (p) => p.userId !== currentUserId,
-              );
-              const partnerName = partner ? getParticipantName(partner) : null;
-              const me = session.participants.find(
-                (p) => p.userId === currentUserId,
-              );
-              const wasSolo = session.participants.length < 2;
-              const attended = Boolean(me?.attended);
-              const completed = Boolean(me?.completed);
-              const attendance: "missed" | "left-early" | "completed" = !attended
-                ? "missed"
-                : completed
-                  ? "completed"
-                  : "left-early";
+      <div className="space-y-10">
+        {Object.entries(grouped).map(([dateKey, daySessions]) => (
+          <section key={dateKey}>
+            <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
+              {dateKey}
+            </h2>
 
-              return (
-                <div
-                  key={session.id}
-                  className="rounded-xl border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex min-w-0 items-start gap-4">
-                      <div className="min-w-[60px] text-center">
-                        <p className="text-lg font-bold text-gray-900 dark:text-white">
-                          {formatTime(session.start)}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {session.durationMin} min
-                        </p>
-                      </div>
+            <ol className="relative ml-3 border-l border-gray-200 pl-6 dark:border-gray-700 sm:ml-4 sm:pl-8">
+              {daySessions.map((session) => {
+                const partner = session.participants.find(
+                  (p) => p.userId !== currentUserId,
+                );
+                const partnerName = partner
+                  ? getParticipantName(partner)
+                  : null;
+                const me = session.participants.find(
+                  (p) => p.userId === currentUserId,
+                );
+                const wasSolo = session.participants.length < 2;
+                const attendance = attendanceOf(me);
+                const title =
+                  session.name?.trim() ||
+                  (partnerName
+                    ? `Focus with ${partnerName}`
+                    : wasSolo
+                      ? "Solo focus"
+                      : `${session.sessionType} session`);
 
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-medium text-gray-900 dark:text-white">
-                            {session.name || `${session.sessionType} session`}
-                          </h3>
-                          <AttendanceBadge attendance={attendance} />
-                          {wasSolo && attended && (
-                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                              Solo
-                            </span>
-                          )}
-                          {me?.quiet && (
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                              Quiet mode
-                            </span>
-                          )}
-                          {session.isOwner && (
-                            <span className="rounded-full border border-gray-200 px-2 py-0.5 text-xs font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                              You hosted
-                            </span>
-                          )}
-                        </div>
-
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          {formatLocalDate(session.start, {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}{" "}
-                          · {session.sessionType}
-                        </p>
-
-                        {partner && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              {partner.avatarUrl ? (
-                                <AvatarImage src={partner.avatarUrl} alt={partnerName!} />
-                              ) : null}
-                              <AvatarFallback className="bg-[#FFF1D3] text-xs text-[#5D1C6A] dark:bg-[#5D1C6A] dark:text-[#FFB090]">
-                                {getInitials(partnerName!)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                              with{" "}
-                              {partner.username ? (
-                                <Link
-                                  href={`/u/${partner.username}`}
-                                  className="font-medium text-gray-900 hover:underline dark:text-gray-100"
-                                >
-                                  {partnerName}
-                                </Link>
-                              ) : (
-                                <span className="font-medium">{partnerName}</span>
-                              )}
-                              {partner.quiet && (
-                                <span className="ml-1 text-gray-400">
-                                  (quiet mode)
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                return (
+                  <li key={session.id} className="relative pb-8 last:pb-0">
+                    <span
+                      aria-hidden
+                      className={`absolute -left-[1.9rem] top-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-white dark:-left-[2.15rem] dark:ring-gray-950 sm:-left-[2.4rem] ${dotClass(attendance)}`}
+                    />
 
                     <Link
                       href={`/sessions/${session.id}`}
-                      className="shrink-0 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      className="group block rounded-lg outline-none transition-colors hover:bg-gray-50/80 focus-visible:ring-2 focus-visible:ring-[#5D1C6A]/40 dark:hover:bg-gray-900/50"
                     >
-                      View details
+                      <div className="flex items-start gap-3 px-2 py-1.5 sm:gap-4">
+                        {partner ? (
+                          <Avatar className="mt-0.5 h-10 w-10 shrink-0">
+                            {partner.avatarUrl ? (
+                              <AvatarImage
+                                src={partner.avatarUrl}
+                                alt={partnerName!}
+                              />
+                            ) : null}
+                            <AvatarFallback className="bg-[#FFF1D3] text-sm text-[#5D1C6A] dark:bg-[#5D1C6A] dark:text-[#FFB090]">
+                              {getInitials(partnerName!)}
+                            </AvatarFallback>
+                          </Avatar>
+                        ) : (
+                          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                            Solo
+                          </div>
+                        )}
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                            <p className="truncate text-[15px] font-medium text-gray-900 group-hover:text-[#5D1C6A] dark:text-gray-100 dark:group-hover:text-[#CA5995]">
+                              {title}
+                            </p>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                              {attendanceLabel(attendance)}
+                            </span>
+                          </div>
+
+                          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                            {formatTime(session.start)}
+                            <span className="mx-1.5 text-gray-300 dark:text-gray-600">
+                              ·
+                            </span>
+                            {session.durationMin} min
+                            <span className="mx-1.5 text-gray-300 dark:text-gray-600">
+                              ·
+                            </span>
+                            {session.sessionType}
+                            {me?.quiet ? (
+                              <>
+                                <span className="mx-1.5 text-gray-300 dark:text-gray-600">
+                                  ·
+                                </span>
+                                Quiet
+                              </>
+                            ) : null}
+                            {session.isOwner ? (
+                              <>
+                                <span className="mx-1.5 text-gray-300 dark:text-gray-600">
+                                  ·
+                                </span>
+                                Hosted
+                              </>
+                            ) : null}
+                          </p>
+
+                          {partner?.username ? (
+                            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                              @{partner.username}
+                            </p>
+                          ) : null}
+                        </div>
+
+                        <span
+                          aria-hidden
+                          className="mt-2 shrink-0 text-gray-300 transition-transform group-hover:translate-x-0.5 group-hover:text-gray-500 dark:text-gray-600"
+                        >
+                          →
+                        </span>
+                      </div>
                     </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        ))}
+      </div>
     </div>
   );
 }
 
-function StatsRow({
+function HistorySummary({
   stats,
 }: {
   stats: {
@@ -292,81 +298,45 @@ function StatsRow({
   const missed = Math.max(0, stats.booked - stats.attended);
   const attendancePct =
     stats.booked > 0 ? Math.round((stats.attended / stats.booked) * 100) : 0;
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <StatCard
-        label="Completed"
-        value={stats.completed.toString()}
-        accent="from-[#5D1C6A]/15 to-[#CA5995]/15"
-      />
-      <StatCard
-        label="Focused time"
-        value={formatTotalMinutes(stats.minutes)}
-        accent="from-[#FFF1D3] to-[#FFD8E8]/60 dark:from-[#5D1C6A]/30 dark:to-[#CA5995]/20"
-      />
-      <StatCard
-        label="Attendance"
-        value={stats.booked > 0 ? `${attendancePct}%` : "—"}
-        accent="from-emerald-100/70 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-900/10"
-      />
-      <StatCard
-        label="Missed"
-        value={missed.toString()}
-        accent={
-          missed > 0
-            ? "from-red-100/80 to-red-50 dark:from-red-900/30 dark:to-red-900/10"
-            : "from-gray-100/70 to-gray-50 dark:from-gray-800/40 dark:to-gray-900/30"
-        }
-      />
-    </div>
-  );
-}
 
-function StatCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent: string;
-}) {
   return (
-    <div
-      className={`rounded-xl border border-gray-200 bg-gradient-to-br p-4 dark:border-gray-700 ${accent}`}
-    >
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-600 dark:text-gray-300">
-        {label}
-      </p>
-      <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
-        {value}
-      </p>
+    <div className="flex flex-wrap items-end gap-x-8 gap-y-3 border-b border-gray-100 pb-6 dark:border-gray-800">
+      <div>
+        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500">
+          Focus history
+        </p>
+        <p className="mt-1 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
+          {formatTotalMinutes(stats.minutes)}
+          <span className="ml-2 text-sm font-normal text-gray-400 dark:text-gray-500">
+            completed
+          </span>
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-300">
+        <span>
+          <strong className="font-semibold text-gray-900 dark:text-white">
+            {stats.completed}
+          </strong>{" "}
+          done
+        </span>
+        <span>
+          <strong className="font-semibold text-gray-900 dark:text-white">
+            {stats.booked > 0 ? `${attendancePct}%` : "—"}
+          </strong>{" "}
+          attendance
+        </span>
+        <span>
+          <strong className="font-semibold text-gray-900 dark:text-white">
+            {stats.withPartner}
+          </strong>{" "}
+          with a partner
+        </span>
+        {missed > 0 ? (
+          <span className="text-red-600/80 dark:text-red-400/80">
+            <strong className="font-semibold">{missed}</strong> missed
+          </span>
+        ) : null}
+      </div>
     </div>
-  );
-}
-
-function AttendanceBadge({
-  attendance,
-}: {
-  attendance: "missed" | "left-early" | "completed";
-}) {
-  if (attendance === "completed") {
-    return (
-      <span className="rounded-full bg-[#FFF1D3] px-2 py-0.5 text-xs font-medium text-[#5D1C6A] dark:bg-[#5D1C6A]/30 dark:text-[#CA5995]">
-        Completed
-      </span>
-    );
-  }
-  if (attendance === "missed") {
-    return (
-      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-        Missed
-      </span>
-    );
-  }
-  return (
-    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-      Left early
-    </span>
   );
 }

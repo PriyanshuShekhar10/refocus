@@ -65,7 +65,6 @@ const CONFETTI_COLORS = [
 const COMPLETION_GRACE_MS = 60_000;
 const WRAP_UP_MS = WRAP_UP_MINUTES * 60_000;
 const COMPLETE_BANNER_MS = 10_000;
-const CHEER_COOLDOWN_MS = 8_000;
 const CHEER_BURST_MS = 3_200;
 
 function formatRemaining(ms: number) {
@@ -103,7 +102,6 @@ export default function ClientCall({
   const [cheerBurstId, setCheerBurstId] = useState(0);
   const [cheerToast, setCheerToast] = useState<string | null>(null);
   const [cheerSending, setCheerSending] = useState(false);
-  const cheerCooldownUntilRef = useRef(0);
   const sessionTasks = useSessionTasks(sessionId, currentUserId);
   const [partner, setPartner] = useState<SessionPartner | null>(() =>
     partnerFromPrejoin(prejoin),
@@ -372,21 +370,14 @@ export default function ClientCall({
 
   const sendCheer = useCallback(async () => {
     if (cheerSending) return;
-    const now = Date.now();
-    if (now < cheerCooldownUntilRef.current) {
-      setCheerToast("Wait a moment before cheering again");
-      return;
-    }
     unlockSessionCompleteSound();
     setCheerSending(true);
-    cheerCooldownUntilRef.current = now + CHEER_COOLDOWN_MS;
     try {
       const res = await fetch(`/api/sessions/${sessionId}/alert`, {
         method: "POST",
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        cheerCooldownUntilRef.current = Date.now();
         setCheerToast(
           typeof data.error === "string" ? data.error : "Couldn’t send cheer",
         );
@@ -394,7 +385,6 @@ export default function ClientCall({
       }
       // Sound + confetti also arrive via Ably for both sides (including sender).
     } catch {
-      cheerCooldownUntilRef.current = Date.now();
       setCheerToast("Couldn’t send cheer");
     } finally {
       setCheerSending(false);

@@ -37,6 +37,8 @@ import { HourOccupancyChip } from "./Calendar/HourOccupancyChip";
 import { isCallJoinable, hasSessionStarted } from "@/lib/sessionWindow";
 import {
   aggregateHourOccupancy,
+  hoursWithMyPastMatchedSessions,
+  isPastUnmatchedSession,
   occupancyKey,
 } from "@/lib/calendarOccupancy";
 
@@ -327,9 +329,12 @@ export default function Calendar({
     const map: Record<string, ProcessedEvent[]> = {};
     for (const d of days) map[ymdInTimeZone(d, timeZone)] = [];
 
-    const filteredEvents = events.filter((ev) =>
-      ui.durationFilter.includes(ev.durationMin),
-    );
+    const filteredEvents = events.filter((ev) => {
+      if (!ui.durationFilter.includes(ev.durationMin)) return false;
+      // Hide past open slots you created that never matched.
+      if (isPastUnmatchedSession(ev, currentUserId)) return false;
+      return true;
+    });
 
     for (const ev of filteredEvents) {
       const startMs = new Date(ev.start).getTime();
@@ -349,7 +354,7 @@ export default function Calendar({
     }
 
     return map;
-  }, [days, events, ui.durationFilter, timeZone]);
+  }, [days, events, ui.durationFilter, timeZone, currentUserId]);
 
   // Use the grid hook for layout and interactions
   const {
@@ -372,6 +377,11 @@ export default function Calendar({
     eventsByDay,
     timeZone,
   });
+
+  const myPastMatchedHours = useMemo(
+    () => hoursWithMyPastMatchedSessions(events, currentUserId, timeZone, now),
+    [events, currentUserId, timeZone, now],
+  );
 
   // Navigation handlers (dispatch actions)
   const goToday = useCallback(
@@ -599,13 +609,16 @@ export default function Calendar({
                   );
                   const tense =
                     hourEnd.getTime() <= now.getTime() ? "attended" : "attending";
+                  const hideOccForMyPastMatch = myPastMatchedHours.has(
+                    occupancyKey(dayKey, hour),
+                  );
                   return (
                   <div
                     key={i}
                     className="relative border-t border-gray-100 dark:border-gray-800"
                     style={{ height: hourBlockHeight }}
                   >
-                    {occ && occ.total > 0 ? (
+                    {occ && occ.total > 0 && !hideOccForMyPastMatch ? (
                       <div className="pointer-events-none absolute right-1 top-1 z-[15]">
                         <HourOccupancyChip
                           people={occ.people}

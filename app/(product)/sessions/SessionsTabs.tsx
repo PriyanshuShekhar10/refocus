@@ -51,7 +51,7 @@ export function SessionsTabs({ upcoming, past, currentUserId }: SessionsTabsProp
         <TabButton
           active={tab === "past"}
           onClick={() => setTab("past")}
-          label="Past"
+          label="History"
           count={stats.booked}
         />
       </div>

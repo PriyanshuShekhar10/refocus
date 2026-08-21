@@ -10,6 +10,10 @@ import { isCallJoinable, hasSessionStarted } from "@/lib/sessionWindow";
 import { formatLocalTime } from "@/lib/localTime";
 import { VerifiedName } from "@/components/verified-tag";
 
+function hasSessionEnded(endTime: Date | string, now = new Date()): boolean {
+  return new Date(endTime).getTime() < now.getTime();
+}
+
 const COMPACT_PASTEL_COLORS_LIGHT = [
   { bg: "#FCE7F3", border: "#F9A8D4" }, // pink
   { bg: "#EDE9FE", border: "#C4B5FD" }, // lavender
@@ -92,14 +96,18 @@ export function CalendarEventCard({
 
   // Track if session is joinable (within 1 hour of start or in progress)
   const [canJoin, setCanJoin] = useState(() => isJoinable(event.start, event.end));
+  const [isPast, setIsPast] = useState(() => hasSessionEnded(event.end));
   const [showCompactPartnerCard, setShowCompactPartnerCard] = useState(false);
   const hidePartnerCardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
 
   useEffect(() => {
-    // Re-check joinability every 30 seconds
-    const check = () => setCanJoin(isJoinable(event.start, event.end));
+    // Re-check joinability / past every 30 seconds
+    const check = () => {
+      setCanJoin(isJoinable(event.start, event.end));
+      setIsPast(hasSessionEnded(event.end));
+    };
     check();
     const interval = setInterval(check, 30000);
     return () => clearInterval(interval);
@@ -314,31 +322,50 @@ export function CalendarEventCard({
   // Determine if this is a short card (25 min = ~46px height)
   const isShortCard = height < 70;
 
-  const isJoinableNow = isBooked && canJoin;
+  const isJoinableNow = isBooked && canJoin && !isPast;
   const canBookSlot = !isBooked && !isOwner && !hasSessionStarted(event.start);
+
+  // Past unmatched open slots are filtered from the grid; never render here.
+  if (isPast && isOwner && !isBooked) {
+    return null;
+  }
+
+  const pastPrimaryLabel = isBooked
+    ? "Completed"
+    : isOwner
+      ? "Unmatched"
+      : "Past session";
 
   return (
     <div className="absolute inset-x-2 z-20" style={{ top }}>
       <div
         style={{
           height,
-          ...(hasCustomColor ? { backgroundColor: resolvedColor! } : {}),
+          ...(hasCustomColor && !isPast
+            ? { backgroundColor: resolvedColor! }
+            : {}),
         }}
-        className={`relative group rounded-lg p-2 flex flex-col justify-between shadow-sm overflow-hidden border ${
-          hasCustomColor
-            ? "border-transparent"
-            : isBooked
-              ? "border-gray-200/80 dark:border-gray-500/50 bg-gray-200 dark:bg-gray-600"
-              : "border-[#FFB090]/90 dark:border-[#CA5995]/45 bg-[#FFF1D3] dark:bg-slate-800/90 hover:border-[#CA5995] dark:hover:border-[#CA5995]/80 cursor-pointer"
+        className={`relative group rounded-lg p-2 flex flex-col justify-between overflow-hidden border ${
+          isPast
+            ? "border-dashed border-gray-300/90 bg-gray-50/90 opacity-80 shadow-none dark:border-gray-600 dark:bg-gray-900/70 dark:opacity-75"
+            : hasCustomColor
+              ? "border-transparent shadow-sm"
+              : isBooked
+                ? "border-gray-200/80 dark:border-gray-500/50 bg-gray-200 dark:bg-gray-600 shadow-sm"
+                : "border-[#FFB090]/90 dark:border-[#CA5995]/45 bg-[#FFF1D3] dark:bg-slate-800/90 hover:border-[#CA5995] dark:hover:border-[#CA5995]/80 cursor-pointer shadow-sm"
         } ${
           isJoinableNow
             ? "border-[#CA5995] ring-2 ring-[#CA5995]/45 shadow-md"
             : ""
-        } ${!hasCustomColor ? "" : "border-black/10 dark:border-white/10"}`}
+        } ${!isPast && hasCustomColor ? "border-black/10 dark:border-white/10" : ""} ${
+          isPast ? "cursor-pointer" : ""
+        }`}
         title={
-          tooltip
-            ? `${tooltip.label}${tooltip.email ? `\n${tooltip.email}` : ""}`
-            : undefined
+          isPast
+            ? `${pastPrimaryLabel} · ${event.durationMin} min`
+            : tooltip
+              ? `${tooltip.label}${tooltip.email ? `\n${tooltip.email}` : ""}`
+              : undefined
         }
         onClick={(evt) => {
           evt.stopPropagation();
@@ -346,8 +373,8 @@ export function CalendarEventCard({
           else onDetails(evt);
         }}
       >
-        {/* Action button - top right corner */}
-        {isOwner ? (
+        {/* Action button - top right corner (hide delete on past — archival) */}
+        {isOwner && !isPast ? (
           <button
             className="absolute top-1 right-1 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400 transition-colors"
             onClick={(e) => {
@@ -379,7 +406,7 @@ export function CalendarEventCard({
           >
             Book
           </button>
-        ) : onLeave && !canJoin ? (
+        ) : onLeave && !canJoin && !isPast ? (
           <button
             className="absolute top-1 right-1 p-1 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 dark:text-amber-400 transition-colors"
             onClick={(e) => {
@@ -403,8 +430,14 @@ export function CalendarEventCard({
           </button>
         ) : null}
 
-        <div className={`${canJoin && isBooked ? "pr-8" : "pr-8"}`}>
-          <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
+        <div className="pr-8">
+          <p
+            className={`font-semibold text-sm leading-tight ${
+              isPast
+                ? "text-gray-500 dark:text-gray-400"
+                : "text-gray-900 dark:text-gray-100"
+            }`}
+          >
             {formatLocalTime(s, {
               hour: "2-digit",
               minute: "2-digit",
@@ -413,16 +446,19 @@ export function CalendarEventCard({
           </p>
           <p
             className={`font-semibold leading-tight ${
-              isShortCard
-                ? "text-[10px]"
-                : "text-xs"
+              isShortCard ? "text-[10px]" : "text-xs"
             } ${
-              isBooked
-                ? "text-gray-900 dark:text-white"
-                : "text-gray-800 dark:text-white"
+              isPast
+                ? "text-gray-500 dark:text-gray-400"
+                : isBooked
+                  ? "text-gray-900 dark:text-white"
+                  : "text-gray-800 dark:text-white"
             }`}
           >
             {(() => {
+              if (isPast) {
+                return `${event.durationMin} min · ${pastPrimaryLabel}`;
+              }
               const primaryLabel = isOwner
                 ? "Your session"
                 : event.name || (isBooked ? "Session" : "Partner needed");
@@ -432,18 +468,24 @@ export function CalendarEventCard({
         </div>
 
         {!isShortCard && (
-          <div className="flex items-center justify-between mt-1">
+          <div className="mt-1 flex items-center justify-between">
             <span
               className={`text-xs font-medium ${
-                isBooked
-                  ? "text-gray-800 dark:text-[#FFB090]"
-                  : "text-[#5D1C6A] dark:text-[#CA5995]"
+                isPast
+                  ? "text-gray-400 dark:text-gray-500"
+                  : isBooked
+                    ? "text-gray-800 dark:text-[#FFB090]"
+                    : "text-[#5D1C6A] dark:text-[#CA5995]"
               }`}
             >
-              {event.name || (isBooked ? "Session" : "Partner needed")}
+              {isPast
+                ? pastPrimaryLabel
+                : event.name || (isBooked ? "Session" : "Partner needed")}
             </span>
             {event.participants && event.participants.length > 0 && (
-              <div className="flex -space-x-1 ml-1">
+              <div
+                className={`ml-1 flex -space-x-1 ${isPast ? "opacity-60 grayscale" : ""}`}
+              >
                 {event.participants.slice(0, 2).map((participant, idx) => {
                   const displayName =
                     [participant.firstname, participant.lastname]
@@ -462,7 +504,7 @@ export function CalendarEventCard({
                   return (
                     <Avatar
                       key={participant.user_id || idx}
-                      className="h-4 w-4 border border-white"
+                      className="h-4 w-4 border border-white dark:border-gray-700"
                     >
                       {participant.avatar_url ? (
                         <AvatarImage
@@ -470,14 +512,14 @@ export function CalendarEventCard({
                           alt={displayName}
                         />
                       ) : null}
-                      <AvatarFallback className="text-[8px] font-medium bg-[#FFF1D3] text-[#5D1C6A]">
+                      <AvatarFallback className="bg-[#FFF1D3] text-[8px] font-medium text-[#5D1C6A]">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                   );
                 })}
                 {event.participants.length > 2 && (
-                  <div className="h-4 w-4 rounded-full bg-gray-200 border border-white flex items-center justify-center">
+                  <div className="flex h-4 w-4 items-center justify-center rounded-full border border-white bg-gray-200">
                     <span className="text-[6px] font-medium text-gray-600">
                       +{event.participants.length - 2}
                     </span>
@@ -488,10 +530,9 @@ export function CalendarEventCard({
           </div>
         )}
 
-
-        {!isShortCard && isBooked && otherQuiet && (
-          <span className="inline-flex items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100 mt-1 w-fit">
-            🔇 Quiet
+        {!isShortCard && isBooked && otherQuiet && !isPast && (
+          <span className="mt-1 inline-flex w-fit items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100">
+            Quiet
           </span>
         )}
       </div>

@@ -35,6 +35,8 @@ import { HourOccupancyChip } from "../Calendar/HourOccupancyChip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   aggregateHourOccupancy,
+  hoursWithMyPastMatchedSessions,
+  isPastUnmatchedSession,
   occupancyKey,
 } from "@/lib/calendarOccupancy";
 
@@ -295,6 +297,11 @@ export default function MobileCalendar() {
   const hourOccupancy = useMemo(
     () => aggregateHourOccupancy(occupied, timeZone),
     [occupied, timeZone],
+  );
+
+  const myPastMatchedHours = useMemo(
+    () => hoursWithMyPastMatchedSessions(events, currentUserId, timeZone, now),
+    [events, currentUserId, timeZone, now],
   );
 
   // Filter and process events
@@ -563,6 +570,9 @@ export default function MobileCalendar() {
             );
             const tense =
               hourEnd.getTime() <= now.getTime() ? "attended" : "attending";
+            const hideOccForMyPastMatch = myPastMatchedHours.has(
+              occupancyKey(dayKey, hour),
+            );
             return (
             <div
               key={hour}
@@ -572,7 +582,7 @@ export default function MobileCalendar() {
               <span className="absolute left-3 -top-2.5 text-xs text-gray-400 bg-white dark:bg-gray-900 px-1">
                 {formatHour(hour)}
               </span>
-              {occ && occ.total > 0 ? (
+              {occ && occ.total > 0 && !hideOccForMyPastMatch ? (
                 <div className="pointer-events-none absolute right-2 top-1 z-[15]">
                   <HourOccupancyChip
                     people={occ.people}
@@ -619,18 +629,27 @@ export default function MobileCalendar() {
               mySessionsOnDay.some((e) => e.id !== ev.id && ev.startMs < e.endMs && ev.endMs > e.startMs);
             if (ineligible) return null;
             if (!isMySession && hasSessionStarted(ev.start)) return null;
+            if (isPastUnmatchedSession(ev, currentUserId)) return null;
 
             const other = ev.participants?.find((p) => p.user_id !== currentUserId);
             const otherName = other
               ? [other.firstname, other.lastname].filter(Boolean).join(" ") || other.email?.split("@")[0]
               : null;
             const otherInitial = otherName?.[0]?.toUpperCase() || "?";
+            const isPast = new Date(ev.end).getTime() < Date.now();
+            const pastLabel = isBooked
+              ? "Completed"
+              : isOwner
+                ? "Unmatched"
+                : "Past session";
 
             return (
               <div
                 key={ev.id}
                 className={`absolute left-14 right-2 rounded-lg p-2 cursor-pointer transition-all ${
-                  isBooked
+                  isPast
+                    ? "border border-dashed border-gray-300 bg-gray-50/90 opacity-80 dark:border-gray-600 dark:bg-gray-900/70"
+                    : isBooked
                     ? "bg-[#FFF1D3] dark:bg-[#5D1C6A]/35 border border-[#FFB090] dark:border-[#CA5995]/70"
                     : isOwner
                     ? "bg-[#FFB090]/35 dark:bg-[#5D1C6A]/45 border border-[#CA5995]/70 dark:border-[#CA5995]/70"
@@ -641,12 +660,38 @@ export default function MobileCalendar() {
                   e.stopPropagation();
                   if (isMySession) {
                     dispatch({ type: "OPEN_DETAILS_MODAL", event: ev });
-                  } else {
+                  } else if (!isPast) {
                     handleBookSlot(ev);
                   }
                 }}
               >
-                {isBooked && other ? (
+                {isPast ? (
+                  <div className="flex h-full items-center gap-2">
+                    {isBooked && other ? (
+                      <Avatar className="h-8 w-8 shrink-0 opacity-70 grayscale">
+                        {other.avatar_url ? (
+                          <AvatarImage src={other.avatar_url} alt={otherName || "Partner"} />
+                        ) : null}
+                        <AvatarFallback className="bg-gray-200 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                          {otherInitial}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
+                        <span className="text-[10px] font-medium text-gray-500">Done</span>
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-medium text-gray-500 dark:text-gray-400">
+                        {pastLabel}
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        {ev.durationMin}m
+                        {otherName ? ` · ${otherName}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                ) : isBooked && other ? (
                   <div className="flex items-center gap-2 h-full">
                     <Avatar className="h-8 w-8 shrink-0">
                       {other.avatar_url ? (

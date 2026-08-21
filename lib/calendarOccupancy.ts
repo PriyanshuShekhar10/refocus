@@ -1,4 +1,8 @@
-import type { OccupiedPerson, OccupiedSession } from "@/types/calendar";
+import type {
+  CalendarEvent,
+  OccupiedPerson,
+  OccupiedSession,
+} from "@/types/calendar";
 import {
   minutesOfDayInTimeZone,
   ymdInTimeZone,
@@ -88,4 +92,45 @@ export function aggregateHourOccupancy(
 
 export function occupancyKey(dayKey: string, hour: number): string {
   return `${dayKey}|${hour}`;
+}
+
+/** Hours where the viewer already has a finished matched session card. */
+export function hoursWithMyPastMatchedSessions(
+  events: CalendarEvent[],
+  currentUserId: string | null,
+  timeZone: string,
+  now = new Date(),
+): Set<string> {
+  const keys = new Set<string>();
+  if (!currentUserId) return keys;
+  const nowMs = now.getTime();
+
+  for (const ev of events) {
+    const end = new Date(ev.end);
+    const start = new Date(ev.start);
+    if (Number.isNaN(end.getTime()) || Number.isNaN(start.getTime())) continue;
+    if (end.getTime() >= nowMs) continue;
+    const booked =
+      (ev.participants?.length ?? 0) >= 2 || ev.status === "booked";
+    if (!booked) continue;
+    const mine =
+      ev.owner_id === currentUserId ||
+      (ev.participants ?? []).some((p) => p.user_id === currentUserId);
+    if (!mine) continue;
+    addHourKeys(start, end, timeZone, keys);
+  }
+  return keys;
+}
+
+/** Past open slots the viewer created that never matched — hide from the grid. */
+export function isPastUnmatchedSession(
+  event: CalendarEvent,
+  currentUserId: string | null,
+  now = new Date(),
+): boolean {
+  if (!currentUserId || event.owner_id !== currentUserId) return false;
+  if ((event.participants?.length ?? 0) >= 2 || event.status === "booked") {
+    return false;
+  }
+  return new Date(event.end).getTime() < now.getTime();
 }

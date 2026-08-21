@@ -59,7 +59,7 @@ export function unlockSessionCompleteSound(): void {
 function scheduleChime(ctx: AudioContext): void {
   const now = ctx.currentTime;
   const master = ctx.createGain();
-  master.gain.setValueAtTime(0.55, now);
+  master.gain.setValueAtTime(0.85, now);
   master.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
   master.connect(ctx.destination);
 

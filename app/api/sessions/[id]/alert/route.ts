@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { ObjectId } from "mongodb";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
-import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { publishAbly } from "@/lib/ably-server";
 import { isOwnerOrParticipant, toObjectId } from "@/lib/sessionAccess";
 import { sessionAlertsChannel } from "@/lib/realtimeChannels";
@@ -29,9 +28,6 @@ export async function POST(
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const rl = await checkRateLimit(userId, "session_cheer");
-  if (!rl.success) return rateLimitedResponse(rl);
 
   const { id: sessionId } = await params;
   const oid = toObjectId(sessionId);
