@@ -6,6 +6,7 @@ import { ChatDock } from "@/components/chat-dock";
 // import Navbar from "@/components/navbar/navbar";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { GoogleAnalytics } from "@/components/google-analytics";
 import { getSiteUrl } from "@/lib/site";
 
 const siteUrl = getSiteUrl();
@@ -60,6 +61,7 @@ export default function RootLayout({
         className={`${quicksandSans.className} ${geistSans.variable} ${geistMono.variable} ${bricolage.variable} antialiased`}
       >
         <Providers>
+          <GoogleAnalytics />
           <Analytics />
           <SpeedInsights />
           {children}
