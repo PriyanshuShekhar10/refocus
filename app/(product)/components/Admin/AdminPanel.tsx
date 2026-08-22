@@ -276,6 +276,7 @@ const ACTION_LABELS: Record<string, string> = {
   "crew.add": "Added crew member",
   "crew.remove": "Removed crew member",
   "test_call.create": "Created Daily test call",
+  "session.club": "Clubbed sessions",
 };
 
 function StatCard({
@@ -374,19 +375,60 @@ function completionClass(kind: string): string {
   }
 }
 
+function slotKey(s: AdminSessionRow): string | null {
+  if (!s.startTime || s.durationMin == null) return null;
+  return `${s.startTime}|${s.durationMin}`;
+}
+
+function openSoloLabel(s: AdminSessionRow): string {
+  return s.participants[0]?.label || s.between || "Open slot";
+}
+
 function SessionsExpandTable({
   rows,
   loading,
   total,
   empty,
   past,
+  clubbingKey,
+  onClub,
 }: {
   rows: AdminSessionRow[];
   loading: boolean;
   total: number;
   empty: string;
   past?: boolean;
+  clubbingKey?: string | null;
+  onClub?: (keepId: string, absorbId: string) => void;
 }) {
+  const peersById = (() => {
+    if (past || !onClub) return new Map<string, AdminSessionRow[]>();
+    const open = rows.filter(
+      (s) => s.participants.length === 1 && slotKey(s) != null,
+    );
+    const bySlot = new Map<string, AdminSessionRow[]>();
+    for (const s of open) {
+      const key = slotKey(s)!;
+      const list = bySlot.get(key) ?? [];
+      list.push(s);
+      bySlot.set(key, list);
+    }
+    const map = new Map<string, AdminSessionRow[]>();
+    for (const group of bySlot.values()) {
+      if (group.length < 2) continue;
+      for (const s of group) {
+        map.set(
+          s.id,
+          group.filter((other) => other.id !== s.id),
+        );
+      }
+    }
+    return map;
+  })();
+
+  const showActions = !past && Boolean(onClub);
+  const colSpan = showActions ? 5 : 4;
+
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
       <table className="w-full text-sm">
@@ -396,82 +438,130 @@ function SessionsExpandTable({
             <th className="px-4 py-3">Between</th>
             <th className="px-4 py-3">Type</th>
             <th className="px-4 py-3">{past ? "Completed" : "Status"}</th>
+            {showActions ? <th className="px-4 py-3">Actions</th> : null}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
           {loading ? (
             <tr>
-              <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+              <td colSpan={colSpan} className="px-4 py-8 text-center text-gray-500">
                 Loading sessions…
               </td>
             </tr>
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+              <td colSpan={colSpan} className="px-4 py-8 text-center text-gray-500">
                 {empty}
               </td>
             </tr>
           ) : (
-            rows.map((s) => (
-              <tr key={s.id}>
-                <td className="px-4 py-3 align-top">
-                  <p className="text-gray-900 dark:text-white">
-                    {formatSessionWhen(s.startTime)}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    until {formatSessionWhen(s.endTime)}
-                    {s.durationMin ? ` · ${s.durationMin} min` : ""}
-                  </p>
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {s.between}
-                  </p>
-                  <ul className="mt-1 space-y-0.5 text-xs text-gray-500">
-                    {s.participants.map((p) => (
-                      <li key={p.id}>
-                        {p.username ? (
-                          <Link
-                            href={`/u/${p.username}`}
-                            className="text-[#5D1C6A] hover:underline"
-                            target="_blank"
-                          >
-                            @{p.username}
-                          </Link>
-                        ) : (
-                          <span>{p.label}</span>
-                        )}
-                        {p.email ? ` · ${p.email}` : ""}
-                        {past ? (
-                          <span className="ml-1 text-gray-400">
-                            {p.completed
-                              ? "· finished"
-                              : p.attended
-                                ? "· left early"
-                                : "· no show"}
-                          </span>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                </td>
-                <td className="px-4 py-3 align-top capitalize text-gray-700 dark:text-gray-300">
-                  {String(s.sessionType).replace(/-/g, " ")}
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${completionClass(s.completion)}`}
-                  >
-                    {completionLabel(s.completion)}
-                  </span>
-                  {past && s.participants.length >= 2 ? (
-                    <p className="mt-1 text-[11px] text-gray-400">
-                      {s.completedCount}/{s.participants.length} finished
+            rows.map((s) => {
+              const peers = peersById.get(s.id) ?? [];
+              const busy =
+                clubbingKey === s.id ||
+                peers.some((p) => clubbingKey === p.id);
+              return (
+                <tr key={s.id}>
+                  <td className="px-4 py-3 align-top">
+                    <p className="text-gray-900 dark:text-white">
+                      {formatSessionWhen(s.startTime)}
                     </p>
+                    <p className="text-xs text-gray-500">
+                      until {formatSessionWhen(s.endTime)}
+                      {s.durationMin ? ` · ${s.durationMin} min` : ""}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3 align-top">
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {s.between}
+                    </p>
+                    <ul className="mt-1 space-y-0.5 text-xs text-gray-500">
+                      {s.participants.map((p) => (
+                        <li key={p.id}>
+                          {p.username ? (
+                            <Link
+                              href={`/u/${p.username}`}
+                              className="text-[#5D1C6A] hover:underline"
+                              target="_blank"
+                            >
+                              @{p.username}
+                            </Link>
+                          ) : (
+                            <span>{p.label}</span>
+                          )}
+                          {p.email ? ` · ${p.email}` : ""}
+                          {past ? (
+                            <span className="ml-1 text-gray-400">
+                              {p.completed
+                                ? "· finished"
+                                : p.attended
+                                  ? "· left early"
+                                  : "· no show"}
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td className="px-4 py-3 align-top capitalize text-gray-700 dark:text-gray-300">
+                    {String(s.sessionType).replace(/-/g, " ")}
+                  </td>
+                  <td className="px-4 py-3 align-top">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${completionClass(s.completion)}`}
+                    >
+                      {completionLabel(s.completion)}
+                    </span>
+                    {past && s.participants.length >= 2 ? (
+                      <p className="mt-1 text-[11px] text-gray-400">
+                        {s.completedCount}/{s.participants.length} finished
+                      </p>
+                    ) : null}
+                  </td>
+                  {showActions ? (
+                    <td className="px-4 py-3 align-top">
+                      {peers.length === 0 ? (
+                        <span className="text-xs text-gray-400">—</span>
+                      ) : peers.length === 1 ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => onClub?.(s.id, peers[0].id)}
+                          className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                        >
+                          {busy
+                            ? "Clubbing…"
+                            : `Club with ${openSoloLabel(peers[0])}`}
+                        </button>
+                      ) : (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                            >
+                              {busy ? "Clubbing…" : "Club with…"}
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {peers.map((peer) => (
+                              <DropdownMenuItem
+                                key={peer.id}
+                                disabled={busy}
+                                onClick={() => onClub?.(s.id, peer.id)}
+                              >
+                                {openSoloLabel(peer)}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </td>
                   ) : null}
-                </td>
-              </tr>
-            ))
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
@@ -680,6 +770,7 @@ export default function AdminPanel() {
   );
   const [upcomingSessionsTotal, setUpcomingSessionsTotal] = useState(0);
   const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [clubbingKey, setClubbingKey] = useState<string | null>(null);
   const [doneExpanded, setDoneExpanded] = useState(false);
   const [doneSessions, setDoneSessions] = useState<AdminSessionRow[]>([]);
   const [doneSessionsTotal, setDoneSessionsTotal] = useState(0);
@@ -814,6 +905,43 @@ export default function AdminPanel() {
       setSessionsLoading(false);
     }
   }, []);
+
+  const clubSessions = useCallback(
+    async (keepId: string, absorbId: string) => {
+      const keep = upcomingSessions.find((s) => s.id === keepId);
+      const absorb = upcomingSessions.find((s) => s.id === absorbId);
+      const keepLabel = keep ? openSoloLabel(keep) : "session A";
+      const absorbLabel = absorb ? openSoloLabel(absorb) : "session B";
+      if (
+        !confirm(
+          `Club ${keepLabel} with ${absorbLabel} into one session?\n\n${absorbLabel}'s open slot will be removed. Both people will get a booked-session email.`,
+        )
+      ) {
+        return;
+      }
+      setClubbingKey(keepId);
+      setError(null);
+      try {
+        const res = await fetch("/api/admin/sessions/club", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ keepId, absorbId }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(
+            typeof data.error === "string" ? data.error : "Failed to club sessions",
+          );
+        }
+        await Promise.all([loadUpcomingSessions(), loadStats()]);
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setClubbingKey(null);
+      }
+    },
+    [upcomingSessions, loadUpcomingSessions, loadStats],
+  );
 
   const loadDoneSessions = useCallback(async () => {
     setDoneLoading(true);
@@ -1126,6 +1254,8 @@ export default function AdminPanel() {
                 loading={sessionsLoading}
                 total={upcomingSessionsTotal}
                 empty="No upcoming sessions."
+                clubbingKey={clubbingKey}
+                onClub={clubSessions}
               />
             ) : null}
 
