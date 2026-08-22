@@ -13,6 +13,7 @@ import { requireNotCommunityBanned } from "@/lib/communityModeration";
 import { getBlockedUserIds } from "@/lib/blocking";
 import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 import { scheduleRecordAccessIp } from "@/lib/userIps";
+import { isEngagementCrewUserId } from "@/lib/engagementCrew";
 
 // GET /api/sessions?from=ISO&to=ISO
 // GET /api/sessions?mineUpcoming=1  — caller's future/in-progress sessions only
@@ -20,6 +21,11 @@ import { scheduleRecordAccessIp } from "@/lib/userIps";
 const MAX_OPEN_SLOTS = 200;
 /** Soft cap on booked sessions used for calendar occupancy chips. */
 const MAX_OCCUPIED_SLOTS = 200;
+/**
+ * TEMPORARY: engagement crew cannot open a new session starting sooner than this.
+ * Remove when the temporary crew scheduling rule ends.
+ */
+const CREW_MIN_LEAD_MS = 60 * 60 * 1000;
 
 type DbSession = {
   _id: ObjectId;
@@ -426,6 +432,25 @@ export async function POST(req: NextRequest) {
       { error: "Cannot book a session in the past or for current time" },
       { status: 400 },
     );
+  }
+
+  // TEMPORARY: engagement crew scheduling limits.
+  if (await isEngagementCrewUserId(userId)) {
+    if (durationMin === 25) {
+      return NextResponse.json(
+        { error: "You can't create 25-minute sessions" },
+        { status: 400 },
+      );
+    }
+    if (s.getTime() < now.getTime() + CREW_MIN_LEAD_MS) {
+      return NextResponse.json(
+        {
+          error:
+            "You should create sessions at least 1 hour in advance",
+        },
+        { status: 400 },
+      );
+    }
   }
 
   // Block sessions too far in the future (defense against abuse + accidental drift)

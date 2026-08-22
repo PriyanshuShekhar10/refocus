@@ -192,6 +192,35 @@ export async function addEngagementCrewMember(params: {
   };
 }
 
+/**
+ * TEMPORARY product rule helper: whether this user is on the engagement crew
+ * roster (by stored userId, or by resolving their account email).
+ */
+export async function isEngagementCrewUserId(
+  userId: string | null | undefined,
+): Promise<boolean> {
+  if (!userId || !ObjectId.isValid(userId)) return false;
+  const db = await getDb();
+  const byUserId = await db.collection("engagement_crew").findOne(
+    { userId },
+    { projection: { _id: 1 } },
+  );
+  if (byUserId) return true;
+
+  const user = (await db.collection("users").findOne(
+    { _id: new ObjectId(userId) },
+    { projection: { email: 1 } },
+  )) as { email?: string | null } | null;
+  const email = user?.email?.trim();
+  if (!email) return false;
+
+  const byEmail = await db.collection("engagement_crew").findOne(
+    { canonicalEmail: canonicalEmail(email.toLowerCase()) },
+    { projection: { _id: 1 } },
+  );
+  return Boolean(byEmail);
+}
+
 export async function removeEngagementCrewMember(
   email: string,
 ): Promise<{ ok: true } | { ok: false; error: string; status: number }> {

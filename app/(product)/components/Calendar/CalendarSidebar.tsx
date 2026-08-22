@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import useSWR from "swr";
 import BookSessionButton from "../BookSessionButton";
 import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { hasSessionStarted } from "@/lib/sessionWindow";
 import * as sessionsApi from "@/lib/api/sessionsApi";
 import { swrKeys } from "@/lib/swr/keys";
+import { useIsEngagementCrew } from "@/hooks/useIsEngagementCrew";
 
 function toYmd(d: Date) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
@@ -63,6 +64,12 @@ export function CalendarSidebar({
   onDeleteSession,
 }: CalendarSidebarProps) {
   const [settingsExpanded, setSettingsExpanded] = useState(true);
+  const { isCrew } = useIsEngagementCrew();
+  useEffect(() => {
+    if (isCrew && createDuration === 25) {
+      onCreateDurationChange(50);
+    }
+  }, [isCrew, createDuration, onCreateDurationChange]);
 
   const { data: upcomingData } = useSWR(
     swrKeys.sessionsMineUpcoming,
@@ -128,20 +135,27 @@ export function CalendarSidebar({
                   Duration
                 </p>
                 <div className="mt-1.5 flex gap-1 rounded-lg bg-gray-100/80 p-1 dark:bg-gray-800/80">
-                  {DURATION_OPTIONS.map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => onCreateDurationChange(d)}
-                      className={`flex-1 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
-                        createDuration === d
-                          ? "bg-[#5D1C6A] text-white shadow dark:bg-[#7A2D88]"
-                          : "text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
-                      }`}
-                    >
-                      {d} min
-                    </button>
-                  ))}
+                  {DURATION_OPTIONS.map((d) => {
+                    const blocked = isCrew && d === 25;
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => !blocked && onCreateDurationChange(d)}
+                        disabled={blocked}
+                        title={blocked ? "25-minute sessions are unavailable" : undefined}
+                        className={`flex-1 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
+                          blocked
+                            ? "cursor-not-allowed text-gray-400 opacity-40 dark:text-gray-600"
+                            : createDuration === d
+                              ? "bg-[#5D1C6A] text-white shadow dark:bg-[#7A2D88]"
+                              : "text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
+                        }`}
+                      >
+                        {d} min
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

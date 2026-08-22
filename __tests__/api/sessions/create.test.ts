@@ -29,6 +29,12 @@ vi.mock("@/lib/sse", () => ({
   sessionsChannel: () => "sessions:updates",
 }));
 
+const isEngagementCrewUserId = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/engagementCrew", () => ({
+  isEngagementCrewUserId,
+}));
+
 import { POST } from "@/app/api/sessions/route";
 
 const USER_ID = "user-xyz";
@@ -37,6 +43,7 @@ describe("POST /api/sessions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSession(USER_ID);
+    isEngagementCrewUserId.mockResolvedValue(false);
     rl.checkRateLimit.mockResolvedValue({
       success: true,
       limit: 100,
@@ -125,5 +132,40 @@ describe("POST /api/sessions", () => {
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(401);
     expect(json.error).toBe("Unauthorized");
+  });
+
+  it("rejects crew creating a session less than 1 hour ahead", async () => {
+    isEngagementCrewUserId.mockResolvedValue(true);
+    const start = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    const req = mockRequest("/api/sessions", {
+      body: { start, durationMin: 50, sessionType: "focus" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(400);
+    expect(json.error).toMatch(/1 hour/i);
+    expect(sessionsCol.insertOne).not.toHaveBeenCalled();
+  });
+
+  it("rejects crew creating a 25-minute session", async () => {
+    isEngagementCrewUserId.mockResolvedValue(true);
+    const start = new Date(Date.now() + 61 * 60 * 1000).toISOString();
+    const req = mockRequest("/api/sessions", {
+      body: { start, durationMin: 25, sessionType: "focus" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(400);
+    expect(json.error).toMatch(/25-minute/i);
+    expect(sessionsCol.insertOne).not.toHaveBeenCalled();
+  });
+
+  it("allows crew creating a 50-minute session at least 1 hour ahead", async () => {
+    isEngagementCrewUserId.mockResolvedValue(true);
+    const start = new Date(Date.now() + 61 * 60 * 1000).toISOString();
+    const req = mockRequest("/api/sessions", {
+      body: { start, durationMin: 50, sessionType: "focus" },
+    });
+    const { status } = await parseResponse(await POST(req));
+    expect(status).toBe(200);
+    expect(sessionsCol.insertOne).toHaveBeenCalled();
   });
 });

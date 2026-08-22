@@ -26,6 +26,7 @@ import {
 } from "@/lib/zonedTime";
 import { useUserTimezone } from "@/components/user-timezone-provider";
 import { useCalendarSessions } from "@/hooks/useCalendarSessions";
+import { useIsEngagementCrew } from "@/hooks/useIsEngagementCrew";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 import { BookingModal } from "../Calendar/Modals/BookingModal";
 import { Toast } from "../Calendar/Modals/Toast";
@@ -219,6 +220,13 @@ function createInitialState(): UIState {
 export default function MobileCalendar() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [ui, dispatch] = useReducer(uiReducer, undefined, createInitialState);
+  const { isCrew } = useIsEngagementCrew();
+
+  useEffect(() => {
+    if (isCrew && ui.createDuration === 25) {
+      dispatch({ type: "SET_CREATE_DURATION", duration: 50 });
+    }
+  }, [isCrew, ui.createDuration]);
   const [now, setNow] = useState(new Date());
   const [bookTime, setBookTime] = useState("09:00");
   const { timeZone } = useUserTimezone();
@@ -810,20 +818,32 @@ export default function MobileCalendar() {
                 Duration
               </label>
               <div className="grid grid-cols-3 gap-2">
-                {([25, 50, 75] as DurationMin[]).map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => dispatch({ type: "SET_CREATE_DURATION", duration: d })}
-                    className={`py-3 rounded-lg text-center transition-all ${
-                      ui.createDuration === d
-                        ? "bg-[#5D1C6A] text-white font-semibold"
-                        : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    {d} min
-                  </button>
-                ))}
+                {([25, 50, 75] as DurationMin[]).map((d) => {
+                  const blocked = isCrew && d === 25;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() =>
+                        !blocked &&
+                        dispatch({ type: "SET_CREATE_DURATION", duration: d })
+                      }
+                      disabled={blocked}
+                      title={
+                        blocked ? "25-minute sessions are unavailable" : undefined
+                      }
+                      className={`py-3 rounded-lg text-center transition-all ${
+                        blocked
+                          ? "cursor-not-allowed bg-gray-100 text-gray-400 opacity-40 dark:bg-gray-800 dark:text-gray-600"
+                          : ui.createDuration === d
+                            ? "bg-[#5D1C6A] text-white font-semibold"
+                            : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {d} min
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

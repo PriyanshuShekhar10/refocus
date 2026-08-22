@@ -15,6 +15,7 @@ vi.mock("@/lib/mongodb", () => ({
 
 import {
   addEngagementCrewMember,
+  isEngagementCrewUserId,
   listEngagementCrew,
   removeEngagementCrewMember,
   resolveEngagementCrewMembers,
@@ -116,6 +117,34 @@ describe("engagementCrew", () => {
     const result = await removeEngagementCrewMember("missing@example.com");
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.status).toBe(404);
+  });
+
+  it("detects crew membership by userId", async () => {
+    const userId = String(new ObjectId());
+    crewCol.findOne.mockResolvedValueOnce({ userId });
+    await expect(isEngagementCrewUserId(userId)).resolves.toBe(true);
+  });
+
+  it("detects crew membership by account email when userId unset on roster", async () => {
+    const userId = String(new ObjectId());
+    crewCol.findOne
+      .mockResolvedValueOnce(null) // by userId
+      .mockResolvedValueOnce({ canonicalEmail: "crew@example.com" }); // by email
+    usersCol.findOne.mockResolvedValue({
+      _id: new ObjectId(userId),
+      email: "crew@example.com",
+    });
+    await expect(isEngagementCrewUserId(userId)).resolves.toBe(true);
+  });
+
+  it("returns false for non-crew users", async () => {
+    const userId = String(new ObjectId());
+    crewCol.findOne.mockResolvedValue(null);
+    usersCol.findOne.mockResolvedValue({
+      _id: new ObjectId(userId),
+      email: "other@example.com",
+    });
+    await expect(isEngagementCrewUserId(userId)).resolves.toBe(false);
   });
 
   it("re-resolves unregistered members when they sign up", async () => {

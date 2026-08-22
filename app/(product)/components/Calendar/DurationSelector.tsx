@@ -15,6 +15,8 @@ interface DurationSelectorBaseProps {
   label?: string;
   /** Whether the selector is disabled */
   disabled?: boolean;
+  /** Individual durations that cannot be chosen (shown greyed out) */
+  disabledOptions?: readonly DurationMin[];
 }
 
 interface SingleSelectProps extends DurationSelectorBaseProps {
@@ -97,6 +99,7 @@ export function DurationSelector(props: DurationSelectorProps) {
     className = "",
     label,
     disabled = false,
+    disabledOptions = [],
     variant = "primary",
   } = props;
 
@@ -107,8 +110,11 @@ export function DurationSelector(props: DurationSelectorProps) {
     return props.selected.includes(duration);
   };
 
+  const isOptionDisabled = (duration: DurationMin): boolean =>
+    disabled || disabledOptions.includes(duration);
+
   const handleClick = (duration: DurationMin) => {
-    if (disabled) return;
+    if (isOptionDisabled(duration)) return;
     props.onChange(duration);
   };
 
@@ -125,21 +131,35 @@ export function DurationSelector(props: DurationSelectorProps) {
           gridTemplateColumns: `repeat(${Math.min(options.length, 4)}, 1fr)`,
         }}
       >
-        {options.map((duration) => (
-          <button
-            key={`duration-${duration}`}
-            type="button"
-            onClick={() => handleClick(duration)}
-            disabled={disabled}
-            className={`rounded-md border px-3 py-2 text-sm transition-colors ${
-              isSelected(duration) ? styles.selected : styles.unselected
-            } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:opacity-80"}`}
-            aria-pressed={isSelected(duration)}
-            aria-label={`${duration} minutes`}
-          >
-            {duration}
-          </button>
-        ))}
+        {options.map((duration) => {
+          const optionDisabled = isOptionDisabled(duration);
+          return (
+            <button
+              key={`duration-${duration}`}
+              type="button"
+              onClick={() => handleClick(duration)}
+              disabled={optionDisabled}
+              className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                isSelected(duration) && !optionDisabled
+                  ? styles.selected
+                  : styles.unselected
+              } ${
+                optionDisabled
+                  ? "cursor-not-allowed opacity-40"
+                  : "cursor-pointer hover:opacity-80"
+              }`}
+              aria-pressed={isSelected(duration)}
+              aria-label={`${duration} minutes`}
+              title={
+                optionDisabled && !disabled
+                  ? "Unavailable for your account"
+                  : undefined
+              }
+            >
+              {duration}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

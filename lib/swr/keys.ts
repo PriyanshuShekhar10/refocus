@@ -1,5 +1,7 @@
 export const swrKeys = {
   adminMe: "/api/admin/me",
+  /** TEMPORARY: engagement crew flag for scheduling UI limits */
+  crewMe: "/api/crew/me",
   userMe: "/api/users/me",
   userStats: "/api/users/me/stats",
   friends: "/api/friends",
