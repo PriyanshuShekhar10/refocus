@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { getDb } from "@/lib/mongodb";
+import { authOptions } from "@/lib/auth";
+import { isUserAdmin } from "@/lib/admin";
 import { isEmailVerified } from "@/lib/emailVerification";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 
-/** GET /api/users/profile/:username — public profile data */
+/** GET /api/profile/:username — public profile data (admins can view private profiles) */
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ username: string }> }
@@ -41,8 +44,16 @@ export async function GET(
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-  if (user.preferences?.publicProfile === false) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  const isPrivate = user.preferences?.publicProfile === false;
+  let adminView = false;
+  if (isPrivate) {
+    const session = await getServerSession(authOptions);
+    const viewerId = (session?.user as { id?: string } | undefined)?.id;
+    if (!(await isUserAdmin(viewerId))) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    adminView = true;
   }
 
   return NextResponse.json({
@@ -63,5 +74,6 @@ export async function GET(
       createdAt: user.createdAt ?? null,
       emailVerified: isEmailVerified(user.emailVerified),
     },
+    ...(adminView ? { adminView: true, privateProfile: true } : {}),
   });
 }

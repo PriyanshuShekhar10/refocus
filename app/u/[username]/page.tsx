@@ -1,11 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
 import { getDb } from "@/lib/mongodb";
-import { MapPin, Globe, Calendar } from "lucide-react";
+import { MapPin, Globe, Calendar, Lock } from "lucide-react";
 import type { Metadata } from "next";
 import { Shell, MinimalNav, designStyles } from "@/components/design";
 import { Logo } from "@/assets/exports";
+import { authOptions } from "@/lib/auth";
+import { isUserAdmin } from "@/lib/admin";
 import { getSiteUrl } from "@/lib/site";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 
@@ -33,6 +36,8 @@ const ABOUT_ME_PROMPTS = [
   "Top 1-2 tasks I use Refocus for most often",
   "If I could add or change one thing about Refocus, it would be",
 ] as const;
+
+type ProfileUser = Awaited<ReturnType<typeof getUser>>;
 
 async function getUser(username: string) {
   const db = await getDb();
@@ -62,25 +67,46 @@ async function getUser(username: string) {
   );
 }
 
-async function getPublicUser(username: string) {
+async function viewerIsAdmin() {
+  const session = await getServerSession(authOptions);
+  const viewerId = (session?.user as { id?: string } | undefined)?.id;
+  return isUserAdmin(viewerId);
+}
+
+/** Public profiles for everyone; private profiles only for admins. */
+async function getViewableUser(username: string): Promise<{
+  user: NonNullable<ProfileUser>;
+  adminPrivateView: boolean;
+} | null> {
   const user = await getUser(username);
   if (!user) return null;
-  if (user.preferences?.publicProfile === false) return null;
-  return user;
+  if (user.preferences?.publicProfile !== false) {
+    return { user, adminPrivateView: false };
+  }
+  if (!(await viewerIsAdmin())) return null;
+  return { user, adminPrivateView: true };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
-  const user = await getPublicUser(username);
-  if (!user) {
+  const viewed = await getViewableUser(username);
+  if (!viewed) {
     return {
       title: "User not found — Refocus",
       robots: { index: false, follow: false },
     };
   }
+  const { user, adminPrivateView } = viewed;
   const name = user.name || user.username || username;
   const canonicalPath = `/u/${user.username}`;
   const description = user.about || `${name}'s profile on Refocus`;
+  if (adminPrivateView) {
+    return {
+      title: `${name} (@${user.username}) — Private — Refocus`,
+      description,
+      robots: { index: false, follow: false },
+    };
+  }
   return {
     title: `${name} (@${user.username}) — Refocus`,
     description,
@@ -113,8 +139,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicProfilePage({ params }: Props) {
   const { username } = await params;
-  const user = await getPublicUser(username);
-  if (!user) notFound();
+  const viewed = await getViewableUser(username);
+  if (!viewed) notFound();
+  const { user, adminPrivateView } = viewed;
 
   const firstname = user.firstname ?? "";
   const lastname = user.lastname ?? "";
@@ -175,11 +202,38 @@ export default async function PublicProfilePage({ params }: Props) {
       />
 
       <main style={{ padding: "56px 0 80px", minHeight: "calc(100vh - 64px)" }}>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd).replace(/</g, '\\u003c') }}
-        />
+        {!adminPrivateView ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd).replace(/</g, '\\u003c') }}
+          />
+        ) : null}
         <div className={designStyles.wrap} style={{ maxWidth: 720 }}>
+          {adminPrivateView ? (
+            <div
+              role="status"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 20,
+                padding: "10px 14px",
+                borderRadius: 10,
+                border: "1px solid color-mix(in oklab, #b45309 35%, var(--line-soft))",
+                background:
+                  "color-mix(in oklab, #f59e0b 12%, var(--card))",
+                color: "var(--ink)",
+                fontSize: 13,
+                lineHeight: 1.45,
+              }}
+            >
+              <Lock size={14} aria-hidden />
+              <span>
+                Private profile — visible to admins only. The public still sees
+                this as not found.
+              </span>
+            </div>
+          ) : null}
           <header
             style={{ display: "flex", alignItems: "flex-start", gap: 20 }}
           >
