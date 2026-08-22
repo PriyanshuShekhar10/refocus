@@ -16,7 +16,8 @@ export type AdminAuditAction =
   | "report.resolve"
   | "user.email"
   | "crew.add"
-  | "crew.remove";
+  | "crew.remove"
+  | "test_call.create";
 
 export type AdminAuditEntry = {
   _id?: ObjectId;

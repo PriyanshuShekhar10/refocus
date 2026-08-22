@@ -18,6 +18,7 @@ import {
   UserX,
   Users,
   UserPlus,
+  Video,
   Volume2,
   VolumeX,
   X,
@@ -34,6 +35,7 @@ import AdminMailbox, {
   type MailRecipient,
 } from "./AdminMailbox";
 import AdminCrew from "./AdminCrew";
+import AdminTestCall from "./AdminTestCall";
 
 type AdminSection =
   | "overview"
@@ -44,7 +46,8 @@ type AdminSection =
   | "history"
   | "ip-activity"
   | "logins"
-  | "crew";
+  | "crew"
+  | "test-call";
 
 type Stats = {
   users: {
@@ -247,6 +250,7 @@ const SECTIONS: {
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "users", label: "Users", icon: Users },
   { id: "crew", label: "Crew", icon: UserPlus },
+  { id: "test-call", label: "Test call", icon: Video },
   { id: "logins", label: "Logins", icon: LogIn },
   { id: "deleted", label: "Deleted", icon: UserX },
   { id: "mailbox", label: "Mailbox", icon: Mail },
@@ -271,6 +275,7 @@ const ACTION_LABELS: Record<string, string> = {
   "user.email": "Emailed users",
   "crew.add": "Added crew member",
   "crew.remove": "Removed crew member",
+  "test_call.create": "Created Daily test call",
 };
 
 function StatCard({
@@ -1195,6 +1200,8 @@ export default function AdminPanel() {
         ) : null}
 
         {section === "crew" ? <AdminCrew active /> : null}
+
+        {section === "test-call" ? <AdminTestCall active /> : null}
 
         {section === "users" ? (
           <div className="space-y-4">
