@@ -148,7 +148,6 @@ export function useCalendarSessions({
   const [error, setError] = useState<string | null>(null);
   const daysRef = useRef(days);
   const currentUserIdRef = useRef<string | null>(null);
-  const ablyConnectedRef = useRef(false);
 
   const fromIso = days.length > 0 ? toISO(days[0]) : null;
   const toIso =
@@ -168,7 +167,15 @@ export function useCalendarSessions({
         if (!result.ok) throw new Error(result.error);
         return result.data;
       }),
-    { keepPreviousData: true },
+    {
+      keepPreviousData: true,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      // Background failures should not clear cached sessions.
+      shouldRetryOnError: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 2_000,
+    },
   );
 
   daysRef.current = days;
@@ -189,6 +196,11 @@ export function useCalendarSessions({
     [onEventsChange, eventsProp],
   );
 
+  /** Quiet revalidate — keeps current events on screen (no loading flash). */
+  const refreshInBackground = useCallback(() => {
+    void mutateSessions(undefined, { revalidate: true });
+  }, [mutateSessions]);
+
   // Sync SWR cache into local event state (instant on revisit when cached).
   useEffect(() => {
     if (!sessionsData) return;
@@ -203,6 +215,7 @@ export function useCalendarSessions({
   useEffect(() => {
     if (!sessionsError) return;
     console.error("/api/sessions failed", sessionsError);
+    // Only surface an error when we have nothing to show.
     if (!sessionsData) {
       setError("Could not load sessions");
     }
@@ -210,7 +223,7 @@ export function useCalendarSessions({
 
   const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Real-time: Ably session deltas (no full-list refetch on every write)
+  // Real-time: Ably session deltas + quiet background refresh fallbacks
   useEffect(() => {
     if (days.length === 0) return;
 
@@ -219,7 +232,7 @@ export function useCalendarSessions({
         clearTimeout(refreshDebounceRef.current);
       }
       refreshDebounceRef.current = setTimeout(() => {
-        void mutateSessions();
+        refreshInBackground();
       }, 200);
     };
 
@@ -298,6 +311,17 @@ export function useCalendarSessions({
       null;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
 
+    const onVisibleAgain = () => {
+      if (document.visibilityState === "visible") scheduleRefresh();
+    };
+    const onFocus = () => scheduleRefresh();
+
+    // Light background reconciliation even when realtime is healthy.
+    const BACKGROUND_POLL_MS = 90_000;
+    pollInterval = setInterval(scheduleRefresh, BACKGROUND_POLL_MS);
+    document.addEventListener("visibilitychange", onVisibleAgain);
+    window.addEventListener("focus", onFocus);
+
     try {
       const client = getAblyClient();
       channel = client.channels.get(sessionsChannel());
@@ -314,27 +338,21 @@ export function useCalendarSessions({
 
       const onConnectionChange = () => {
         const state = client.connection.state;
-        ablyConnectedRef.current = state === "connected";
+        // When Ably drops, poll more often until it recovers.
         if (state === "failed" || state === "suspended") {
-          if (!pollInterval) {
-            pollInterval = setInterval(scheduleRefresh, 120_000);
-          }
-        } else if (state === "connected" && pollInterval) {
-          clearInterval(pollInterval);
-          pollInterval = null;
+          if (pollInterval) clearInterval(pollInterval);
+          pollInterval = setInterval(scheduleRefresh, 30_000);
+        } else if (state === "connected") {
+          if (pollInterval) clearInterval(pollInterval);
+          pollInterval = setInterval(scheduleRefresh, BACKGROUND_POLL_MS);
         }
       };
-      ablyConnectedRef.current = client.connection.state === "connected";
       client.connection.on(onConnectionChange);
-
-      const onFocus = () => {
-        if (!ablyConnectedRef.current) scheduleRefresh();
-      };
-      window.addEventListener("focus", onFocus);
 
       return () => {
         channel?.unsubscribe("event", onEvent);
         client.connection.off(onConnectionChange);
+        document.removeEventListener("visibilitychange", onVisibleAgain);
         window.removeEventListener("focus", onFocus);
         if (pollInterval) clearInterval(pollInterval);
         if (refreshDebounceRef.current) {
@@ -343,20 +361,18 @@ export function useCalendarSessions({
         }
       };
     } catch {
-      // Ably unavailable — rare full refresh fallback
-      pollInterval = setInterval(scheduleRefresh, 120_000);
-      const onFocus = () => scheduleRefresh();
-      window.addEventListener("focus", onFocus);
+      // Ably unavailable — keep the quiet poll + focus/visibility refresh.
       return () => {
-        if (pollInterval) clearInterval(pollInterval);
+        document.removeEventListener("visibilitychange", onVisibleAgain);
         window.removeEventListener("focus", onFocus);
+        if (pollInterval) clearInterval(pollInterval);
         if (refreshDebounceRef.current) {
           clearTimeout(refreshDebounceRef.current);
           refreshDebounceRef.current = null;
         }
       };
     }
-  }, [days.length, setEvents, mutateSessions]);
+  }, [days.length, setEvents, refreshInBackground]);
 
   const isLoading = sessionsLoading && !sessionsData;
 
@@ -405,8 +421,9 @@ export function useCalendarSessions({
         prev.map((e) => (e.id === tempId ? { ...e, id: result.data.id } : e)),
       );
       refreshMineUpcoming();
+      refreshInBackground();
     },
-    [currentUserId, setEvents],
+    [currentUserId, setEvents, refreshInBackground],
   );
 
   const deleteSession = useCallback(
@@ -423,8 +440,9 @@ export function useCalendarSessions({
         throw new sessionsApi.ApiError(result.error);
       }
       refreshMineUpcoming();
+      refreshInBackground();
     },
-    [events, setEvents],
+    [events, setEvents, refreshInBackground],
   );
 
   const leaveSession = useCallback(
@@ -441,8 +459,9 @@ export function useCalendarSessions({
         throw new sessionsApi.ApiError(result.error);
       }
       refreshMineUpcoming();
+      refreshInBackground();
     },
-    [events, setEvents],
+    [events, setEvents, refreshInBackground],
   );
 
   const joinSession = useCallback(
@@ -462,8 +481,9 @@ export function useCalendarSessions({
         throw new sessionsApi.ApiError(result.error);
       }
       refreshMineUpcoming();
+      refreshInBackground();
     },
-    [setEvents],
+    [setEvents, refreshInBackground],
   );
 
   const updateSessionMeta = useCallback(

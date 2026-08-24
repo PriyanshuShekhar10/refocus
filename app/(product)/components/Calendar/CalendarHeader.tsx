@@ -2,7 +2,6 @@
 
 import { formatLocalDate } from "@/lib/localTime";
 import { useUserTimezone } from "@/components/user-timezone-provider";
-import { PageRefreshButton } from "@/components/page-refresh";
 
 type ViewDays = 3 | 5 | 7;
 
@@ -31,8 +30,8 @@ export function CalendarHeader({
   const { timeZone } = useUserTimezone();
 
   return (
-    <div className="flex items-center justify-between border-b px-4 py-3 dark:border-gray-700">
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between gap-8 border-b px-4 py-3 dark:border-gray-700">
+      <div className="flex min-w-0 items-center gap-2">
         <button
           onClick={() => onShiftRange(-1)}
           className="rounded-md border p-2 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800 transition-colors"
@@ -57,7 +56,7 @@ export function CalendarHeader({
             <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
           </svg>
         </button>
-        <span className="ml-4 text-lg font-semibold dark:text-gray-100">
+        <span className="ml-4 truncate text-lg font-semibold dark:text-gray-100">
           {formatLocalDate(startDate, { weekday: "short", day: "numeric" })}
         </span>
         <span
@@ -68,10 +67,7 @@ export function CalendarHeader({
         </span>
       </div>
 
-      {/* View selector */}
-      <div className="flex items-center gap-2">
-        <PageRefreshButton />
-        <div className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-600 p-1 bg-gray-50 dark:bg-gray-800">
+      <div className="flex shrink-0 items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-600 p-1 bg-gray-50 dark:bg-gray-800">
         {VIEW_OPTIONS.map((option) => (
           <button
             key={option.value}
@@ -85,7 +81,6 @@ export function CalendarHeader({
             {option.label}
           </button>
         ))}
-        </div>
       </div>
     </div>
   );
