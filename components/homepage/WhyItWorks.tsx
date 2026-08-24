@@ -21,7 +21,7 @@ const REASONS = [
 
 export function WhyItWorks() {
   return (
-    <section className={styles.block} id="community">
+    <section className={`${styles.block} ${styles.blockAlt}`} id="community">
       <div className={styles.wrap}>
         <Reveal className={styles.sectionHead}>
           <span className={styles.eyebrow}>03 — Why it works</span>

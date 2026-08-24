@@ -29,7 +29,7 @@ const LENGTHS: Length[] = [
 
 export function Sessions() {
   return (
-    <section className={styles.block} id="sessions">
+    <section className={`${styles.block} ${styles.blockSurface}`} id="sessions">
       <div className={styles.wrap}>
         <Reveal className={styles.sectionHead}>
           <span className={styles.eyebrow}>01 — Sessions</span>

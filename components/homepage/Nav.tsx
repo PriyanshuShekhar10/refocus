@@ -78,7 +78,7 @@ export function Nav() {
               </Link>
               <Link
                 href="/auth/sign-up"
-                className={`${styles.btn} ${styles.btnPrimary}`}
+                className={`${styles.btn} ${styles.btnBrand}`}
               >
                 Start focusing
               </Link>
