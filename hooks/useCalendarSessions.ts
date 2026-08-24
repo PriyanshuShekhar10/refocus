@@ -43,12 +43,12 @@ interface UseCalendarSessionsReturn {
   isLoading: boolean;
   /** Error message if any */
   error: string | null;
-  /** Create a new session */
+  /** Create a new session; resolves to the new session id */
   createSession: (
     start: Date,
     durationMin: DurationMin,
     quietOwner?: boolean,
-  ) => Promise<void>;
+  ) => Promise<string>;
   /** Delete a session (owner: deletes or transfers to other person if booked) */
   deleteSession: (id: string, message?: string) => Promise<void>;
   /** Leave a session (participant only; session stays available for owner) */
@@ -381,7 +381,7 @@ export function useCalendarSessions({
       start: Date,
       durationMin: DurationMin,
       quietOwner: boolean = false,
-    ) => {
+    ): Promise<string> => {
       const tempId = `temp_${Date.now()}`;
       const end = addMinutes(start, durationMin);
       const optimistic: CalendarEvent = {
@@ -417,11 +417,13 @@ export function useCalendarSessions({
         throw new sessionsApi.ApiError(result.error);
       }
 
+      const newId = result.data.id;
       setEvents((prev) =>
-        prev.map((e) => (e.id === tempId ? { ...e, id: result.data.id } : e)),
+        prev.map((e) => (e.id === tempId ? { ...e, id: newId } : e)),
       );
       refreshMineUpcoming();
       refreshInBackground();
+      return newId;
     },
     [currentUserId, setEvents, refreshInBackground],
   );

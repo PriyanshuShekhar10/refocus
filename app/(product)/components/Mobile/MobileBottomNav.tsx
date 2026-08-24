@@ -71,7 +71,7 @@ export function MobileBottomNav({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-gray-200 bg-white dark:border-[#354055] dark:bg-[#0E1624] lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       aria-label="Mobile navigation"
     >
@@ -87,19 +87,19 @@ export function MobileBottomNav({
               aria-current={isActive ? "page" : undefined}
               className={`relative flex flex-col items-center justify-center gap-0.5 transition-colors ${
                 isActive
-                  ? "text-[#5D1C6A] dark:text-[#CA5995]"
-                  : "text-gray-500 dark:text-gray-400"
+                  ? "text-[#8A328F] dark:text-[#8A328F]"
+                  : "text-gray-500 dark:text-[#AAA6B1]"
               }`}
             >
               <div
                 className={`relative rounded-xl p-1.5 transition-colors ${
-                  isActive ? "bg-[#FFF1D3] dark:bg-[#5D1C6A]/40" : ""
+                  isActive ? "bg-[#21182B]/80 dark:bg-[#21182B]" : ""
                 }`}
               >
                 {tab.icon}
                 {tab.badge && tab.badge > 0 ? (
                   <span
-                    className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900"
+                    className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#0E1624]"
                     aria-hidden
                   />
                 ) : null}

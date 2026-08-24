@@ -10,11 +10,9 @@ import {
   HiMoon,
 } from "react-icons/hi";
 import { BsGearFill } from "react-icons/bs";
-import { FiLogOut } from "react-icons/fi";
-import { RefreshCw } from "lucide-react";
+import { FiLogOut, FiShare2 } from "react-icons/fi";
 import type { TabKey } from "../Sidebar/sidebar";
 import { MOBILE_MORE_TABS } from "./MobileBottomNav";
-import { usePageRefresh } from "@/components/page-refresh";
 
 interface MobileMoreMenuProps {
   open: boolean;
@@ -55,6 +53,18 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
+function shareRefocus() {
+  if (typeof navigator !== "undefined" && navigator.share) {
+    void navigator.share({
+      title: "Refocus",
+      text: "Check out Refocus - Virtual coworking made easy!",
+      url: window.location.origin,
+    });
+  } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+    void navigator.clipboard.writeText(window.location.origin);
+  }
+}
+
 export function MobileMoreMenu({
   open,
   onClose,
@@ -63,12 +73,12 @@ export function MobileMoreMenu({
   isAdmin = false,
 }: MobileMoreMenuProps) {
   const { resolvedTheme, setTheme } = useTheme();
-  const { refresh, refreshing } = usePageRefresh();
 
   if (!open) return null;
 
   const visibleItems = MENU_ITEMS.filter((item) => !item.adminOnly || isAdmin);
   const nextTheme = (resolvedTheme || "light") === "dark" ? "light" : "dark";
+  const isDark = (resolvedTheme || "light") === "dark";
 
   const handleSelect = (tab: TabKey) => {
     onSelect(tab);
@@ -108,7 +118,7 @@ export function MobileMoreMenu({
                 <button
                   type="button"
                   onClick={() => handleSelect(item.tab)}
-                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors ${
+                  className={`flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors ${
                     isActive
                       ? "bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/30 dark:text-[#CA5995]"
                       : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
@@ -123,40 +133,35 @@ export function MobileMoreMenu({
           <li>
             <button
               type="button"
-              onClick={() => {
-                void refresh();
-                onClose();
-              }}
-              disabled={refreshing}
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-gray-700 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
-            >
-              <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-              <span className="font-medium">Refresh</span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
               onClick={() => setTheme(nextTheme)}
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+              className="flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+              aria-label={`Appearance, currently ${isDark ? "Dark" : "Light"}. Toggle theme.`}
             >
-              {(resolvedTheme || "light") === "dark" ? (
-                <HiSun size={20} />
-              ) : (
-                <HiMoon size={20} />
-              )}
-              <span className="font-medium">
-                {(resolvedTheme || "light") === "dark"
-                  ? "Light mode"
-                  : "Dark mode"}
+              {isDark ? <HiSun size={20} /> : <HiMoon size={20} />}
+              <span className="flex-1 font-medium">Appearance</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {isDark ? "Dark" : "Light"}
               </span>
             </button>
           </li>
           <li>
             <button
               type="button"
+              onClick={() => {
+                shareRefocus();
+                onClose();
+              }}
+              className="flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              <FiShare2 size={18} />
+              <span className="font-medium">Share Refocus</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+              className="flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
             >
               <FiLogOut size={18} />
               <span className="font-medium">Sign out</span>

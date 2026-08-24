@@ -89,7 +89,7 @@ const TOUR_STEPS_MOBILE: TourStep[] = [
   {
     title: "Home",
     description:
-      "Your calendar lives on Home. Book, join, and manage focus sessions from here.",
+      "See today’s sessions on Home. Join what’s available or book a new one in a few taps.",
     tab: "dashboard",
   },
   {
@@ -270,12 +270,6 @@ function DashboardContent() {
       </div>
       <div className="ml-0 flex min-w-0 flex-1 flex-col overflow-hidden lg:ml-16">
         <EmailVerificationStrip />
-        {mobileMounted && isMobile && (
-          <p className="shrink-0 border-b border-amber-200/80 bg-amber-50 px-3 py-1.5 text-center text-[11px] leading-snug text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
-            Refocus works best on desktop — mobile is great for quick sessions and
-            chat.
-          </p>
-        )}
         <div className="flex min-h-0 flex-1 overflow-hidden pb-16 lg:pb-0">
           <WallpaperProvider active={!!showWallpaper}>
           <main
