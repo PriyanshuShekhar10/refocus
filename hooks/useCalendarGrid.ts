@@ -29,12 +29,18 @@ export interface HoverState {
   dayIndex: number;
   /** Y position in pixels (snapped to grid) */
   yPx: number;
-  /** Time label (e.g., "14:30") */
+  /** Start time label (e.g., "3:30 PM") */
   label: string;
+  /** End time label (e.g., "4:20 PM") */
+  endLabel: string;
   /** Top position for preview slot */
   previewTop: number;
-  /** Whether cursor is over an existing event */
+  /** Whether cursor is over an existing event card */
   overEvent: boolean;
+  /** Whether a new session can be booked at this snapped time */
+  bookable: boolean;
+  /** Duration shown in the ghost preview */
+  durationMin: DurationMin;
 }
 
 interface UseCalendarGridOptions {
@@ -54,6 +60,8 @@ interface UseCalendarGridOptions {
   eventsByDay: Record<string, Array<CalendarEvent | DayLayoutEvent>>;
   /** IANA timezone for grid placement and click-to-create */
   timeZone: string;
+  /** Current user id — used to hide previews that conflict with own sessions */
+  currentUserId?: string | null;
 }
 
 interface UseCalendarGridReturn {
@@ -123,6 +131,7 @@ export function useCalendarGrid({
   createDuration,
   eventsByDay,
   timeZone,
+  currentUserId = null,
 }: UseCalendarGridOptions): UseCalendarGridReturn {
   const { rowPx, gutterWidth } = CALENDAR_LAYOUT;
   // Extra hour past midnight so overnight tails remain visible on the start day.
@@ -207,6 +216,12 @@ export function useCalendarGrid({
       const x = clientX - rect.left;
       const y = clientY - rect.top;
 
+      // Ignore the time gutter
+      if (x < gutterWidth) {
+        setHoverState(null);
+        return;
+      }
+
       const contentWidth = Math.max(0, rect.width - gutterWidth);
       const xAdjusted = Math.max(0, x - gutterWidth);
       const dayWidth = contentWidth / visibleDays;
@@ -235,11 +250,15 @@ export function useCalendarGrid({
       if (!d) return;
 
       const when = wallMinutesOnDayToUtc(d, minutesOfDay, timeZone);
+      const endWhen = new Date(when.getTime() + createDuration * 60_000);
       const label = formatLocalTime(when, TIME_CONFIG.timeFormatOptions);
+      const endLabel = formatLocalTime(endWhen, TIME_CONFIG.timeFormatOptions);
 
-      // Check if cursor is over an existing event
       const dayKey = ymdInTimeZone(d, timeZone);
-      const overEvent = (eventsByDay[dayKey] ?? []).some((ev) => {
+      const dayEvents = eventsByDay[dayKey] ?? [];
+
+      // Cursor resting on an existing event card
+      const overEvent = dayEvents.some((ev) => {
         const layout = ev as DayLayoutEvent;
         const startMin =
           typeof layout.startMinutes === "number"
@@ -254,13 +273,30 @@ export function useCalendarGrid({
 
       const topPx = minuteToPx(minutesOfDay - startHour * 60);
       const nowMinutes = minutesOfDayInTimeZone(now, timeZone);
+      const dayYmd = ymdInTimeZone(d, timeZone);
+      const todayYmd = ymdInTimeZone(now, timeZone);
+      const isPast =
+        dayYmd < todayYmd ||
+        (dayYmd === todayYmd && minutesOfDay < nowMinutes);
 
-      // Hide hover for past times
-      if (
-        ymdInTimeZone(d, timeZone) < ymdInTimeZone(now, timeZone) ||
-        (ymdInTimeZone(d, timeZone) === ymdInTimeZone(now, timeZone) &&
-          minutesOfDay < nowMinutes)
-      ) {
+      // Proposed block overlaps one of the user's own sessions (any loaded day)
+      const startMs = when.getTime();
+      const endMs = startMs + createDuration * 60_000;
+      const overlapsMine = Object.values(eventsByDay).some((list) =>
+        list.some((ev) => {
+          const mine =
+            (ev.owner_id && currentUserId && ev.owner_id === currentUserId) ||
+            (ev.participants ?? []).some((p) => p.user_id === currentUserId);
+          if (!mine) return false;
+          const evStart = new Date(ev.start).getTime();
+          const evEnd = new Date(ev.end).getTime();
+          return startMs < evEnd && endMs > evStart;
+        }),
+      );
+
+      const bookable = !isPast && !overEvent && !overlapsMine;
+
+      if (isPast) {
         setHoverState(null);
         return;
       }
@@ -269,8 +305,11 @@ export function useCalendarGrid({
         dayIndex,
         yPx: topPx,
         label,
+        endLabel,
         previewTop: topPx,
         overEvent,
+        bookable,
+        durationMin: createDuration,
       });
     },
     [
@@ -286,6 +325,7 @@ export function useCalendarGrid({
       rowPx,
       minuteToPx,
       timeZone,
+      currentUserId,
     ],
   );
 

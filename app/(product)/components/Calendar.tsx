@@ -365,6 +365,7 @@ export default function Calendar({
     createDuration: ui.createDuration,
     eventsByDay,
     timeZone,
+    currentUserId,
   });
 
   // Keep day labels aligned with columns when a classic scrollbar eats grid width.
@@ -582,7 +583,9 @@ export default function Calendar({
 
         <div
           ref={gridRef}
-          className="calendar-scroll relative flex min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]"
+          className={`calendar-scroll relative flex min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable] ${
+            hoverState?.bookable ? "cursor-pointer" : ""
+          }`}
           onClick={handleGridClick}
           onMouseMove={handleGridMouseMove}
           onMouseLeave={handleGridMouseLeave}
@@ -702,29 +705,29 @@ export default function Calendar({
                   </div>
                 )}
 
-                {/* Hover time + slot preview */}
-                {hoverState && hoverState.dayIndex === dayIdx && (
-                  <div
-                    className="pointer-events-none absolute inset-x-0 z-30"
-                    style={{ top: hoverState.yPx }}
-                  >
-                    <div className="h-px w-full bg-[#CA5995]/70" />
-                    <div className="absolute left-2 -top-3 rounded bg-[#5D1C6A] dark:bg-[#7A2D88] px-2 py-0.5 text-[10px] font-medium text-white shadow">
-                      {hoverState.label}
-                    </div>
-                  </div>
-                )}
+                {/* Ghost booking preview — empty slot hover */}
                 {hoverState &&
                   hoverState.dayIndex === dayIdx &&
-                  !hoverState.overEvent && (
+                  hoverState.bookable && (
                     <div
-                      className="pointer-events-none absolute inset-x-2 z-20"
-                      style={{ top: hoverState.previewTop }}
+                      className="pointer-events-none absolute inset-x-1.5 z-20 opacity-100 transition-opacity duration-100"
+                      style={{
+                        top: hoverState.previewTop,
+                        height: Math.max(
+                          minuteToPx(hoverState.durationMin),
+                          28,
+                        ),
+                      }}
+                      aria-hidden="true"
                     >
-                      <div
-                        className="rounded-lg border border-[#CA5995]/70 dark:border-[#CA5995]/45 bg-[#FFB090]/20 dark:bg-[#CA5995]/10"
-                        style={{ height: minuteToPx(ui.createDuration) }}
-                      />
+                      <div className="flex h-full flex-col overflow-hidden rounded-lg border border-[#CA5995]/40 bg-[#5D1C6A]/10 px-2 py-1.5 dark:border-[#CA5995]/35 dark:bg-[#CA5995]/15">
+                        <span className="truncate text-[11px] font-medium leading-tight text-[#5D1C6A] dark:text-[#E8B4D4]">
+                          {hoverState.label} – {hoverState.endLabel}
+                        </span>
+                        <span className="mt-0.5 truncate text-[10px] leading-tight text-[#5D1C6A]/75 dark:text-[#CA5995]/90">
+                          {hoverState.durationMin} min · Book
+                        </span>
+                      </div>
                     </div>
                   )}
 
