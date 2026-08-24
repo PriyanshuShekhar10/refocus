@@ -6,7 +6,7 @@ import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { isEmailVerified } from "@/lib/emailVerification";
-import { DURATION_OPTIONS, SESSION_TYPES, type DurationMin, type SessionType } from "@/constants/calendar";
+import { DURATION_OPTIONS, SESSION_TYPES, BOOKING_TIME_STEP_MINUTES, isBookingStartAligned, type DurationMin, type SessionType } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { requireNotCommunityBanned } from "@/lib/communityModeration";
@@ -423,6 +423,14 @@ export async function POST(req: NextRequest) {
   const s = new Date(start);
   if (isNaN(s.getTime())) {
     return NextResponse.json({ error: "Invalid start time" }, { status: 400 });
+  }
+  if (!isBookingStartAligned(s)) {
+    return NextResponse.json(
+      {
+        error: `Start time must be on a ${BOOKING_TIME_STEP_MINUTES}-minute mark (:00 or :30)`,
+      },
+      { status: 400 },
+    );
   }
 
   // Block past or current sessions

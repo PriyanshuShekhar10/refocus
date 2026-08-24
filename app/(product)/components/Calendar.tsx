@@ -19,6 +19,7 @@ import {
   CALENDAR_LAYOUT,
   DEFAULT_DURATION,
   DEFAULT_DURATION_FILTER,
+  BOOKING_DAY_OVERFLOW_MINUTES,
   isValidDuration,
   type DurationMin,
 } from "@/constants/calendar";
@@ -26,6 +27,7 @@ import { useCalendarSessions } from "@/hooks/useCalendarSessions";
 import { useIsEngagementCrew } from "@/hooks/useIsEngagementCrew";
 import { useCalendarGrid } from "@/hooks/useCalendarGrid";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
+import { buildEventsByDay } from "@/lib/calendarDayEvents";
 import { BookingModal } from "./Calendar/Modals/BookingModal";
 import { Toast } from "./Calendar/Modals/Toast";
 import { ConfirmModal, partnerNoteField } from "./Calendar/Modals/ConfirmModal";
@@ -50,21 +52,13 @@ import {
 interface CalendarProps {
   startHour?: number;
   endHour?: number;
-  stepMinutes?: 15 | 30;
+  stepMinutes?: 30;
   startDate?: Date;
   events?: CalendarEvent[];
   locale?: string;
   onEventsChange?: (next: CalendarEvent[]) => void;
   className?: string;
 }
-
-/** CalendarEvent with precomputed epoch ms for fast overlap checks */
-type ProcessedEvent = CalendarEvent & {
-  startMs: number;
-  endMs: number;
-  /** minutes from midnight for positioning */
-  startMinutes: number;
-};
 
 type SidebarProfilePreview = {
   username: string;
@@ -233,7 +227,7 @@ function createInitialState(startDateProp?: Date): UIState {
 export default function Calendar({
   startHour = 0,
   endHour = 24,
-  stepMinutes = 15,
+  stepMinutes = 30,
   startDate: startDateProp,
   events: eventsProp,
   locale,
@@ -241,6 +235,8 @@ export default function Calendar({
   className = "",
 }: CalendarProps) {
   const { hourBlockHeight, minorLinePositions } = CALENDAR_LAYOUT;
+  const overflowHours = BOOKING_DAY_OVERFLOW_MINUTES / 60;
+  const gridHourCount = endHour - startHour + overflowHours;
   const { timeZone } = useUserTimezone();
   const { canBookSessions, bannedMessage } = useCommunityModeration();
 
@@ -333,36 +329,20 @@ export default function Calendar({
   );
 
   // Filter events by duration and precompute epoch ms for fast overlap checks
-  const eventsByDay = useMemo(() => {
-    const map: Record<string, ProcessedEvent[]> = {};
-    for (const d of days) map[ymdInTimeZone(d, timeZone)] = [];
-
-    const filteredEvents = events.filter((ev) => {
-      if (!ui.durationFilter.includes(ev.durationMin)) return false;
-      // Hide past open slots you created that never matched.
-      if (isPastUnmatchedSession(ev, currentUserId)) return false;
-      return true;
-    });
-
-    for (const ev of filteredEvents) {
-      const startMs = new Date(ev.start).getTime();
-      const endMs = new Date(ev.end).getTime();
-      const evStartDate = new Date(startMs);
-      const startMinutes = minutesOfDayInTimeZone(evStartDate, timeZone);
-      const key = ymdInTimeZone(evStartDate, timeZone);
-
-      if (map[key]) {
-        map[key].push({ ...ev, startMs, endMs, startMinutes });
-      }
-    }
-
-    // Sort by startMs (no Date allocation)
-    for (const k in map) {
-      map[k].sort((a, b) => a.startMs - b.startMs);
-    }
-
-    return map;
-  }, [days, events, ui.durationFilter, timeZone, currentUserId]);
+  const eventsByDay = useMemo(
+    () =>
+      buildEventsByDay({
+        days,
+        events,
+        timeZone,
+        includeEvent: (ev) => {
+          if (!ui.durationFilter.includes(ev.durationMin)) return false;
+          if (isPastUnmatchedSession(ev, currentUserId)) return false;
+          return true;
+        },
+      }),
+    [days, events, ui.durationFilter, timeZone, currentUserId],
+  );
 
   // Use the grid hook for layout and interactions
   const {
@@ -502,17 +482,18 @@ export default function Calendar({
 
     // Only block if the overlapping session is one I'm already in (owner or participant).
     // Other people's slots (different duration or same time) don't block me — we just won't match.
-    const dayKey = ymdInTimeZone(dayDate, timeZone);
+    // Check all loaded days: late starts can overlap into the next morning.
     const startMs = start.getTime();
     const newEndMs = addMinutes(start, ui.createDuration).getTime();
-    const mySessions = (eventsByDay[dayKey] ?? []).filter(
-      (ev) =>
+    const overlaps = events.some((ev) => {
+      const mine =
         (ev.owner_id && currentUserId && ev.owner_id === currentUserId) ||
-        (ev.participants ?? []).some((p) => p.user_id === currentUserId),
-    );
-    const overlaps = mySessions.some(
-      (ev) => startMs < ev.endMs && newEndMs > ev.startMs,
-    );
+        (ev.participants ?? []).some((p) => p.user_id === currentUserId);
+      if (!mine) return false;
+      const evStart = new Date(ev.start).getTime();
+      const evEnd = new Date(ev.end).getTime();
+      return startMs < evEnd && newEndMs > evStart;
+    });
 
     if (overlaps) {
       dispatch({ type: "SHOW_TOAST", message: "You already have a session at this time" });
@@ -576,22 +557,37 @@ export default function Calendar({
         >
           {/* Time Gutter */}
           <div className="w-16 shrink-0 border-r bg-gray-50/80 dark:border-gray-700 dark:bg-gray-800/80">
-            {Array.from({ length: endHour - startHour }).map((_, i) => (
+            {Array.from({ length: gridHourCount }).map((_, i) => {
+              const hour = startHour + i;
+              const isOverflow = hour >= endHour;
+              const labelHour = isOverflow ? hour - endHour : hour;
+              return (
               <div
                 key={i}
                 className="relative text-right"
                 style={{ height: hourBlockHeight }}
               >
-                {/* Top of hour block = hour start */}
-                <span className="absolute right-2 top-0 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">
-                  {formatHour(startHour + i)}
+                <span
+                  className={`absolute right-2 top-0 -translate-y-1/2 text-xs ${
+                    isOverflow
+                      ? "text-gray-300 dark:text-gray-600"
+                      : "text-gray-400 dark:text-gray-500"
+                  }`}
+                >
+                  {formatHour(labelHour)}
                 </span>
-                {/* Midpoint = :30 of this hour */}
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 dark:text-gray-500">
-                  :30
-                </span>
+                {!isOverflow ? (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 dark:text-gray-500">
+                    :30
+                  </span>
+                ) : (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-300 dark:text-gray-600">
+                    next
+                  </span>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Columns */}
@@ -605,24 +601,33 @@ export default function Calendar({
                 className="relative border-r dark:border-gray-700"
               >
                 {/* Horizontal Lines */}
-                {Array.from({ length: endHour - startHour }).map((_, i) => {
+                {Array.from({ length: gridHourCount }).map((_, i) => {
                   const hour = startHour + i;
-                  const dayKey = ymdInTimeZone(d, timeZone);
-                  const occ = hourOccupancy.get(occupancyKey(dayKey, hour));
+                  const isOverflow = hour >= endHour;
+                  const dayForOcc = isOverflow
+                    ? addDaysInTimeZone(d, 1, timeZone)
+                    : d;
+                  const hourForOcc = isOverflow ? hour - endHour : hour;
+                  const dayKey = ymdInTimeZone(dayForOcc, timeZone);
+                  const occ = hourOccupancy.get(occupancyKey(dayKey, hourForOcc));
                   const hourEnd = wallMinutesOnDayToUtc(
-                    d,
-                    (hour + 1) * 60,
+                    dayForOcc,
+                    (hourForOcc + 1) * 60,
                     timeZone,
                   );
                   const tense =
                     hourEnd.getTime() <= now.getTime() ? "attended" : "attending";
                   const hideOccForMyPastMatch = myPastMatchedHours.has(
-                    occupancyKey(dayKey, hour),
+                    occupancyKey(dayKey, hourForOcc),
                   );
                   return (
                   <div
                     key={i}
-                    className="relative border-t border-gray-100 dark:border-gray-800"
+                    className={`relative border-t ${
+                      isOverflow
+                        ? "border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/40 dark:bg-gray-800/30"
+                        : "border-gray-100 dark:border-gray-800"
+                    }`}
                     style={{ height: hourBlockHeight }}
                   >
                     {occ && occ.total > 0 && !hideOccForMyPastMatch ? (
@@ -634,8 +639,9 @@ export default function Calendar({
                         />
                       </div>
                     ) : null}
-                    {/* 15/30/45 min minor lines */}
-                    {minorLinePositions.map((yy, j) => (
+                    {/* :30 minor line */}
+                    {!isOverflow &&
+                      minorLinePositions.map((yy, j) => (
                       <div
                         key={j}
                         className="pointer-events-none absolute inset-x-0"
@@ -757,7 +763,7 @@ export default function Calendar({
                     return dayEvents.map((ev) => {
                     // Use precomputed startMinutes (no Date allocation)
                     const top = minuteToPx(ev.startMinutes - startHour * 60);
-                    const height = minuteToPx(ev.durationMin);
+                    const height = minuteToPx(ev.layoutDurationMin);
                     const isBooked =
                       ev.status === "booked" ||
                       (ev.participants?.length ?? 0) >= 2;
@@ -808,7 +814,7 @@ export default function Calendar({
 
                     return (
                       <CalendarEventCard
-                        key={ev.id}
+                        key={ev.isContinuation ? `${ev.id}-cont` : ev.id}
                         event={ev}
                         isBooked={isBooked}
                         isOwner={!!isOwner}

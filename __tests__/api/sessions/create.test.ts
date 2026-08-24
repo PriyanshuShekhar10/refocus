@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mockRequest, parseResponse, mockCollection, mockDb, mockSession } from "../../helpers";
+import {
+  mockRequest,
+  parseResponse,
+  mockCollection,
+  mockDb,
+  mockSession,
+  alignedFutureIso,
+  alignedPastIso,
+} from "../../helpers";
 import { ObjectId } from "mongodb";
 
 // Stub rate limiter so we can drive 429 behavior independently.
@@ -58,7 +66,7 @@ describe("POST /api/sessions", () => {
   });
 
   it("rejects past start times", async () => {
-    const past = new Date(Date.now() - 60_000).toISOString();
+    const past = alignedPastIso();
     const req = mockRequest("/api/sessions", {
       body: { start: past, durationMin: 25, sessionType: "focus" },
     });
@@ -67,8 +75,21 @@ describe("POST /api/sessions", () => {
     expect(json.error).toMatch(/past|current/i);
   });
 
+  it("rejects start times not on a 30-minute mark", async () => {
+    const misaligned = new Date(
+      Math.ceil(Date.now() / (30 * 60_000)) * (30 * 60_000) + 15 * 60_000,
+    ).toISOString();
+    const req = mockRequest("/api/sessions", {
+      body: { start: misaligned, durationMin: 25, sessionType: "focus" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(400);
+    expect(json.error).toMatch(/30-minute/i);
+    expect(sessionsCol.insertOne).not.toHaveBeenCalled();
+  });
+
   it("rejects invalid durationMin", async () => {
-    const start = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const start = alignedFutureIso();
     const req = mockRequest("/api/sessions", {
       body: { start, durationMin: 17, sessionType: "focus" },
     });
@@ -78,7 +99,7 @@ describe("POST /api/sessions", () => {
   });
 
   it("rejects invalid sessionType", async () => {
-    const start = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const start = alignedFutureIso();
     const req = mockRequest("/api/sessions", {
       body: { start, durationMin: 25, sessionType: "marathon" },
     });
@@ -88,7 +109,7 @@ describe("POST /api/sessions", () => {
   });
 
   it("rejects bookings beyond the horizon", async () => {
-    const tooFar = new Date(Date.now() + 200 * 24 * 60 * 60 * 1000).toISOString();
+    const tooFar = alignedFutureIso(200 * 24 * 60 * 60 * 1000);
     const req = mockRequest("/api/sessions", {
       body: { start: tooFar, durationMin: 25, sessionType: "focus" },
     });
@@ -99,7 +120,7 @@ describe("POST /api/sessions", () => {
 
   it("rejects overlap with existing user session (409)", async () => {
     sessionsCol.findOne.mockResolvedValueOnce({ _id: new ObjectId() });
-    const start = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const start = alignedFutureIso();
     const req = mockRequest("/api/sessions", {
       body: { start, durationMin: 25, sessionType: "focus" },
     });
@@ -109,7 +130,7 @@ describe("POST /api/sessions", () => {
   });
 
   it("creates a session when valid + non-overlapping", async () => {
-    const start = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const start = alignedFutureIso();
     const req = mockRequest("/api/sessions", {
       body: { start, durationMin: 25, sessionType: "focus", quietOwner: true },
     });
@@ -127,7 +148,11 @@ describe("POST /api/sessions", () => {
   it("returns 401 without a session", async () => {
     mockSession(null);
     const req = mockRequest("/api/sessions", {
-      body: { start: new Date(Date.now() + 60 * 60 * 1000).toISOString(), durationMin: 25, sessionType: "focus" },
+      body: {
+        start: alignedFutureIso(),
+        durationMin: 25,
+        sessionType: "focus",
+      },
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(401);
@@ -136,7 +161,8 @@ describe("POST /api/sessions", () => {
 
   it("rejects crew creating a session less than 1 hour ahead", async () => {
     isEngagementCrewUserId.mockResolvedValue(true);
-    const start = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    // Next 30-min mark is always < 1 hour from "now" (at most ~30m).
+    const start = alignedFutureIso(1_000);
     const req = mockRequest("/api/sessions", {
       body: { start, durationMin: 50, sessionType: "focus" },
     });
@@ -148,7 +174,7 @@ describe("POST /api/sessions", () => {
 
   it("rejects crew creating a 25-minute session", async () => {
     isEngagementCrewUserId.mockResolvedValue(true);
-    const start = new Date(Date.now() + 61 * 60 * 1000).toISOString();
+    const start = alignedFutureIso(61 * 60 * 1000);
     const req = mockRequest("/api/sessions", {
       body: { start, durationMin: 25, sessionType: "focus" },
     });
@@ -160,7 +186,7 @@ describe("POST /api/sessions", () => {
 
   it("allows crew creating a 50-minute session at least 1 hour ahead", async () => {
     isEngagementCrewUserId.mockResolvedValue(true);
-    const start = new Date(Date.now() + 61 * 60 * 1000).toISOString();
+    const start = alignedFutureIso(61 * 60 * 1000);
     const req = mockRequest("/api/sessions", {
       body: { start, durationMin: 50, sessionType: "focus" },
     });

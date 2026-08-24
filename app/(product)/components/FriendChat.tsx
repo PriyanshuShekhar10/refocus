@@ -17,6 +17,7 @@ import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import FriendChatInput from "./chat/FriendChatInput";
 import {
+  BOOKING_MINUTE_OPTIONS,
   DEFAULT_DURATION,
   isValidDuration,
   type DurationMin,
@@ -1202,7 +1203,7 @@ export default function FriendChat({
                   <div className={`flex items-center gap-2 ${layout === "docked" ? "mt-1" : "mt-2"}`}>
                     <span className={`text-gray-500 dark:text-gray-400 ${layout === "docked" ? "text-[10px]" : "text-xs"}`}>Minutes:</span>
                     <div className="flex gap-1">
-                      {[0, 15, 30, 45].map((m) => {
+                      {BOOKING_MINUTE_OPTIONS.map((m) => {
                         const minuteConflict = getSlotConflict(srDate, srHour, m, srDuration);
                         return (
                           <button

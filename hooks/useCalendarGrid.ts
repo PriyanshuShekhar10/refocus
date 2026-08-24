@@ -14,8 +14,11 @@ import {
 import {
   CALENDAR_LAYOUT,
   TIME_CONFIG,
+  BOOKING_DAY_OVERFLOW_MINUTES,
+  maxAlignedBookingStartMinutes,
   type DurationMin,
 } from "@/constants/calendar";
+import type { DayLayoutEvent } from "@/lib/calendarDayEvents";
 
 // ============================================
 // Types
@@ -48,7 +51,7 @@ interface UseCalendarGridOptions {
   /** Currently selected duration for creating sessions */
   createDuration: DurationMin;
   /** Events organized by day (for overlap detection) */
-  eventsByDay: Record<string, CalendarEvent[]>;
+  eventsByDay: Record<string, Array<CalendarEvent | DayLayoutEvent>>;
   /** IANA timezone for grid placement and click-to-create */
   timeZone: string;
 }
@@ -104,7 +107,7 @@ interface UseCalendarGridReturn {
  *   days,
  *   startHour: 0,
  *   endHour: 24,
- *   stepMinutes: 15,
+ *   stepMinutes: 30,
  *   visibleDays: 3,
  *   createDuration: 25,
  *   eventsByDay,
@@ -122,7 +125,9 @@ export function useCalendarGrid({
   timeZone,
 }: UseCalendarGridOptions): UseCalendarGridReturn {
   const { rowPx, gutterWidth } = CALENDAR_LAYOUT;
-  const totalMinutes = (endHour - startHour) * 60;
+  // Extra hour past midnight so overnight tails remain visible on the start day.
+  const totalMinutes =
+    (endHour - startHour) * 60 + BOOKING_DAY_OVERFLOW_MINUTES;
 
   // Current time state (updates every minute)
   const [now, setNow] = useState<Date>(new Date());
@@ -215,10 +220,15 @@ export function useCalendarGrid({
       const minutesFromTopRaw = (yContent / rowPx) * stepMinutes;
       const minutesFromTop =
         Math.round(minutesFromTopRaw / stepMinutes) * stepMinutes;
+      const maxStart = maxAlignedBookingStartMinutes(
+        endHour * 60,
+        createDuration,
+        stepMinutes,
+      );
       const minutesOfDay = clamp(
         minutesFromTop + startHour * 60,
         startHour * 60,
-        endHour * 60 - createDuration,
+        maxStart,
       );
 
       const d = days[dayIndex];
@@ -230,10 +240,16 @@ export function useCalendarGrid({
       // Check if cursor is over an existing event
       const dayKey = ymdInTimeZone(d, timeZone);
       const overEvent = (eventsByDay[dayKey] ?? []).some((ev) => {
-        const s = new Date(ev.start);
-        const startMin = minutesOfDayInTimeZone(s, timeZone);
-        const endMin = startMin + ev.durationMin;
-        return minutesOfDay >= startMin && minutesOfDay < endMin;
+        const layout = ev as DayLayoutEvent;
+        const startMin =
+          typeof layout.startMinutes === "number"
+            ? layout.startMinutes
+            : minutesOfDayInTimeZone(new Date(ev.start), timeZone);
+        const span =
+          typeof layout.layoutDurationMin === "number"
+            ? layout.layoutDurationMin
+            : ev.durationMin;
+        return minutesOfDay >= startMin && minutesOfDay < startMin + span;
       });
 
       const topPx = minuteToPx(minutesOfDay - startHour * 60);
@@ -298,10 +314,15 @@ export function useCalendarGrid({
       const y = e.clientY - rect.top;
       const yContent = y + (scroller?.scrollTop ?? 0);
       const minutesFromTop = Math.round(yContent / rowPx) * stepMinutes;
+      const maxStart = maxAlignedBookingStartMinutes(
+        endHour * 60,
+        createDuration,
+        stepMinutes,
+      );
       const minutesOfDay = clamp(
         minutesFromTop + startHour * 60,
         startHour * 60,
-        endHour * 60 - createDuration,
+        maxStart,
       );
 
       const start = wallMinutesOnDayToUtc(dayDate, minutesOfDay, timeZone);

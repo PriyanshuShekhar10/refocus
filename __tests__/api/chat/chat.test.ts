@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mockRequest, parseResponse, mockCollection, mockDb, mockSession } from "../../helpers";
+import { mockRequest, parseResponse, mockCollection, mockDb, mockSession, alignedFutureIso } from "../../helpers";
 import { ObjectId } from "mongodb";
 
 // Mock rate limiting
@@ -172,7 +172,7 @@ describe("POST /api/chat/:friendId", () => {
       to_user_id: FRIEND_ID,
       status: "pending",
     });
-    const start = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const start = alignedFutureIso();
 
     const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
       body: { type: "session-request", start, durationMin: 25 },

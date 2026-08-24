@@ -2,6 +2,10 @@ import { Db } from "mongodb";
 import { broadcastEvent } from "./broadcaster";
 import { chatChannel, userChannel } from "./sse";
 import { hasSessionOverlap } from "./sessionOverlap";
+import {
+  BOOKING_TIME_STEP_MINUTES,
+  isBookingStartAligned,
+} from "@/constants/calendar";
 
 export const DURATION_OPTIONS = [25, 50, 75] as const;
 export type DurationMin = (typeof DURATION_OPTIONS)[number];
@@ -24,6 +28,11 @@ export async function createSessionRequest(params: {
   
   const s = new Date(start);
   if (isNaN(s.getTime())) throw new Error("Invalid start");
+  if (!isBookingStartAligned(s)) {
+    throw new Error(
+      `Start time must be on a ${BOOKING_TIME_STEP_MINUTES}-minute mark (:00 or :30)`,
+    );
+  }
   
   const now = new Date();
   if (s.getTime() <= now.getTime()) {

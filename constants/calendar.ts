@@ -39,18 +39,33 @@ export const DEFAULT_DURATION_FILTER: DurationMin[] = [...DURATION_OPTIONS];
 // Layout Configuration
 // ============================================
 
-export const CALENDAR_LAYOUT = {
-  /** Height of each 15-minute row in pixels */
-  rowPx: 28,
+/**
+ * Booking start-time grid (wall clock). Sessions can start on :00 and :30 only.
+ */
+export const BOOKING_TIME_STEP_MINUTES = 30;
 
-  /** Height of each hour block (4 x rowPx for 15-min steps) */
+/** Minute-of-hour choices for booking UIs */
+export const BOOKING_MINUTE_OPTIONS = [0, 30] as const;
+
+/**
+ * How far a session may extend past the calendar day boundary (into the next
+ * morning), and how far a previous-night session may still occupy the start
+ * of a day. Keeps late starts like 23:30 bookable for 25/50/75-minute sessions.
+ */
+export const BOOKING_DAY_OVERFLOW_MINUTES = 60;
+
+export const CALENDAR_LAYOUT = {
+  /** Height of each booking-step row in pixels (30-minute steps) */
+  rowPx: 56,
+
+  /** Height of each hour block (2 x rowPx for 30-min steps) */
   hourBlockHeight: 112,
 
   /** Width of the time gutter on the left */
   gutterWidth: 64,
 
-  /** Y positions for 15/30/45 minute marker lines within an hour block */
-  minorLinePositions: [28, 56, 84],
+  /** Y positions for :30 minute marker lines within an hour block */
+  minorLinePositions: [56],
 } as const;
 
 // ============================================
@@ -119,7 +134,7 @@ export function getNextDuration(current: DurationMin): DurationMin {
  */
 export function minutesToPixels(
   minutes: number,
-  stepMinutes: number = 15,
+  stepMinutes: number = BOOKING_TIME_STEP_MINUTES,
 ): number {
   return (minutes / stepMinutes) * CALENDAR_LAYOUT.rowPx;
 }
@@ -129,9 +144,38 @@ export function minutesToPixels(
  */
 export function pixelsToMinutes(
   pixels: number,
-  stepMinutes: number = 15,
+  stepMinutes: number = BOOKING_TIME_STEP_MINUTES,
 ): number {
   return (pixels / CALENDAR_LAYOUT.rowPx) * stepMinutes;
+}
+
+/**
+ * True when `date` falls on a BOOKING_TIME_STEP_MINUTES boundary
+ * (UTC :00 / :30, which is wall :00 / :30 for hour and half-hour offsets).
+ */
+export function isBookingStartAligned(date: Date): boolean {
+  if (date.getUTCSeconds() !== 0 || date.getUTCMilliseconds() !== 0) {
+    return false;
+  }
+  return date.getTime() % (BOOKING_TIME_STEP_MINUTES * 60_000) === 0;
+}
+
+/**
+ * Latest start (minutes from midnight on the booking day) that lands on the
+ * booking step grid and whose end is within `dayEndMinutes + overflow`.
+ * Starts themselves stay on the booking day (never past 23:30 for a 0–24 day).
+ */
+export function maxAlignedBookingStartMinutes(
+  dayEndMinutes: number,
+  durationMin: number,
+  stepMinutes: number = BOOKING_TIME_STEP_MINUTES,
+  overflowMinutes: number = BOOKING_DAY_OVERFLOW_MINUTES,
+): number {
+  const latestByEnd = dayEndMinutes + overflowMinutes - durationMin;
+  const lastSlotOnDay = dayEndMinutes - stepMinutes;
+  const latest = Math.min(latestByEnd, lastSlotOnDay);
+  if (latest < 0) return 0;
+  return Math.floor(latest / stepMinutes) * stepMinutes;
 }
 
 // ============================================

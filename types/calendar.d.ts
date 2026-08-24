@@ -104,7 +104,7 @@ export type PresenceDot = {
 export type CalendarProps = {
   startHour?: number;
   endHour?: number;
-  stepMinutes?: 15 | 30;
+  stepMinutes?: 30;
   visibleDays?: number;
   startDate?: Date;
   events?: CalendarEvent[];

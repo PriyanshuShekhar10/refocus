@@ -85,3 +85,17 @@ export function mockSession(userId: string | null) {
     fn.mockResolvedValue(null as never);
   }
 }
+
+const BOOKING_STEP_MS = 30 * 60_000;
+
+/** ISO start snapped up to the next 30-minute UTC mark after now+offsetMs. */
+export function alignedFutureIso(offsetMs: number = 60 * 60 * 1000): string {
+  const target = Date.now() + offsetMs;
+  return new Date(Math.ceil(target / BOOKING_STEP_MS) * BOOKING_STEP_MS).toISOString();
+}
+
+/** ISO start snapped down to a past 30-minute UTC mark. */
+export function alignedPastIso(offsetMs: number = 60_000): string {
+  const target = Date.now() - offsetMs;
+  return new Date(Math.floor(target / BOOKING_STEP_MS) * BOOKING_STEP_MS).toISOString();
+}

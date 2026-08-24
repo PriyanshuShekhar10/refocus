@@ -4,6 +4,7 @@ import {
   DEFAULT_DURATION,
   isValidDuration,
   type DurationMin,
+  BOOKING_MINUTE_OPTIONS,
 } from "@/constants/calendar";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
@@ -345,7 +346,7 @@ export default function BookSessionButton({
                         Minutes:
                       </span>
                       <div className="flex gap-1">
-                        {([0, 15, 30, 45] as const).map((m) => {
+                        {BOOKING_MINUTE_OPTIONS.map((m) => {
                           const minuteConflict = getSlotConflict(
                             srDate,
                             srHour,

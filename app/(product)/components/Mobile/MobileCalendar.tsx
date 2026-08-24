@@ -9,6 +9,8 @@ import {
   formatHour,
 } from "@/lib/utils";
 import {
+  BOOKING_TIME_STEP_MINUTES,
+  BOOKING_DAY_OVERFLOW_MINUTES,
   DEFAULT_DURATION,
   DEFAULT_DURATION_FILTER,
   isValidDuration,
@@ -28,6 +30,7 @@ import { useUserTimezone } from "@/components/user-timezone-provider";
 import { useCalendarSessions } from "@/hooks/useCalendarSessions";
 import { useIsEngagementCrew } from "@/hooks/useIsEngagementCrew";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
+import { buildEventsByDay } from "@/lib/calendarDayEvents";
 import { BookingModal } from "../Calendar/Modals/BookingModal";
 import { Toast } from "../Calendar/Modals/Toast";
 import { ConfirmModal, partnerNoteField } from "../Calendar/Modals/ConfirmModal";
@@ -42,7 +45,11 @@ import {
 } from "@/lib/calendarOccupancy";
 
 const HOUR_HEIGHT = 60;
-const BOOK_TIME_STEP_MINUTES = 15;
+const OVERFLOW_HOURS = BOOKING_DAY_OVERFLOW_MINUTES / 60;
+const GRID_HOURS = 24 + OVERFLOW_HOURS;
+const BOOK_TIME_STEP_MINUTES = BOOKING_TIME_STEP_MINUTES;
+const MAX_BOOK_MINUTES =
+  24 * 60 - BOOK_TIME_STEP_MINUTES; /* 23:30 */
 
 function formatBookTime(totalMinutes: number): string {
   const h = Math.floor(totalMinutes / 60);
@@ -53,7 +60,7 @@ function formatBookTime(totalMinutes: number): string {
 function snapBookTimeMinutes(totalMinutes: number): number {
   const rounded =
     Math.round(totalMinutes / BOOK_TIME_STEP_MINUTES) * BOOK_TIME_STEP_MINUTES;
-  return Math.min(Math.max(0, rounded), 23 * 60 + 45);
+  return Math.min(Math.max(0, rounded), MAX_BOOK_MINUTES);
 }
 
 function getDefaultBookTime(date: Date, timeZone: string): string {
@@ -89,12 +96,6 @@ function normalizeBookTime(value: string): string | null {
 // ============================================
 // Types & State Management (same as desktop)
 // ============================================
-
-type ProcessedEvent = CalendarEvent & {
-  startMs: number;
-  endMs: number;
-  startMinutes: number;
-};
 
 type ModalState =
   | { type: "none" }
@@ -313,30 +314,20 @@ export default function MobileCalendar() {
   );
 
   // Filter and process events
-  const eventsByDay = useMemo(() => {
-    const map: Record<string, ProcessedEvent[]> = {};
-    for (const d of days) map[ymdInTimeZone(d, timeZone)] = [];
-
-    const filtered = events.filter((ev) => ui.durationFilter.includes(ev.durationMin));
-
-    for (const ev of filtered) {
-      const startMs = new Date(ev.start).getTime();
-      const endMs = new Date(ev.end).getTime();
-      const evStartDate = new Date(startMs);
-      const startMinutes = minutesOfDayInTimeZone(evStartDate, timeZone);
-      const key = ymdInTimeZone(evStartDate, timeZone);
-
-      if (map[key]) {
-        map[key].push({ ...ev, startMs, endMs, startMinutes });
-      }
-    }
-
-    for (const k in map) {
-      map[k].sort((a, b) => a.startMs - b.startMs);
-    }
-
-    return map;
-  }, [days, events, ui.durationFilter, timeZone]);
+  const eventsByDay = useMemo(
+    () =>
+      buildEventsByDay({
+        days,
+        events,
+        timeZone,
+        includeEvent: (ev) => {
+          if (!ui.durationFilter.includes(ev.durationMin)) return false;
+          if (isPastUnmatchedSession(ev, currentUserId)) return false;
+          return true;
+        },
+      }),
+    [days, events, ui.durationFilter, timeZone, currentUserId],
+  );
 
   // Navigation
   const goToday = useCallback(
@@ -450,17 +441,17 @@ export default function MobileCalendar() {
       return;
     }
 
-    const dayKey = ymdInTimeZone(ui.startDate, timeZone);
     const startMs = start.getTime();
     const newEndMs = addMinutes(start, ui.createDuration).getTime();
-    const mySessions = (eventsByDay[dayKey] ?? []).filter(
-      (ev) =>
+    const overlaps = events.some((ev) => {
+      const mine =
         (ev.owner_id && currentUserId && ev.owner_id === currentUserId) ||
-        (ev.participants ?? []).some((p) => p.user_id === currentUserId),
-    );
-    const overlaps = mySessions.some(
-      (ev) => startMs < ev.endMs && newEndMs > ev.startMs,
-    );
+        (ev.participants ?? []).some((p) => p.user_id === currentUserId);
+      if (!mine) return false;
+      const evStart = new Date(ev.start).getTime();
+      const evEnd = new Date(ev.end).getTime();
+      return startMs < evEnd && newEndMs > evStart;
+    });
 
     if (overlaps) {
       dispatch({ type: "SHOW_TOAST", message: "You already have a session at this time" });
@@ -486,7 +477,7 @@ export default function MobileCalendar() {
     ui.startDate,
     ui.createDuration,
     timeZone,
-    eventsByDay,
+    events,
     currentUserId,
   ]);
 
@@ -566,29 +557,43 @@ export default function MobileCalendar() {
         className="flex-1 overflow-y-auto"
         style={{ paddingBottom: ui.sheetExpanded ? 380 : 200 }}
       >
-        <div className="relative" style={{ height: 24 * HOUR_HEIGHT }}>
+        <div className="relative" style={{ height: GRID_HOURS * HOUR_HEIGHT }}>
           {/* Hour lines */}
-          {Array.from({ length: 24 }).map((_, hour) => {
-            const dayKey = ymdInTimeZone(ui.startDate, timeZone);
-            const occ = hourOccupancy.get(occupancyKey(dayKey, hour));
+          {Array.from({ length: GRID_HOURS }).map((_, hour) => {
+            const isOverflow = hour >= 24;
+            const dayForOcc = isOverflow
+              ? addDaysInTimeZone(ui.startDate, 1, timeZone)
+              : ui.startDate;
+            const hourForOcc = isOverflow ? hour - 24 : hour;
+            const dayKey = ymdInTimeZone(dayForOcc, timeZone);
+            const occ = hourOccupancy.get(occupancyKey(dayKey, hourForOcc));
             const hourEnd = wallMinutesOnDayToUtc(
-              ui.startDate,
-              (hour + 1) * 60,
+              dayForOcc,
+              (hourForOcc + 1) * 60,
               timeZone,
             );
             const tense =
               hourEnd.getTime() <= now.getTime() ? "attended" : "attending";
             const hideOccForMyPastMatch = myPastMatchedHours.has(
-              occupancyKey(dayKey, hour),
+              occupancyKey(dayKey, hourForOcc),
             );
             return (
             <div
               key={hour}
-              className="absolute left-0 right-0 border-t border-gray-100 dark:border-gray-800"
+              className={`absolute left-0 right-0 border-t ${
+                isOverflow
+                  ? "border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/40"
+                  : "border-gray-100 dark:border-gray-800"
+              }`}
               style={{ top: hour * HOUR_HEIGHT, height: HOUR_HEIGHT }}
             >
-              <span className="absolute left-3 -top-2.5 text-xs text-gray-400 bg-white dark:bg-gray-900 px-1">
-                {formatHour(hour)}
+              <span
+                className={`absolute left-3 -top-2.5 text-xs bg-white dark:bg-gray-900 px-1 ${
+                  isOverflow ? "text-gray-300 dark:text-gray-600" : "text-gray-400"
+                }`}
+              >
+                {formatHour(hourForOcc)}
+                {isOverflow ? " +" : ""}
               </span>
               {occ && occ.total > 0 && !hideOccForMyPastMatch ? (
                 <div className="pointer-events-none absolute right-2 top-1 z-[15]">
@@ -599,9 +604,9 @@ export default function MobileCalendar() {
                   />
                 </div>
               ) : null}
-              <div className="absolute left-14 right-0 top-1/4 border-t border-dashed border-gray-100 dark:border-gray-800" />
-              <div className="absolute left-14 right-0 top-1/2 border-t border-dashed border-gray-100 dark:border-gray-800" />
-              <div className="absolute left-14 right-0 top-3/4 border-t border-dashed border-gray-100 dark:border-gray-800" />
+              {!isOverflow ? (
+                <div className="absolute left-14 right-0 top-1/2 border-t border-dashed border-gray-100 dark:border-gray-800" />
+              ) : null}
             </div>
             );
           })}
@@ -621,7 +626,7 @@ export default function MobileCalendar() {
           {/* Events */}
           {dayEvents.map((ev) => {
             const top = (ev.startMinutes / 60) * HOUR_HEIGHT;
-            const height = Math.max((ev.durationMin / 60) * HOUR_HEIGHT, 40);
+            const height = Math.max((ev.layoutDurationMin / 60) * HOUR_HEIGHT, 40);
             const isBooked = (ev.participants?.length ?? 0) >= 2;
             const isOwner = ev.owner_id === currentUserId;
             const isMySession = isBooked || isOwner;
@@ -653,7 +658,7 @@ export default function MobileCalendar() {
 
             return (
               <div
-                key={ev.id}
+                key={ev.isContinuation ? `${ev.id}-cont` : ev.id}
                 className={`absolute left-14 right-2 rounded-lg p-2 cursor-pointer transition-all ${
                   isPast
                     ? "border border-dashed border-gray-300 bg-gray-50/90 opacity-80 dark:border-gray-600 dark:bg-gray-900/70"

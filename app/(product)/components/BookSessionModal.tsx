@@ -4,6 +4,7 @@ import { FiX } from "react-icons/fi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 import {
+  BOOKING_MINUTE_OPTIONS,
   DEFAULT_DURATION,
   isValidDuration,
   type DurationMin,
@@ -345,7 +346,7 @@ export default function BookSessionModal({
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-xs text-gray-500 dark:text-gray-400">Minutes:</span>
                   <div className="flex gap-1">
-                    {([0, 15, 30, 45] as const).map((m) => {
+                    {BOOKING_MINUTE_OPTIONS.map((m) => {
                       const mc = getSlotConflict(srDate, srHour, m, srDuration);
                       return (
                         <button
