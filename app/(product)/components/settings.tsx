@@ -391,7 +391,7 @@ function FocusPreferences() {
         </Row>
         <Row
           label="Start in focus mode"
-          hint="Mute mic and camera at session start."
+          hint="Mute mic at session start. Camera stays on."
         >
           <Toggle
             checked={prefs.focusModeDefault}

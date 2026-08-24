@@ -173,8 +173,8 @@ export default function ClientCall({
         }
         if (cancelled) return;
         if (youQuiet) {
+          // Quiet / focus mode mutes mic only — cameras stay on for presence.
           setMuted(true);
-          setVideoOff(true);
         }
 
         const tokenRes = await fetch(`/api/sessions/${sessionId}/daily/token`, {
@@ -203,7 +203,6 @@ export default function ClientCall({
         });
         if (youQuiet) {
           query.set("startAudioOff", "true");
-          query.set("startVideoOff", "true");
         }
 
         const url = `https://${tokenData.domain}/${tokenData.roomName}?${query.toString()}`;

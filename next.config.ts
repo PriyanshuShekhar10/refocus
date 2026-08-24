@@ -153,6 +153,19 @@ const nextConfig: NextConfig = {
         destination: toApex("/"),
         permanent: true,
       },
+      {
+        // Marketing owns Features + Pricing; keep a single indexable URL.
+        source: "/features",
+        has: [{ type: "host", value: marketingHost }],
+        destination: toApex("/features"),
+        permanent: true,
+      },
+      {
+        source: "/pricing",
+        has: [{ type: "host", value: marketingHost }],
+        destination: toApex("/pricing"),
+        permanent: true,
+      },
     ];
   },
   async headers() {

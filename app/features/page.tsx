@@ -11,8 +11,8 @@ const FEATURES = [
   },
   {
     eyebrow: "Focus mode",
-    title: "Both mics muted. Both cameras off.",
-    body: "Focus mode disables audio and video by default. You're present, not performing. Unmute at the end of the session to check in if you want.",
+    title: "Both mics muted. Cameras stay on.",
+    body: "Focus mode mutes mics by default so you're present, not performing. Unmute at the end of the session to check in if you want.",
   },
   {
     eyebrow: "Synced timers",

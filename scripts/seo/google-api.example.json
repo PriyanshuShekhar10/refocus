@@ -1,0 +1,6 @@
+{
+  "default_property": "https://refocus.co.in/",
+  "api_key": "<optional — PageSpeed + CrUX only>",
+  "service_account_path": "~/.config/claude-seo/service_account.json",
+  "ga4_property_id": "properties/<numeric-id>"
+}
