@@ -9,6 +9,8 @@ export function Footer() {
           <img src="/logo.svg" alt="Refocus" style={{ height: 28, width: "auto" }} />
         </a>
         <div className={styles.footLinks}>
+          <a href="/features">Features</a>
+          <a href="/pricing">Pricing</a>
           <a href="/body-doubling">Body doubling</a>
           <a href="/virtual-coworking">Virtual coworking</a>
           <a href="/focus-room">Focus room</a>

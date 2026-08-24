@@ -1,0 +1,118 @@
+---
+import LandingPage from "../layouts/LandingPage.astro";
+import { APP_URL } from "../lib/config";
+import { SITE_URL, articleJsonLd, faqJsonLd } from "../lib/seo";
+
+const UPDATED = "2026-08-25";
+const canonical = "/features";
+const title = "Features — Focus rooms, synced timers, quiet accountability";
+const description =
+  "Everything Refocus does: 25/50/75 minute sessions, focus mode, synced timers, friends, and community — free to start, no credit card.";
+
+const faqs = [
+  {
+    question: "What does Refocus include?",
+    answer:
+      "Timed focus sessions (25, 50, or 75 minutes), partner matching, synced timers, quiet mics with cameras on for presence, friends and session requests, and a community layer between sessions.",
+  },
+  {
+    question: "Do I need my camera on?",
+    answer:
+      "Cameras stay on so your partner can see you're there. Focus mode mutes mics by default — you're present, not performing. Unmute at the end if you want a short check-in, and you can turn your camera off anytime.",
+  },
+  {
+    question: "Is it free?",
+    answer:
+      "Yes. Refocus is free to start with no credit card. See the pricing page for what's included.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: "Refocus features",
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+
+const softwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Refocus",
+  url: SITE_URL,
+  applicationCategory: "ProductivityApplication",
+  operatingSystem: "Web",
+  description,
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  installUrl: `${APP_URL}/auth/sign-up`,
+  featureList: [
+    "25, 50, and 75 minute focus sessions",
+    "Accountability partner matching",
+    "Synced timers",
+    "Quiet focus mode",
+    "Friends and session requests",
+    "Community between sessions",
+  ],
+};
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Product"
+  heading="Everything Refocus does, in one page."
+  lead="Nothing you don't need. A timer, a partner, a room. The rest stays out of the way — free to start, no credit card."
+  updated={UPDATED}
+  faqs={faqs}
+  ctaTitle="Try it in a real session"
+  ctaText="Pick a length, get matched with someone who's also there to focus, and work side by side with a shared timer."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Start a free session"
+  jsonLd={[article, softwareJsonLd, faqJsonLd(faqs)]}
+>
+  <h2>Three lengths. One ritual.</h2>
+  <p>
+    <strong>25-minute</strong> sprints for quick wins, <strong>50-minute</strong>
+    deep-work blocks for the real thing, and <strong>75-minute</strong>
+    marathons for writing or research. Pick a length, start the timer — the
+    structure does the rest.
+  </p>
+
+  <h2>Focus mode</h2>
+  <p>
+    Both mics muted by default. Cameras stay on for presence. You're present,
+    not performing. Unmute at the end of the session to check in if you want.
+    That's the same idea as a library desk — co-presence without a meeting.
+  </p>
+
+  <h2>Synced timers</h2>
+  <p>
+    When your partner starts, you start. Breaks land together. No coordination
+    overhead — sit down and the timer takes care of the rhythm. See also our
+    guides on <a href="/focus-room">online focus rooms</a> and
+    <a href="/body-doubling">body doubling</a>.
+  </p>
+
+  <h2>Friends and session requests</h2>
+  <p>
+    Work with the people you focus best with. Send friend requests, send session
+    requests, and see who's free, who's in a session, and how long is left on
+    their timer.
+  </p>
+
+  <h2>Community between sessions</h2>
+  <p>
+    Share wins, ask for advice, and cheer others on when you're not in a room —
+    quiet company while you work, supportive community when you don't.
+  </p>
+
+  <h2>Pricing</h2>
+  <p>
+    Free to start with no credit card. See what's included on the
+    <a href="/pricing">pricing page</a>.
+  </p>
+</LandingPage>

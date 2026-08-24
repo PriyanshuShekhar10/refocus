@@ -1,0 +1,163 @@
+---
+import Base from "../layouts/Base.astro";
+import Navbar from "../components/Navbar";
+import { APP_URL } from "../lib/config";
+import {
+  SITE_URL,
+  breadcrumbJsonLd,
+  organizationJsonLd,
+} from "../lib/seo";
+import "../styles/blog.css";
+
+const UPDATED = "2026-08-25";
+const canonical = "/pricing";
+const title = "Pricing — Free to start, no credit card";
+const description =
+  "Refocus is free to start with no credit card. Body doubling sessions, partner matching, synced timers, and focus rooms — $0.";
+
+const freeFeatures = [
+  "25, 50, or 75 minute focus sessions",
+  "Accountability partner matching",
+  "Synced timers and quiet focus mode",
+  "Cameras on for presence — mics stay quiet",
+  "Friends, session requests, and community",
+];
+
+const faqs = [
+  {
+    question: "Is Refocus really free?",
+    answer:
+      "Yes. You can start focus sessions with no credit card. Everything listed on this page is included.",
+  },
+  {
+    question: "Do I need a credit card to sign up?",
+    answer:
+      "No. Create an account and join a session without entering payment details.",
+  },
+  {
+    question: "What's included?",
+    answer:
+      "Timed sessions (25, 50, or 75 minutes), partner matching, synced timers, quiet focus mode, friends and session requests, and community between sessions.",
+  },
+];
+
+const signUp = `${APP_URL}/auth/sign-up`;
+
+const jsonLd = [
+  breadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: "Pricing", path: canonical },
+  ]),
+  organizationJsonLd(),
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Refocus",
+    url: SITE_URL,
+    applicationCategory: "ProductivityApplication",
+    operatingSystem: "Web",
+    description:
+      "Virtual co-working and body doubling for deep work. Free to start with no credit card.",
+    offers: {
+      "@type": "Offer",
+      name: "Free",
+      price: "0",
+      priceCurrency: "USD",
+      description:
+        "Focus sessions, partner matching, synced timers, and quiet focus mode. No credit card required.",
+      url: `${SITE_URL}${canonical}`,
+    },
+    installUrl: signUp,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
+  },
+];
+
+const updatedLabel = new Date(UPDATED).toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+---
+
+<Base
+  title={`${title} — Refocus`}
+  description={description}
+  canonical={canonical}
+  ogTitle="Pricing — Refocus"
+  ogDescription={description}
+  jsonLd={jsonLd}
+>
+  <div class="blog">
+    <Navbar client:load />
+
+    <article class="blog-article">
+      <header class="blog-header">
+        <a class="blog-back" href="/">&larr; Home</a>
+        <p class="blog-eyebrow">Pricing</p>
+        <h1>Free to start. No credit card.</h1>
+        <p class="blog-lede">
+          Join focus sessions and get matched with a partner at $0. No card, no
+          trial trap — just sit down and start.
+        </p>
+        <p class="blog-meta">Last updated {updatedLabel}</p>
+      </header>
+
+      <hr class="blog-divider" />
+
+      <div class="pricing-grid pricing-grid--single">
+        <section class="pricing-tier pricing-tier--free" aria-labelledby="tier-free">
+          <h2 id="tier-free">Free</h2>
+          <p class="pricing-price">
+            <span class="pricing-amount">$0</span>
+            <span class="pricing-period">to start</span>
+          </p>
+          <p class="pricing-note">No credit card required</p>
+          <ul class="pricing-features">
+            {freeFeatures.map((f) => <li>{f}</li>)}
+          </ul>
+          <a class="blog-cta-btn" href={signUp}>Start free &rarr;</a>
+        </section>
+      </div>
+
+      <div class="blog-prose">
+        <section class="lp-faq" aria-label="Frequently asked questions">
+          <h2>Frequently asked questions</h2>
+          {
+            faqs.map((f) => (
+              <div class="lp-faq-item">
+                <h3>{f.question}</h3>
+                <p>{f.answer}</p>
+              </div>
+            ))
+          }
+        </section>
+      </div>
+
+      <aside class="blog-cta">
+        <h3>Ready when you are</h3>
+        <p>
+          Pick a session length, get matched, and work side by side. Free to
+          start — no card.
+        </p>
+        <a class="blog-cta-btn" href={signUp}>Start a free session &rarr;</a>
+      </aside>
+    </article>
+
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href="/">Home</a>
+      <a href="/features">Features</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/blog">Blog</a>
+      <a href="/about">About</a>
+    </footer>
+  </div>
+</Base>

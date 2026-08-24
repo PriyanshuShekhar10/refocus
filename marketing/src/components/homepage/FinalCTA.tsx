@@ -22,10 +22,10 @@ export function FinalCTA() {
             <ArrowIcon />
           </a>
           <a
-            href={url("/features")}
+            href="/features"
             className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`}
           >
-            See it in action
+            See features
           </a>
         </Reveal>
       </div>

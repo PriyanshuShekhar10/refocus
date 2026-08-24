@@ -7,8 +7,8 @@ Refocus pairs you with another person for 25, 50, or 75-minute focus sessions. S
 ## Product
 
 - [Home](https://refocus.co.in/)
-- [Features](https://dashboard.refocus.co.in/features)
-- [Pricing](https://dashboard.refocus.co.in/pricing)
+- [Features](https://refocus.co.in/features)
+- [Pricing](https://refocus.co.in/pricing) — free to start, no credit card
 - [Sign up (free)](https://dashboard.refocus.co.in/auth/sign-up)
 
 ## Topic guides

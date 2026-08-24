@@ -37,6 +37,19 @@ export const GET: APIRoute = async () => {
       changefreq: "daily",
       priority: "0.8",
     },
+    // Core product pages.
+    {
+      loc: `${site}/features`,
+      lastmod: new Date().toISOString(),
+      changefreq: "monthly",
+      priority: "0.9",
+    },
+    {
+      loc: `${site}/pricing`,
+      lastmod: new Date().toISOString(),
+      changefreq: "monthly",
+      priority: "0.9",
+    },
     // Topic-cluster landing pages.
     { loc: `${site}/body-doubling`, changefreq: "monthly", priority: "0.8" },
     { loc: `${site}/virtual-coworking`, changefreq: "monthly", priority: "0.8" },

@@ -478,6 +478,111 @@
   opacity: 0.94;
 }
 
+/* ───────── pricing page ───────── */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 8px 0 40px;
+}
+.pricing-grid--single {
+  grid-template-columns: 1fr;
+  max-width: 420px;
+}
+@media (max-width: 720px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.pricing-tier {
+  position: relative;
+  padding: 28px 24px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pricing-tier--free {
+  border-color: color-mix(in oklab, var(--accent) 28%, var(--line));
+  background: color-mix(in oklab, var(--accent-soft) 55%, var(--card));
+}
+.pricing-tier--pro {
+  opacity: 0.92;
+  background: color-mix(in oklab, var(--paper) 40%, var(--card));
+}
+.pricing-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--line);
+  color: var(--ink-mute);
+}
+.pricing-tier h2 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+.pricing-price {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.pricing-amount {
+  font-size: 44px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.pricing-amount--muted {
+  color: var(--ink-mute);
+}
+.pricing-period {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.pricing-note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.pricing-features {
+  margin: 8px 0 16px;
+  padding: 0 0 0 1.1em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.45;
+  flex: 1;
+}
+.pricing-tier .blog-cta-btn {
+  align-self: flex-start;
+  margin-top: auto;
+}
+.pricing-notify {
+  align-self: flex-start;
+  margin-top: auto;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pricing-notify:hover {
+  color: var(--accent);
+}
+
 /* ───────── footer ───────── */
 .blog-foot {
   max-width: 720px;
