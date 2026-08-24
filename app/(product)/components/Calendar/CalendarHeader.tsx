@@ -51,18 +51,18 @@ export function CalendarHeader({
   const rangeLabel = formatVisibleRange(startDate, visibleDays, timeZone);
 
   return (
-    <div className="flex h-14 items-center justify-between gap-6 border-b border-gray-200 px-4 dark:border-gray-700">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="flex items-center gap-0.5">
+    <div className="flex h-14 shrink-0 items-center justify-between gap-6 border-b border-gray-200/90 px-5 dark:border-gray-700/70">
+      <div className="flex min-w-0 items-center gap-8">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => onShiftRange(-1)}
             className={cn(
-              "inline-flex h-9 w-9 items-center justify-center rounded-md",
-              "text-gray-500 transition-colors",
-              "hover:bg-gray-100 hover:text-gray-800",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/40",
-              "dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100",
+              "inline-flex h-8 w-8 items-center justify-center rounded-md",
+              "text-gray-400 transition-colors",
+              "hover:bg-gray-100/70 hover:text-gray-700",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35",
+              "dark:text-gray-500 dark:hover:bg-gray-800/60 dark:hover:text-gray-200",
             )}
             title="Previous"
             aria-label="Previous range"
@@ -76,11 +76,12 @@ export function CalendarHeader({
             type="button"
             onClick={onGoToday}
             className={cn(
-              "inline-flex h-9 items-center rounded-md border border-gray-200 px-3",
-              "text-sm font-medium text-gray-800 transition-colors",
-              "hover:bg-gray-100",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/40",
-              "dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-800",
+              "inline-flex h-7 items-center rounded-md border border-gray-200/50 px-2",
+              "text-[13px] font-medium text-gray-500 transition-colors",
+              "hover:border-gray-300/70 hover:bg-gray-50/80 hover:text-gray-700",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35",
+              "dark:border-gray-700/50 dark:text-gray-400",
+              "dark:hover:border-gray-600/70 dark:hover:bg-gray-800/40 dark:hover:text-gray-200",
             )}
           >
             Today
@@ -90,11 +91,11 @@ export function CalendarHeader({
             type="button"
             onClick={() => onShiftRange(1)}
             className={cn(
-              "inline-flex h-9 w-9 items-center justify-center rounded-md",
-              "text-gray-500 transition-colors",
-              "hover:bg-gray-100 hover:text-gray-800",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/40",
-              "dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100",
+              "inline-flex h-8 w-8 items-center justify-center rounded-md",
+              "text-gray-400 transition-colors",
+              "hover:bg-gray-100/70 hover:text-gray-700",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35",
+              "dark:text-gray-500 dark:hover:bg-gray-800/60 dark:hover:text-gray-200",
             )}
             title="Next"
             aria-label="Next range"
@@ -106,7 +107,7 @@ export function CalendarHeader({
         </div>
 
         <h2
-          className="truncate text-base font-semibold tracking-tight text-gray-900 dark:text-gray-100"
+          className="truncate text-lg font-semibold tracking-tight text-gray-950 dark:text-white"
           title={`Times shown in ${timeZone.replace(/_/g, " ")}`}
         >
           {rangeLabel}
@@ -114,7 +115,7 @@ export function CalendarHeader({
       </div>
 
       <div
-        className="flex shrink-0 items-center rounded-md bg-gray-100/80 p-0.5 dark:bg-gray-800/80"
+        className="flex h-8 shrink-0 items-center rounded-md bg-gray-100/35 p-px dark:bg-gray-800/30"
         role="group"
         aria-label="Calendar view"
       >
@@ -127,11 +128,11 @@ export function CalendarHeader({
               onClick={() => onVisibleDaysChange(option.value)}
               aria-pressed={selected}
               className={cn(
-                "h-8 rounded px-2.5 text-sm font-medium transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/40",
+                "h-7 rounded px-1.5 text-[13px] font-medium transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35",
                 selected
-                  ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                  : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200",
+                  ? "bg-white/85 text-gray-900 dark:bg-gray-700/70 dark:text-gray-50"
+                  : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300",
               )}
             >
               {option.label}

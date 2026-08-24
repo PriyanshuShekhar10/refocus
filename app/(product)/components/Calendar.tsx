@@ -34,6 +34,7 @@ import { ConfirmModal, partnerNoteField } from "./Calendar/Modals/ConfirmModal";
 import { SessionDetailsModal } from "./Calendar/Modals/SessionDetailsModal";
 import { CalendarSidebar } from "./Calendar/CalendarSidebar";
 import { CalendarHeader } from "./Calendar/CalendarHeader";
+import { CalendarDayHeader } from "./Calendar/CalendarDayHeader";
 import { CalendarEventCard } from "./Calendar/CalendarEventCard";
 import { CalendarRightSidebar } from "./Calendar/CalendarRightSidebar";
 import { HourOccupancyChip } from "./Calendar/HourOccupancyChip";
@@ -366,6 +367,26 @@ export default function Calendar({
     timeZone,
   });
 
+  // Keep day labels aligned with columns when a classic scrollbar eats grid width.
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
+  useEffect(() => {
+    const scroller = gridRef.current;
+    if (!scroller) return;
+
+    const sync = () => {
+      setScrollbarWidth(Math.max(0, scroller.offsetWidth - scroller.clientWidth));
+    };
+    sync();
+
+    const ro = new ResizeObserver(sync);
+    ro.observe(scroller);
+    window.addEventListener("resize", sync);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", sync);
+    };
+  }, [gridRef, ui.visibleDays, days, events.length]);
+
   const myPastMatchedHours = useMemo(
     () => hoursWithMyPastMatchedSessions(events, currentUserId, timeZone, now),
     [events, currentUserId, timeZone, now],
@@ -537,7 +558,7 @@ export default function Calendar({
       />
 
       {/* Right: Calendar Area */}
-      <section className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+      <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
         <CalendarHeader
           startDate={ui.startDate}
           locale={locale}
@@ -546,17 +567,23 @@ export default function Calendar({
           visibleDays={ui.visibleDays}
           onVisibleDaysChange={setVisibleDays}
         />
+        <CalendarDayHeader
+          days={days}
+          visibleDays={ui.visibleDays}
+          timeZone={timeZone}
+          endInset={scrollbarWidth}
+        />
 
         <div
           ref={gridRef}
-          className="relative flex h-[calc(100%-3.75rem)] overflow-auto"
+          className="calendar-scroll relative flex min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]"
           onClick={handleGridClick}
           onMouseMove={handleGridMouseMove}
           onMouseLeave={handleGridMouseLeave}
           onScroll={handleGridScroll}
         >
           {/* Time Gutter */}
-          <div className="w-16 shrink-0 border-r bg-gray-50/80 dark:border-gray-700 dark:bg-gray-800/80">
+          <div className="w-16 shrink-0 border-r border-gray-100/70 bg-gray-50/40 dark:border-gray-800/60 dark:bg-gray-800/40">
             {Array.from({ length: gridHourCount }).map((_, i) => {
               const hour = startHour + i;
               const isOverflow = hour >= endHour;
@@ -568,7 +595,11 @@ export default function Calendar({
                 style={{ height: hourBlockHeight }}
               >
                 <span
-                  className={`absolute right-2 top-0 -translate-y-1/2 text-xs ${
+                  className={`absolute right-2 text-xs ${
+                    i === 0
+                      ? "top-1.5"
+                      : "top-0 -translate-y-1/2"
+                  } ${
                     isOverflow
                       ? "text-gray-300 dark:text-gray-600"
                       : "text-gray-400 dark:text-gray-500"
@@ -598,7 +629,7 @@ export default function Calendar({
             {days.map((d, dayIdx) => (
               <div
                 key={ymdInTimeZone(d, timeZone)}
-                className="relative border-r dark:border-gray-700"
+                className="relative border-r border-gray-100 dark:border-gray-800"
               >
                 {/* Horizontal Lines */}
                 {Array.from({ length: gridHourCount }).map((_, i) => {
