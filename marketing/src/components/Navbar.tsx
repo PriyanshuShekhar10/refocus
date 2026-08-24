@@ -6,146 +6,91 @@ function cn(...classes: (string | false | null | undefined)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-function MenuIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="4" x2="20" y1="6" y2="6" />
-      <line x1="4" x2="20" y1="12" y2="12" />
-      <line x1="4" x2="20" y1="18" y2="18" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
-    </svg>
-  );
-}
-
-function AuthButtons({
-  isMobile = false,
-  onClose,
-}: {
-  isMobile?: boolean;
-  onClose?: () => void;
-}) {
-  return (
-    <div className={isMobile ? styles.mobileAuthButtons : "nav-auth-desktop"}>
-      <a href={url("/auth/login")} className={styles.signInBtn} onClick={onClose}>
-        Sign in
-      </a>
-      <a href={url("/auth/sign-up")} className={styles.signUpBtn} onClick={onClose}>
-        Sign up
-      </a>
-    </div>
-  );
-}
-
 const navItems = [
   { name: "Sessions", link: "/#sessions" },
   { name: "Features", link: "/features" },
   { name: "Pricing", link: "/pricing" },
-  { name: "Blog", link: "/blog" },
   { name: "FAQ", link: "/#faq" },
 ];
 
 export default function Navbar() {
-  const [isFixed, setIsFixed] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > window.innerHeight * 0.1) {
-        setIsFixed(true);
-      } else {
-        setIsFixed(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isMobileMenuOpen) {
-        setIsMobileMenuOpen(false);
-      }
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
     };
-
-    if (isMobileMenuOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
     };
-  }, [isMobileMenuOpen]);
+  }, [menuOpen]);
 
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  const close = () => setMenuOpen(false);
 
   return (
-    <>
-      <nav className={cn(styles.navbar, isFixed ? styles.fixed : styles.rounded)}>
-        <div className={styles.logo}>
-          <a href="/" className="nav-logo-link">
-            <img src="/logo.svg" alt="Refocus" className="nav-logo-img" />
+    <header className={cn(styles.header, scrolled && styles.scrolled)}>
+      <div className={styles.inner}>
+        <a href="/" className={styles.logo} onClick={close}>
+          <img src="/logo.svg" alt="Refocus" width={182} height={52} />
+        </a>
+
+        <nav className={styles.links} aria-label="Primary">
+          {navItems.map((item) => (
+            <a key={item.name} href={item.link}>
+              {item.name}
+            </a>
+          ))}
+        </nav>
+
+        <div className={styles.auth}>
+          <a href={url("/auth/login")} className={styles.signIn}>
+            Sign in
+          </a>
+          <a href={url("/auth/sign-up")} className={styles.signUp}>
+            Sign up
           </a>
         </div>
 
-        <div className={styles.navRight}>
-          <ul className={styles.navLinks}>
-            {navItems.map((item, idx) => (
-              <li key={`nav-item-${idx}`}>
-                <a href={item.link}>{item.name}</a>
-              </li>
-            ))}
-          </ul>
-          <div className={styles.authButtons}>
-            <AuthButtons />
-          </div>
-        </div>
-
         <button
-          className={styles.mobileMenuButton}
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Toggle mobile menu"
-          aria-expanded={isMobileMenuOpen}
+          type="button"
+          className={styles.menuBtn}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((o) => !o)}
         >
-          {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+          <span className={cn(styles.menuIcon, menuOpen && styles.menuIconOpen)} />
         </button>
-      </nav>
+      </div>
 
-      {isMobileMenuOpen && (
-        <div className={styles.mobileMenuOverlay} onClick={closeMobileMenu} />
-      )}
-
-      <div
-        className={cn(styles.mobileMenu, isMobileMenuOpen && styles.mobileMenuOpen)}
-      >
-        <div className={styles.mobileMenuContent}>
-          <ul className={styles.mobileNavLinks}>
-            {navItems.map((item, idx) => (
-              <li key={`mobile-nav-item-${idx}`}>
-                <a href={item.link} onClick={closeMobileMenu}>
-                  {item.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          <div className={styles.mobileMenuFooter}>
-            <AuthButtons isMobile onClose={closeMobileMenu} />
-          </div>
+      <div className={cn(styles.mobile, menuOpen && styles.mobileOpen)}>
+        <nav className={styles.mobileLinks} aria-label="Mobile">
+          {navItems.map((item) => (
+            <a key={item.name} href={item.link} onClick={close}>
+              {item.name}
+            </a>
+          ))}
+        </nav>
+        <div className={styles.mobileAuth}>
+          <a href={url("/auth/login")} className={styles.signIn} onClick={close}>
+            Sign in
+          </a>
+          <a href={url("/auth/sign-up")} className={styles.signUp} onClick={close}>
+            Sign up
+          </a>
         </div>
       </div>
-    </>
+    </header>
   );
 }

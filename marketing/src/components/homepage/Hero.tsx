@@ -3,8 +3,6 @@ import { Reveal } from "./Reveal";
 import { ArrowIcon } from "./ArrowIcon";
 import { url } from "../../lib/config";
 
-const AVATAR_COLORS = ["#FFF1D3", "#FFB090", "#CA5995", "#5D1C6A"];
-
 export type HeroImage = {
   avifSrcset: string;
   webpSrcset: string;
@@ -19,44 +17,36 @@ export function Hero({ image }: { image?: HeroImage }) {
   return (
     <section className={styles.hero}>
       <div className={styles.wrap}>
-        <Reveal as="h1" className={styles.heroTitle}>
-          Virtual coworking
-          <br />
-          for accountability.
-          <br />
-          <em>Get more done.</em>
-        </Reveal>
+        <div className={styles.heroCopy}>
+          <Reveal as="p" className={styles.heroEyebrow}>
+            Virtual coworking
+          </Reveal>
 
-        <Reveal as="p" className={styles.heroSub}>
-          Refocus is a quiet focus room: 25, 50, or 75 minutes with a partner
-          to study or get work done. Share your goal, work side by side, and
-          check in at the end.
-        </Reveal>
+          <Reveal as="h1" className={styles.heroTitle}>
+            Work alongside someone.
+            <br />
+            Get more done.
+          </Reveal>
 
-        <Reveal className={styles.heroCta}>
-          <a
-            href={url("/auth/sign-up")}
-            className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
-          >
-            Start free session
-            <ArrowIcon />
-          </a>
-          <a
-            href={url("/dashboard")}
-            className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`}
-          >
-            Find a partner
-          </a>
-        </Reveal>
+          <Reveal as="p" className={styles.heroSub}>
+            Refocus pairs you with a real person for a quiet, focused work
+            session.
+          </Reveal>
 
-        <Reveal className={styles.heroFoot}>
-          <span className={styles.avatars} aria-hidden="true">
-            {AVATAR_COLORS.map((bg) => (
-              <span key={bg} style={{ background: bg }} />
-            ))}
-          </span>
-          <span>Free to start. No card required.</span>
-        </Reveal>
+          <Reveal className={styles.heroCta}>
+            <a
+              href={url("/auth/sign-up")}
+              className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
+            >
+              Start a free session
+              <ArrowIcon />
+            </a>
+          </Reveal>
+
+          <Reveal as="p" className={styles.heroFoot}>
+            Free to try · No card required
+          </Reveal>
+        </div>
 
         <Reveal className={styles.preview}>
           {image ? (

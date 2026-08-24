@@ -16,7 +16,7 @@ export function FinalCTA() {
         <Reveal className={styles.finalCtaRow}>
           <a
             href={url("/auth/sign-up")}
-            className={`${styles.btn} ${styles.btnPrimary} ${styles.btnLg}`}
+            className={`${styles.btn} ${styles.btnBrand} ${styles.btnLg}`}
           >
             Start focusing
             <ArrowIcon />
