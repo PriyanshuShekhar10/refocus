@@ -13,6 +13,7 @@ import { HiOutlineUserGroup } from "react-icons/hi";
 import { LuListTodo } from "react-icons/lu";
 import { HiOutlineClock, HiOutlineShieldCheck } from "react-icons/hi";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export type TabKey =
   | "profile"
@@ -78,115 +79,121 @@ const SideBar: FC<SideBarProps> = ({
 
   return (
     <aside
-      className="fixed top-0 left-0 h-screen w-16 flex flex-col
-                 bg-white dark:bg-gray-900 shadow-sm z-40"
-      aria-label="Sidebar"
+      className="fixed top-0 left-0 z-40 flex h-screen w-16 flex-col bg-white shadow-sm dark:bg-gray-900"
+      aria-label="Main navigation"
     >
-      <SideBarIcon
-        icon={<MdDashboard size={20} />}
-        text="Dashboard"
-        onClick={() => onSelect("dashboard")}
-        active={activeTab === "dashboard"}
-      />
-      <SideBarIcon
-        icon={<HiOutlineClock size={18} />}
-        text="Sessions"
-        onClick={() => onSelect("sessions")}
-        active={activeTab === "sessions"}
-      />
-      {showBacklogTab && (
+      {/* Primary work */}
+      <nav className="flex flex-col pt-1" aria-label="Workspace">
         <SideBarIcon
-          icon={<LuListTodo size={18} />}
-          text="Backlog"
-          onClick={() => onSelect("backlog")}
-          active={activeTab === "backlog"}
+          icon={<MdDashboard size={20} />}
+          text="Dashboard"
+          onClick={() => onSelect("dashboard")}
+          active={activeTab === "dashboard"}
         />
-      )}
+        <SideBarIcon
+          icon={<HiOutlineClock size={18} />}
+          text="Sessions"
+          onClick={() => onSelect("sessions")}
+          active={activeTab === "sessions"}
+        />
+        {showBacklogTab ? (
+          <SideBarIcon
+            icon={<LuListTodo size={18} />}
+            text="Backlog"
+            onClick={() => onSelect("backlog")}
+            active={activeTab === "backlog"}
+          />
+        ) : null}
+      </nav>
 
       <Divider />
 
-      <SideBarIcon
-        icon={<CgProfile size={20} />}
-        text="Profile"
-        onClick={() => onSelect("profile")}
-        active={activeTab === "profile"}
-      />
-
-      {/* <SideBarIcon
-        icon={<BsFillLightningFill size={18} />}
-        text="Friends"
-        onClick={() => onSelect("friends")}
-        active={activeTab === "friends"}
-      /> */}
-
-      <SideBarIcon
-        icon={
-          <div className="relative inline-flex">
-            <FaUserFriends size={18} />
-            {pendingSessionRequests > 0 ? (
-              <span
-                className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900"
-                aria-label={`${pendingSessionRequests} pending session request${pendingSessionRequests !== 1 ? "s" : ""}`}
-              />
-            ) : null}
-          </div>
-        }
-        text={pendingSessionRequests > 0 ? `Friends (${pendingSessionRequests} session request${pendingSessionRequests !== 1 ? "s" : ""} pending)` : "Friends"}
-        onClick={() => onSelect("friends")}
-        active={activeTab === "friends"}
-      />
-
-      {/* Community */}
-      <SideBarIcon
-        icon={<HiOutlineUserGroup size={18} />}
-        text="Community"
-        onClick={() => onSelect("community")}
-        active={activeTab === "community"}
-      />
-      {/* <SideBarIcon
-        icon={<BsStars size={18} />}
-        text="AI Match"
-        onClick={() => onSelect("matches")}
-        active={activeTab === "matches"}
-      /> */}
-      <Divider />
-
-      {showAdminTab ? (
+      {/* People */}
+      <nav className="flex flex-col" aria-label="People">
         <SideBarIcon
-          icon={<HiOutlineShieldCheck size={18} />}
-          text="Admin"
-          onClick={() => onSelect("admin")}
-          active={activeTab === "admin"}
+          icon={<CgProfile size={20} />}
+          text="Profile"
+          onClick={() => onSelect("profile")}
+          active={activeTab === "profile"}
         />
-      ) : null}
-
-      <SideBarIcon
-        icon={<BsGearFill size={18} />}
-        text="Settings"
-        onClick={() => onSelect("settings")}
-        active={activeTab === "settings"}
-      />
-
-      {/* push the chat dock + theme toggle to the bottom */}
-      <div className="mt-auto mb-4">
-        {/* Friends Chat (dock) - anchored near bottom */}
         <SideBarIcon
           icon={
-            <div className="relative">
-              <RiMessage3Line size={18} />
-              {friendsUnread > 0 ? (
-                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-white dark:ring-gray-900"></span>
+            <div className="relative inline-flex">
+              <FaUserFriends size={18} />
+              {pendingSessionRequests > 0 ? (
+                <span
+                  className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900"
+                  aria-hidden="true"
+                />
               ) : null}
             </div>
           }
-          text="Friends Chat"
-          onClick={() => {
-            try {
-              window.dispatchEvent(new Event("chatdock:toggle"));
-            } catch {}
-          }}
-          active={false}
+          text={
+            pendingSessionRequests > 0
+              ? `Friends (${pendingSessionRequests} session request${pendingSessionRequests !== 1 ? "s" : ""} pending)`
+              : "Friends"
+          }
+          onClick={() => onSelect("friends")}
+          active={activeTab === "friends"}
         />
+        <SideBarIcon
+          icon={<HiOutlineUserGroup size={18} />}
+          text="Community"
+          onClick={() => onSelect("community")}
+          active={activeTab === "community"}
+        />
+      </nav>
+
+      {showAdminTab ? (
+        <>
+          <Divider />
+          <nav className="flex flex-col" aria-label="Admin">
+            <SideBarIcon
+              icon={<HiOutlineShieldCheck size={18} />}
+              text="Admin"
+              onClick={() => onSelect("admin")}
+              active={activeTab === "admin"}
+            />
+          </nav>
+        </>
+      ) : null}
+
+      {/* Utilities */}
+      <div className="mb-3 mt-auto flex flex-col">
+        <nav className="flex flex-col" aria-label="Tools">
+          <SideBarIcon
+            icon={
+              <div className="relative">
+                <RiMessage3Line size={18} />
+                {friendsUnread > 0 ? (
+                  <span
+                    className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-white dark:ring-gray-900"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
+            }
+            text={
+              friendsUnread > 0
+                ? `Messages (${friendsUnread} unread)`
+                : "Messages"
+            }
+            onClick={() => {
+              try {
+                window.dispatchEvent(new Event("chatdock:toggle"));
+              } catch {
+                // ignore
+              }
+            }}
+            active={false}
+          />
+          <SideBarIcon
+            icon={<BsGearFill size={18} />}
+            text="Settings"
+            onClick={() => onSelect("settings")}
+            active={activeTab === "settings"}
+          />
+        </nav>
         <Divider />
         <ThemeToggle />
       </div>
@@ -209,23 +216,27 @@ const SideBarIcon: FC<SideBarIconProps> = ({
   active = false,
   href,
 }) => {
-  const base =
-    "group relative flex items-center justify-center h-12 w-12 mt-3 mb-3 mx-auto rounded-3xl transition-all duration-200 ease-linear cursor-pointer shadow-sm";
-  const activeClasses = active
-    ? "bg-[#5D1C6A] dark:bg-[#7A2D88] text-white rounded-xl"
-    : "bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 text-gray-600 dark:text-[#FFB090] hover:bg-[#CA5995] hover:text-white hover:rounded-xl";
+  const className = cn(
+    "group relative mx-auto my-1.5 flex h-11 w-11 items-center justify-center rounded-xl",
+    "transition-colors duration-150 ease-out",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900",
+    active
+      ? "bg-[#5D1C6A] text-white dark:bg-[#7A2D88]"
+      : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100",
+  );
 
   const content = (
     <>
       {icon}
       <span
-        className="absolute left-16 top-1/2 -translate-y-1/2
-                   whitespace-nowrap px-2 py-1 rounded-md shadow-md
-                   text-xs font-semibold
-                   bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900
-                   transform -translate-x-1 opacity-0
-                   group-hover:translate-x-0 group-hover:opacity-100
-                   transition-all duration-150 ease-out"
+        role="tooltip"
+        className={cn(
+          "pointer-events-none absolute left-[3.75rem] top-1/2 z-50 -translate-y-1/2",
+          "whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium shadow-md",
+          "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900",
+          "opacity-0 transition-opacity duration-100",
+          "group-hover:opacity-100 group-focus-visible:opacity-100",
+        )}
       >
         {text}
       </span>
@@ -237,8 +248,8 @@ const SideBarIcon: FC<SideBarIconProps> = ({
       <Link
         href={href}
         aria-label={text}
-        title={text}
-        className={`${base} ${activeClasses}`}
+        aria-current={active ? "page" : undefined}
+        className={className}
       >
         {content}
       </Link>
@@ -250,8 +261,8 @@ const SideBarIcon: FC<SideBarIconProps> = ({
       type="button"
       onClick={onClick}
       aria-label={text}
-      title={text}
-      className={`${base} ${activeClasses}`}
+      aria-current={active ? "page" : undefined}
+      className={className}
     >
       {content}
     </button>
@@ -259,10 +270,9 @@ const SideBarIcon: FC<SideBarIconProps> = ({
 };
 
 const Divider: FC = () => (
-  <hr className="w-10 mx-auto my-1 bg-gray-200 dark:bg-gray-800 h-[1px] rounded-full" />
+  <hr className="mx-auto my-1.5 h-px w-8 rounded-full border-0 bg-gray-200 dark:bg-gray-800" />
 );
 
-/* ThemeToggle component using next-themes */
 const ThemeToggle: FC = () => {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -272,10 +282,7 @@ const ThemeToggle: FC = () => {
   if (!mounted) {
     return (
       <div
-        className="group relative flex items-center justify-center
-                   h-12 w-12 mt-2 mx-auto
-                   bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700
-                   rounded-3xl shadow-sm"
+        className="mx-auto my-1.5 flex h-11 w-11 items-center justify-center rounded-xl text-gray-400"
         aria-hidden
       >
         <HiSun size={18} />
@@ -285,33 +292,33 @@ const ThemeToggle: FC = () => {
 
   const current = resolvedTheme || "light";
   const next = current === "dark" ? "light" : "dark";
+  const label = current === "dark" ? "Switch to light mode" : "Switch to dark mode";
 
   return (
     <button
+      type="button"
       onClick={() => setTheme(next)}
-      className="group relative flex items-center justify-center
-                 h-12 w-12 mt-2 mx-auto
-                 bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700
-                 text-gray-600 dark:text-[#FFB090]
-                 hover:bg-[#CA5995] hover:text-white
-                 rounded-3xl hover:rounded-xl
-                 transition-all duration-200 ease-linear
-                 cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FFB090]"
-      aria-label={`Switch to ${next} mode`}
-      title={`Switch to ${next} mode`}
+      className={cn(
+        "group relative mx-auto my-1.5 flex h-11 w-11 items-center justify-center rounded-xl",
+        "bg-transparent text-gray-500 transition-colors duration-150",
+        "hover:bg-gray-100 hover:text-gray-800",
+        "dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900",
+      )}
+      aria-label={label}
     >
       {current === "dark" ? <HiSun size={18} /> : <HiMoon size={18} />}
-
       <span
-        className="absolute left-16 top-1/2 -translate-y-1/2
-                   whitespace-nowrap px-2 py-1 rounded-md shadow-md
-                   text-xs font-semibold
-                   bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900
-                   transform -translate-x-1 opacity-0
-                   group-hover:translate-x-0 group-hover:opacity-100
-                   transition-all duration-150 ease-out"
+        role="tooltip"
+        className={cn(
+          "pointer-events-none absolute left-[3.75rem] top-1/2 z-50 -translate-y-1/2",
+          "whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium shadow-md",
+          "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900",
+          "opacity-0 transition-opacity duration-100",
+          "group-hover:opacity-100 group-focus-visible:opacity-100",
+        )}
       >
-        {current === "dark" ? "Dark mode" : "Light mode"}
+        {current === "dark" ? "Light mode" : "Dark mode"}
       </span>
     </button>
   );

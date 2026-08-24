@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import BookSessionButton from "../BookSessionButton";
@@ -13,6 +13,8 @@ import { swrKeys } from "@/lib/swr/keys";
 import { useIsEngagementCrew } from "@/hooks/useIsEngagementCrew";
 
 const UPCOMING_PREVIEW_COUNT = 2;
+const CALENDAR_SLOT_TIP_KEY = "refocus.hideCalendarSlotTip";
+const CALENDAR_SLOT_CREATED_EVENT = "refocus:calendar-slot-created";
 
 function toYmd(d: Date) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
@@ -103,13 +105,27 @@ export function CalendarSidebar({
   currentUserId: currentUserIdProp,
   onDetailsSession,
 }: CalendarSidebarProps) {
-  const [settingsExpanded, setSettingsExpanded] = useState(true);
   const { isCrew } = useIsEngagementCrew();
+  const [showSlotTip, setShowSlotTip] = useState(true);
+
   useEffect(() => {
     if (isCrew && createDuration === 25) {
       onCreateDurationChange(50);
     }
   }, [isCrew, createDuration, onCreateDurationChange]);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(CALENDAR_SLOT_TIP_KEY) === "1") {
+        setShowSlotTip(false);
+      }
+    } catch {
+      // ignore
+    }
+    const hide = () => setShowSlotTip(false);
+    window.addEventListener(CALENDAR_SLOT_CREATED_EVENT, hide);
+    return () => window.removeEventListener(CALENDAR_SLOT_CREATED_EVENT, hide);
+  }, []);
 
   const { data: upcomingData } = useSWR(
     swrKeys.sessionsMineUpcoming,
@@ -133,88 +149,71 @@ export function CalendarSidebar({
   }, [upcomingData]);
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900 h-full overflow-hidden">
-      {/* Top: Book session + Quick book */}
-      <div className="flex gap-2">
-        <div className="flex-1">
-          <BookSessionButton label="Book session" className="w-full rounded-lg bg-[#5D1C6A] px-4 py-3 text-sm font-semibold text-white hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]" />
-        </div>
-      </div>
+    <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white px-7 py-7 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+      {/* New session: configure duration, then book */}
+      <section>
+        <h2 className="text-[18px] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+          New session
+        </h2>
 
-      {/* Session Settings (collapsible) */}
-      <section className="rounded-lg border border-gray-200 dark:border-gray-700">
-        <button
-          type="button"
-          onClick={() => setSettingsExpanded((e) => !e)}
-          className="flex w-full items-center justify-between px-3 py-2.5 text-left"
-          aria-expanded={settingsExpanded}
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              Session Settings
-            </span>
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700 dark:text-gray-400" title="Filter and default for new sessions">
-              i
-            </span>
-          </div>
-          <span
-            className={`text-gray-500 transition-transform dark:text-gray-400 ${
-              settingsExpanded ? "rotate-180" : ""
-            }`}
+        <div className="mt-6">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Duration
+          </p>
+          <div
+            className="mt-2 flex gap-1 rounded-lg bg-gray-100/80 p-1 dark:bg-gray-800/80"
+            role="group"
+            aria-label="Session duration"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </span>
-        </button>
-        {settingsExpanded && (
-          <div className="border-t border-gray-100 px-3 pb-3 pt-2 dark:border-gray-800">
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Duration
-                </p>
-                <div className="mt-1.5 flex gap-1 rounded-lg bg-gray-100/80 p-1 dark:bg-gray-800/80">
-                  {DURATION_OPTIONS.map((d) => {
-                    const blocked = isCrew && d === 25;
-                    return (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => !blocked && onCreateDurationChange(d)}
-                        disabled={blocked}
-                        title={blocked ? "25-minute sessions are unavailable" : undefined}
-                        className={`flex-1 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
-                          blocked
-                            ? "cursor-not-allowed text-gray-400 opacity-40 dark:text-gray-600"
-                            : createDuration === d
-                              ? "bg-[#5D1C6A] text-white shadow dark:bg-[#7A2D88]"
-                              : "text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
-                        }`}
-                      >
-                        {d} min
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+            {DURATION_OPTIONS.map((d) => {
+              const blocked = isCrew && d === 25;
+              const selected = createDuration === d;
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => !blocked && onCreateDurationChange(d)}
+                  disabled={blocked}
+                  aria-pressed={selected}
+                  title={
+                    blocked ? "25-minute sessions are unavailable" : undefined
+                  }
+                  className={`flex-1 rounded-md px-2 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/40 ${
+                    blocked
+                      ? "cursor-not-allowed text-gray-400 opacity-40 dark:text-gray-600"
+                      : selected
+                        ? "bg-[#5D1C6A] text-white shadow-sm dark:bg-[#7A2D88]"
+                        : "text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {d} min
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
+
+        <BookSessionButton
+          label={`Book a ${createDuration} min session`}
+          defaultDuration={createDuration}
+          className="mt-5 h-12 w-full rounded-lg bg-[#5D1C6A] px-4 py-0 text-sm font-semibold text-white hover:bg-[#CA5995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-[#7A2D88] dark:hover:bg-[#CA5995] dark:focus-visible:ring-offset-gray-900"
+        />
+
+        {showSlotTip ? (
+          <p className="mt-5 text-[11px] leading-snug text-gray-400 dark:text-gray-500">
+            You can also click an empty calendar slot.
+          </p>
+        ) : null}
       </section>
 
-      <p className="text-[11px] text-gray-500 dark:text-gray-400">
-        Tip: click an empty slot to create your own session.
-      </p>
-
-      {/* Upcoming — compact, a little personality */}
-      <section className="border-t border-gray-100 pt-3 dark:border-gray-800">
+      {/* Upcoming — compact preview */}
+      <section className="mt-7 border-t border-gray-100/70 pt-6 dark:border-gray-800/60">
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <h3 className="text-[17px] font-medium text-gray-800 dark:text-gray-200">
             Upcoming
           </h3>
           {upcomingSessions.length > 0 ? (
-            <span className="text-[10px] font-medium tabular-nums text-[#CA5995] dark:text-[#FFB090]">
+            <span className="text-[10px] font-medium tabular-nums text-gray-400 dark:text-gray-500">
               {upcomingSessions.length === 1
                 ? "1 up next"
                 : `${upcomingSessions.length} lined up`}
@@ -223,8 +222,8 @@ export function CalendarSidebar({
         </div>
 
         {upcomingSessions.length === 0 ? (
-          <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-            Nothing scheduled yet
+          <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+            No upcoming sessions
           </p>
         ) : (
           <>

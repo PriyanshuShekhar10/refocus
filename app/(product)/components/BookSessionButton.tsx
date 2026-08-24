@@ -58,6 +58,12 @@ export default function BookSessionButton({
   >([]);
   const [loadingBusy, setLoadingBusy] = useState(false);
 
+  // Keep modal duration aligned with sidebar selection when provided.
+  useEffect(() => {
+    if (defaultDuration === undefined) return;
+    setDuration(defaultDuration);
+  }, [defaultDuration]);
+
   // Pull saved duration only when caller did not pass an explicit override.
   useEffect(() => {
     if (defaultDuration !== undefined) return;
@@ -79,6 +85,14 @@ export default function BookSessionButton({
       cancelled = true;
     };
   }, [defaultDuration]);
+
+  // When opening from the sidebar CTA, re-apply the selected duration.
+  useEffect(() => {
+    if (!open) return;
+    if (defaultDuration !== undefined) {
+      setDuration(defaultDuration);
+    }
+  }, [open, defaultDuration]);
 
   // Fetch my busy slots when modal opens
   useEffect(() => {

@@ -473,6 +473,12 @@ export default function Calendar({
     const { start, preferred, quiet } = ui.modal;
     try {
       await createSession(start, preferred, quiet);
+      try {
+        localStorage.setItem("refocus.hideCalendarSlotTip", "1");
+        window.dispatchEvent(new Event("refocus:calendar-slot-created"));
+      } catch {
+        // ignore storage / event failures
+      }
     } catch (e) {
       dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
     }
