@@ -1,30 +1,73 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import useSWR from "swr";
 import BookSessionButton from "../BookSessionButton";
 import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
 import type { CalendarEvent, FetchedSession } from "@/types/calendar";
-import { formatLocalTimeRange } from "@/lib/localTime";
-import { VerifiedName } from "@/components/verified-tag";
+import { formatLocalTime } from "@/lib/localTime";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { hasSessionStarted } from "@/lib/sessionWindow";
 import * as sessionsApi from "@/lib/api/sessionsApi";
 import { swrKeys } from "@/lib/swr/keys";
 import { useIsEngagementCrew } from "@/hooks/useIsEngagementCrew";
+
+const UPCOMING_PREVIEW_COUNT = 2;
 
 function toYmd(d: Date) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
 }
 
-function formatUpcomingDate(d: Date) {
+function formatUpcomingWhen(start: Date, durationMin: number) {
+  const time = formatLocalTime(start, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const meta = `${time} · ${durationMin} min`;
+
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  if (toYmd(d) === toYmd(today)) return "Today";
-  if (toYmd(d) === toYmd(tomorrow))
-    return `Tomorrow, ${d.toLocaleDateString("en-US", { month: "long", day: "numeric" })}`;
-  return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  if (toYmd(start) === toYmd(today)) return meta;
+  if (toYmd(start) === toYmd(tomorrow)) return `Tomorrow · ${meta}`;
+  const day = start.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  return `${day} · ${meta}`;
+}
+
+function partnerInfo(
+  ev: CalendarEvent,
+  currentUserId: string | null,
+): { label: string; avatarUrl: string | null; initials: string; matched: boolean } {
+  const other = (ev.participants ?? []).find((p) => p.user_id !== currentUserId);
+  if (!other) {
+    return {
+      label: "open seat",
+      avatarUrl: null,
+      initials: "?",
+      matched: false,
+    };
+  }
+  const first = other.firstname?.trim();
+  const full = [other.firstname, other.lastname].filter(Boolean).join(" ").trim();
+  const label = first || full || other.email || "Partner";
+  const initials =
+    label
+      .split(/\s+/)
+      .map((s) => s[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "?";
+  return {
+    label,
+    avatarUrl: other.avatar_url ?? null,
+    initials,
+    matched: true,
+  };
 }
 
 function mapFetchedToEvent(s: FetchedSession): CalendarEvent {
@@ -58,10 +101,7 @@ export function CalendarSidebar({
   createDuration,
   onCreateDurationChange,
   currentUserId: currentUserIdProp,
-  onJoinSession,
   onDetailsSession,
-  onLeaveSession,
-  onDeleteSession,
 }: CalendarSidebarProps) {
   const [settingsExpanded, setSettingsExpanded] = useState(true);
   const { isCrew } = useIsEngagementCrew();
@@ -167,136 +207,104 @@ export function CalendarSidebar({
         Tip: click an empty slot to create your own session.
       </p>
 
-      {/* Upcoming — all future sessions, not limited to the visible week */}
-      <section className="mt-auto flex flex-1 flex-col min-h-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="shrink-0 px-3 py-2.5">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Upcoming</h3>
-          {upcomingSessions.length > 0 && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {upcomingSessions.length} session{upcomingSessions.length === 1 ? "" : "s"}
-            </p>
-          )}
+      {/* Upcoming — compact, a little personality */}
+      <section className="border-t border-gray-100 pt-3 dark:border-gray-800">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            Upcoming
+          </h3>
+          {upcomingSessions.length > 0 ? (
+            <span className="text-[10px] font-medium tabular-nums text-[#CA5995] dark:text-[#FFB090]">
+              {upcomingSessions.length === 1
+                ? "1 up next"
+                : `${upcomingSessions.length} lined up`}
+            </span>
+          ) : null}
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-2">
-          {upcomingSessions.length === 0 ? (
-            <p className="px-2 py-4 text-center text-xs text-gray-500 dark:text-gray-400">
-              No upcoming sessions
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {upcomingSessions.map((ev) => {
-                const start = new Date(ev.start);
-                const end = new Date(ev.end);
-                const isBooked = (ev.participants?.length ?? 0) >= 2;
-                const isOwner = ev.owner_id === currentUserId;
-                const other = (ev.participants ?? []).find((p) => p.user_id !== currentUserId);
-                const otherName = other
-                  ? [other.firstname, other.lastname].filter(Boolean).join(" ") ||
-                    other.email ||
-                    other.user_id
-                  : "Partner needed";
-                const timeRange = formatLocalTimeRange(start, end, {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                });
-                const initials = otherName
-                  .split(/\s+/)
-                  .map((s) => s[0])
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2) || "?";
 
-                return (
-                  <li
-                    key={ev.id}
-                    className="flex items-stretch gap-2 rounded-lg border border-gray-200 bg-gray-50/80 p-2 dark:border-gray-700 dark:bg-gray-800/50"
-                  >
-                    <div className="w-1 shrink-0 rounded-full bg-[#CA5995] dark:bg-[#CA5995]" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
-                          {ev.durationMin} min ·{" "}
-                          {isOwner ? "Your session" : ev.name || "Session"}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-xs font-medium text-gray-900 dark:text-gray-100">
-                        {formatUpcomingDate(start)}
-                      </p>
-                      <p className="text-xs text-gray-700 dark:text-gray-200">{timeRange}</p>
-                      <p className="truncate text-xs text-gray-600 dark:text-gray-300">
-                        <VerifiedName
-                          name={otherName}
-                          verified={other?.emailVerified}
-                        />
-                      </p>
-                      <div className="mt-2 flex items-center gap-1">
-                        {isBooked ? (
-                          <a
-                            href={`/sessions/${ev.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="rounded bg-[#5D1C6A] px-2 py-1 text-[10px] font-medium text-white hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]"
-                          >
-                            Join
-                          </a>
-                        ) : !isOwner &&
-                          onJoinSession &&
-                          !hasSessionStarted(ev.start) ? (
-                          <button
-                            type="button"
-                            onClick={() => onJoinSession(ev)}
-                            className="rounded bg-[#5D1C6A] px-2 py-1 text-[10px] font-medium text-white hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]"
-                          >
-                            Book
-                          </button>
-                        ) : null}
-                        {onDetailsSession && (
-                          <button
-                            type="button"
-                            onClick={() => onDetailsSession(ev)}
-                            className="rounded p-1 text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
-                            aria-label="More options"
-                          >
-                            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                              <circle cx="5" cy="10" r="1.6" />
-                              <circle cx="10" cy="10" r="1.6" />
-                              <circle cx="15" cy="10" r="1.6" />
-                            </svg>
-                          </button>
-                        )}
-                        {(onLeaveSession || onDeleteSession) && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (isOwner && onDeleteSession) onDeleteSession(ev);
-                              else if (!isOwner && onLeaveSession) onLeaveSession(ev);
-                              else if (onDetailsSession) onDetailsSession(ev);
-                            }}
-                            className="rounded p-1 text-gray-500 hover:bg-red-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-900/30 dark:hover:text-red-400"
-                            aria-label={isOwner ? "Delete" : "Leave"}
-                          >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <Avatar className="h-8 w-8 shrink-0">
-                      {other?.avatar_url ? (
-                        <AvatarImage src={other.avatar_url} alt={otherName} />
+        {upcomingSessions.length === 0 ? (
+          <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+            Nothing scheduled yet
+          </p>
+        ) : (
+          <>
+            <ul className="mt-2 space-y-1.5">
+              {upcomingSessions.slice(0, UPCOMING_PREVIEW_COUNT).map((ev) => {
+                const start = new Date(ev.start);
+                const duration = ev.durationMin ?? 25;
+                const partner = partnerInfo(ev, currentUserId);
+                const rowClass =
+                  "flex w-full items-center gap-2.5 rounded-lg border border-transparent bg-[#FFF1D3]/40 px-2 py-2 text-left outline-none transition-all hover:border-[#CA5995]/25 hover:bg-[#FFF1D3]/80 focus-visible:ring-2 focus-visible:ring-[#CA5995]/40 dark:bg-[#5D1C6A]/15 dark:hover:border-[#CA5995]/35 dark:hover:bg-[#5D1C6A]/30";
+
+                const content = (
+                  <>
+                    <span
+                      className="h-8 w-0.5 shrink-0 rounded-full bg-[#CA5995]"
+                      aria-hidden="true"
+                    />
+                    <Avatar className="h-7 w-7 shrink-0">
+                      {partner.avatarUrl ? (
+                        <AvatarImage src={partner.avatarUrl} alt={partner.label} />
                       ) : null}
-                      <AvatarFallback className="text-xs bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
-                        {initials}
+                      <AvatarFallback
+                        className={`text-[10px] font-semibold ${
+                          partner.matched
+                            ? "bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]"
+                            : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
+                        }`}
+                      >
+                        {partner.initials}
                       </AvatarFallback>
                     </Avatar>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-semibold text-gray-900 dark:text-gray-100">
+                        {formatUpcomingWhen(start, duration)}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[11px] text-gray-500 dark:text-gray-400">
+                        {partner.matched ? (
+                          <>
+                            with{" "}
+                            <span className="font-medium text-[#5D1C6A] dark:text-[#FFB090]">
+                              {partner.label}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="italic">looking for a partner</span>
+                        )}
+                      </span>
+                    </span>
+                  </>
+                );
+
+                return (
+                  <li key={ev.id}>
+                    {onDetailsSession ? (
+                      <button
+                        type="button"
+                        onClick={() => onDetailsSession(ev)}
+                        className={rowClass}
+                      >
+                        {content}
+                      </button>
+                    ) : (
+                      <div className={rowClass}>{content}</div>
+                    )}
                   </li>
                 );
               })}
             </ul>
-          )}
-        </div>
+
+            {upcomingSessions.length > UPCOMING_PREVIEW_COUNT ? (
+              <Link
+                href="/sessions"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[#5D1C6A] transition-colors hover:text-[#CA5995] dark:text-[#FFB090] dark:hover:text-[#CA5995]"
+              >
+                View all
+                <span aria-hidden="true">→</span>
+              </Link>
+            ) : null}
+          </>
+        )}
       </section>
     </aside>
   );
