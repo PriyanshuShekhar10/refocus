@@ -12,6 +12,7 @@ import {
   LogIn,
   Mail,
   MoreHorizontal,
+  Settings2,
   Shield,
   ShieldOff,
   Trash2,
@@ -47,7 +48,14 @@ type AdminSection =
   | "ip-activity"
   | "logins"
   | "crew"
-  | "test-call";
+  | "test-call"
+  | "config";
+
+type DailyAccountRow = {
+  id: string;
+  domain: string;
+  keyHint: string;
+};
 
 type Stats = {
   users: {
@@ -257,6 +265,7 @@ const SECTIONS: {
   { id: "ip-activity", label: "Banned IP activity", icon: Activity },
   { id: "reports", label: "Reports", icon: Flag },
   { id: "history", label: "History", icon: History },
+  { id: "config", label: "Config", icon: Settings2 },
 ];
 
 const ACTION_LABELS: Record<string, string> = {
@@ -277,6 +286,7 @@ const ACTION_LABELS: Record<string, string> = {
   "crew.remove": "Removed crew member",
   "test_call.create": "Created Daily test call",
   "session.club": "Clubbed sessions",
+  "daily.switch_account": "Switched Daily.co account",
 };
 
 function StatCard({
@@ -604,6 +614,14 @@ function formatAuditDetails(entry: AuditEntry): string | null {
   if (entry.action === "user.mute" && entry.details.muteDays) {
     return `${entry.details.muteDays} day${entry.details.muteDays === 1 ? "" : "s"}`;
   }
+  if (entry.action === "daily.switch_account") {
+    const fromDomain = entry.details.fromDomain;
+    const toDomain = entry.details.toDomain;
+    if (typeof fromDomain === "string" && typeof toDomain === "string") {
+      return `${fromDomain} → ${toDomain}`;
+    }
+    if (typeof toDomain === "string") return `→ ${toDomain}`;
+  }
   return null;
 }
 
@@ -756,6 +774,8 @@ export default function AdminPanel() {
   const [reports, setReports] = useState<ReportEntry[]>([]);
   const [reportsTotal, setReportsTotal] = useState(0);
   const [reportFilter, setReportFilter] = useState<"pending" | "all">("pending");
+  const [dailyAccounts, setDailyAccounts] = useState<DailyAccountRow[]>([]);
+  const [dailyActiveId, setDailyActiveId] = useState<string | null>(null);
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -985,6 +1005,14 @@ export default function AdminPanel() {
     }
   }, []);
 
+  const loadDailyConfig = useCallback(async () => {
+    const res = await fetch("/api/admin/daily");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to load Daily config");
+    setDailyAccounts(data.accounts || []);
+    setDailyActiveId(data.activeId ?? null);
+  }, []);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -1001,6 +1029,7 @@ export default function AdminPanel() {
       else if (section === "history") await loadAuditLog();
       else if (section === "ip-activity") await loadIpActivity();
       else if (section === "logins") await loadLogins();
+      else if (section === "config") await loadDailyConfig();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -1021,6 +1050,7 @@ export default function AdminPanel() {
     loadAuditLog,
     loadIpActivity,
     loadLogins,
+    loadDailyConfig,
   ]);
 
   useEffect(() => {
@@ -1084,6 +1114,34 @@ export default function AdminPanel() {
         }),
       }),
     );
+  };
+
+  const switchDailyAccount = async (account: DailyAccountRow) => {
+    if (account.id === dailyActiveId) return;
+    if (
+      !confirm(
+        `Switch active Daily.co account to ${account.domain}?\n\nRooms are per Daily account — in-progress calls on the previous account may break until recreated.`,
+      )
+    ) {
+      return;
+    }
+    setActionId(account.id);
+    try {
+      const res = await fetch("/api/admin/daily", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activeId: account.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Action failed");
+      setDailyAccounts(data.accounts || []);
+      setDailyActiveId(data.activeId ?? account.id);
+      await loadAuditLog().catch(() => {});
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setActionId(null);
+    }
   };
 
   return (
@@ -2301,11 +2359,83 @@ export default function AdminPanel() {
           </div>
         ) : null}
 
+        {section === "config" ? (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+                Daily.co accounts
+              </h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Keys are configured in env (
+                <code className="text-xs">DAILY_API_KEY</code> /{" "}
+                <code className="text-xs">DAILY_DOMAIN</code>, then{" "}
+                <code className="text-xs">_2</code>,{" "}
+                <code className="text-xs">_3</code>
+                …). Switch which account creates rooms and meeting tokens.
+              </p>
+              <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                Switching mid-session can break in-progress calls until rooms are
+                recreated on the new account.
+              </p>
+
+              {dailyAccounts.length === 0 ? (
+                <p className="mt-4 text-sm text-gray-500">
+                  No Daily accounts found. Add{" "}
+                  <code className="text-xs">DAILY_API_KEY</code> and{" "}
+                  <code className="text-xs">DAILY_DOMAIN</code> to the server env.
+                </p>
+              ) : (
+                <ul className="mt-4 divide-y divide-gray-100 dark:divide-gray-800 rounded-lg border border-gray-200 dark:border-gray-800">
+                  {dailyAccounts.map((account) => {
+                    const isActive = account.id === dailyActiveId;
+                    return (
+                      <li
+                        key={account.id}
+                        className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            Account {account.id}
+                            {isActive ? (
+                              <span className="ml-2 text-xs font-normal text-[#5D1C6A]">
+                                Active
+                              </span>
+                            ) : null}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            {account.domain}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Key {account.keyHint}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={isActive || actionId === account.id}
+                          onClick={() => switchDailyAccount(account)}
+                          className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                        >
+                          {isActive
+                            ? "In use"
+                            : actionId === account.id
+                              ? "Switching…"
+                              : "Use this"}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+        ) : null}
+
         {loading &&
         !stats &&
         users.length === 0 &&
         auditEntries.length === 0 &&
-        reports.length === 0 ? (
+        reports.length === 0 &&
+        dailyAccounts.length === 0 ? (
           <p className="text-sm text-gray-500">Loading…</p>
         ) : null}
       </div>

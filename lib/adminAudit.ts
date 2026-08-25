@@ -18,7 +18,8 @@ export type AdminAuditAction =
   | "crew.add"
   | "crew.remove"
   | "test_call.create"
-  | "session.club";
+  | "session.club"
+  | "daily.switch_account";
 
 export type AdminAuditEntry = {
   _id?: ObjectId;

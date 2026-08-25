@@ -69,6 +69,8 @@ NEXTAUTH_URL=http://localhost:3000
 
 # Optional: Daily.co API (for video sessions)
 DAILY_API_KEY=your-daily-api-key
+DAILY_DOMAIN=your-subdomain.daily.co
+# Optional: DAILY_API_KEY_2 / DAILY_DOMAIN_2 (switch in Admin → Config)
 ```
 
 **Note**: For local development, you can use MongoDB Atlas (free tier) or set up a local MongoDB instance.

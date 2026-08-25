@@ -72,6 +72,9 @@ NEXTAUTH_SECRET=your-long-random-secret
 NEXTAUTH_URL=http://localhost:3000
 DAILY_API_KEY=...
 DAILY_DOMAIN=your-subdomain.daily.co
+# Optional additional Daily accounts (switch in Admin → Config):
+# DAILY_API_KEY_2=...
+# DAILY_DOMAIN_2=other-subdomain.daily.co
 ```
 
 3. Install and run:
@@ -177,7 +180,7 @@ Workflow files:
 - Friends / sessions / chat backed by MongoDB
 - Chat realtime via SSE (`/api/chat/.../events`)
 - Session requests: create / accept / decline APIs under `/api/session-requests`
-- Daily.co: `DAILY_API_KEY` (server-only), `DAILY_DOMAIN`
+- Daily.co: `DAILY_API_KEY` / `DAILY_DOMAIN` (server-only); optional `_2`, `_3`, … pairs selectable in Admin → Config
 
 ## Contributing
 

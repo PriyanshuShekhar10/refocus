@@ -1,15 +1,9 @@
-const DAILY_API_BASE = "https://api.daily.co/v1";
-const DAILY_API_KEY = process.env.DAILY_API_KEY;
-const DAILY_DOMAIN = process.env.DAILY_DOMAIN;
+import { getActiveDailyAccount } from "@/lib/dailyAccounts";
 
-if (process.env.NODE_ENV === "production" && (!DAILY_API_KEY || !DAILY_DOMAIN)) {
-  throw new Error("Missing DAILY_API_KEY or DAILY_DOMAIN env vars");
-}
+const DAILY_API_BASE = "https://api.daily.co/v1";
 
 export async function createOrGetDailyRoom(sessionId: string, exp?: number) {
-  if (!DAILY_API_KEY || !DAILY_DOMAIN) {
-    throw new Error("Missing DAILY_API_KEY or DAILY_DOMAIN env vars");
-  }
+  const { apiKey, domain } = await getActiveDailyAccount();
 
   // Room name must be URL-safe and unique per session
   const roomName = `session-${sessionId}`;
@@ -25,7 +19,7 @@ export async function createOrGetDailyRoom(sessionId: string, exp?: number) {
   };
   // Try get
   let roomRes = await fetch(`${DAILY_API_BASE}/rooms/${roomName}`, {
-    headers: { Authorization: `Bearer ${DAILY_API_KEY}` },
+    headers: { Authorization: `Bearer ${apiKey}` },
     cache: "no-store",
   });
   if (roomRes.status === 404) {
@@ -33,7 +27,7 @@ export async function createOrGetDailyRoom(sessionId: string, exp?: number) {
     roomRes = await fetch(`${DAILY_API_BASE}/rooms`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${DAILY_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -50,7 +44,7 @@ export async function createOrGetDailyRoom(sessionId: string, exp?: number) {
   const updateRes = await fetch(`${DAILY_API_BASE}/rooms/${roomName}`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${DAILY_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -63,7 +57,7 @@ export async function createOrGetDailyRoom(sessionId: string, exp?: number) {
   }
 
   const room = (await updateRes.json()) as Record<string, unknown>;
-  return { room, roomName, domain: DAILY_DOMAIN } as {
+  return { room, roomName, domain } as {
     room: Record<string, unknown>;
     roomName: string;
     domain: string;
@@ -75,12 +69,12 @@ export async function createDailyMeetingToken(
   userId: string,
   opts?: { userName?: string; exp?: number },
 ) {
-  if (!DAILY_API_KEY) throw new Error("Missing DAILY_API_KEY env var");
+  const { apiKey } = await getActiveDailyAccount();
   const sanitizedName = opts?.userName?.trim();
   const res = await fetch(`${DAILY_API_BASE}/meeting-tokens`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${DAILY_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
