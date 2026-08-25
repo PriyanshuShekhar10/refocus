@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { getSiteUrl } from "@/lib/site";
+import { getMarketingSiteUrl } from "@/lib/site";
 
 /** Matches components/design/design.module.css */
 export const emailBrand = {
@@ -24,8 +24,10 @@ function emailAssetBaseUrl(): string {
     process.env.SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
 
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
-  return getSiteUrl();
+  if (fromEnv) {
+    return fromEnv.replace(/\/$/, "").replace(/^(https?:\/\/)www\./i, "$1");
+  }
+  return getMarketingSiteUrl();
 }
 
 /**

@@ -19,7 +19,9 @@ vi.mock("@/lib/sessionReminders", async (importOriginal) => {
 });
 
 vi.mock("@/lib/site", () => ({
+  getAppUrl: () => "https://dashboard.refocus.co.in",
   getSiteUrl: () => "https://refocus.co.in",
+  getMarketingSiteUrl: () => "https://refocus.co.in",
 }));
 
 const usersCol = mockCollection();
@@ -87,7 +89,7 @@ describe("notifySessionCancelled", () => {
         fromEmail: "host@example.com",
         message: "Something came up",
         kind: "delete",
-        calendarUrl: "https://refocus.co.in/sessions",
+        calendarUrl: "https://dashboard.refocus.co.in/sessions",
       }),
     );
   });

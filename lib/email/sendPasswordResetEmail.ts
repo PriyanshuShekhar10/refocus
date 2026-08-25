@@ -1,5 +1,5 @@
 import { getResend, getResendFromEmail, isResendConfigured } from "@/lib/resend";
-import { getSiteUrl } from "@/lib/site";
+import { getAppUrl } from "@/lib/site";
 import {
   createPasswordResetToken,
   setPasswordResetToken,
@@ -42,8 +42,9 @@ export async function sendPasswordResetEmail(
   const token = createPasswordResetToken();
   await setPasswordResetToken(input.userId, token);
 
-  const siteUrl = getSiteUrl();
-  const resetUrl = `${siteUrl}/auth/reset-password?token=${encodeURIComponent(token)}`;
+  // Must be the dashboard host — marketing apex has no /auth/* routes.
+  const appUrl = getAppUrl();
+  const resetUrl = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}`;
 
   const { subject, html, text } = buildPasswordResetEmail({
     firstName: input.firstName,

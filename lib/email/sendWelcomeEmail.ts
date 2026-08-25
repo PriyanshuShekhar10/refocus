@@ -1,5 +1,5 @@
 import { getResend, getResendFromEmail, isResendConfigured } from "@/lib/resend";
-import { getSiteUrl } from "@/lib/site";
+import { getAppUrl } from "@/lib/site";
 import {
   createVerificationToken,
   setEmailVerificationToken,
@@ -26,9 +26,10 @@ export async function sendWelcomeVerificationEmail(
   const token = createVerificationToken();
   await setEmailVerificationToken(input.userId, token);
 
-  const siteUrl = getSiteUrl();
-  const verifyUrl = `${siteUrl}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
-  const signInUrl = `${siteUrl}/auth/login`;
+  // Must be the dashboard host — marketing apex has no /api/auth/* routes.
+  const appUrl = getAppUrl();
+  const verifyUrl = `${appUrl}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+  const signInUrl = `${appUrl}/auth/login`;
 
   const { subject, html, text } = buildWelcomeVerifyEmail({
     firstName: input.firstName,

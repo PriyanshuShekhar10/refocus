@@ -1,7 +1,7 @@
 import { ObjectId, type Db } from "mongodb";
 import { sendSessionCancelledEmail } from "@/lib/email/sendSessionCancelledEmail";
 import { formatSessionTimeIST } from "@/lib/sessionReminders";
-import { getSiteUrl } from "@/lib/site";
+import { getAppUrl } from "@/lib/site";
 import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 
 type Participant = { user_id: string; joined_at?: Date | string; quiet?: boolean };
@@ -90,7 +90,7 @@ export async function notifySessionCancelled(
       message: input.message,
       sessionTitle: sessionTitleFor(input.session, partnerId),
       startsAtLabel: formatSessionTimeIST(new Date(input.session.start_time), tz),
-      calendarUrl: `${getSiteUrl()}/sessions`,
+      calendarUrl: `${getAppUrl()}/sessions`,
       kind: input.kind,
     });
   } catch (err) {

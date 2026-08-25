@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { TIME_CONFIG } from "@/constants/calendar";
 import { getDb } from "@/lib/mongodb";
-import { getSiteUrl } from "@/lib/site";
+import { getAppUrl } from "@/lib/site";
 import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 import { CALL_JOIN_GRACE_MINUTES } from "@/lib/sessionWindow";
 import {
@@ -97,7 +97,7 @@ export function formatSessionTimeIST(
 }
 
 export function sessionJoinUrl(sessionId: string): string {
-  return `${getSiteUrl()}/sessions/${sessionId}`;
+  return `${getAppUrl()}/sessions/${sessionId}`;
 }
 
 export function resolveReminderTiming(

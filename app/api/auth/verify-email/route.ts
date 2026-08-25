@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyEmailWithToken } from "@/lib/emailVerification";
-import { getSiteUrl } from "@/lib/site";
+import { getAppUrl } from "@/lib/site";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
-  const siteUrl = getSiteUrl();
+  const appUrl = getAppUrl();
 
   if (!token) {
     return NextResponse.redirect(
-      `${siteUrl}/auth/verify-email?status=missing`,
+      `${appUrl}/auth/verify-email?status=missing`,
     );
   }
 
@@ -16,11 +16,11 @@ export async function GET(req: NextRequest) {
 
   if (!result.ok) {
     return NextResponse.redirect(
-      `${siteUrl}/auth/verify-email?status=invalid`,
+      `${appUrl}/auth/verify-email?status=invalid`,
     );
   }
 
   return NextResponse.redirect(
-    `${siteUrl}/auth/verify-email?status=success`,
+    `${appUrl}/auth/verify-email?status=success`,
   );
 }
