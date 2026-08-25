@@ -112,7 +112,7 @@ export function Modes() {
         <Reveal className={styles.sectionHead}>
           <span className={styles.eyebrow}>02 — Modes</span>
           <h2 className={styles.sectionTitle}>
-            Co-work that gets out of the way.
+            Focus together. Without meetings or noise.
           </h2>
           <p className={styles.sectionSub}>
             Four ways to share a room, all built around accountability and real

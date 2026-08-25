@@ -217,9 +217,9 @@ export function Modes() {
         <Reveal className={`${styles.sectionHead} ${styles.modesHead}`}>
           <span className={styles.eyebrow}>02 — The experience</span>
           <h2 className={`${styles.sectionTitle} ${styles.modesTitle}`}>
-            Co-work that gets
+            Focus together.
             <br />
-            out of the way.
+            Without meetings or noise.
           </h2>
           <p className={`${styles.sectionSub} ${styles.modesSub}`}>
             Quiet accountability without meetings, forced conversation, or
