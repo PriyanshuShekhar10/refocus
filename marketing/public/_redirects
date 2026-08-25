@@ -7,3 +7,25 @@
 # Brand SERP for "Study Together" — fold into the exam-prep hub, not a thin clone.
 /study-together /study-with-me 301
 /study-together/ /study-with-me 301
+
+# Near-duplicate blog posts (slug collision `-2`) → canonical URLs.
+/blog/batching-shallow-work-deep-focus-2 /blog/batching-shallow-work-deep-focus 301
+/blog/batching-shallow-work-deep-focus-2/ /blog/batching-shallow-work-deep-focus 301
+/blog/body-doubling-task-initiation-adhd-2 /blog/body-doubling-task-initiation-adhd 301
+/blog/body-doubling-task-initiation-adhd-2/ /blog/body-doubling-task-initiation-adhd 301
+/blog/pomodoro-vs-longer-focus-blocks-2 /blog/pomodoro-vs-longer-focus-blocks 301
+/blog/pomodoro-vs-longer-focus-blocks-2/ /blog/pomodoro-vs-longer-focus-blocks 301
+/blog/protect-first-focus-hour-waking-up-2 /blog/protect-first-focus-hour-waking-up 301
+/blog/protect-first-focus-hour-waking-up-2/ /blog/protect-first-focus-hour-waking-up 301
+/blog/virtual-coworking-vs-zoom-discord-focus-2 /blog/virtual-coworking-vs-zoom-discord-focus 301
+/blog/virtual-coworking-vs-zoom-discord-focus-2/ /blog/virtual-coworking-vs-zoom-discord-focus 301
+
+# Auth / product routes only exist on the Next.js dashboard.
+# Keep query strings (verification + reset tokens) when proxying old emails
+# that still point at the marketing apex.
+/api/auth/* https://dashboard.refocus.co.in/api/auth/:splat 302
+/auth/* https://dashboard.refocus.co.in/auth/:splat 302
+/sessions https://dashboard.refocus.co.in/sessions 302
+/sessions/* https://dashboard.refocus.co.in/sessions/:splat 302
+/dashboard https://dashboard.refocus.co.in/dashboard 302
+/dashboard/* https://dashboard.refocus.co.in/dashboard/:splat 302
