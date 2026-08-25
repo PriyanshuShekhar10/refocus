@@ -9,7 +9,7 @@ import {
   getOtherParticipants,
   participantDisplayName,
 } from "./sessionUiState";
-import { agenda } from "./mobileAgendaColors";
+import { useMobileAgendaColors } from "./mobileAgendaColors";
 
 interface MobileSessionSheetProps {
   open: boolean;
@@ -34,6 +34,7 @@ export function MobileSessionSheet({
   onLeave,
   onManage,
 }: MobileSessionSheetProps) {
+  const agenda = useMobileAgendaColors();
   if (!open || !event) return null;
 
   const state = classifySessionUiState(event, currentUserId);
@@ -105,7 +106,13 @@ export function MobileSessionSheet({
                       {p.avatar_url ? (
                         <AvatarImage src={p.avatar_url} alt={name} />
                       ) : null}
-                      <AvatarFallback className="bg-[#2A3444] text-xs text-[#AAA6B1]">
+                      <AvatarFallback
+                        className="text-xs"
+                        style={{
+                          backgroundColor: agenda.avatarFallbackBg,
+                          color: agenda.avatarFallbackText,
+                        }}
+                      >
                         {name[0]?.toUpperCase() ?? "?"}
                       </AvatarFallback>
                     </Avatar>

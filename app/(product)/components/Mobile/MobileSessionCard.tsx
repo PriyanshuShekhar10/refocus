@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import type { CalendarEvent } from "@/types/calendar";
 import { VerifiedName } from "@/components/verified-tag";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,19 +12,21 @@ import {
   participantDisplayName,
   type SessionUiState,
 } from "./sessionUiState";
-import { agenda } from "./mobileAgendaColors";
-
-const AVATAR_FALLBACK =
-  "bg-[#2A3444] text-[10px] text-[#AAA6B1] dark:bg-[#2A3444] dark:text-[#AAA6B1]";
+import {
+  type AgendaColors,
+  useMobileAgendaColors,
+} from "./mobileAgendaColors";
 
 function PeopleRow({
   event,
   currentUserId,
   state,
+  agenda,
 }: {
   event: CalendarEvent;
   currentUserId: string | null;
   state: SessionUiState;
+  agenda: AgendaColors;
 }) {
   const others = getOtherParticipants(event, currentUserId);
   const participantCount = event.participants?.length ?? 0;
@@ -37,7 +40,13 @@ function PeopleRow({
             {others[0].avatar_url ? (
               <AvatarImage src={others[0].avatar_url} alt={name} />
             ) : null}
-            <AvatarFallback className={AVATAR_FALLBACK}>
+            <AvatarFallback
+              className="text-[10px]"
+              style={{
+                backgroundColor: agenda.avatarFallbackBg,
+                color: agenda.avatarFallbackText,
+              }}
+            >
               {name[0]?.toUpperCase() ?? "?"}
             </AvatarFallback>
           </Avatar>
@@ -79,7 +88,13 @@ function PeopleRow({
       <div className="flex items-center gap-2">
         <Avatar className="h-7 w-7 shrink-0">
           {avatarUrl ? <AvatarImage src={avatarUrl} alt={name} /> : null}
-          <AvatarFallback className={AVATAR_FALLBACK}>
+          <AvatarFallback
+            className="text-[10px]"
+            style={{
+              backgroundColor: agenda.avatarFallbackBg,
+              color: agenda.avatarFallbackText,
+            }}
+          >
             {name[0]?.toUpperCase() ?? "?"}
           </AvatarFallback>
         </Avatar>
@@ -118,7 +133,13 @@ function PeopleRow({
               style={{ borderColor: agenda.card }}
             >
               {p.avatar_url ? <AvatarImage src={p.avatar_url} alt={n} /> : null}
-              <AvatarFallback className={AVATAR_FALLBACK}>
+              <AvatarFallback
+                className="text-[10px]"
+                style={{
+                  backgroundColor: agenda.avatarFallbackBg,
+                  color: agenda.avatarFallbackText,
+                }}
+              >
                 {n[0]?.toUpperCase() ?? "?"}
               </AvatarFallback>
             </Avatar>
@@ -136,23 +157,38 @@ function PeopleRow({
   );
 }
 
-function cardClassName(state: SessionUiState, highlighted: boolean): string {
-  const base =
-    "w-full min-h-[44px] rounded-xl border p-3.5 text-left transition-colors active:scale-[0.99]";
-  const highlight = highlighted
-    ? "ring-2 ring-[#8FA58F]/70 ring-offset-2 ring-offset-[#0E1624]"
-    : "";
+function getCardStyle(
+  state: SessionUiState,
+  agenda: AgendaColors,
+  highlighted: boolean,
+): CSSProperties {
+  const style: CSSProperties = {
+    backgroundColor: agenda.card,
+    borderColor: agenda.border,
+    borderWidth: 1,
+    borderStyle: "solid",
+  };
+
+  if (highlighted) {
+    style.boxShadow = `0 0 0 2px ${agenda.ringOffset}, 0 0 0 4px color-mix(in srgb, ${agenda.sage} 70%, transparent)`;
+  }
 
   switch (state) {
     case "available":
-      return `${base} ${highlight} border-[#354055] border-l-2 border-l-[#8A328F] bg-[#182132] hover:bg-[#21182B] active:bg-[#21182B] hover:border-l-[#C55CB4]`;
+      style.borderLeftWidth = 2;
+      style.borderLeftColor = agenda.plum;
+      break;
     case "joined":
-      return `${base} ${highlight} border-[#354055] border-l-2 border-l-[#8FA58F] bg-[#182132] hover:bg-[#1B2927]`;
-    case "yours":
-      return `${base} ${highlight} border-[#354055] bg-[#182132] hover:bg-[#202A3A]`;
+      style.borderLeftWidth = 2;
+      style.borderLeftColor = agenda.sage;
+      break;
     case "past":
-      return `${base} ${highlight} border-[#2A3444] bg-[#0E1624] opacity-65`;
+      style.backgroundColor = agenda.page;
+      style.opacity = 0.65;
+      break;
   }
+
+  return style;
 }
 
 interface MobileSessionCardProps {
@@ -172,6 +208,7 @@ export function MobileSessionCard({
   highlighted = false,
   onPress,
 }: MobileSessionCardProps) {
+  const agenda = useMobileAgendaColors();
   const state = classifySessionUiState(event, currentUserId, now);
   const timeLabel = formatLocalTime(event.start, {
     hour: "numeric",
@@ -183,7 +220,8 @@ export function MobileSessionCard({
     <button
       type="button"
       onClick={onPress}
-      className={cardClassName(state, highlighted)}
+      className="w-full min-h-[44px] rounded-xl p-3.5 text-left transition-colors active:scale-[0.99]"
+      style={getCardStyle(state, agenda, highlighted)}
     >
       {isNextUp && (
         <p
@@ -202,7 +240,12 @@ export function MobileSessionCard({
         {timeLabel} · {event.durationMin} min
       </p>
       <div className="mt-2">
-        <PeopleRow event={event} currentUserId={currentUserId} state={state} />
+        <PeopleRow
+          event={event}
+          currentUserId={currentUserId}
+          state={state}
+          agenda={agenda}
+        />
       </div>
       <div className="mt-2.5 flex items-center justify-between gap-2">
         {state === "available" && (

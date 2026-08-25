@@ -43,7 +43,7 @@ import {
   filterAgendaEvents,
   pickNextUpSession,
 } from "./sessionUiState";
-import { agenda } from "./mobileAgendaColors";
+import { useMobileAgendaColors } from "./mobileAgendaColors";
 
 const BOOK_TIME_STEP_MINUTES = BOOKING_TIME_STEP_MINUTES;
 const MAX_BOOK_MINUTES = 24 * 60 - BOOK_TIME_STEP_MINUTES;
@@ -240,6 +240,7 @@ function createInitialState(): UIState {
 }
 
 export default function MobileCalendar() {
+  const agenda = useMobileAgendaColors();
   const scrollRef = useRef<HTMLDivElement>(null);
   const nextUpRef = useRef<HTMLDivElement>(null);
   const touchStart = useRef<{ x: number; y: number } | null>(null);

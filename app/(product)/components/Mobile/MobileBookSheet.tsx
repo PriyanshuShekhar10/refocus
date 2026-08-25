@@ -2,7 +2,7 @@
 
 import type { DurationMin } from "@/constants/calendar";
 import { formatLocalDate } from "@/lib/localTime";
-import { agenda } from "./mobileAgendaColors";
+import { useMobileAgendaColors } from "./mobileAgendaColors";
 
 interface MobileBookSheetProps {
   open: boolean;
@@ -31,6 +31,7 @@ export function MobileBookSheet({
   onBook,
   onPickDate,
 }: MobileBookSheetProps) {
+  const agenda = useMobileAgendaColors();
   if (!open) return null;
 
   return (
@@ -105,7 +106,7 @@ export function MobileBookSheet({
                 borderColor: agenda.border,
                 backgroundColor: agenda.card,
                 color: agenda.text,
-                colorScheme: "dark",
+                colorScheme: agenda.colorScheme,
               }}
             />
           </div>

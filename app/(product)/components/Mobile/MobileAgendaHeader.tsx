@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatLocalDate } from "@/lib/localTime";
 import { ymdInTimeZone } from "@/lib/zonedTime";
-import { agenda } from "./mobileAgendaColors";
+import { useMobileAgendaColors } from "./mobileAgendaColors";
 
 interface MobileAgendaHeaderProps {
   startDate: Date;
@@ -25,6 +25,7 @@ export function MobileAgendaHeader({
   onToday,
   onSelectDate,
 }: MobileAgendaHeaderProps) {
+  const agenda = useMobileAgendaColors();
   const dateInputRef = useRef<HTMLInputElement>(null);
   const label = formatLocalDate(startDate, {
     weekday: "short",
@@ -35,14 +36,19 @@ export function MobileAgendaHeader({
 
   return (
     <header
-      className="shrink-0 px-2 py-2"
-      style={{ borderBottom: `1px solid ${agenda.border}` }}
+      className="shrink-0 px-2 py-2 [--agenda-hover:var(--agenda-hover-color)]"
+      style={
+        {
+          borderBottom: `1px solid ${agenda.border}`,
+          "--agenda-hover-color": agenda.hover,
+        } as React.CSSProperties
+      }
     >
       <div className="flex items-center justify-between gap-1">
         <button
           type="button"
           onClick={onPrev}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-[#202A3A]"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-[var(--agenda-hover-color)]"
           style={{ color: agenda.textSecondary }}
           aria-label="Previous day"
         >
@@ -60,7 +66,7 @@ export function MobileAgendaHeader({
               el.click();
             }
           }}
-          className="min-h-11 flex-1 rounded-xl px-2 text-center text-base font-semibold transition-colors hover:bg-[#202A3A]"
+          className="min-h-11 flex-1 rounded-xl px-2 text-center text-base font-semibold transition-colors hover:bg-[var(--agenda-hover-color)]"
           style={{ color: agenda.text }}
           aria-label="Pick a date"
         >
@@ -86,7 +92,7 @@ export function MobileAgendaHeader({
         <button
           type="button"
           onClick={onNext}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-[#202A3A]"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-[var(--agenda-hover-color)]"
           style={{ color: agenda.textSecondary }}
           aria-label="Next day"
         >

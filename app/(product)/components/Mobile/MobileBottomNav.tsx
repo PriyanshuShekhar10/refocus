@@ -93,7 +93,7 @@ export function MobileBottomNav({
             >
               <div
                 className={`relative rounded-xl p-1.5 transition-colors ${
-                  isActive ? "bg-[#21182B]/80 dark:bg-[#21182B]" : ""
+                  isActive ? "bg-[#FFF1D3] dark:bg-[#21182B]" : ""
                 }`}
               >
                 {tab.icon}
