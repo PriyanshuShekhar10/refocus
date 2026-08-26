@@ -1,0 +1,224 @@
+---
+import Base from "../layouts/Base.astro";
+import Navbar from "../components/Navbar";
+import { APP_URL } from "../lib/config";
+import {
+  SITE_URL,
+  breadcrumbJsonLd,
+  organizationJsonLd,
+} from "../lib/seo";
+import "../styles/blog.css";
+
+const UPDATED = "2026-08-27";
+const canonical = "/free";
+const title = "Refocus is free — no card, no session cap";
+const description =
+  "Refocus virtual coworking and body doubling sessions are free right now: no credit card, no weekly session cap. Start a 25, 50, or 75 minute focus room today.";
+
+const included = [
+  "25, 50, or 75 minute matched focus sessions",
+  "Partner matching (or invite a friend)",
+  "Synced timers and quiet focus mode",
+  "Cameras on for presence; mics muted by default",
+  "Friends, session requests, and community",
+];
+
+const notIncluded = [
+  "No credit card hold to try a session",
+  "No facilitator-led workshops or membership curriculum",
+  "No always-on group lobby with dozens of avatars",
+];
+
+const faqs = [
+  {
+    question: "Is Refocus really free?",
+    answer:
+      "Yes. During this free period you can create an account and join focus sessions with no credit card and no weekly session cap. What's included is listed on this page and on /pricing.",
+  },
+  {
+    question: "Will Refocus stay free forever?",
+    answer:
+      "This is a free period, not a forever promise. If paid plans appear later, we'll keep what's free clear on /pricing — no surprise card charges to try a session today.",
+  },
+  {
+    question: "How is this different from Focusmate's free plan?",
+    answer:
+      "Focusmate's free plan covers three sessions per week. Refocus currently has no weekly session cap and no card required. See the full comparison on our Focusmate alternative page.",
+  },
+  {
+    question: "What do I get in a free session?",
+    answer:
+      "A timed 1:1 focus room: pick a length, get matched, share your goal, work quietly with a synced timer, and check in when it ends.",
+  },
+];
+
+const signUp = `${APP_URL}/auth/sign-up`;
+
+const jsonLd = [
+  breadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: "Free", path: canonical },
+  ]),
+  organizationJsonLd(),
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Refocus",
+    url: SITE_URL,
+    applicationCategory: "ProductivityApplication",
+    operatingSystem: "Web",
+    description:
+      "Free virtual coworking and body doubling. Matched focus sessions with no credit card and no session cap during the free period.",
+    offers: {
+      "@type": "Offer",
+      name: "Free period",
+      price: "0",
+      priceCurrency: "USD",
+      description:
+        "Focus sessions, partner matching, synced timers, and quiet focus mode. No credit card. No weekly session cap during the free period.",
+      url: `${SITE_URL}${canonical}`,
+      availability: "https://schema.org/InStock",
+    },
+    installUrl: signUp,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
+  },
+];
+
+const updatedLabel = new Date(UPDATED).toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+---
+
+<Base
+  title={`${title} — Refocus`}
+  description={description}
+  canonical={canonical}
+  ogTitle="Refocus is free — no card, no session cap"
+  ogDescription={description}
+  jsonLd={jsonLd}
+>
+  <div class="blog">
+    <Navbar client:load />
+
+    <article class="blog-article">
+      <header class="blog-header">
+        <a class="blog-back" href="/">&larr; Home</a>
+        <p class="blog-eyebrow">Free period</p>
+        <h1>Refocus is free — no card, no session cap</h1>
+        <p class="blog-lede">
+          Virtual coworking and body doubling without a membership wall. Create
+          an account, pick a session length, get matched, and work.
+        </p>
+        <p class="blog-meta">Last updated {updatedLabel}</p>
+      </header>
+
+      <hr class="blog-divider" />
+
+      <div class="blog-prose">
+        <p>
+          If you searched for free virtual coworking, a free Focusmate
+          alternative, or free body doubling online — this is the short version:
+          <strong>Refocus is free right now</strong>. No credit card. No three-sessions-a-week
+          cap. Full detail lives on <a href="/pricing">pricing</a>; this page is
+          the campaign summary.
+        </p>
+
+        <h2>What's included</h2>
+        <ul>
+          {included.map((item) => <li>{item}</li>)}
+        </ul>
+
+        <h2>What you're not paying for</h2>
+        <ul>
+          {notIncluded.map((item) => <li>{item}</li>)}
+        </ul>
+
+        <h2>vs Focusmate free tier</h2>
+        <div class="blog-table">
+          <table>
+            <thead>
+              <tr>
+                <th>&nbsp;</th>
+                <th>Refocus (now)</th>
+                <th>Focusmate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>Price to start</th>
+                <td>$0, no card</td>
+                <td>Free tier available</td>
+              </tr>
+              <tr>
+                <th>Session cap</th>
+                <td>No weekly cap during this free period</td>
+                <td>3 sessions / week on free</td>
+              </tr>
+              <tr>
+                <th>Format</th>
+                <td>1:1 matched focus rooms</td>
+                <td>1:1 matched video sessions</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          For the full honest comparison — cameras, community, and fit — see
+          <a href="/focusmate-alternative">Refocus vs Focusmate</a>. Also useful:
+          <a href="/virtual-coworking">virtual coworking</a>,
+          <a href="/body-doubling">body doubling</a>, and
+          <a href="/study-with-me">study with me</a>.
+        </p>
+
+        <h2>How to start</h2>
+        <ol>
+          <li>Create an account — no card.</li>
+          <li>Choose 25, 50, or 75 minutes.</li>
+          <li>Get matched (or invite a friend).</li>
+          <li>Share your goal, work quietly, check in when the timer ends.</li>
+        </ol>
+
+        <section class="lp-faq" aria-label="Frequently asked questions">
+          <h2>Frequently asked questions</h2>
+          {
+            faqs.map((f) => (
+              <div class="lp-faq-item">
+                <h3>{f.question}</h3>
+                <p>{f.answer}</p>
+              </div>
+            ))
+          }
+        </section>
+      </div>
+
+      <aside class="blog-cta">
+        <h3>Start free today</h3>
+        <p>
+          No card. No session cap during this free period. Just a quiet partner
+          and a timer.
+        </p>
+        <a class="blog-cta-btn" href={signUp}>Start a free session &rarr;</a>
+      </aside>
+    </article>
+
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href="/">Home</a>
+      <a href="/free">Free</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/features">Features</a>
+      <a href="/focusmate-alternative">vs Focusmate</a>
+      <a href="/blog">Blog</a>
+    </footer>
+  </div>
+</Base>

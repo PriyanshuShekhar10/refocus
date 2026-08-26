@@ -1,0 +1,56 @@
+name: "Blog: publish (every other day)"
+
+# Single rotating niche publish — Mon/Wed/Fri at 06:00 UTC (~11:30 IST).
+# Replaces five daily niche crons to avoid thin/near-duplicate flooding.
+# Category rotates by UTC day-of-year. Manual niche runs remain via
+# blog-productivity / blog-adhd / … workflow_dispatch only.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1,3,5"
+  workflow_dispatch:
+    inputs:
+      category:
+        description: "Optional niche override (productivity | adhd | exams | loneliness | remote)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-publish
+  cancel-in-progress: false
+
+jobs:
+  pick-category:
+    runs-on: ubuntu-latest
+    outputs:
+      category: ${{ steps.pick.outputs.category }}
+    steps:
+      - id: pick
+        run: |
+          if [ -n "${{ github.event.inputs.category }}" ]; then
+            echo "category=${{ github.event.inputs.category }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Rotate niches by UTC day-of-year
+          DOY=$(date -u +%j)
+          # strip leading zeros for arithmetic
+          DOY=$((10#$DOY))
+          case $((DOY % 5)) in
+            0) CAT=productivity ;;
+            1) CAT=adhd ;;
+            2) CAT=exams ;;
+            3) CAT=loneliness ;;
+            *) CAT=remote ;;
+          esac
+          echo "category=$CAT" >> "$GITHUB_OUTPUT"
+          echo "Selected category: $CAT (DOY=$DOY)"
+
+  generate:
+    needs: pick-category
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      category: ${{ needs.pick-category.outputs.category }}
+    secrets: inherit

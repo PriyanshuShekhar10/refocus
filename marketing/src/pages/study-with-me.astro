@@ -3,17 +3,22 @@ import LandingPage from "../layouts/LandingPage.astro";
 import { articleJsonLd, faqJsonLd } from "../lib/seo";
 import { APP_URL } from "../lib/config";
 
-const UPDATED = "2026-08-18";
+const UPDATED = "2026-08-27";
 const canonical = "/study-with-me";
-const title = "Study Together Online: Live Study Rooms for Exam Prep";
+const title = "Free Study With Me Online: Live Study Rooms for Exam Prep";
 const description =
-  "Study together online in a live study room — not a YouTube video and not the Study Together app. Quiet, timed sessions with a real partner for UPSC, JEE, NEET, and other long grinds.";
+  "Free study with me online in a live study room — not a YouTube video. Quiet, timed sessions with a real partner for UPSC, JEE, NEET, and other long grinds.";
 
 const faqs = [
   {
     question: "What does study together online mean here?",
     answer:
       "It means a live, timed study room with a real person — not a recording, and not a branded 24/7 lobby. You join a session, share what you'll study, and work in parallel. That's 'study with me' without the livestream performance.",
+  },
+  {
+    question: "Is free study with me available on Refocus?",
+    answer:
+      "Yes. During this free period you can join timed study sessions with no credit card and no weekly session cap. Pick 25, 50, or 75 minutes and get matched with a study partner. See /free and /pricing.",
   },
   {
     question: "Is this the Study Together app?",
@@ -50,12 +55,12 @@ const article = articleJsonLd({
   description={description}
   canonical={canonical}
   eyebrow="Guide"
-  heading="Study together online: live study rooms for exam prep"
-  lead="Solo exam prep is a grind, and the loneliness is half the battle. An online study room lets you study alongside someone else in real time — quiet, timed, and accountable — so you actually sit down and start."
+  heading="Free study with me online: live study rooms for exam prep"
+  lead="Solo exam prep is a grind, and the loneliness is half the battle. A free online study room lets you study alongside someone else in real time — quiet, timed, and accountable — so you actually sit down and start."
   updated={UPDATED}
   faqs={faqs}
-  ctaTitle="Study with someone tonight"
-  ctaText="Refocus is a virtual study room: pick a session length, get matched with a study partner who's also studying, and work side by side with a shared timer. No talking, just company."
+  ctaTitle="Study with someone tonight — free"
+  ctaText="Refocus is a virtual study room: pick a session length, get matched with a study partner who's also studying, and work side by side with a shared timer. Free right now — no card, no weekly cap."
   ctaHref={`${APP_URL}/auth/sign-up`}
   ctaLabel="Start a free session"
   jsonLd={[article, faqJsonLd(faqs)]}

@@ -3,17 +3,22 @@ import LandingPage from "../layouts/LandingPage.astro";
 import { articleJsonLd, faqJsonLd } from "../lib/seo";
 import { APP_URL } from "../lib/config";
 
-const UPDATED = "2026-08-09";
+const UPDATED = "2026-08-27";
 const canonical = "/body-doubling";
-const title = "Body Doubling: The Focus Tool That Actually Works";
+const title = "Free Body Doubling Online: The Focus Tool That Works";
 const description =
-  "What body doubling is, why it works for focus and ADHD, and how to do it online — plus how to find a body doubling tool or partner when you're working alone.";
+  "What body doubling is, why it works for focus and ADHD, and how to do free body doubling online — find a partner without a membership wall.";
 
 const faqs = [
   {
     question: "What is body doubling?",
     answer:
       "Body doubling is working on your own task while another person is present and also working. The other person doesn't help with the task — their quiet presence just makes it easier to start and stay on track. It's a common strategy for people with ADHD, but it helps almost anyone who struggles to begin.",
+  },
+  {
+    question: "Is there a free body doubling tool?",
+    answer:
+      "Yes. Refocus offers free body doubling sessions during this free period — no credit card and no weekly session cap. You get matched for a timed focus block with cameras on for presence and mics quiet. See /free and /pricing.",
   },
   {
     question: "Why does body doubling work?",
@@ -38,7 +43,7 @@ const faqs = [
 ];
 
 const article = articleJsonLd({
-  headline: "Body Doubling: The Focus Tool That Actually Works",
+  headline: "Free Body Doubling Online: The Focus Tool That Works",
   description,
   path: canonical,
   dateModified: UPDATED,
@@ -50,12 +55,12 @@ const article = articleJsonLd({
   description={description}
   canonical={canonical}
   eyebrow="Guide"
-  heading="Body doubling: the focus tool that actually works"
-  lead="If you can focus in a library but fall apart alone at home, body doubling is probably the missing piece. Here's what it is, why it works — especially for ADHD — and how to do it online when no one's around."
+  heading="Free body doubling online: the focus tool that works"
+  lead="If you can focus in a library but fall apart alone at home, body doubling is probably the missing piece. Here's what it is, why it works — especially for ADHD — and how to do it free online when no one's around."
   updated={UPDATED}
   faqs={faqs}
-  ctaTitle="Try body doubling online"
-  ctaText="Refocus is a virtual co-working room built around body doubling: pick a session length, get matched with someone who's also there to focus, and work side by side with a shared timer."
+  ctaTitle="Try free body doubling"
+  ctaText="Refocus is a virtual co-working room built around body doubling: pick a session length, get matched with someone who's also there to focus, and work side by side with a shared timer. Free right now — no card, no weekly cap."
   ctaHref={`${APP_URL}/auth/sign-up`}
   ctaLabel="Start a free session"
   jsonLd={[article, faqJsonLd(faqs)]}

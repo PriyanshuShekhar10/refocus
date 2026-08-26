@@ -40,7 +40,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Is Refocus free?",
     answer:
-      "Yes. Refocus offers a free plan to get started. If you want more advanced features and expanded usage, premium options are available as well.",
+      "Yes. During this free period Refocus has no credit card requirement and no weekly session cap. See /free and /pricing for what's included. If paid plans appear later, what's free will stay clear on the pricing page.",
   },
 ];
 

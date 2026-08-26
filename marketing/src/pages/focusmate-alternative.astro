@@ -3,17 +3,17 @@ import LandingPage from "../layouts/LandingPage.astro";
 import { articleJsonLd, faqJsonLd } from "../lib/seo";
 import { APP_URL } from "../lib/config";
 
-const UPDATED = "2026-08-09";
+const UPDATED = "2026-08-27";
 const canonical = "/focusmate-alternative";
-const title = "A Focusmate Alternative: Refocus vs Focusmate";
+const title = "A Free Focusmate Alternative: Refocus vs Focusmate";
 const description =
-  "Looking for a Focusmate alternative? Here's an honest comparison of Refocus vs Focusmate — sessions, cameras, community, and pricing — so you can pick the virtual coworking tool that fits.";
+  "Looking for a free Focusmate alternative? Honest Refocus vs Focusmate comparison — sessions, cameras, community, and free tiers (no weekly cap vs 3/week).";
 
 const faqs = [
   {
     question: "Is there a free Focusmate alternative?",
     answer:
-      "Yes. Refocus is free to start with no credit card required, and it works the same way as Focusmate — you get matched with someone who's also there to focus and work through a timed session together. Focusmate's own free plan covers three sessions per week, so if you need more than that, comparing free tiers is worth it.",
+      "Yes. Refocus is free right now with no credit card and no weekly session cap. It works the same core way as Focusmate — matched timed sessions with a partner. Focusmate's free plan covers three sessions per week, so if you need more than that, comparing free tiers matters.",
   },
   {
     question: "Does Refocus require your camera on the whole time like Focusmate?",
@@ -33,7 +33,7 @@ const faqs = [
   {
     question: "Refocus vs Focusmate — which should I choose?",
     answer:
-      "Choose Focusmate if you want the largest, most established 24/7 community and cameras-on accountability is exactly what makes you focus. Choose Refocus if you want a free start, quiet mics with cameras on for presence, synced timers, and a friends-and-chat community layer between sessions.",
+      "Choose Focusmate if you want the largest, most established 24/7 community and cameras-on accountability is exactly what makes you focus. Choose Refocus if you want a free period with no weekly session cap, quiet mics with cameras on for presence, synced timers, and a friends-and-chat community layer between sessions.",
   },
 ];
 
@@ -50,12 +50,12 @@ const article = articleJsonLd({
   description={description}
   canonical={canonical}
   eyebrow="Comparison"
-  heading="A Focusmate alternative: Refocus vs Focusmate"
-  lead="Focusmate popularized virtual coworking, and it's a genuinely good tool. But it isn't the only option — and its always-on, meeting-like energy doesn't suit everyone. Here's an honest look at how Refocus compares, so you can pick what actually gets you working."
+  heading="A free Focusmate alternative: Refocus vs Focusmate"
+  lead="Focusmate popularized virtual coworking, and it's a genuinely good tool. But it isn't the only option — and its free plan caps you at three sessions a week. Here's an honest look at how Refocus compares, including the free tier, so you can pick what actually gets you working."
   updated={UPDATED}
   faqs={faqs}
   ctaTitle="Try Refocus free"
-  ctaText="Refocus is a virtual coworking room: pick a 25, 50, or 75-minute session, get matched with someone who's also there to focus, and work side by side with synced timers. Free to start, no card required."
+  ctaText="Refocus is a virtual coworking room: pick a 25, 50, or 75-minute session, get matched with someone who's also there to focus, and work side by side with synced timers. Free right now — no card, no weekly session cap. Details on /free and /pricing."
   ctaHref={`${APP_URL}/auth/sign-up`}
   ctaLabel="Start a free session"
   jsonLd={[article, faqJsonLd(faqs)]}
@@ -108,7 +108,7 @@ const article = articleJsonLd({
         </tr>
         <tr>
           <th>Free plan</th>
-          <td>Free to start, no card required</td>
+          <td>Free period: no card, no weekly session cap</td>
           <td>3 sessions per week free</td>
         </tr>
         <tr>
@@ -158,7 +158,9 @@ const article = articleJsonLd({
     </li>
     <li>
       <strong>Pick Refocus</strong> if you want quiet mics with cameras on for
-      presence, a free start, synced timers, and friends/chat between sessions.
+      presence, a free period with no weekly session cap, synced timers, and
+      friends/chat between sessions. See <a href="/free">/free</a> and
+      <a href="/pricing">pricing</a>.
     </li>
   </ul>
   <p>

@@ -3,17 +3,22 @@ import LandingPage from "../layouts/LandingPage.astro";
 import { articleJsonLd, faqJsonLd } from "../lib/seo";
 import { APP_URL } from "../lib/config";
 
-const UPDATED = "2026-08-09";
+const UPDATED = "2026-08-27";
 const canonical = "/virtual-coworking";
-const title = "Virtual Coworking: Focus With People, Remotely";
+const title = "Free Virtual Coworking: Focus With People, Remotely";
 const description =
-  "Virtual coworking recreates the quiet focus of a shared office online. Here's how it works, how it differs from Zoom and Discord, and how remote workers and freelancers use it to stay on task.";
+  "Free virtual coworking that recreates the quiet focus of a shared office online. How it works vs Zoom and Discord — and how to start a free session on Refocus.";
 
 const faqs = [
   {
     question: "What is virtual coworking?",
     answer:
       "Virtual coworking is working alongside other people over the internet in a shared, timed session. Everyone does their own work quietly with light structure — a short intro, a focus block, and a check-in — so you get the accountability of a shared office without being in the same room.",
+  },
+  {
+    question: "Is there free virtual coworking?",
+    answer:
+      "Yes. Refocus offers free virtual coworking sessions during this free period — no credit card and no weekly session cap. You pick 25, 50, or 75 minutes, get matched with a partner, and work with a synced timer. See /free and /pricing.",
   },
   {
     question: "How is virtual coworking different from a Zoom call?",
@@ -54,8 +59,8 @@ const article = articleJsonLd({
   lead="Working from home can be quiet in the wrong way — no colleagues, no ambient momentum, nothing stopping you from opening a new tab. Virtual coworking brings back the focus of a shared office, minus the commute and the meetings."
   updated={UPDATED}
   faqs={faqs}
-  ctaTitle="Try a virtual coworking session"
-  ctaText="Refocus is a virtual coworking room: pick a session length, get matched with someone who's also there to focus, and work side by side with a shared timer — no small talk required."
+  ctaTitle="Try free virtual coworking"
+  ctaText="Refocus is a free virtual coworking room during this period: pick a session length, get matched with someone who's also there to focus, and work side by side with a shared timer — no small talk required. No card, no weekly cap."
   ctaHref={`${APP_URL}/auth/sign-up`}
   ctaLabel="Start a free session"
   jsonLd={[article, faqJsonLd(faqs)]}

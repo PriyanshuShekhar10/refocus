@@ -20,6 +20,11 @@
 /blog/virtual-coworking-vs-zoom-discord-focus-2 /blog/virtual-coworking-vs-zoom-discord-focus 301
 /blog/virtual-coworking-vs-zoom-discord-focus-2/ /blog/virtual-coworking-vs-zoom-discord-focus 301
 
+# --- Free-period exit (DO NOT enable while /free campaign page is live) ---
+# When paid plans launch, uncomment these and follow docs/seo/FREE-PERIOD-EXIT.md:
+# /free /pricing 301
+# /free/ /pricing 301
+
 # Auth / product routes only exist on the Next.js dashboard.
 # Keep query strings (verification + reset tokens) when proxying old emails
 # that still point at the marketing apex.

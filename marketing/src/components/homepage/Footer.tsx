@@ -10,6 +10,7 @@ export function Footer() {
         </a>
         <div className={styles.footLinks}>
           <a href="/features">Features</a>
+          <a href="/free">Free</a>
           <a href="/pricing">Pricing</a>
           <a href="/body-doubling">Body doubling</a>
           <a href="/virtual-coworking">Virtual coworking</a>
@@ -36,8 +37,10 @@ export function Footer() {
           <img
             src="https://www.betterlaunch.co/badge-light.svg"
             alt="Featured on Better Launch"
-            width={1}
-            height={1}
+            width={120}
+            height={40}
+            loading="lazy"
+            decoding="async"
             className={styles.footBadge}
           />
         </a>

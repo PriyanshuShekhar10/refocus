@@ -1,11 +1,12 @@
 /**
  * Blog niches for Refocus auto-publishing.
- * Each category has its own daily cron (staggered) and a concrete topic pool
- * so posts stay specific — exams, ADHD, loneliness, etc. — not vague advice.
+ * Scheduled cadence: Mon/Wed/Fri via blog-publish.yml (rotating niche).
+ * Per-niche workflows remain for manual workflow_dispatch only.
  *
  * Each niche also declares a `pillar`: the cluster landing page every post in
  * that niche should link to once (topic-cluster model). The generator enforces
- * exactly one natural in-body link to this page.
+ * exactly one natural in-body link to this page, plus a commercial hub link
+ * (/pricing, /free, or an alternatives page) when the topic is free/commercial.
  */
 
 export const CATEGORIES = {
@@ -36,6 +37,8 @@ export const CATEGORIES = {
       "recovering focus after a Slack rabbit hole",
       "batching shallow work so deep work has a real slot",
       "what to do in the first 5 minutes of a session when resistance is high",
+      "free virtual coworking apps worth trying when paid memberships feel like overkill",
+      "accountability partner ideas that aren't another Discord lobby",
     ],
   },
 
@@ -67,6 +70,8 @@ export const CATEGORIES = {
       "noise, silence, and ADHD: designing a focus environment that doesn't fight you",
       "accountability without pressure for ADHD study sessions",
       "when medication isn't enough: environmental scaffolding for focus",
+      "free body doubling for ADHD without paying for a deep-work membership",
+      "body doubling vs accountability partner apps: which helps task initiation",
     ],
   },
 
@@ -100,6 +105,7 @@ export const CATEGORIES = {
       "optional subject deep work for UPSC: one topic, one timer, one outcome",
       "NEET biology revision: active recall sessions that beat passive rereading",
       "JEE physics problem sets: batching hard problems into a focused hour",
+      "free study with me sessions for UPSC/JEE when YouTube videos aren't enough",
     ],
   },
 
@@ -130,6 +136,7 @@ export const CATEGORIES = {
       "virtual body doubling when your friends are in different cities",
       "the difference between needing company and needing a conversation",
       "building a weekly study ritual so solitude doesn't feel endless",
+      "free online coworking when you can't afford a membership or cafe habit",
     ],
   },
 
@@ -161,13 +168,32 @@ export const CATEGORIES = {
       "timezone loneliness on a distributed team",
       "makers and indie hackers: ending the day with something shipped",
       "when your roommate / family treats WFH like you're free all day",
+      "free Focusmate-style sessions for freelancers who hit the weekly free-tier wall",
+      "when paid deep-work clubs feel like overkill for one focused hour",
     ],
   },
 };
 
 export const CATEGORY_IDS = Object.keys(CATEGORIES);
 
-/** Stagger UTC hours so niches publish once each per day. */
+/** Commercial hub pages — generator may require one of these for free-angled topics. */
+export const COMMERCIAL_HUBS = [
+  { path: "/pricing", label: "Refocus pricing (free period)" },
+  { path: "/free", label: "Refocus free period summary" },
+  { path: "/focusmate-alternative", label: "Refocus vs Focusmate" },
+  { path: "/flown-alternative", label: "Refocus vs FLOWN" },
+  { path: "/cofocus-alternative", label: "Refocus vs Cofocus" },
+];
+
+/** Detect topics that should reinforce free / alternatives hubs. */
+export function isFreeCommercialTopic(topic) {
+  const t = String(topic || "").toLowerCase();
+  return /\bfree\b|alternative|focusmate|membership|pricing|session cap|paid/.test(
+    t,
+  );
+}
+
+/** Legacy helper — niches now publish via blog-publish.yml Mon/Wed/Fri. */
 export const CRON_HOUR_BY_CATEGORY = {
   productivity: 6,
   adhd: 9,

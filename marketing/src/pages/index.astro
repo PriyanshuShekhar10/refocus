@@ -17,9 +17,9 @@ import { APP_URL } from "../lib/config";
 
 const site = SITE_URL;
 
-const title = "Refocus — Focus rooms & virtual coworking for deep work";
+const title = "Refocus — Free focus rooms & virtual coworking for deep work";
 const description =
-  "A virtual focus room for deep work and study: 25, 50, or 75 minutes with a partner. Body doubling, not a group lobby — get the thing done.";
+  "Free virtual focus rooms for deep work and study: 25, 50, or 75 minutes with a partner. Body doubling, not a group lobby — no card, no session cap during the free period.";
 
 const websiteJsonLd = {
   "@context": "https://schema.org",
@@ -40,11 +40,14 @@ const softwareJsonLd = {
   applicationCategory: "ProductivityApplication",
   operatingSystem: "Web",
   description:
-    "An online focus room for deep work and study. Pick a 25, 50, or 75 minute session, get matched with a partner, and work side by side with synced timers.",
+    "An online focus room for deep work and study. Free during this period — pick a 25, 50, or 75 minute session, get matched with a partner, and work side by side with synced timers.",
   offers: {
     "@type": "Offer",
+    name: "Free",
     price: "0",
     priceCurrency: "USD",
+    description:
+      "No credit card. No weekly session cap during the free period.",
   },
   installUrl: `${APP_URL}/auth/sign-up`,
 };
@@ -97,7 +100,7 @@ const heroImage = {
     imagesizes={heroSizes}
   />
   <div class={homeStyles.root}>
-    <Navbar client:load />
+    <Navbar client:idle />
     <main>
       <Hero client:load image={heroImage} />
       <Sessions client:visible />

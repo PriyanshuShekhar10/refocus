@@ -1,9 +1,7 @@
-name: "Blog: ADHD & mental health"
+name: "Blog: ADHD"
 
-# ADHD / mental health niche — once daily at 09:00 UTC (~14:30 IST).
+# Manual only — scheduled publishing is blog-publish.yml (Mon/Wed/Fri).
 on:
-  schedule:
-    - cron: "0 9 * * *"
   workflow_dispatch:
 
 permissions:

@@ -12,8 +12,6 @@ type Entry = {
   priority: string;
 };
 
-const PAGE_SIZE = 12;
-
 export const GET: APIRoute = async () => {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
 
@@ -50,6 +48,12 @@ export const GET: APIRoute = async () => {
       changefreq: "monthly",
       priority: "0.9",
     },
+    {
+      loc: `${site}/free`,
+      lastmod: new Date().toISOString(),
+      changefreq: "weekly",
+      priority: "0.9",
+    },
     // Topic-cluster landing pages.
     { loc: `${site}/body-doubling`, changefreq: "monthly", priority: "0.8" },
     { loc: `${site}/virtual-coworking`, changefreq: "monthly", priority: "0.8" },
@@ -65,18 +69,8 @@ export const GET: APIRoute = async () => {
     { loc: `${site}/terms`, changefreq: "yearly", priority: "0.3" },
   ];
 
-  // Paginated blog listing pages (page 1 lives at /blog above).
-  const pageCount = Math.max(1, Math.ceil(posts.length / PAGE_SIZE));
-  const paginationEntries: Entry[] = Array.from(
-    { length: pageCount - 1 },
-    (_, i) => ({
-      loc: `${site}/blog/${i + 2}`,
-      changefreq: "weekly",
-      priority: "0.4",
-    }),
-  );
-
-  // Category archive pages.
+  // Category archive pages. Paginated /blog/2…N stay out of the sitemap
+  // (those pages are noindex,follow — crawlable via prev/next only).
   const categoryEntries: Entry[] = CATEGORY_IDS.map((id) => ({
     loc: `${site}/blog/category/${id}`,
     changefreq: "weekly",
@@ -95,7 +89,6 @@ export const GET: APIRoute = async () => {
   const entries = [
     ...staticEntries,
     ...categoryEntries,
-    ...paginationEntries,
     ...postEntries,
   ];
 

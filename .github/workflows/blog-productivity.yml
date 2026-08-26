@@ -1,9 +1,7 @@
 name: "Blog: Productivity"
 
-# Generic / productivity niche — once daily at 06:00 UTC (~11:30 IST).
+# Manual only — scheduled publishing is blog-publish.yml (Mon/Wed/Fri).
 on:
-  schedule:
-    - cron: "0 6 * * *"
   workflow_dispatch:
 
 permissions:

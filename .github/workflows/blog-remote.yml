@@ -1,9 +1,7 @@
-name: "Blog: Remote work & freelancing"
+name: "Blog: Remote"
 
-# Remote / freelance niche — once daily at 18:00 UTC (~23:30 IST).
+# Manual only — scheduled publishing is blog-publish.yml (Mon/Wed/Fri).
 on:
-  schedule:
-    - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:

@@ -9,11 +9,11 @@ import {
 } from "../lib/seo";
 import "../styles/blog.css";
 
-const UPDATED = "2026-08-25";
+const UPDATED = "2026-08-27";
 const canonical = "/pricing";
-const title = "Pricing — Free to start, no credit card";
+const title = "Pricing — Free, no credit card, no session cap";
 const description =
-  "Refocus is free to start with no credit card. Body doubling sessions, partner matching, synced timers, and focus rooms — $0.";
+  "Refocus is free right now: no credit card and no weekly session cap. Body doubling, partner matching, synced timers, and focus rooms at $0.";
 
 const freeFeatures = [
   "25, 50, or 75 minute focus sessions",
@@ -23,11 +23,53 @@ const freeFeatures = [
   "Friends, session requests, and community",
 ];
 
+const includedRows = [
+  {
+    item: "Session lengths",
+    detail: "25, 50, or 75 minutes — pick what matches the work in front of you",
+  },
+  {
+    item: "Partner matching",
+    detail: "Get paired with someone else who is also here to focus",
+  },
+  {
+    item: "Synced timers",
+    detail: "Start, break, and finish on the same clock as your partner",
+  },
+  {
+    item: "Focus mode",
+    detail: "Mics muted by default; cameras on for quiet presence",
+  },
+  {
+    item: "Friends & requests",
+    detail: "Save people you work well with and invite them to the next session",
+  },
+  {
+    item: "Community",
+    detail: "Share wins and find company between sessions — optional, never noisy",
+  },
+];
+
+const whoFor = [
+  {
+    title: "Students & exam prep",
+    body: "JEE, NEET, UPSC, CA, GRE — sit with someone for a timed block instead of studying alone for hours. See also our <a href=\"/study-with-me\">study with me</a> and <a href=\"/study-partner\">study partner</a> guides.",
+  },
+  {
+    title: "Remote & deep work",
+    body: "Writers, engineers, and freelancers who need a container for focus — not another Slack channel. More in <a href=\"/virtual-coworking\">virtual coworking</a>.",
+  },
+  {
+    title: "ADHD-friendly accountability",
+    body: "Body doubling helps with task initiation when “just focus” fails. Read our <a href=\"/body-doubling\">body doubling</a> guide, then try a short 25-minute session.",
+  },
+];
+
 const faqs = [
   {
     question: "Is Refocus really free?",
     answer:
-      "Yes. You can start focus sessions with no credit card. Everything listed on this page is included.",
+      "Yes. During this free period you can run focus sessions with no credit card and no weekly session cap. Everything listed on this page is included. See also /free for the short campaign summary.",
   },
   {
     question: "Do I need a credit card to sign up?",
@@ -38,6 +80,16 @@ const faqs = [
     question: "What's included?",
     answer:
       "Timed sessions (25, 50, or 75 minutes), partner matching, synced timers, quiet focus mode, friends and session requests, and community between sessions.",
+  },
+  {
+    question: "How is this different from a free Discord study lobby?",
+    answer:
+      "Refocus is a one-to-one focus room with a synced timer — not a group voice lobby. You share a goal, work quietly, and check in at the end. Less chat, more getting the thing done.",
+  },
+  {
+    question: "Will this stay free forever?",
+    answer:
+      "This is a free period, not a forever promise. If paid plans appear later, what stays free will remain clear on this page — no surprise card holds to try a session today.",
   },
 ];
 
@@ -57,14 +109,14 @@ const jsonLd = [
     applicationCategory: "ProductivityApplication",
     operatingSystem: "Web",
     description:
-      "Virtual co-working and body doubling for deep work. Free to start with no credit card.",
+      "Virtual co-working and body doubling for deep work. Free during this period — no credit card, no weekly session cap.",
     offers: {
       "@type": "Offer",
       name: "Free",
       price: "0",
       priceCurrency: "USD",
       description:
-        "Focus sessions, partner matching, synced timers, and quiet focus mode. No credit card required.",
+        "Focus sessions, partner matching, synced timers, and quiet focus mode. No credit card. No weekly session cap during the free period.",
       url: `${SITE_URL}${canonical}`,
     },
     installUrl: signUp,
@@ -102,10 +154,11 @@ const updatedLabel = new Date(UPDATED).toLocaleDateString("en-US", {
       <header class="blog-header">
         <a class="blog-back" href="/">&larr; Home</a>
         <p class="blog-eyebrow">Pricing</p>
-        <h1>Free to start. No credit card.</h1>
+        <h1>Free. No credit card. No session cap.</h1>
         <p class="blog-lede">
           Join focus sessions and get matched with a partner at $0. No card, no
-          trial trap — just sit down and start.
+          weekly cap during this free period — just sit down and start. Short
+          summary: <a href="/free">refocus.co.in/free</a>.
         </p>
         <p class="blog-meta">Last updated {updatedLabel}</p>
       </header>
@@ -117,9 +170,9 @@ const updatedLabel = new Date(UPDATED).toLocaleDateString("en-US", {
           <h2 id="tier-free">Free</h2>
           <p class="pricing-price">
             <span class="pricing-amount">$0</span>
-            <span class="pricing-period">to start</span>
+            <span class="pricing-period">free period</span>
           </p>
-          <p class="pricing-note">No credit card required</p>
+          <p class="pricing-note">No credit card · No weekly session cap</p>
           <ul class="pricing-features">
             {freeFeatures.map((f) => <li>{f}</li>)}
           </ul>
@@ -128,6 +181,70 @@ const updatedLabel = new Date(UPDATED).toLocaleDateString("en-US", {
       </div>
 
       <div class="blog-prose">
+        <h2>What you get for free</h2>
+        <p>
+          Refocus is built as a quiet <a href="/focus-room">online focus room</a>:
+          you pick a length, get matched with a partner, share what you are
+          working on, and work side by side with a synced timer. Full product
+          detail lives on the <a href="/features">features</a> page — here is
+          the plain list of what the free period includes. Campaign page:
+          <a href="/free">/free</a>.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Included</th>
+              <th scope="col">Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              includedRows.map((row) => (
+                <tr>
+                  <th scope="row">{row.item}</th>
+                  <td>{row.detail}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+
+        <h2>Who this is for</h2>
+        <p>
+          Pricing is simple because the product is simple: one person, one
+          partner, one timer. People use it for different reasons.
+        </p>
+        {
+          whoFor.map((block) => (
+            <>
+              <h3>{block.title}</h3>
+              <p set:html={block.body} />
+            </>
+          ))
+        }
+
+        <h2>What you are not paying for</h2>
+        <p>
+          There is no group lobby tax, no forced video call etiquette, and no
+          credit card “hold” to try a session. You are not buying a meeting
+          tool — you are getting a container for deep work. If you are comparing
+          tools, start with our <a href="/focusmate-alternative">Focusmate
+          alternative</a> write-up or the broader
+          <a href="/virtual-coworking">virtual coworking</a> guide.
+        </p>
+
+        <h2>How a free session works</h2>
+        <ol>
+          <li>Create an account — no card.</li>
+          <li>Choose 25, 50, or 75 minutes.</li>
+          <li>Get matched with a partner (or invite a friend).</li>
+          <li>Share your goal, work quietly, check in when the timer ends.</li>
+        </ol>
+        <p>
+          That ritual is the product. Everything else on
+          <a href="/features">features</a> supports it.
+        </p>
+
         <section class="lp-faq" aria-label="Frequently asked questions">
           <h2>Frequently asked questions</h2>
           {
@@ -144,8 +261,8 @@ const updatedLabel = new Date(UPDATED).toLocaleDateString("en-US", {
       <aside class="blog-cta">
         <h3>Ready when you are</h3>
         <p>
-          Pick a session length, get matched, and work side by side. Free to
-          start — no card.
+          Pick a session length, get matched, and work side by side. Free right
+          now — no card, no session cap.
         </p>
         <a class="blog-cta-btn" href={signUp}>Start a free session &rarr;</a>
       </aside>
@@ -154,6 +271,7 @@ const updatedLabel = new Date(UPDATED).toLocaleDateString("en-US", {
     <footer class="blog-foot">
       <span>&copy; {new Date().getFullYear()} Refocus</span>
       <a href="/">Home</a>
+      <a href="/free">Free</a>
       <a href="/features">Features</a>
       <a href="/pricing">Pricing</a>
       <a href="/blog">Blog</a>

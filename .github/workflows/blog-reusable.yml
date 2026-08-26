@@ -1,8 +1,10 @@
 name: Blog niche (reusable)
 
-# Called by per-niche daily workflows. Checks out `landing`, generates one
+# Called by blog-publish.yml (Mon/Wed/Fri) and by per-niche
+# workflow_dispatch workflows. Checks out `landing`, generates one
 # post for the given category, commits, builds, and deploys to Cloudflare.
-# Posts are usefulness/SEO-first (outbound links); Refocus is optional & soft.
+# Posts are usefulness/SEO-first (outbound links); free/commercial topics
+# also link to /pricing, /free, or alternatives hubs.
 
 on:
   workflow_call:

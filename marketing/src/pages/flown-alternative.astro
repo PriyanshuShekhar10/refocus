@@ -3,11 +3,11 @@ import LandingPage from "../layouts/LandingPage.astro";
 import { articleJsonLd, faqJsonLd } from "../lib/seo";
 import { APP_URL } from "../lib/config";
 
-const UPDATED = "2026-08-09";
+const UPDATED = "2026-08-27";
 const canonical = "/flown-alternative";
-const title = "A FLOWN Alternative: Refocus vs FLOWN";
+const title = "A Free FLOWN Alternative: Refocus vs FLOWN";
 const description =
-  "Looking for a FLOWN alternative? An honest Refocus vs FLOWN comparison — facilitated deep-work sessions and wellbeing content vs simple, free matched focus sessions.";
+  "Looking for a free FLOWN alternative? Honest Refocus vs FLOWN — facilitated membership deep-work vs simple free matched focus sessions.";
 
 const faqs = [
   {
@@ -18,7 +18,7 @@ const faqs = [
   {
     question: "Is Refocus a free alternative to FLOWN?",
     answer:
-      "Yes. Refocus is free to start with no credit card, and it focuses on one thing: matched, timed coworking sessions. FLOWN runs on a membership (with a free trial), which makes sense for its facilitated sessions and wellbeing programming but is more than some people need.",
+      "Yes. Refocus is free right now with no credit card and no weekly session cap, and it focuses on one thing: matched, timed coworking sessions. FLOWN runs on a membership (with a free trial), which makes sense for its facilitated sessions and wellbeing programming but is more than some people need.",
   },
   {
     question: "Does Refocus have facilitated or guided sessions like FLOWN?",
@@ -50,7 +50,7 @@ const article = articleJsonLd({
   updated={UPDATED}
   faqs={faqs}
   ctaTitle="Try Refocus free"
-  ctaText="Refocus is a virtual coworking room: pick a 25, 50, or 75-minute session, get matched with someone who's also there to focus, and work side by side with synced timers. Free to start, no card required."
+  ctaText="Refocus is a virtual coworking room: pick a 25, 50, or 75-minute session, get matched with someone who's also there to focus, and work side by side with synced timers. Free right now — no card, no weekly session cap."
   ctaHref={`${APP_URL}/auth/sign-up`}
   ctaLabel="Start a free session"
   jsonLd={[article, faqJsonLd(faqs)]}
@@ -104,7 +104,7 @@ const article = articleJsonLd({
         </tr>
         <tr>
           <th>Pricing</th>
-          <td>Free to start, no card required</td>
+          <td>Free period: no card, no weekly session cap</td>
           <td>Membership (free trial, no card to start)</td>
         </tr>
       </tbody>

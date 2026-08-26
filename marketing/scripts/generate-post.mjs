@@ -26,7 +26,9 @@ import { fileURLToPath } from "node:url";
 import {
   CATEGORIES,
   CATEGORY_IDS,
+  COMMERCIAL_HUBS,
   getCategory,
+  isFreeCommercialTopic,
   pickCategoryByUtcHour,
 } from "./blog-categories.mjs";
 
@@ -47,6 +49,9 @@ const LANDING_PAGES = [
   "/body-doubling — What body doubling is and how to do it online",
   "/virtual-coworking — Virtual coworking for remote/solo focus",
   "/study-with-me — Study-with-me online study rooms for exam prep",
+  "/pricing — Free period pricing (no card, no weekly session cap)",
+  "/free — Short free-period campaign summary",
+  "/focusmate-alternative — Honest Refocus vs Focusmate comparison",
 ];
 
 /** Absolute URL of the pillar page for a category. */
@@ -140,13 +145,29 @@ async function getExistingMeta() {
   return { titles, urls };
 }
 
+/**
+ * Refuse numeric suffix collisions (`slug-2`) that create near-duplicate URLs.
+ * Prefer a distinct angle slug, or fail so CI does not ship cannibalizing posts.
+ */
 async function uniqueSlug(slug) {
-  let candidate = slug || "post";
-  let n = 2;
-  while (existsSync(join(BLOG_DIR, `${candidate}.md`))) {
-    candidate = `${slug}-${n++}`;
+  const base = slug || "post";
+  if (!existsSync(join(BLOG_DIR, `${base}.md`))) return base;
+
+  const stamp = new Date()
+    .toISOString()
+    .slice(0, 10)
+    .replace(/-/g, "");
+  const angled = `${base}-${stamp}`;
+  if (!existsSync(join(BLOG_DIR, `${angled}.md`))) {
+    console.warn(
+      `Slug "${base}" already exists — using dated slug "${angled}" instead of -2.`,
+    );
+    return angled;
   }
-  return candidate;
+
+  throw new Error(
+    `Slug collision for "${base}" (and dated fallback). Pick a clearly different title/slug — do not publish near-duplicates.`,
+  );
 }
 
 /** Suggested outbound sources the model may link — real, useful sites. */
@@ -193,7 +214,12 @@ const LINK_BANK = {
   ],
 };
 
-function buildSystemPrompt(category) {
+function buildSystemPrompt(category, topic) {
+  const freeCommercial = isFreeCommercialTopic(topic);
+  const commercialRule = freeCommercial
+    ? `5b. COMMERCIAL HUB LINK (required for this free/pricing/alternative topic): also include EXACTLY ONE Markdown link to one of these pages — ${COMMERCIAL_HUBS.map((h) => `${SITE}${h.path} (${h.label})`).join("; ")}. Place it naturally mid-article as further reading (e.g. pricing or comparison detail). This is separate from the pillar link. Do not hard-sell; one calm sentence is enough.`
+    : `5b. COMMERCIAL HUB LINK (optional): if you mention free tools, pricing, or Focusmate/FLOWN-style alternatives, you MAY add one link to ${SITE}/pricing, ${SITE}/free, or ${SITE}/focusmate-alternative. Otherwise omit.`;
+
   return `You write SEO-friendly, genuinely useful long-form articles. Readers should leave with tactics they can use today — even if they never hear of any product.
 
 Niche for this article: ${category.label}
@@ -201,17 +227,19 @@ Audience: ${category.audience}
 Voice: ${category.voice}
 
 Hard requirements:
-1. TITLE: specific and searchable. No brand names. Prefer including a concrete exam, situation, or named tactic when the niche calls for it.
-2. Do NOT pitch or center any product. The article must stand alone as useful content.
+1. TITLE: specific and searchable. No brand names in the title unless comparing publicly known tools (Focusmate, Discord, Zoom). Prefer including a concrete exam, situation, or named tactic when the niche calls for it.
+2. Do NOT pitch or center any product as the whole article. The piece must stand alone as useful content. Soft product mentions are allowed only as instructed below.
 3. OUTBOUND LINKS (critical for usefulness + SEO): include 3–5 Markdown links to real external resources (official sites, reputable orgs, well-known references). Prefer links from this bank when they fit, and only use real https URLs you are confident exist:
 ${(LINK_BANK[category.id] || LINK_BANK.productivity).map((l) => `   - ${l}`).join("\n")}
    Spread links through the article (not dumped at the end). Anchor text should be natural ("NTA's JEE Main site", "CHADD's ADHD overview"), not "click here".
 4. OPTIONAL soft tool mention: You MAY mention Refocus (https://refocus.co.in) at most ONCE, mid-article, as a quiet example of virtual body doubling / co-working — never in the title or intro, never as a CTA, never more than 1–2 sentences. If the article is stronger without it, omit Refocus entirely.
 5. INTERNAL LINK (required): include EXACTLY ONE Markdown link to our guide at ${pillarUrl(category)}, placed naturally high in the article (within the first few paragraphs) as "further reading", with descriptive anchor text (e.g. "our guide to ${category.pillar?.label || "body doubling"}"). This is an internal reference, not a CTA, and does NOT count toward the 3–5 outbound links above. Do not link it more than once.
+${commercialRule}
 6. Must include: ${category.mustInclude}
 7. Avoid: ${category.avoid}
 8. Structure: Markdown with 3–5 "##" headings, short paragraphs, occasional lists. ~900–1200 words. No emojis. No "In conclusion". No invented statistics or fake studies.
-9. Be specific: name exams, tools, routines, times of day, failure modes. Vague motivational writing is a failure.`;
+9. Be specific: name exams, tools, routines, times of day, failure modes. Vague motivational writing is a failure.
+10. Do NOT try to own head commercial keywords as if this post were a product landing page. Leave "free Focusmate alternative" ownership to ${SITE}/focusmate-alternative; this post supports long-tail intent.`;
 }
 
 function buildUserPrompt(category, topic, existingTitles, existingUrls) {
@@ -229,7 +257,10 @@ function buildUserPrompt(category, topic, existingTitles, existingUrls) {
           .map((u) => `- ${u}`)
           .join("\n")}`
       : "";
-  const landing = `\n\nRequired internal link — link to this guide exactly once, high in the article, as further reading:\n- ${pillarUrl(category)}\nOther related internal pages you MAY link if genuinely relevant:\n${LANDING_PAGES.map((p) => `- ${SITE}${p}`).join("\n")}`;
+  const commercialNote = isFreeCommercialTopic(topic)
+    ? `\n\nThis topic is free/commercial-angled. Required: one link to a commercial hub (${COMMERCIAL_HUBS.map((h) => SITE + h.path).join(", ")}) in addition to the pillar link.`
+    : "";
+  const landing = `\n\nRequired internal link — link to this guide exactly once, high in the article, as further reading:\n- ${pillarUrl(category)}\nOther related internal pages you MAY link if genuinely relevant:\n${LANDING_PAGES.map((p) => `- ${SITE}${p}`).join("\n")}${commercialNote}`;
 
   return `Write a blog post in the "${category.label}" niche about: ${topic}.${avoidTitles}${landing}${internal}
 
@@ -255,7 +286,7 @@ async function callOpenAI(apiKey, category, topic, existingTitles, existingUrls)
       temperature: 0.85,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: buildSystemPrompt(category) },
+        { role: "system", content: buildSystemPrompt(category, topic) },
         {
           role: "user",
           content: buildUserPrompt(

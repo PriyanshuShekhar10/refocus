@@ -3,11 +3,11 @@ import LandingPage from "../layouts/LandingPage.astro";
 import { articleJsonLd, faqJsonLd } from "../lib/seo";
 import { APP_URL } from "../lib/config";
 
-const UPDATED = "2026-08-09";
+const UPDATED = "2026-08-27";
 const canonical = "/cofocus-alternative";
 const title = "A Cofocus Alternative: Refocus vs Cofocus";
 const description =
-  "Looking for a Cofocus alternative? An honest Refocus vs Cofocus comparison — session lengths, focus mode, and a community layer for virtual coworking and body doubling.";
+  "Looking for a Cofocus alternative? Honest Refocus vs Cofocus — session lengths, focus mode, community, and free virtual coworking.";
 
 const faqs = [
   {
@@ -23,7 +23,7 @@ const faqs = [
   {
     question: "Is Refocus free like Cofocus?",
     answer:
-      "Refocus is free to start with no credit card required. Cofocus is also positioned as a simple, low-cost tool; pricing details can change, so check cofocus.one for the latest before deciding.",
+      "Refocus is free right now with no credit card and no weekly session cap. Cofocus is also positioned as a simple, low-cost tool; pricing details can change, so check cofocus.one for the latest before deciding. See /free and /pricing.",
   },
   {
     question: "Refocus vs Cofocus — which should I choose?",
@@ -50,7 +50,7 @@ const article = articleJsonLd({
   updated={UPDATED}
   faqs={faqs}
   ctaTitle="Try Refocus free"
-  ctaText="Refocus is a virtual coworking room: pick a 25, 50, or 75-minute session, get matched with someone who's also there to focus, and work side by side with synced timers. Free to start, no card required."
+  ctaText="Refocus is a virtual coworking room: pick a 25, 50, or 75-minute session, get matched with someone who's also there to focus, and work side by side with synced timers. Free right now — no card, no weekly session cap."
   ctaHref={`${APP_URL}/auth/sign-up`}
   ctaLabel="Start a free session"
   jsonLd={[article, faqJsonLd(faqs)]}

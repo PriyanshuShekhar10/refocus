@@ -9,6 +9,7 @@ function cn(...classes: (string | false | null | undefined)[]) {
 const navItems = [
   { name: "Sessions", link: "/#sessions" },
   { name: "Features", link: "/features" },
+  { name: "Free", link: "/free" },
   { name: "Pricing", link: "/pricing" },
   { name: "FAQ", link: "/#faq" },
 ];
@@ -43,7 +44,15 @@ export default function Navbar() {
     <header className={cn(styles.header, scrolled && styles.scrolled)}>
       <div className={styles.inner}>
         <a href="/" className={styles.logo} onClick={close}>
-          <img src="/logo.svg" alt="Refocus" width={182} height={52} />
+          <img
+            src="/logo.svg"
+            alt="Refocus"
+            width={182}
+            height={52}
+            decoding="async"
+            // @ts-expect-error fetchpriority is a valid HTML attribute
+            fetchPriority="low"
+          />
         </a>
 
         <nav className={styles.links} aria-label="Primary">
