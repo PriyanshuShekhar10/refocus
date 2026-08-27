@@ -26,6 +26,11 @@ function ensureInit() {
     persistence: "localStorage+cookie",
     capture_pageview: true,
     capture_pageleave: true,
+    disable_session_recording: false,
+    session_recording: {
+      maskAllInputs: true,
+      maskTextSelector: ".ph-no-capture",
+    },
   });
   initialized = true;
 }
