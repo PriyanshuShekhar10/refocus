@@ -20,12 +20,13 @@ export default function CrewListClient() {
   const fetchDays = rangeMode === "custom" ? CREW_MAX_DAYS : rangeMode;
   const [data, setData] = useState<CrewStatsPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [customFrom, setCustomFrom] = useState<string | null>(null);
   const [customTo, setCustomTo] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    setRefreshing(true);
     setError(null);
     try {
       const res = await fetch(`/api/crew/stats?days=${fetchDays}`);
@@ -35,7 +36,8 @@ export default function CrewListClient() {
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setLoading(false);
+      setRefreshing(false);
+      setInitialLoad(false);
     }
   }, [fetchDays]);
 
@@ -120,6 +122,7 @@ export default function CrewListClient() {
               {rangeMode === "custom"
                 ? "Totals for the custom range · tap a person for details"
                 : "Totals for the selected window · tap a person for details"}
+              {refreshing ? " · Updating…" : ""}
             </p>
           </div>
           <div className="flex w-full shrink-0 gap-1 rounded-lg border border-neutral-200 bg-white p-1 sm:w-auto">
@@ -206,14 +209,24 @@ export default function CrewListClient() {
           </div>
         ) : null}
 
-        {loading && !data ? (
+        {initialLoad && !data ? (
           <p className="text-sm text-neutral-500">Loading…</p>
         ) : null}
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
+        {initialLoad && !data ? (
+          <div className="hidden overflow-hidden rounded-xl border border-neutral-200 bg-white md:block">
+            <div className="animate-pulse space-y-0 p-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="mb-3 h-8 rounded bg-neutral-100" />
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         {/* Mobile: stacked cards */}
-        <div className="space-y-3 md:hidden">
-          {memberRows.length === 0 && !loading ? (
+        <div className={`space-y-3 md:hidden ${refreshing ? "opacity-70" : ""}`}>
+          {memberRows.length === 0 && !initialLoad ? (
             <div className="rounded-xl border border-neutral-200 bg-white px-4 py-10 text-center text-sm text-neutral-500">
               No crew members yet
             </div>
@@ -267,7 +280,10 @@ export default function CrewListClient() {
         </div>
 
         {/* Desktop: table */}
-        <div className="hidden overflow-hidden rounded-xl border border-neutral-200 bg-white md:block">
+        {!initialLoad || data ? (
+        <div
+          className={`hidden overflow-hidden rounded-xl border border-neutral-200 bg-white md:block ${refreshing ? "opacity-70" : ""}`}
+        >
           <div className="overflow-x-auto">
             <table className="w-full min-w-[36rem] text-sm">
               <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
@@ -290,7 +306,7 @@ export default function CrewListClient() {
                 </tr>
               </thead>
               <tbody>
-                {memberRows.length === 0 && !loading ? (
+                {memberRows.length === 0 && !initialLoad ? (
                   <tr>
                     <td
                       colSpan={8}
@@ -343,6 +359,7 @@ export default function CrewListClient() {
             </table>
           </div>
         </div>
+        ) : null}
 
         <section className="mt-6 rounded-xl border border-neutral-200 bg-white px-4 py-4 sm:px-5">
           <h2 className="text-sm font-semibold text-neutral-900">

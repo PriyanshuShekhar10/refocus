@@ -38,6 +38,7 @@ export function mockCollection(overrides: Record<string, unknown> = {}) {
     findOne: vi.fn().mockResolvedValue(null),
     insertOne: vi.fn().mockResolvedValue({ insertedId: new ObjectId() }),
     updateOne: vi.fn().mockResolvedValue({ modifiedCount: 1 }),
+    bulkWrite: vi.fn().mockResolvedValue({ modifiedCount: 1 }),
     updateMany: vi.fn().mockResolvedValue({ modifiedCount: 0 }),
     deleteOne: vi.fn().mockResolvedValue({ deletedCount: 1 }),
     deleteMany: vi.fn().mockResolvedValue({ deletedCount: 0 }),

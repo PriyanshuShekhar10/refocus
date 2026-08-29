@@ -9,5 +9,9 @@ export async function GET(req: NextRequest) {
   }
 
   const stats = await getCrewStats(days);
-  return NextResponse.json(stats);
+  return NextResponse.json(stats, {
+    headers: {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+    },
+  });
 }

@@ -20,6 +20,7 @@ vi.mock("@/lib/engagementCrew", () => ({
 }));
 
 import {
+  clearCrewStatsCache,
   getCrewStats,
 } from "@/lib/crewStats";
 
@@ -35,6 +36,7 @@ describe("crewStats", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearCrewStatsCache();
     vi.useFakeTimers();
     vi.setSystemTime(now);
     resolveEngagementCrewMembers.mockResolvedValue([
@@ -59,31 +61,26 @@ describe("crewStats", () => {
 
   it("aggregates created/deleted/joined/attended/finished and qualifying for today", async () => {
     const today = new Date("2026-08-21T08:00:00+05:30");
-    sessionsCol.find
-      .mockReturnValueOnce(
-        findToArray([
-          { _id: "c1", owner_id: userId, created_at: today, participant_count: 1 },
-          { _id: "c2", owner_id: userId, created_at: today, participant_count: 1 },
-        ]),
-      )
-      .mockReturnValueOnce(
-        findToArray([
-          {
-            _id: "j1",
-            owner_id: "someone-else",
-            end_time: today,
-            session_participants: [
-              {
-                user_id: userId,
-                joined_at: today,
-                call_joined_at: today,
-                call_left_at: today,
-                call_completed: true,
-              },
-            ],
-          },
-        ]),
-      );
+    sessionsCol.find.mockReturnValueOnce(
+      findToArray([
+        { _id: "c1", owner_id: userId, created_at: today, participant_count: 1 },
+        { _id: "c2", owner_id: userId, created_at: today, participant_count: 1 },
+        {
+          _id: "j1",
+          owner_id: "someone-else",
+          end_time: today,
+          session_participants: [
+            {
+              user_id: userId,
+              joined_at: today,
+              call_joined_at: today,
+              call_left_at: today,
+              call_completed: true,
+            },
+          ],
+        },
+      ]),
+    );
     lifecycleCol.find.mockReturnValue(
       findToArray([{ userId, at: today }]),
     );
@@ -119,36 +116,34 @@ describe("crewStats", () => {
   it("computes inactive streak when today is below 3 qualifying sessions", async () => {
     const today = new Date("2026-08-21T08:00:00+05:30");
     const compliantDay = new Date("2026-08-19T08:00:00+05:30");
-    sessionsCol.find
-      .mockReturnValueOnce(
-        findToArray([
-          {
-            _id: "old1",
-            owner_id: userId,
-            created_at: compliantDay,
-            participant_count: 1,
-          },
-          {
-            _id: "old2",
-            owner_id: userId,
-            created_at: compliantDay,
-            participant_count: 1,
-          },
-          {
-            _id: "old3",
-            owner_id: userId,
-            created_at: compliantDay,
-            participant_count: 1,
-          },
-          {
-            _id: "today1",
-            owner_id: userId,
-            created_at: today,
-            participant_count: 1,
-          },
-        ]),
-      )
-      .mockReturnValueOnce(findToArray([]));
+    sessionsCol.find.mockReturnValueOnce(
+      findToArray([
+        {
+          _id: "old1",
+          owner_id: userId,
+          created_at: compliantDay,
+          participant_count: 1,
+        },
+        {
+          _id: "old2",
+          owner_id: userId,
+          created_at: compliantDay,
+          participant_count: 1,
+        },
+        {
+          _id: "old3",
+          owner_id: userId,
+          created_at: compliantDay,
+          participant_count: 1,
+        },
+        {
+          _id: "today1",
+          owner_id: userId,
+          created_at: today,
+          participant_count: 1,
+        },
+      ]),
+    );
     lifecycleCol.find.mockReturnValue(findToArray([]));
 
     const stats = await getCrewStats(7);

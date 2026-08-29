@@ -64,7 +64,9 @@ export async function listEngagementCrew(): Promise<
 }
 
 /** Re-resolve userId/name for roster rows (in case they registered after add). */
-export async function resolveEngagementCrewMembers(): Promise<
+export async function resolveEngagementCrewMembers(options?: {
+  writeBack?: boolean;
+}): Promise<
   Array<{
     email: string;
     canonicalEmail: string;
@@ -72,12 +74,81 @@ export async function resolveEngagementCrewMembers(): Promise<
     name: string | null;
   }>
 > {
+  const writeBack = options?.writeBack ?? true;
   const db = await getDb();
   const rows = (await db
     .collection<EngagementCrewMember>("engagement_crew")
     .find({})
     .sort({ addedAt: 1 })
     .toArray()) as EngagementCrewMember[];
+
+  const userProjection = {
+    firstname: 1,
+    lastname: 1,
+    name: 1,
+    username: 1,
+    email: 1,
+    canonicalEmail: 1,
+  } as const;
+
+  type UserRow = {
+    _id: ObjectId;
+    firstname?: string | null;
+    lastname?: string | null;
+    name?: string | null;
+    username?: string | null;
+    email?: string | null;
+    canonicalEmail?: string | null;
+  };
+
+  const idsToFetch = rows
+    .map((row) => row.userId)
+    .filter((id): id is string => typeof id === "string" && ObjectId.isValid(id))
+    .map((id) => new ObjectId(id));
+
+  const usersById = new Map<string, UserRow>();
+  if (idsToFetch.length > 0) {
+    const users = (await db
+      .collection("users")
+      .find({ _id: { $in: idsToFetch } }, { projection: userProjection })
+      .toArray()) as UserRow[];
+    for (const user of users) {
+      usersById.set(String(user._id), user);
+    }
+  }
+
+  const usersByEmail = new Map<string, UserRow>();
+  const unresolved = rows.filter((row) => !row.userId);
+  if (unresolved.length > 0) {
+    const emailKeys = new Set<string>();
+    for (const row of unresolved) {
+      const display = row.email.trim().toLowerCase();
+      emailKeys.add(display);
+      emailKeys.add(canonicalEmail(display));
+    }
+    const keys = [...emailKeys];
+    const users = (await db
+      .collection("users")
+      .find(
+        {
+          $or: [{ email: { $in: keys } }, { canonicalEmail: { $in: keys } }],
+        },
+        { projection: userProjection },
+      )
+      .toArray()) as UserRow[];
+    for (const user of users) {
+      if (user.email) usersByEmail.set(user.email.trim().toLowerCase(), user);
+      if (user.canonicalEmail) {
+        usersByEmail.set(user.canonicalEmail.trim().toLowerCase(), user);
+      }
+    }
+  }
+
+  const writeBackOps: Array<{
+    canonicalEmail: string;
+    userId: string;
+    name: string | null;
+  }> = [];
 
   const out: Array<{
     email: string;
@@ -89,50 +160,45 @@ export async function resolveEngagementCrewMembers(): Promise<
   for (const row of rows) {
     let userId = row.userId;
     let name = row.name;
-    if (!userId) {
-      const user = (await findUserByEmailIdentity(row.email)) as {
-        _id: ObjectId;
-        firstname?: string | null;
-        lastname?: string | null;
-        name?: string | null;
-        username?: string | null;
-        email?: string | null;
-      } | null;
+
+    if (userId && usersById.has(userId)) {
+      name = displayName(usersById.get(userId) ?? null) ?? name;
+    } else if (!userId) {
+      const display = row.email.trim().toLowerCase();
+      const user =
+        usersByEmail.get(display) ??
+        usersByEmail.get(canonicalEmail(display)) ??
+        null;
       if (user) {
         userId = String(user._id);
         name = displayName(user);
-        await db.collection("engagement_crew").updateOne(
-          { canonicalEmail: row.canonicalEmail },
-          { $set: { userId, name } },
-        );
+        if (writeBack) {
+          writeBackOps.push({
+            canonicalEmail: row.canonicalEmail,
+            userId,
+            name,
+          });
+        }
       }
-    } else if (ObjectId.isValid(userId)) {
-      const user = (await db.collection("users").findOne(
-        { _id: new ObjectId(userId) },
-        {
-          projection: {
-            firstname: 1,
-            lastname: 1,
-            name: 1,
-            username: 1,
-            email: 1,
-          },
-        },
-      )) as {
-        firstname?: string | null;
-        lastname?: string | null;
-        name?: string | null;
-        username?: string | null;
-        email?: string | null;
-      } | null;
-      name = displayName(user) ?? name;
     }
+
     out.push({
       email: row.email,
       canonicalEmail: row.canonicalEmail,
       userId,
       name,
     });
+  }
+
+  if (writeBack && writeBackOps.length > 0) {
+    await db.collection("engagement_crew").bulkWrite(
+      writeBackOps.map((op) => ({
+        updateOne: {
+          filter: { canonicalEmail: op.canonicalEmail },
+          update: { $set: { userId: op.userId, name: op.name } },
+        },
+      })),
+    );
   }
 
   return out;

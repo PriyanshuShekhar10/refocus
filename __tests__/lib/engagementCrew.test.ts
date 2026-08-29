@@ -35,6 +35,9 @@ describe("engagementCrew", () => {
       }),
     });
     usersCol.findOne.mockResolvedValue(null);
+    usersCol.find.mockReturnValue({
+      toArray: vi.fn().mockResolvedValue([]),
+    });
   });
 
   it("rejects invalid email", async () => {
@@ -163,15 +166,19 @@ describe("engagementCrew", () => {
         ]),
       }),
     });
-    usersCol.findOne.mockResolvedValue({
-      _id: userId,
-      email: "new@example.com",
-      name: "New Hire",
+    usersCol.find.mockReturnValue({
+      toArray: vi.fn().mockResolvedValue([
+        {
+          _id: userId,
+          email: "new@example.com",
+          name: "New Hire",
+        },
+      ]),
     });
 
     const resolved = await resolveEngagementCrewMembers();
     expect(resolved[0]?.userId).toBe(String(userId));
     expect(resolved[0]?.name).toBe("New Hire");
-    expect(crewCol.updateOne).toHaveBeenCalled();
+    expect(crewCol.bulkWrite).toHaveBeenCalled();
   });
 });

@@ -101,12 +101,28 @@ export function computeInactiveDays(
   earliestKey?: string,
   firstActivityKey?: string | null,
 ): number {
-  const byDate = new Map(days.map((d) => [d.date, d.qualifying]));
-  if ((byDate.get(todayKey) ?? 0) >= 3) return 0;
+  return computeInactiveDaysFromMap(
+    new Map(days.map((d) => [d.date, d.qualifying])),
+    todayKey,
+    earliestKey,
+    firstActivityKey,
+  );
+}
 
-  const hardStop = earliestKey ?? days[0]?.date ?? todayKey;
+/** Sparse qualifying map variant — avoids building 365-day arrays per member. */
+export function computeInactiveDaysFromMap(
+  qualifyingByDate: Map<string, number>,
+  todayKey: string,
+  earliestKey?: string,
+  firstActivityKey?: string | null,
+): number {
+  if ((qualifyingByDate.get(todayKey) ?? 0) >= 3) return 0;
+
+  const hardStop = earliestKey ?? todayKey;
   const firstQualifyingKey = earliestDateKey(
-    days.filter((d) => d.qualifying > 0).map((d) => d.date),
+    [...qualifyingByDate.entries()]
+      .filter(([, q]) => q > 0)
+      .map(([date]) => date),
   );
   const floor =
     earliestDateKey(
@@ -119,7 +135,7 @@ export function computeInactiveDays(
   let cursor = todayKey;
 
   while (cursor >= floor) {
-    if ((byDate.get(cursor) ?? 0) >= 3) break;
+    if ((qualifyingByDate.get(cursor) ?? 0) >= 3) break;
     streak += 1;
     if (cursor === floor) break;
     cursor = prevDayKey(cursor);

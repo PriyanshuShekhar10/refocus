@@ -2,13 +2,14 @@ import { TIME_CONFIG } from "@/constants/calendar";
 import { getDb } from "@/lib/mongodb";
 import { resolveEngagementCrewMembers } from "@/lib/engagementCrew";
 import {
-  computeInactiveDays,
+  computeInactiveDaysFromMap,
   getQualifyingEventForMember,
   type QualifyingSessionDoc,
 } from "@/lib/crewQualifying";
 import { getISTDayBounds } from "@/lib/sessionReminders";
 
 const STREAK_LOOKBACK_DAYS = 365;
+const CACHE_TTL_MS = 60_000;
 
 export type CrewDayCounts = {
   date: string;
@@ -28,6 +29,24 @@ export type CrewMemberStats = {
   days: CrewDayCounts[];
   inactiveDays: number;
 };
+
+type CrewStatsResult = {
+  days: number;
+  timezone: string;
+  todayKey: string;
+  fromKey: string;
+  toKey: string;
+  members: CrewMemberStats[];
+};
+
+const crewStatsCache = new Map<
+  string,
+  { expiresAt: number; value: CrewStatsResult }
+>();
+
+export function clearCrewStatsCache(): void {
+  crewStatsCache.clear();
+}
 
 function istDateKey(date: Date): string {
   return date.toLocaleDateString("en-CA", { timeZone: TIME_CONFIG.timezone });
@@ -95,14 +114,18 @@ function noteFirstActivity(
   }
 }
 
-function sessionIsRelevantToUser(
-  doc: QualifyingSessionDoc,
-  userId: string,
-): boolean {
-  if (String(doc.owner_id) === userId) return true;
-  return (doc.session_participants ?? []).some(
-    (p) => p.user_id && String(p.user_id) === userId,
-  );
+function relevantUserIds(
+  session: QualifyingSessionDoc,
+  userIdSet: ReadonlySet<string>,
+): string[] {
+  const ids = new Set<string>();
+  const ownerId = String(session.owner_id);
+  if (userIdSet.has(ownerId)) ids.add(ownerId);
+  for (const p of session.session_participants ?? []) {
+    const uid = p.user_id ? String(p.user_id) : "";
+    if (uid && userIdSet.has(uid)) ids.add(uid);
+  }
+  return [...ids];
 }
 
 function toQualifyingSession(doc: {
@@ -121,29 +144,18 @@ function toQualifyingSession(doc: {
   };
 }
 
-/**
- * Aggregate crew session metrics for the last `days` IST calendar days
- * ending today (inclusive).
- */
-export async function getCrewStats(days = 14): Promise<{
-  days: number;
-  timezone: string;
-  todayKey: string;
-  fromKey: string;
-  toKey: string;
-  members: CrewMemberStats[];
-}> {
+async function computeCrewStats(days: number): Promise<CrewStatsResult> {
   const safeDays = Math.min(90, Math.max(1, Math.floor(days)));
   const now = new Date();
   const dayKeys = buildDayKeys(safeDays, now);
   const streakDayKeys = buildDayKeys(STREAK_LOOKBACK_DAYS, now);
-  const todayKey = dayKeys[dayKeys.length - 1];
+  const todayKey = dayKeys[dayKeys.length - 1]!;
   const { start, end } = rangeBounds(dayKeys);
   const { start: streakStart, end: streakEnd } = rangeBounds(streakDayKeys);
   const dayKeySet = new Set(dayKeys);
   const streakDayKeySet = new Set(streakDayKeys);
 
-  const members = await resolveEngagementCrewMembers();
+  const members = await resolveEngagementCrewMembers({ writeBack: false });
   const userIds = members
     .map((m) => m.userId)
     .filter((id): id is string => Boolean(id));
@@ -158,19 +170,28 @@ export async function getCrewStats(days = 14): Promise<{
     const padStart = new Date(streakStart.getTime() - 2 * 24 * 60 * 60 * 1000);
     const padEnd = new Date(streakEnd.getTime() + 24 * 60 * 60 * 1000);
 
-    const [createdDocs, deletedDocs, participantDocs] = await Promise.all([
+    const [sessionDocs, deletedDocs] = await Promise.all([
       db
         .collection("sessions")
         .find(
           {
-            owner_id: { $in: userIds },
-            created_at: { $gte: streakStart, $lt: streakEnd },
+            $or: [
+              {
+                owner_id: { $in: userIds },
+                created_at: { $gte: streakStart, $lt: streakEnd },
+              },
+              {
+                "session_participants.user_id": { $in: userIds },
+                start_time: { $gte: padStart, $lt: padEnd },
+              },
+            ],
           },
           {
             projection: {
               owner_id: 1,
               created_at: 1,
               participant_count: 1,
+              end_time: 1,
               session_participants: 1,
             },
           },
@@ -185,24 +206,6 @@ export async function getCrewStats(days = 14): Promise<{
             at: { $gte: streakStart, $lt: streakEnd },
           },
           { projection: { userId: 1, at: 1, sessionId: 1 } },
-        )
-        .toArray(),
-      db
-        .collection("sessions")
-        .find(
-          {
-            "session_participants.user_id": { $in: userIds },
-            start_time: { $gte: padStart, $lt: padEnd },
-          },
-          {
-            projection: {
-              owner_id: 1,
-              created_at: 1,
-              participant_count: 1,
-              end_time: 1,
-              session_participants: 1,
-            },
-          },
         )
         .toArray(),
     ]);
@@ -221,37 +224,25 @@ export async function getCrewStats(days = 14): Promise<{
     }
 
     const sessionById = new Map<string, QualifyingSessionDoc>();
-    for (const doc of participantDocs) {
+    for (const doc of sessionDocs) {
       sessionById.set(String(doc._id), toQualifyingSession(doc));
     }
-    for (const doc of createdDocs) {
-      const id = String(doc._id);
-      if (!sessionById.has(id)) {
-        sessionById.set(id, toQualifyingSession(doc));
-      }
-    }
 
-    for (const doc of createdDocs) {
+    for (const doc of sessionDocs) {
       const ownerId = String(doc.owner_id);
-      if (!userIdSet.has(ownerId) || !(doc.created_at instanceof Date)) continue;
-      const key = istDateKey(doc.created_at);
-      if (streakDayKeySet.has(key)) {
-        noteFirstActivity(firstActivityByUser, ownerId, key);
+      if (
+        userIdSet.has(ownerId) &&
+        doc.created_at instanceof Date
+      ) {
+        const key = istDateKey(doc.created_at);
+        if (streakDayKeySet.has(key)) {
+          noteFirstActivity(firstActivityByUser, ownerId, key);
+        }
+        if (dayKeySet.has(key)) {
+          bump(counts, ownerId, key, "created");
+        }
       }
-      if (!dayKeySet.has(key)) continue;
-      bump(counts, ownerId, key, "created");
-    }
 
-    for (const doc of deletedDocs) {
-      const uid = String(doc.userId);
-      if (!userIdSet.has(uid) || !(doc.at instanceof Date)) continue;
-      const key = istDateKey(doc.at);
-      if (!dayKeySet.has(key)) continue;
-      bump(counts, uid, key, "deleted");
-    }
-
-    for (const doc of participantDocs) {
-      const ownerId = String(doc.owner_id);
       const participants = (doc.session_participants ?? []) as Array<{
         user_id?: string;
         joined_at?: Date | string;
@@ -317,9 +308,16 @@ export async function getCrewStats(days = 14): Promise<{
       }
     }
 
+    for (const doc of deletedDocs) {
+      const uid = String(doc.userId);
+      if (!userIdSet.has(uid) || !(doc.at instanceof Date)) continue;
+      const key = istDateKey(doc.at);
+      if (!dayKeySet.has(key)) continue;
+      bump(counts, uid, key, "deleted");
+    }
+
     for (const sessionDoc of sessionById.values()) {
-      for (const uid of userIds) {
-        if (!sessionIsRelevantToUser(sessionDoc, uid)) continue;
+      for (const uid of relevantUserIds(sessionDoc, userIdSet)) {
         const deletedIds = deletedByUser.get(uid) ?? new Set<string>();
         const event = getQualifyingEventForMember(sessionDoc, uid, deletedIds);
         if (!event || !streakDayKeySet.has(event.dateKey)) continue;
@@ -333,13 +331,16 @@ export async function getCrewStats(days = 14): Promise<{
 
   const result: CrewMemberStats[] = members.map((m) => {
     const byDay = m.userId ? counts.get(m.userId) : undefined;
-    const streakSeries = streakDayKeys.map((date) => {
-      const row = byDay?.get(date);
-      return row ? { date, qualifying: row.qualifying } : { date, qualifying: 0 };
-    });
+    const qualifyingByDate = new Map<string, number>();
+    if (byDay) {
+      for (const [date, row] of byDay.entries()) {
+        if (row.qualifying > 0) qualifyingByDate.set(date, row.qualifying);
+      }
+    }
+
     const inactiveDays = m.userId
-      ? computeInactiveDays(
-          streakSeries,
+      ? computeInactiveDaysFromMap(
+          qualifyingByDate,
           todayKey,
           streakEarliest,
           firstActivityByUser.get(m.userId) ?? null,
@@ -369,4 +370,24 @@ export async function getCrewStats(days = 14): Promise<{
     toKey: todayKey,
     members: result,
   };
+}
+
+/**
+ * Aggregate crew session metrics for the last `days` IST calendar days
+ * ending today (inclusive). Responses are cached briefly in memory.
+ */
+export async function getCrewStats(days = 14): Promise<CrewStatsResult> {
+  const safeDays = Math.min(90, Math.max(1, Math.floor(days)));
+  const cacheKey = String(safeDays);
+  const cached = crewStatsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  const value = await computeCrewStats(safeDays);
+  crewStatsCache.set(cacheKey, {
+    expiresAt: Date.now() + CACHE_TTL_MS,
+    value,
+  });
+  return value;
 }
