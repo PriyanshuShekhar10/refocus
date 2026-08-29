@@ -28,7 +28,7 @@ export type CrewStatsPayload = {
   members: CrewMemberStats[];
 };
 
-export type MetricKey = Exclude<keyof DayCounts, "date">;
+export type MetricKey = Exclude<keyof DayCounts, "date" | "qualifying">;
 
 export const CREW_METRICS: { key: MetricKey; label: string }[] = [
   { key: "created", label: "Created" },
