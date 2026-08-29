@@ -5,6 +5,7 @@ export type DayCounts = {
   joined: number;
   attended: number;
   finished: number;
+  qualifying: number;
 };
 
 export type CrewMemberStats = {
@@ -13,6 +14,7 @@ export type CrewMemberStats = {
   userId: string | null;
   today: DayCounts;
   days: DayCounts[];
+  inactiveDays: number;
 };
 
 export type CrewStatsPayload = {
@@ -47,6 +49,11 @@ export const CREW_METRIC_COLORS: Record<MetricKey, string> = {
 
 export const CREW_RANGE_OPTIONS = [7, 14, 30] as const;
 
+export type CrewRangeMode = (typeof CREW_RANGE_OPTIONS)[number] | "custom";
+
+/** Max days the stats API will return (used for custom range mode). */
+export const CREW_MAX_DAYS = 90;
+
 export const CREW_DAYS_PAGE_SIZE = 7;
 
 export function dayHasAnyActivity(day: DayCounts): boolean {
@@ -55,7 +62,8 @@ export function dayHasAnyActivity(day: DayCounts): boolean {
     day.deleted > 0 ||
     day.joined > 0 ||
     day.attended > 0 ||
-    day.finished > 0
+    day.finished > 0 ||
+    day.qualifying > 0
   );
 }
 
@@ -67,6 +75,7 @@ export function sumCrewDays(days: DayCounts[]): Omit<DayCounts, "date"> {
     joined: 0,
     attended: 0,
     finished: 0,
+    qualifying: 0,
   };
   for (const day of days) {
     total.created += day.created;
@@ -74,9 +83,43 @@ export function sumCrewDays(days: DayCounts[]): Omit<DayCounts, "date"> {
     total.joined += day.joined;
     total.attended += day.attended;
     total.finished += day.finished;
+    total.qualifying += day.qualifying;
   }
   return total;
 }
+
+/** Days in a range with 3+ qualifying sessions. */
+export function countCompliantDays(days: DayCounts[]): number {
+  return days.filter((d) => d.qualifying >= 3).length;
+}
+
+export const CREW_ACTIVITY_FORMULA = {
+  title: "How activity is measured",
+  sections: [
+    {
+      heading: "Compliant days",
+      body: "Calendar days in the selected range with 3 or more qualifying sessions.",
+    },
+    {
+      heading: "Inactive days",
+      body: "Consecutive days of inactivity as of today — how long since the last compliant day (today counts if still below 3). Not affected by the From/To range picker.",
+    },
+    {
+      heading: "Qualifying session",
+      body: "Counts once per day toward the daily total when you:",
+      counts: [
+        "Create an unmatched slot (no partner yet)",
+        "Join someone else's session",
+        "Create a matched slot and join the call",
+      ],
+      excludes: [
+        "Matched but never joined the call",
+        "Deleted sessions",
+        "Deleting a session alone (not activity)",
+      ],
+    },
+  ],
+} as const;
 
 /** Format an IST calendar day key (YYYY-MM-DD) for display. */
 export function formatCrewDayLabel(ymd: string): string {

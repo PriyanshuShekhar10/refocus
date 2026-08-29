@@ -3,27 +3,32 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  countCompliantDays,
+  CREW_ACTIVITY_FORMULA,
+  CREW_MAX_DAYS,
   CREW_METRICS,
   CREW_RANGE_OPTIONS,
   crewMemberPath,
   formatCrewDateRange,
   sumCrewDays,
+  type CrewRangeMode,
   type CrewStatsPayload,
 } from "./crewShared";
 
 export default function CrewListClient() {
-  const [days, setDays] = useState<number>(14);
+  const [rangeMode, setRangeMode] = useState<CrewRangeMode>(14);
+  const fetchDays = rangeMode === "custom" ? CREW_MAX_DAYS : rangeMode;
   const [data, setData] = useState<CrewStatsPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [rangeFrom, setRangeFrom] = useState<string | null>(null);
-  const [rangeTo, setRangeTo] = useState<string | null>(null);
+  const [customFrom, setCustomFrom] = useState<string | null>(null);
+  const [customTo, setCustomTo] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/crew/stats?days=${days}`);
+      const res = await fetch(`/api/crew/stats?days=${fetchDays}`);
       const json = (await res.json()) as CrewStatsPayload & { error?: string };
       if (!res.ok) throw new Error(json.error || "Failed to load");
       setData(json);
@@ -32,43 +37,58 @@ export default function CrewListClient() {
     } finally {
       setLoading(false);
     }
-  }, [days]);
+  }, [fetchDays]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  // When the loaded window changes, reset the custom range to the full window.
   useEffect(() => {
-    if (!data?.fromKey || !data?.toKey) return;
-    setRangeFrom(data.fromKey);
-    setRangeTo(data.toKey);
-  }, [data?.fromKey, data?.toKey]);
+    if (!data || rangeMode !== "custom") return;
+    setCustomFrom((prev) => {
+      if (prev && prev >= data.fromKey && prev <= data.toKey) return prev;
+      return data.fromKey;
+    });
+    setCustomTo((prev) => {
+      if (prev && prev >= data.fromKey && prev <= data.toKey) return prev;
+      return data.toKey;
+    });
+  }, [data, rangeMode]);
 
   const members = data?.members ?? [];
 
   const effectiveFrom = useMemo(() => {
-    if (!rangeFrom || !rangeTo) return rangeFrom;
-    return rangeFrom <= rangeTo ? rangeFrom : rangeTo;
-  }, [rangeFrom, rangeTo]);
+    if (!data) return null;
+    if (rangeMode !== "custom") return data.fromKey;
+    if (!customFrom || !customTo) return data.fromKey;
+    return customFrom <= customTo ? customFrom : customTo;
+  }, [customFrom, customTo, data, rangeMode]);
 
   const effectiveTo = useMemo(() => {
-    if (!rangeFrom || !rangeTo) return rangeTo;
-    return rangeFrom <= rangeTo ? rangeTo : rangeFrom;
-  }, [rangeFrom, rangeTo]);
+    if (!data) return null;
+    if (rangeMode !== "custom") return data.toKey;
+    if (!customFrom || !customTo) return data.toKey;
+    return customFrom <= customTo ? customTo : customFrom;
+  }, [customFrom, customTo, data, rangeMode]);
 
   const dateRangeLabel = useMemo(() => {
     if (!effectiveFrom || !effectiveTo) return null;
+    if (rangeMode !== "custom") {
+      return `Last ${rangeMode} days`;
+    }
     return formatCrewDateRange(effectiveFrom, effectiveTo);
-  }, [effectiveFrom, effectiveTo]);
+  }, [effectiveFrom, effectiveTo, rangeMode]);
 
-  const isFullWindow =
-    !!data && rangeFrom === data.fromKey && rangeTo === data.toKey;
+  const isFullCustomWindow =
+    rangeMode === "custom" &&
+    !!data &&
+    customFrom === data.fromKey &&
+    customTo === data.toKey;
 
-  const setFullWindow = () => {
+  const resetCustomWindow = () => {
     if (!data) return;
-    setRangeFrom(data.fromKey);
-    setRangeTo(data.toKey);
+    setCustomFrom(data.fromKey);
+    setCustomTo(data.toKey);
   };
 
   const memberRows = members.map((m) => {
@@ -78,7 +98,11 @@ export default function CrewListClient() {
             (d) => d.date >= effectiveFrom && d.date <= effectiveTo,
           )
         : m.days;
-    return { member: m, totals: sumCrewDays(sliced) };
+    return {
+      member: m,
+      totals: sumCrewDays(sliced),
+      compliantDays: countCompliantDays(sliced),
+    };
   });
 
   return (
@@ -93,7 +117,9 @@ export default function CrewListClient() {
                 : "Session activity by person"}
             </p>
             <p className="mt-0.5 text-xs text-neutral-400">
-              Totals for the selected range · tap a person for details
+              {rangeMode === "custom"
+                ? "Totals for the custom range · tap a person for details"
+                : "Totals for the selected window · tap a person for details"}
             </p>
           </div>
           <div className="flex w-full shrink-0 gap-1 rounded-lg border border-neutral-200 bg-white p-1 sm:w-auto">
@@ -101,9 +127,9 @@ export default function CrewListClient() {
               <button
                 key={n}
                 type="button"
-                onClick={() => setDays(n)}
+                onClick={() => setRangeMode(n)}
                 className={`flex-1 rounded-md px-3 py-1.5 text-sm sm:flex-none ${
-                  days === n
+                  rangeMode === n
                     ? "bg-neutral-900 text-white"
                     : "text-neutral-600 hover:bg-neutral-100"
                 }`}
@@ -111,61 +137,74 @@ export default function CrewListClient() {
                 {n}d
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setRangeMode("custom")}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm sm:flex-none ${
+                rangeMode === "custom"
+                  ? "bg-neutral-900 text-white"
+                  : "text-neutral-600 hover:bg-neutral-100"
+              }`}
+            >
+              Custom
+            </button>
           </div>
         </header>
 
-        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-3 sm:mb-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:py-2.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">
-            Range
-          </span>
-          <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
-            <label className="flex min-w-0 items-center gap-1.5 text-sm text-neutral-600">
-              <span className="w-10 shrink-0 text-xs text-neutral-400 sm:w-auto">
-                From
-              </span>
-              <input
-                type="date"
-                value={rangeFrom ?? data?.fromKey ?? ""}
-                min={data?.fromKey}
-                max={rangeTo ?? data?.toKey}
-                disabled={!data}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  if (!next) return;
-                  setRangeFrom(next);
-                }}
-                className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm disabled:opacity-50 sm:flex-none"
-              />
-            </label>
-            <label className="flex min-w-0 items-center gap-1.5 text-sm text-neutral-600">
-              <span className="w-10 shrink-0 text-xs text-neutral-400 sm:w-auto">
-                To
-              </span>
-              <input
-                type="date"
-                value={rangeTo ?? data?.toKey ?? ""}
-                min={rangeFrom ?? data?.fromKey}
-                max={data?.toKey}
-                disabled={!data}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  if (!next) return;
-                  setRangeTo(next);
-                }}
-                className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm disabled:opacity-50 sm:flex-none"
-              />
-            </label>
+        {rangeMode === "custom" ? (
+          <div className="mb-5 flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-3 sm:mb-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:py-2.5">
+            <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+              Custom range
+            </span>
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
+              <label className="flex min-w-0 items-center gap-1.5 text-sm text-neutral-600">
+                <span className="w-10 shrink-0 text-xs text-neutral-400 sm:w-auto">
+                  From
+                </span>
+                <input
+                  type="date"
+                  value={customFrom ?? data?.fromKey ?? ""}
+                  min={data?.fromKey}
+                  max={customTo ?? data?.toKey}
+                  disabled={!data}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (!next) return;
+                    setCustomFrom(next);
+                  }}
+                  className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm disabled:opacity-50 sm:flex-none"
+                />
+              </label>
+              <label className="flex min-w-0 items-center gap-1.5 text-sm text-neutral-600">
+                <span className="w-10 shrink-0 text-xs text-neutral-400 sm:w-auto">
+                  To
+                </span>
+                <input
+                  type="date"
+                  value={customTo ?? data?.toKey ?? ""}
+                  min={customFrom ?? data?.fromKey}
+                  max={data?.toKey}
+                  disabled={!data}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (!next) return;
+                    setCustomTo(next);
+                  }}
+                  className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm disabled:opacity-50 sm:flex-none"
+                />
+              </label>
+            </div>
+            {!isFullCustomWindow && data ? (
+              <button
+                type="button"
+                onClick={resetCustomWindow}
+                className="rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50 sm:ml-auto"
+              >
+                Full {CREW_MAX_DAYS}d window
+              </button>
+            ) : null}
           </div>
-          {!isFullWindow && data ? (
-            <button
-              type="button"
-              onClick={setFullWindow}
-              className="rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50 sm:ml-auto"
-            >
-              Full window
-            </button>
-          ) : null}
-        </div>
+        ) : null}
 
         {loading && !data ? (
           <p className="text-sm text-neutral-500">Loading…</p>
@@ -179,10 +218,10 @@ export default function CrewListClient() {
               No crew members yet
             </div>
           ) : null}
-          {memberRows.map(({ member: m, totals }) => (
+          {memberRows.map(({ member: m, totals, compliantDays }) => (
             <Link
               key={m.email}
-              href={`${crewMemberPath(m.email)}?days=${days}`}
+              href={`${crewMemberPath(m.email)}?days=${fetchDays}`}
               className="block rounded-xl border border-neutral-200 bg-white p-4 active:bg-neutral-50"
             >
               <div className="font-medium text-neutral-900">
@@ -205,6 +244,24 @@ export default function CrewListClient() {
                   </div>
                 ))}
               </dl>
+              <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-neutral-100 pt-3">
+                <div className="text-center">
+                  <dt className="text-[10px] uppercase tracking-wide text-neutral-400">
+                    Compliant days
+                  </dt>
+                  <dd className="text-base font-semibold tabular-nums text-neutral-900">
+                    {compliantDays}
+                  </dd>
+                </div>
+                <div className="text-center">
+                  <dt className="text-[10px] uppercase tracking-wide text-neutral-400">
+                    Inactive days
+                  </dt>
+                  <dd className="text-base font-semibold tabular-nums text-neutral-900">
+                    {m.inactiveDays}
+                  </dd>
+                </div>
+              </dl>
             </Link>
           ))}
         </div>
@@ -224,24 +281,30 @@ export default function CrewListClient() {
                       {m.label}
                     </th>
                   ))}
+                  <th className="px-3 py-3 text-right font-medium">
+                    Compliant days
+                  </th>
+                  <th className="px-3 py-3 text-right font-medium">
+                    Inactive days
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {memberRows.length === 0 && !loading ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={8}
                       className="px-4 py-10 text-center text-neutral-500"
                     >
                       No crew members yet
                     </td>
                   </tr>
                 ) : null}
-                {memberRows.map(({ member: m, totals }) => (
+                {memberRows.map(({ member: m, totals, compliantDays }) => (
                   <tr key={m.email} className="border-t border-neutral-100">
                     <td className="px-4 py-3">
                       <Link
-                        href={`${crewMemberPath(m.email)}?days=${days}`}
+                        href={`${crewMemberPath(m.email)}?days=${fetchDays}`}
                         className="block hover:underline"
                       >
                         <div className="font-medium text-neutral-900">
@@ -260,7 +323,7 @@ export default function CrewListClient() {
                         className="px-3 py-3 text-right tabular-nums text-neutral-800"
                       >
                         <Link
-                          href={`${crewMemberPath(m.email)}?days=${days}`}
+                          href={`${crewMemberPath(m.email)}?days=${fetchDays}`}
                           className="block"
                           title={`Today: ${m.today[metricCol.key]}`}
                         >
@@ -268,12 +331,46 @@ export default function CrewListClient() {
                         </Link>
                       </td>
                     ))}
+                    <td className="px-3 py-3 text-right tabular-nums text-neutral-800">
+                      {compliantDays}
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums text-neutral-800">
+                      {m.inactiveDays}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+
+        <section className="mt-6 rounded-xl border border-neutral-200 bg-white px-4 py-4 sm:px-5">
+          <h2 className="text-sm font-semibold text-neutral-900">
+            {CREW_ACTIVITY_FORMULA.title}
+          </h2>
+          <div className="mt-3 space-y-3 text-sm text-neutral-600">
+            {CREW_ACTIVITY_FORMULA.sections.map((section) => (
+              <div key={section.heading}>
+                <h3 className="font-medium text-neutral-800">
+                  {section.heading}
+                </h3>
+                <p className="mt-0.5">{section.body}</p>
+                {"counts" in section && section.counts ? (
+                  <ul className="mt-1.5 list-disc space-y-0.5 pl-5">
+                    {section.counts.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {"excludes" in section && section.excludes ? (
+                  <p className="mt-1.5 text-neutral-500">
+                    Does not count: {section.excludes.join("; ")}.
+                  </p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

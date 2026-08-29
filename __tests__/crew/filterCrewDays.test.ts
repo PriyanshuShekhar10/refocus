@@ -12,6 +12,7 @@ function day(partial: Partial<DayCounts> & { date: string }): DayCounts {
     joined: 0,
     attended: 0,
     finished: 0,
+    qualifying: 0,
     ...partial,
   };
 }
