@@ -40,7 +40,7 @@ function getMentionQuery(
   if (at === -1) return null;
   const between = before.slice(at + 1);
   if (between.includes("\n")) return null;
-  if (!/^[a-z0-9 _.'-]*$/i.test(between)) return null;
+  if (!/^[a-z0-9_ .'.-]*$/i.test(between)) return null;
   return { query: between, start: at };
 }
 

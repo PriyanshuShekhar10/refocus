@@ -25,14 +25,16 @@ export function userDisplayName(user: {
   return full || user.name?.trim() || user.username || "User";
 }
 
-const MENTION_NAME_WORD_RE = /[A-Za-z0-9][A-Za-z0-9.'-]*/;
+const MENTION_NAME_WORD_RE = /[A-Za-z0-9_][A-Za-z0-9_.'-]*/;
 const MAX_NAME_WORDS = 2;
 const MENTION_STOPWORDS = new Set(["and", "or", "the", "a", "an"]);
 
 function readMentionEnd(rest: string): number {
   const endCandidates = [rest.length];
-  const punct = rest.search(/[\n.,!?;:—]/);
-  if (punct !== -1) endCandidates.push(punct);
+  const comma = rest.search(/[\n,!?;:—]/);
+  if (comma !== -1) endCandidates.push(comma);
+  const sentenceDot = rest.search(/\.(\s|$|[,!?\s])/);
+  if (sentenceDot !== -1) endCandidates.push(sentenceDot);
   const nextMention = rest.search(/\s@/);
   if (nextMention !== -1) endCandidates.push(nextMention);
   return Math.min(...endCandidates);

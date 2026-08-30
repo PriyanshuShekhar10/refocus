@@ -13,6 +13,12 @@ describe("communityMentions", () => {
     ).toEqual(["devpahuja", "akshay17"]);
   });
 
+  it("parses display names with underscores and dots", () => {
+    expect(
+      parseMentionLabels("Hii @S.D.M _shane, welcome!!"),
+    ).toEqual(["S.D.M _shane"]);
+  });
+
   it("parses display names with spaces", () => {
     expect(parseMentionLabels("Hey @Dev Pahuja, @Akshay N")).toEqual([
       "Dev Pahuja",

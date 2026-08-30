@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
     20,
   );
 
-  if (!q || q.length > 40 || !/^[a-z0-9 _.'-]+$/i.test(q)) {
+  if (!q || q.length > 40 || !/^[a-z0-9_ .'.-]+$/i.test(q)) {
     return NextResponse.json({ users: [] });
   }
 

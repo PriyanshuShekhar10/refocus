@@ -181,7 +181,15 @@ export async function POST(
     String(result.insertedId),
   );
   const mentionSet = new Set(mentionedUserIds);
-  const threadReplyIds = threadTaggedIds.filter((id) => !mentionSet.has(id));
+  const postAuthorId = String(post.authorId);
+  const threadReplyIds = [
+    ...new Set([
+      ...threadTaggedIds.filter((id) => !mentionSet.has(id)),
+      ...(postAuthorId !== userId && !mentionSet.has(postAuthorId)
+        ? [postAuthorId]
+        : []),
+    ]),
+  ];
 
   if (mentionedUserIds.length > 0) {
     void notifyCommunityMentions({
