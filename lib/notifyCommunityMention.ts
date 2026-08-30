@@ -3,12 +3,24 @@ import { areUsersBlocked } from "@/lib/blocking";
 import { isEmailVerified } from "@/lib/emailVerification";
 import { sendCommunityMentionEmail } from "@/lib/email/sendCommunityMentionEmail";
 import type { CommunityMentionEmailKind } from "@/lib/email/communityMentionTemplates";
+import { userDisplayName } from "@/lib/communityMentions";
 import { getAppUrl } from "@/lib/site";
 
 type Recipient = {
   id: string;
   email: string;
-  firstName?: string | null;
+  greetingName?: string | null;
+};
+
+type MentionRecipientUser = {
+  _id: ObjectId;
+  email?: string | null;
+  firstname?: string | null;
+  lastname?: string | null;
+  name?: string | null;
+  username?: string | null;
+  emailVerified?: Date | string | null;
+  preferences?: { emailCommunityMentions?: boolean } | null;
 };
 
 async function loadRecipients(
@@ -18,7 +30,7 @@ async function loadRecipients(
   const unique = [...new Set(recipientIds.filter(Boolean))];
   if (unique.length === 0) return [];
 
-  const users = await db
+  const users = (await db
     .collection("users")
     .find(
       { _id: { $in: unique.map((id) => new ObjectId(id)) } },
@@ -26,13 +38,15 @@ async function loadRecipients(
         projection: {
           email: 1,
           firstname: 1,
+          lastname: 1,
           name: 1,
+          username: 1,
           emailVerified: 1,
           preferences: 1,
         },
       },
     )
-    .toArray();
+    .toArray()) as MentionRecipientUser[];
 
   const recipients: Recipient[] = [];
   for (const user of users) {
@@ -43,7 +57,7 @@ async function loadRecipients(
     recipients.push({
       id: String(user._id),
       email,
-      firstName: user.firstname ?? user.name ?? null,
+      greetingName: userDisplayName(user),
     });
   }
   return recipients;
@@ -80,7 +94,7 @@ export async function notifyCommunityMentions(input: {
       recipients.map((recipient) =>
         sendCommunityMentionEmail({
           email: recipient.email,
-          firstName: recipient.firstName,
+          firstName: recipient.greetingName,
           kind: input.kind,
           actorName: input.actorName,
           contentPreview: input.contentPreview,

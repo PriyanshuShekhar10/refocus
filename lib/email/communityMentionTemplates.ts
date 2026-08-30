@@ -103,10 +103,9 @@ Open Community: ${input.communityUrl}
               <p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:${emailBrand.ink};">${greeting(input.firstName)}</p>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">${lead}</p>
               <p style="margin:0 0 24px;padding:14px 16px;border-radius:12px;background:${emailBrand.bg};border:1px solid ${emailBrand.line};font-size:14px;line-height:1.65;color:${emailBrand.ink};white-space:pre-wrap;">${escapeHtml(preview)}</p>
-              <p style="margin:0 0 16px;">
+              <p style="margin:0;">
                 <a href="${escapeHtml(input.communityUrl)}" style="font-size:15px;font-weight:600;color:${emailBrand.accent};text-decoration:none;">Open Community &rarr;</a>
               </p>
-              <p style="margin:0;font-size:13px;line-height:1.65;color:${emailBrand.inkMute};">Don't want these emails? Open <a href="${escapeHtml(input.settingsUrl)}" style="color:${emailBrand.accent};text-decoration:none;font-weight:600;">Settings</a> → Notifications and turn off <strong style="color:${emailBrand.ink};">Community @mentions</strong>.</p>
 `,
   });
 }

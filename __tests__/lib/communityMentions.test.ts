@@ -51,18 +51,21 @@ describe("community mention email", () => {
   it("builds a direct mention email", () => {
     const email = buildCommunityMentionEmail({
       kind: "mention",
-      firstName: "Dev",
+      firstName: "Dev Pahuja",
       actorName: "Akshay N",
       contentPreview: "Great session today @Dev Pahuja",
       communityUrl: "https://dashboard.refocus.co.in/dashboard?tab=community",
       settingsUrl: "https://dashboard.refocus.co.in/dashboard?tab=settings",
     });
     expect(email.subject).toContain("Akshay N");
-    expect(email.text).toContain("Dev Pahuja");
+    expect(email.text).toContain("Hi Dev Pahuja,");
     expect(email.text).toContain("Community @mentions");
     expect(email.text).toContain("tab=settings");
     expect(email.html).toContain("Open Community");
     expect(email.html).toContain("Community @mentions");
+    expect(
+      email.html.split("Don't want these emails?").length - 1,
+    ).toBe(1);
   });
 
   it("builds a thread reply email", () => {
