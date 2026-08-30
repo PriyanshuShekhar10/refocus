@@ -8,9 +8,13 @@ import {
   isValidReportReason,
   isValidReportTargetType,
   REPORT_DETAILS_MAX_LENGTH,
+  REPORT_REASON_LABELS,
+  REPORT_TARGET_LABELS,
   ReportValidationError,
   resolveReportTarget,
 } from "@/lib/reports";
+import { notifyOpsReport } from "@/lib/email/opsNotify";
+import { getAppUrl } from "@/lib/site";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -67,6 +71,8 @@ export async function POST(req: NextRequest) {
       status: "pending",
     });
 
+    const adminUrl = `${getAppUrl()}/dashboard`;
+
     if (existing) {
       await db.collection("content_reports").updateOne(
         { _id: existing._id },
@@ -79,9 +85,24 @@ export async function POST(req: NextRequest) {
           },
         },
       );
+      const reportId = String(existing._id);
+      void notifyOpsReport({
+        reportId,
+        targetTypeLabel: REPORT_TARGET_LABELS[targetType],
+        reasonLabel: REPORT_REASON_LABELS[reason],
+        reporter: { email: reporterEmail },
+        reported: {
+          name: resolved.reportedUserLabel,
+          email: resolved.reportedUserEmail,
+        },
+        details: trimmedDetails || null,
+        contentSnapshot: resolved.contentSnapshot,
+        duplicate: true,
+        adminUrl,
+      });
       return NextResponse.json({
         ok: true,
-        reportId: String(existing._id),
+        reportId,
         duplicate: true,
       });
     }
@@ -103,9 +124,24 @@ export async function POST(req: NextRequest) {
       updatedAt: now,
     });
 
+    const reportId = String(insert.insertedId);
+    void notifyOpsReport({
+      reportId,
+      targetTypeLabel: REPORT_TARGET_LABELS[targetType],
+      reasonLabel: REPORT_REASON_LABELS[reason],
+      reporter: { email: reporterEmail },
+      reported: {
+        name: resolved.reportedUserLabel,
+        email: resolved.reportedUserEmail,
+      },
+      details: trimmedDetails || null,
+      contentSnapshot: resolved.contentSnapshot,
+      adminUrl,
+    });
+
     return NextResponse.json({
       ok: true,
-      reportId: String(insert.insertedId),
+      reportId,
     });
   } catch (e) {
     if (e instanceof ReportValidationError) {

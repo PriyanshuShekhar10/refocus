@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildOpsReportEmail,
   buildOpsSessionMatchedEmail,
   buildOpsSignupEmail,
 } from "@/lib/email/opsTemplates";
@@ -31,11 +32,28 @@ describe("ops email copy", () => {
       startsAtLabel: "Tue, Aug 18, 03:30 PM IST",
       host: { name: "Priya", email: "host@example.com" },
       joiner: { name: "Alex", email: "joiner@example.com" },
-      joinUrl: "https://refocus.co.in/sessions/abc",
+      joinUrl: "https://dashboard.refocus.co.in/sessions/abc",
     });
     expect(email.subject).toContain("Alex");
     expect(email.subject).toContain("Priya");
-    expect(email.html).toContain("https://refocus.co.in/sessions/abc");
+    expect(email.html).toContain("https://dashboard.refocus.co.in/sessions/abc");
     expect(email.text).toContain("Host: Priya (host@example.com)");
+  });
+
+  it("summarizes a user report", () => {
+    const email = buildOpsReportEmail({
+      reportId: "rep123",
+      targetTypeLabel: "User",
+      reasonLabel: "Harassment or bullying",
+      reporter: { email: "reporter@example.com" },
+      reported: { name: "Dev Pahuja", email: "dev@example.com" },
+      details: "Was rude in call",
+      contentSnapshot: null,
+      adminUrl: "https://dashboard.refocus.co.in/dashboard",
+    });
+    expect(email.subject).toBe("New report: Dev Pahuja (dev@example.com)");
+    expect(email.text).toContain("reporter@example.com");
+    expect(email.text).toContain("Harassment or bullying");
+    expect(email.html).toContain("Open reports queue");
   });
 });

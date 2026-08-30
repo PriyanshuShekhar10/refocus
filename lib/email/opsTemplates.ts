@@ -90,6 +90,52 @@ User id: ${input.userId}
   });
 }
 
+export function buildOpsReportEmail(input: {
+  reportId: string;
+  targetTypeLabel: string;
+  reasonLabel: string;
+  reporter: { email?: string | null };
+  reported: { name?: string | null; email?: string | null };
+  details?: string | null;
+  contentSnapshot?: string | null;
+  duplicate?: boolean;
+  adminUrl?: string | null;
+}): { subject: string; html: string; text: string } {
+  const reporter = personLine(null, input.reporter.email);
+  const reported = personLine(input.reported.name, input.reported.email);
+  const subject = input.duplicate
+    ? `Report again: ${reported}`
+    : `New report: ${reported}`;
+  const details = input.details?.trim() || "";
+  const snapshot = input.contentSnapshot?.trim() || "";
+  const adminUrl = input.adminUrl?.trim() || "";
+
+  return opsShell({
+    eyebrow: input.duplicate ? "Report updated" : "New report",
+    subject,
+    bodyText: `${input.duplicate ? "Someone re-submitted a report" : "Someone submitted a report"}
+
+Reported: ${reported}
+Reporter: ${reporter}
+Type: ${input.targetTypeLabel}
+Reason: ${input.reasonLabel}
+${details ? `Details: ${details}\n` : ""}${snapshot ? `Content: ${snapshot}\n` : ""}
+Report id: ${input.reportId}
+${adminUrl ? `\n${adminUrl}\n` : ""}`,
+    bodyHtml: `
+              <p style="margin:0 0 16px;font-size:17px;line-height:1.5;color:${emailBrand.ink};font-weight:500;">${input.duplicate ? "Someone re-submitted a report" : "Someone submitted a report"}</p>
+              <p style="margin:0 0 8px;font-size:14px;line-height:1.65;color:${emailBrand.inkMute};">Reported: <strong style="color:${emailBrand.ink};">${escapeHtml(reported)}</strong></p>
+              <p style="margin:0 0 8px;font-size:14px;line-height:1.65;color:${emailBrand.inkMute};">Reporter: <strong style="color:${emailBrand.ink};">${escapeHtml(reporter)}</strong></p>
+              <p style="margin:0 0 8px;font-size:14px;line-height:1.65;color:${emailBrand.inkMute};">Type: ${escapeHtml(input.targetTypeLabel)}</p>
+              <p style="margin:0 0 ${details || snapshot || adminUrl ? "8px" : "0"};font-size:14px;line-height:1.65;color:${emailBrand.inkMute};">Reason: ${escapeHtml(input.reasonLabel)}</p>
+              ${details ? `<p style="margin:0 0 8px;font-size:14px;line-height:1.65;color:${emailBrand.inkMute};">Details: ${escapeHtml(details)}</p>` : ""}
+              ${snapshot ? `<p style="margin:0 0 ${adminUrl ? "16px" : "0"};font-size:13px;line-height:1.65;color:${emailBrand.inkMute};">Content: ${escapeHtml(snapshot)}</p>` : ""}
+              ${adminUrl ? `<p style="margin:16px 0 0;"><a href="${escapeHtml(adminUrl)}" style="font-size:15px;font-weight:600;color:${emailBrand.accent};text-decoration:none;">Open reports queue &rarr;</a></p>` : ""}
+              <p style="margin:16px 0 0;font-size:12px;line-height:1.65;color:${emailBrand.inkMute};">Report id: ${escapeHtml(input.reportId)}</p>
+`,
+  });
+}
+
 export function buildOpsSessionMatchedEmail(input: {
   sessionTitle: string;
   startsAtLabel: string;

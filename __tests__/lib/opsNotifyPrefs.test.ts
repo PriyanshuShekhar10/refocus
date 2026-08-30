@@ -26,6 +26,7 @@ describe("opsNotifyPrefs", () => {
     await expect(getOpsNotifyPrefs()).resolves.toEqual(DEFAULT_OPS_NOTIFY_PREFS);
     await expect(isOpsNotifyKindEnabled("signup")).resolves.toBe(true);
     await expect(isOpsNotifyKindEnabled("sessionMatched")).resolves.toBe(true);
+    await expect(isOpsNotifyKindEnabled("report")).resolves.toBe(true);
   });
 
   it("treats explicit false as off", async () => {
@@ -33,9 +34,11 @@ describe("opsNotifyPrefs", () => {
       key: "ops_notify",
       signup: false,
       sessionMatched: true,
+      report: false,
     });
     await expect(isOpsNotifyKindEnabled("signup")).resolves.toBe(false);
     await expect(isOpsNotifyKindEnabled("sessionMatched")).resolves.toBe(true);
+    await expect(isOpsNotifyKindEnabled("report")).resolves.toBe(false);
   });
 
   it("upserts only the patched flags", async () => {

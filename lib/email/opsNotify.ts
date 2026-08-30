@@ -1,5 +1,6 @@
 import { getResend, getResendFromEmail, isResendConfigured } from "@/lib/resend";
 import {
+  buildOpsReportEmail,
   buildOpsSessionMatchedEmail,
   buildOpsSignupEmail,
 } from "@/lib/email/opsTemplates";
@@ -66,5 +67,26 @@ export async function notifyOpsSessionMatched(input: {
     await sendOpsEmail(built);
   } catch (err) {
     console.error("[email] notifyOpsSessionMatched failed:", err);
+  }
+}
+
+/** Fire-and-forget safe: never throws to the request path. */
+export async function notifyOpsReport(input: {
+  reportId: string;
+  targetTypeLabel: string;
+  reasonLabel: string;
+  reporter: { email?: string | null };
+  reported: { name?: string | null; email?: string | null };
+  details?: string | null;
+  contentSnapshot?: string | null;
+  duplicate?: boolean;
+  adminUrl?: string | null;
+}): Promise<void> {
+  try {
+    if (!(await isOpsNotifyKindEnabled("report"))) return;
+    const built = buildOpsReportEmail(input);
+    await sendOpsEmail(built);
+  } catch (err) {
+    console.error("[email] notifyOpsReport failed:", err);
   }
 }

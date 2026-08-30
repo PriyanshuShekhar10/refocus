@@ -15,6 +15,7 @@ export async function GET() {
     email: OPS_NOTIFY_EMAIL,
     signup: prefs.signup,
     sessionMatched: prefs.sessionMatched,
+    report: prefs.report,
   });
 }
 
@@ -25,13 +26,19 @@ export async function PATCH(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as {
     signup?: unknown;
     sessionMatched?: unknown;
+    report?: unknown;
   };
 
-  const patch: { signup?: boolean; sessionMatched?: boolean } = {};
+  const patch: {
+    signup?: boolean;
+    sessionMatched?: boolean;
+    report?: boolean;
+  } = {};
   if (typeof body.signup === "boolean") patch.signup = body.signup;
   if (typeof body.sessionMatched === "boolean") {
     patch.sessionMatched = body.sessionMatched;
   }
+  if (typeof body.report === "boolean") patch.report = body.report;
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
@@ -43,5 +50,6 @@ export async function PATCH(req: NextRequest) {
     email: OPS_NOTIFY_EMAIL,
     signup: prefs.signup,
     sessionMatched: prefs.sessionMatched,
+    report: prefs.report,
   });
 }

@@ -40,6 +40,7 @@ describe("/api/admin/ops-notify", () => {
     expect(status).toBe(200);
     expect(json.signup).toBe(true);
     expect(json.sessionMatched).toBe(true);
+    expect(json.report).toBe(true);
     expect(json.email).toBe("priyanshushekhar100@gmail.com");
   });
 

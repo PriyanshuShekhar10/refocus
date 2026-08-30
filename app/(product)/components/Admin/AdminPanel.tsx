@@ -629,18 +629,21 @@ function OpsNotifySettings() {
   const [email, setEmail] = useState("priyanshushekhar100@gmail.com");
   const [signup, setSignup] = useState(true);
   const [sessionMatched, setSessionMatched] = useState(true);
-  const [saving, setSaving] = useState<"signup" | "sessionMatched" | null>(
-    null,
-  );
+  const [report, setReport] = useState(true);
+  const [saving, setSaving] = useState<
+    "signup" | "sessionMatched" | "report" | null
+  >(null);
 
   const applyPayload = (data: {
     email?: string | null;
     signup?: boolean;
     sessionMatched?: boolean;
+    report?: boolean;
   }) => {
     if (data.email) setEmail(data.email);
     setSignup(data.signup !== false);
     setSessionMatched(data.sessionMatched !== false);
+    setReport(data.report !== false);
   };
 
   useEffect(() => {
@@ -659,12 +662,14 @@ function OpsNotifySettings() {
   }, []);
 
   const setFlag = async (
-    key: "signup" | "sessionMatched",
+    key: "signup" | "sessionMatched" | "report",
     value: boolean,
   ) => {
-    const previous = key === "signup" ? signup : sessionMatched;
+    const previous =
+      key === "signup" ? signup : key === "sessionMatched" ? sessionMatched : report;
     if (key === "signup") setSignup(value);
-    else setSessionMatched(value);
+    else if (key === "sessionMatched") setSessionMatched(value);
+    else setReport(value);
     setSaving(key);
     try {
       const res = await fetch("/api/admin/ops-notify", {
@@ -677,7 +682,8 @@ function OpsNotifySettings() {
       applyPayload(data);
     } catch {
       if (key === "signup") setSignup(previous);
-      else setSessionMatched(previous);
+      else if (key === "sessionMatched") setSessionMatched(previous);
+      else setReport(previous);
     } finally {
       setSaving(null);
     }
@@ -694,7 +700,7 @@ function OpsNotifySettings() {
             Founder emails
           </p>
           <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-            Sent to {email}. Turn either off anytime.
+            Sent to {email}. Turn any off anytime.
           </p>
         </div>
       </div>
@@ -712,6 +718,13 @@ function OpsNotifySettings() {
           checked={sessionMatched}
           disabled={saving !== null}
           onChange={(v) => void setFlag("sessionMatched", v)}
+        />
+        <OpsNotifyRow
+          label="User reports"
+          hint="When someone reports a user or content."
+          checked={report}
+          disabled={saving !== null}
+          onChange={(v) => void setFlag("report", v)}
         />
       </div>
     </div>
