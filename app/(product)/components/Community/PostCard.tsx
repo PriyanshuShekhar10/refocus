@@ -137,6 +137,7 @@ export default function PostCard({
   const [loadingComments, setLoadingComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [localLikesCount, setLocalLikesCount] = useState(post.likesCount);
   const [localIsLiked, setLocalIsLiked] = useState(post.isLiked);
   const [localCommentsCount, setLocalCommentsCount] = useState(post.commentsCount);
@@ -256,6 +257,34 @@ export default function PostCard({
       });
     } catch {
       // ignore lookup failures
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (deletingCommentId) return;
+    if (!confirm("Delete this comment?")) return;
+
+    setDeletingCommentId(commentId);
+    const previous = comments;
+    const previousCount = localCommentsCount;
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
+    setLocalCommentsCount((prev) => Math.max(0, prev - 1));
+
+    try {
+      const res = await fetch(
+        `/api/community/posts/${post.id}/comments/${commentId}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete comment");
+      }
+    } catch (e) {
+      setComments(previous);
+      setLocalCommentsCount(previousCount);
+      alert((e as Error).message);
+    } finally {
+      setDeletingCommentId(null);
     }
   };
 
@@ -603,7 +632,30 @@ export default function PostCard({
                                     }}
                                     onModerate={onModerateUser!}
                                   />
-                                ) : commentIsOwn ? null : (
+                                ) : commentIsOwn ? (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                                        aria-label="Comment actions"
+                                      >
+                                        <MoreHorizontal className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-40">
+                                      <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive"
+                                        disabled={deletingCommentId === comment.id}
+                                        onClick={() => void handleDeleteComment(comment.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                ) : (
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button
