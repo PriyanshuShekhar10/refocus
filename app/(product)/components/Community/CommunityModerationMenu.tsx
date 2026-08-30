@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ban, MoreHorizontal, Trash2, VolumeX, Volume2 } from "lucide-react";
+import { Ban, Flag, MoreHorizontal, Trash2, VolumeX, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,6 +19,8 @@ type Props = {
   targetLabel: string;
   onDeleteContent?: () => Promise<void>;
   deleteLabel?: string;
+  onReport?: () => void;
+  onBlock?: () => void;
   onModerate: (
     userId: string,
     action: "ban" | "unban" | "mute" | "unmute",
@@ -31,6 +33,8 @@ export default function CommunityModerationMenu({
   targetLabel,
   onDeleteContent,
   deleteLabel = "Delete",
+  onReport,
+  onBlock,
   onModerate,
 }: Props) {
   const [busy, setBusy] = useState(false);
@@ -59,6 +63,27 @@ export default function CommunityModerationMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
+        {onReport ? (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={onReport}
+          >
+            <Flag className="h-4 w-4" />
+            Report
+          </DropdownMenuItem>
+        ) : null}
+        {onBlock ? (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={onBlock}
+          >
+            <Ban className="h-4 w-4" />
+            Block
+          </DropdownMenuItem>
+        ) : null}
+        {(onReport || onBlock) && onDeleteContent ? (
+          <DropdownMenuSeparator />
+        ) : null}
         {onDeleteContent ? (
           <>
             <DropdownMenuItem

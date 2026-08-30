@@ -18,12 +18,17 @@ type ProfilePreviewPayload = {
 
 type Props = {
   onPreviewProfile?: (profile: ProfilePreviewPayload) => void;
+  /** When true, header is rendered by the parent panel */
+  compactHeader?: boolean;
 };
 
 type WelcomeResponse = {
   announcements: WelcomeAnnouncement[];
   nextCursor: string | null;
 };
+
+const INITIAL_LIMIT = 8;
+const PAGE_SIZE = 20;
 
 const fetcher = async (url: string): Promise<WelcomeResponse> => {
   const res = await fetch(url);
@@ -66,9 +71,12 @@ function initials(name: string): string {
     .slice(0, 2);
 }
 
-export default function WelcomeBoard({ onPreviewProfile }: Props) {
+export default function WelcomeBoard({
+  onPreviewProfile,
+  compactHeader = false,
+}: Props) {
   const { data, error, isLoading, mutate } = useSWR<WelcomeResponse>(
-    swrKeys.communityWelcome(40),
+    swrKeys.communityWelcome(INITIAL_LIMIT),
     fetcher,
     { refreshInterval: 15_000, revalidateOnFocus: true },
   );
@@ -76,18 +84,18 @@ export default function WelcomeBoard({ onPreviewProfile }: Props) {
   const [older, setOlder] = useState<WelcomeAnnouncement[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const seenIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setOlder([]);
     setNextCursor(data?.nextCursor ?? null);
+    setExpanded(false);
     seenIdsRef.current = new Set(
       (data?.announcements ?? []).map((a) => a.id),
     );
   }, [data?.nextCursor, data?.announcements]);
 
-  // Live updates when someone new signs up
   useEffect(() => {
     const client = getAblyClient();
     const channel = client.channels.get(welcomeBoardChannel());
@@ -131,12 +139,19 @@ export default function WelcomeBoard({ onPreviewProfile }: Props) {
   }, [mutate]);
 
   const announcements = [...(data?.announcements ?? []), ...older];
+  const visible = expanded
+    ? announcements
+    : announcements.slice(0, INITIAL_LIMIT);
+  const canSeeMore =
+    announcements.length > INITIAL_LIMIT || Boolean(nextCursor);
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const res = await fetch(swrKeys.communityWelcomePage(nextCursor, 30));
+      const res = await fetch(
+        swrKeys.communityWelcomePage(nextCursor, PAGE_SIZE),
+      );
       if (!res.ok) return;
       const page = (await res.json()) as WelcomeResponse;
       setOlder((prev) => {
@@ -150,18 +165,12 @@ export default function WelcomeBoard({ onPreviewProfile }: Props) {
     }
   }, [nextCursor, loadingMore]);
 
-  useEffect(() => {
-    const el = loadMoreRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) void loadMore();
-      },
-      { rootMargin: "80px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [loadMore]);
+  const handleSeeMore = async () => {
+    setExpanded(true);
+    if (nextCursor) {
+      await loadMore();
+    }
+  };
 
   const openProfile = (a: WelcomeAnnouncement) => {
     if (!onPreviewProfile || !a.username) return;
@@ -174,19 +183,23 @@ export default function WelcomeBoard({ onPreviewProfile }: Props) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-border/70 px-4 py-3">
-        <div className="flex items-start gap-2.5">
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A]/10 text-[#5D1C6A]">
-            <PartyPopper className="h-3.5 w-3.5" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold leading-tight">#welcome</p>
-            <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-              Live announcements when someone joins the Refocus community.
-            </p>
+      {!compactHeader ? (
+        <div className="shrink-0 border-b border-border/70 px-4 py-3">
+          <div className="flex items-start gap-2.5">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A]/10 text-[#5D1C6A]">
+              <PartyPopper className="h-3.5 w-3.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold leading-tight">
+                Recently joined
+              </p>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                Live announcements when someone joins the Refocus community.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
         {isLoading && !data ? (
@@ -215,7 +228,7 @@ export default function WelcomeBoard({ onPreviewProfile }: Props) {
           </div>
         ) : (
           <ul className="space-y-1">
-            {announcements.map((a) => {
+            {visible.map((a) => {
               const mention = mentionLabel(a);
               return (
                 <li
@@ -266,8 +279,28 @@ export default function WelcomeBoard({ onPreviewProfile }: Props) {
           </ul>
         )}
 
-        <div ref={loadMoreRef} className="h-4" />
-        {loadingMore ? (
+        {canSeeMore && !expanded ? (
+          <button
+            type="button"
+            onClick={() => void handleSeeMore()}
+            className="mt-2 w-full px-2 py-1.5 text-left text-xs font-medium text-[#5D1C6A] hover:underline dark:text-[#CA5995]"
+          >
+            See more →
+          </button>
+        ) : null}
+
+        {expanded && nextCursor ? (
+          <button
+            type="button"
+            onClick={() => void loadMore()}
+            disabled={loadingMore}
+            className="mt-2 w-full px-2 py-1.5 text-left text-xs font-medium text-[#5D1C6A] hover:underline disabled:opacity-60 dark:text-[#CA5995]"
+          >
+            {loadingMore ? "Loading…" : "See more →"}
+          </button>
+        ) : null}
+
+        {loadingMore && expanded ? (
           <div className="flex justify-center py-3">
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
