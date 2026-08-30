@@ -52,6 +52,7 @@ type Prefs = {
   sessionReminderTiming: SessionReminderTiming;
   emailFriendRequests: boolean;
   emailWeeklyDigest: boolean;
+  emailCommunityMentions: boolean;
   timezone: string;
 };
 
@@ -65,6 +66,7 @@ const DEFAULT_PREFS: Prefs = {
   sessionReminderTiming: DEFAULT_SESSION_REMINDER_TIMING,
   emailFriendRequests: false,
   emailWeeklyDigest: false,
+  emailCommunityMentions: true,
   timezone: "auto",
 };
 
@@ -413,7 +415,7 @@ function NotificationsSection() {
     <SectionCard
       icon={<Bell size={16} />}
       title="Notifications"
-      subtitle="Email reminders for your booked focus sessions."
+      subtitle="Email alerts for sessions and Community activity."
     >
       <RowGroup>
         <Row
@@ -456,6 +458,16 @@ function NotificationsSection() {
             </div>
           </Row>
         )}
+        <Row
+          label="Community @mentions"
+          hint="Email when someone tags you in Community, or replies on a thread where you were tagged."
+        >
+          <Toggle
+            checked={prefs.emailCommunityMentions}
+            onChange={(v) => setPref("emailCommunityMentions", v)}
+            disabled={saving}
+          />
+        </Row>
         <Row
           label="Friend & session requests"
           hint="Saved preference for future request emails."

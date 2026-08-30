@@ -6,6 +6,12 @@ import { ObjectId } from "mongodb";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 import { ADMIN_ROLE } from "@/lib/admin";
+import {
+  collectThreadMentionedUserIds,
+  resolveMentionedUserIds,
+  toObjectIdList,
+} from "@/lib/communityMentions.server";
+import { notifyCommunityMentions } from "@/lib/notifyCommunityMention";
 
 // GET - Fetch comments for a post
 export async function GET(
@@ -129,10 +135,18 @@ export async function POST(
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
 
+  const trimmedContent = content.trim();
+  const mentionedUserIds = await resolveMentionedUserIds(
+    db,
+    userId,
+    trimmedContent,
+  );
+
   const comment = {
     postId: new ObjectId(postId),
     authorId: new ObjectId(userId),
-    content: content.trim(),
+    content: trimmedContent,
+    mentionedUserIds: toObjectIdList(mentionedUserIds),
     createdAt: new Date(),
   };
 
@@ -154,6 +168,42 @@ export async function POST(
     image?: string | null;
     role?: string | null;
   } | null;
+
+  const authorName =
+    [author?.firstname, author?.lastname].filter(Boolean).join(" ") ||
+    author?.name ||
+    author?.email ||
+    "User";
+
+  const threadTaggedIds = await collectThreadMentionedUserIds(
+    db,
+    postId,
+    String(result.insertedId),
+  );
+  const mentionSet = new Set(mentionedUserIds);
+  const threadReplyIds = threadTaggedIds.filter((id) => !mentionSet.has(id));
+
+  if (mentionedUserIds.length > 0) {
+    void notifyCommunityMentions({
+      db,
+      kind: "mention",
+      actorUserId: userId,
+      actorName: authorName,
+      contentPreview: comment.content,
+      recipientIds: mentionedUserIds,
+    });
+  }
+
+  if (threadReplyIds.length > 0) {
+    void notifyCommunityMentions({
+      db,
+      kind: "thread_reply",
+      actorUserId: userId,
+      actorName: authorName,
+      contentPreview: comment.content,
+      recipientIds: threadReplyIds,
+    });
+  }
 
   return NextResponse.json({
     comment: {

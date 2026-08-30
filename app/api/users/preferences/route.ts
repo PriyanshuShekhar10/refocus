@@ -29,6 +29,7 @@ type Prefs = {
   sessionReminderTiming: SessionReminderTiming;
   emailFriendRequests: boolean;
   emailWeeklyDigest: boolean;
+  emailCommunityMentions: boolean;
   /** "auto" = device timezone; otherwise an IANA timezone id */
   timezone: string;
   /** Custom dashboard background image URL, or null for default grid */
@@ -45,6 +46,7 @@ const DEFAULTS: Prefs = {
   sessionReminderTiming: DEFAULT_SESSION_REMINDER_TIMING,
   emailFriendRequests: false,
   emailWeeklyDigest: false,
+  emailCommunityMentions: true,
   timezone: "auto",
   dashboardWallpaperUrl: null,
 };
@@ -97,6 +99,7 @@ export async function PATCH(req: NextRequest) {
     "emailSessionReminders",
     "emailFriendRequests",
     "emailWeeklyDigest",
+    "emailCommunityMentions",
   ];
   for (const k of boolKeys) {
     if (typeof body[k] === "boolean") {

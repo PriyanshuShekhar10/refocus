@@ -5,6 +5,11 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import {
+  resolveMentionedUserIds,
+  toObjectIdList,
+} from "@/lib/communityMentions.server";
+import { notifyCommunityMentions } from "@/lib/notifyCommunityMention";
 import { ADMIN_ROLE } from "@/lib/admin";
 
 // GET - Fetch posts with pagination
@@ -178,9 +183,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const trimmedContent = content.trim();
+  const mentionedUserIds = await resolveMentionedUserIds(db, userId, trimmedContent);
+
   const post = {
     authorId: new ObjectId(userId),
-    content: content.trim(),
+    content: trimmedContent,
+    mentionedUserIds: toObjectIdList(mentionedUserIds),
     createdAt: new Date(),
   };
 
@@ -202,6 +211,23 @@ export async function POST(req: NextRequest) {
     image?: string | null;
     role?: string | null;
   } | null;
+
+  const authorName =
+    [author?.firstname, author?.lastname].filter(Boolean).join(" ") ||
+    author?.name ||
+    author?.email ||
+    "User";
+
+  if (mentionedUserIds.length > 0) {
+    void notifyCommunityMentions({
+      db,
+      kind: "mention",
+      actorUserId: userId,
+      actorName: authorName,
+      contentPreview: post.content,
+      recipientIds: mentionedUserIds,
+    });
+  }
 
   return NextResponse.json({
     post: {

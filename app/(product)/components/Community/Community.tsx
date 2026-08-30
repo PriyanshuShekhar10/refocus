@@ -4,10 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, MessageSquare, Sparkles } from "lucide-react";
-import { PageRefreshButton } from "@/components/page-refresh";
-import PostCard, { Post, Comment } from "./PostCard";
+import MentionComposer from "@/components/community/MentionComposer";
+import { Loader2, MessageSquare, Users, X } from "lucide-react";
+import PostCard, { Comment } from "./PostCard";
 import WelcomeBoard from "./WelcomeBoard";
 import WelcomeBoardPanel from "./WelcomeBoardPanel";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
@@ -32,35 +31,125 @@ interface CommunityProps {
   onPreviewProfile?: (profile: ProfilePreviewPayload) => void;
 }
 
-const PINNED_ADMIN_POST: Post = {
-  id: "admin-pinned-welcome",
-  content: `Hey everyone, welcome to Refocus Community.
+const GUIDELINES_STORAGE_KEY = "refocus-community-guidelines-collapsed";
 
-This space is for supportive accountability and steady progress. Please keep it kind and useful for everyone:
+const COMMUNITY_GUIDELINES = `This space is for supportive accountability and steady progress. Please keep it kind and useful for everyone:
 
-- Be respectful. No harassment, bullying, hate speech, or personal attacks.
-- Keep posts constructive and on-topic (focus, study, work, goals, habits).
-- No spam, promotions, or repeated self-advertising.
-- Protect privacy. Don't share private info (yours or someone else's).
-- Encourage others. Celebrate wins and help when someone is stuck.
+• Be respectful. No harassment, bullying, hate speech, or personal attacks.
+• Keep posts constructive and on-topic (focus, study, work, goals, habits).
+• No spam, promotions, or repeated self-advertising.
+• Protect privacy. Don't share private info (yours or someone else's).
+• Encourage others. Celebrate wins and help when someone is stuck.
 
 How to use this platform:
-- Use Dashboard to plan and join sessions.
-- Use Friends to build accountability circles.
-- Use Community to share progress, ask for advice, and motivate each other.
+• Use Dashboard to plan and join sessions.
+• Use Friends to build accountability circles.
+• Use Community to share progress, ask for advice, and motivate each other.
 
-We're glad you're here. Let's build a friendly, focused community together.`,
-  createdAt: "2026-05-16T00:00:00.000Z",
-  authorId: "admin",
-  authorName: "Admin",
-  authorUsername: null,
-  authorInitials: "AD",
-  authorIsAdmin: true,
-  likesCount: 0,
-  commentsCount: 0,
-  isLiked: false,
-  isPinned: true,
-};
+We're glad you're here. Let's build a friendly, focused community together.`;
+
+function loadGuidelinesCollapsed(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(GUIDELINES_STORAGE_KEY) === "1";
+}
+
+function GuidelinesDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="community-guidelines-title"
+        className="w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-xl"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <h2
+            id="community-guidelines-title"
+            className="text-base font-semibold"
+          >
+            Community guidelines
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+          {COMMUNITY_GUIDELINES}
+        </p>
+        <div className="mt-4 flex justify-end">
+          <Button
+            size="sm"
+            onClick={onClose}
+            className="bg-[#5D1C6A] hover:bg-[#CA5995]"
+          >
+            Got it
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PinnedWelcome({
+  collapsed,
+  onOpenGuidelines,
+}: {
+  collapsed: boolean;
+  onOpenGuidelines: () => void;
+}) {
+  if (collapsed) {
+    return (
+      <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-card/50 px-3 py-2">
+        <p className="text-sm text-foreground">
+          <span className="mr-1.5" aria-hidden>
+            📌
+          </span>
+          Community guidelines
+        </p>
+        <button
+          type="button"
+          onClick={onOpenGuidelines}
+          className="shrink-0 text-xs font-medium text-[#5D1C6A] hover:underline dark:text-[#CA5995]"
+        >
+          View →
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 rounded-lg border border-[#5D1C6A]/25 border-l-[3px] border-l-[#5D1C6A] bg-card/60 px-3 py-2.5 dark:border-[#CA5995]/30 dark:border-l-[#CA5995]">
+      <p className="text-sm font-medium text-foreground">
+        <span className="mr-1.5" aria-hidden>
+          📌
+        </span>
+        Welcome to Refocus Community
+      </p>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        A space for supportive accountability and steady progress.
+      </p>
+      <button
+        type="button"
+        onClick={onOpenGuidelines}
+        className="mt-2 text-xs font-medium text-[#5D1C6A] hover:underline dark:text-[#CA5995]"
+      >
+        Read community guidelines →
+      </button>
+    </div>
+  );
+}
 
 export default function Community({ onPreviewProfile }: CommunityProps) {
   const { data: session } = useSession();
@@ -89,21 +178,28 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [newPostContent, setNewPostContent] = useState("");
   const [posting, setPosting] = useState(false);
+  const [composerExpanded, setComposerExpanded] = useState(false);
+  const [guidelinesOpen, setGuidelinesOpen] = useState(false);
+  const [guidelinesCollapsed, setGuidelinesCollapsed] = useState(false);
   const [mobileView, setMobileView] = useState<MobileCommunityView>("feed");
   const { isMobile } = useIsMobileShell();
   const wallpaperActive = useWallpaperActive();
-  const { layout, setLayout, chatWidth, startResize } = useCommunityPanelLayout();
+  const { layout, setLayout, chatWidth } = useCommunityPanelLayout();
   const { isAdmin } = useAdminMe();
-  const { data: meData } = useSWR<{ user?: { communityBanned?: boolean; communityMuted?: boolean; avatarUrl?: string | null } }>(
-    swrKeys.userMe,
-  );
+  const { data: meData } = useSWR<{
+    user?: {
+      communityBanned?: boolean;
+      communityMuted?: boolean;
+      avatarUrl?: string | null;
+    };
+  }>(swrKeys.userMe);
   const communityBanned = meData?.user?.communityBanned === true;
   const communityMuted = meData?.user?.communityMuted === true;
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const composerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { canInteract, message: verifyMessage } = useEmailVerified();
 
-  const canParticipate =
-    canInteract && !communityBanned && !communityMuted;
+  const canParticipate = canInteract && !communityBanned && !communityMuted;
   const participationMessage = communityBanned
     ? "You are banned from the community."
     : communityMuted
@@ -111,6 +207,10 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
       : !canInteract
         ? verifyMessage
         : undefined;
+
+  useEffect(() => {
+    setGuidelinesCollapsed(loadGuidelinesCollapsed());
+  }, []);
 
   useEffect(() => {
     const fromSession = session?.user?.image?.trim();
@@ -123,7 +223,14 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
     }
   }, [session?.user?.image, meData?.user?.avatarUrl]);
 
-  // Infinite scroll
+  useEffect(() => {
+    if (!composerExpanded) return;
+    const id = window.setTimeout(() => {
+      composerTextareaRef.current?.focus();
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [composerExpanded]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -132,7 +239,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
           void loadMore(nextCursor).finally(() => setLoadingMore(false));
         }
       },
-      { rootMargin: "100px" }
+      { rootMargin: "100px" },
     );
 
     const ref = loadMoreRef.current;
@@ -142,6 +249,17 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
       if (ref) observer.unobserve(ref);
     };
   }, [nextCursor, loadingMore, loadMore]);
+
+  const collapseComposer = () => {
+    setNewPostContent("");
+    setComposerExpanded(false);
+  };
+
+  const openGuidelines = () => {
+    setGuidelinesOpen(true);
+    setGuidelinesCollapsed(true);
+    localStorage.setItem(GUIDELINES_STORAGE_KEY, "1");
+  };
 
   const handlePost = async () => {
     if (!canParticipate || !newPostContent.trim() || posting) return;
@@ -157,7 +275,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
       if (res.ok) {
         const data = await res.json();
         prependPost(data.post);
-        setNewPostContent("");
+        collapseComposer();
       }
     } finally {
       setPosting(false);
@@ -181,13 +299,12 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
         );
       }
     } catch {
-      // Revert optimistic update would go here
+      // ignore
     }
   };
 
   const handleDelete = async (postId: string) => {
     if (!canInteract) return;
-    // Optimistic delete
     updatePosts((prev) => prev.filter((p) => p.id !== postId));
 
     try {
@@ -204,7 +321,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
 
   const handleComment = async (
     postId: string,
-    content: string
+    content: string,
   ): Promise<Comment | null> => {
     if (!canParticipate) return null;
     try {
@@ -269,14 +386,11 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
     >
       {isMobile && (
         <div className="shrink-0 border-b border-border px-4 py-3">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-xl font-semibold">Community</h1>
-              <p className="text-sm text-muted-foreground">
-                Share updates and connect with others
-              </p>
-            </div>
-            <PageRefreshButton compact />
+          <div>
+            <h1 className="text-xl font-semibold">Community</h1>
+            <p className="text-sm text-muted-foreground">
+              Share updates and connect with others.
+            </p>
           </div>
           <div className="mt-3 flex rounded-lg bg-muted p-1">
             <button
@@ -299,7 +413,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                   : "text-muted-foreground"
               }`}
             >
-              Welcome
+              Recently joined
             </button>
           </div>
         </div>
@@ -310,145 +424,168 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
         className={`flex min-h-0 flex-col ${
           isMobile && mobileView === "welcome"
             ? "hidden"
-            : layout === "chat"
-              ? "hidden lg:hidden"
-              : "flex-1 min-w-0"
+            : "flex-1 min-w-0"
         } ${!isMobile && wallpaperActive ? "lg:rounded-2xl lg:border lg:border-border/60" : ""}`}
       >
-        {/* Header - desktop only */}
         {!isMobile && (
           <div className="shrink-0 border-b border-border px-6 py-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h1 className="text-xl font-semibold">Community</h1>
                 <p className="text-sm text-muted-foreground">
-                  Share updates and connect with others
+                  Share updates and connect with others.
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <PageRefreshButton />
-                {layout === "feed" ? (
-                  <button
-                    type="button"
-                    onClick={() => setLayout("split")}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Welcome
-                  </button>
-                ) : null}
-              </div>
+              {layout === "feed" ? (
+                <button
+                  type="button"
+                  onClick={() => setLayout("split")}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border/70 px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  Recently joined
+                </button>
+              ) : null}
             </div>
           </div>
         )}
 
-        {/* Scrollable Content */}
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="max-w-2xl mx-auto px-4 py-4">
-            {/* Create Post */}
+          <div className="mx-auto max-w-2xl px-4 py-4">
+            {/* Composer */}
             <div
-              className={`border border-border rounded-lg p-4 mb-6 ${
-                wallpaperActive ? "bg-card" : ""
+              className={`mb-4 rounded-lg border border-border ${
+                wallpaperActive ? "bg-card" : "bg-card/40"
               }`}
             >
-              <div className="flex gap-3">
-                <Avatar className="h-10 w-10">
-                  {currentUserAvatarUrl ? (
-                    <AvatarImage src={currentUserAvatarUrl} alt={currentUserName} />
-                  ) : null}
-                  <AvatarFallback className="text-sm bg-muted">
-                    {currentUserInitials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <Textarea
-                    value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
-                    placeholder={
-                      canParticipate
-                        ? "What's on your mind?"
-                        : participationMessage
-                    }
-                    disabled={!canParticipate}
-                    className="min-h-[80px] resize-none border-0 p-0 focus-visible:ring-0 shadow-none disabled:opacity-60"
-                  />
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                    {/* <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" disabled className="text-muted-foreground">
-                        <ImageIcon className="h-4 w-4 mr-1" />
-                        Photo
-                      </Button>
-                    </div> */}
-                    <Button
-                      size="sm"
-                      onClick={handlePost}
-                      disabled={!canParticipate || !newPostContent.trim() || posting}
-                      title={!canParticipate ? participationMessage : undefined}
-                      className="bg-[#5D1C6A] hover:bg-[#CA5995]"
-                    >
-                      {posting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                          Posting...
-                        </>
-                      ) : (
-                        "Post"
-                      )}
-                    </Button>
+              {!composerExpanded ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canParticipate) return;
+                    setComposerExpanded(true);
+                  }}
+                  disabled={!canParticipate}
+                  title={!canParticipate ? participationMessage : undefined}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Avatar className="h-8 w-8 shrink-0">
+                    {currentUserAvatarUrl ? (
+                      <AvatarImage
+                        src={currentUserAvatarUrl}
+                        alt={currentUserName}
+                      />
+                    ) : null}
+                    <AvatarFallback className="bg-muted text-xs">
+                      {currentUserInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-muted-foreground">
+                    {canParticipate
+                      ? "Share an update..."
+                      : participationMessage}
+                  </span>
+                </button>
+              ) : (
+                <div className="p-3">
+                  <div className="flex gap-3">
+                    <Avatar className="h-8 w-8 shrink-0">
+                      {currentUserAvatarUrl ? (
+                        <AvatarImage
+                          src={currentUserAvatarUrl}
+                          alt={currentUserName}
+                        />
+                      ) : null}
+                      <AvatarFallback className="bg-muted text-xs">
+                        {currentUserInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="mb-1.5 text-sm font-medium">
+                        What&apos;s on your mind?
+                      </p>
+                      <MentionComposer
+                        multiline
+                        inputRef={composerTextareaRef}
+                        value={newPostContent}
+                        onChange={setNewPostContent}
+                        placeholder="Share an update… type @name to tag someone"
+                        disabled={!canParticipate || posting}
+                        className="min-h-[88px] resize-none border-0 p-0 shadow-none focus-visible:ring-0"
+                      />
+                      <div className="mt-3 flex items-center justify-end gap-2 border-t border-border pt-3">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={collapseComposer}
+                          disabled={posting}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => void handlePost()}
+                          disabled={
+                            !canParticipate ||
+                            !newPostContent.trim() ||
+                            posting
+                          }
+                          className="bg-[#5D1C6A] hover:bg-[#CA5995]"
+                        >
+                          {posting ? (
+                            <>
+                              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                              Posting...
+                            </>
+                          ) : (
+                            "Post"
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Posts Feed */}
+            <PinnedWelcome
+              collapsed={guidelinesCollapsed}
+              onOpenGuidelines={openGuidelines}
+            />
+
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
               <>
-                <div className="border border-border rounded-lg divide-y divide-border">
-                  <div className="px-4">
+                <div className="divide-y divide-border/70">
+                  {posts.map((post) => (
                     <PostCard
-                      post={PINNED_ADMIN_POST}
+                      key={post.id}
+                      post={post}
                       currentUserId={currentUserId || ""}
                       isAdmin={isAdmin}
                       onLike={handleLike}
                       onDelete={handleDelete}
                       onComment={handleComment}
-                      onAdminDeletePost={isAdmin ? handleAdminDeletePost : undefined}
+                      onAdminDeletePost={
+                        isAdmin ? handleAdminDeletePost : undefined
+                      }
                       onAdminDeleteComment={
                         isAdmin ? handleAdminDeleteComment : undefined
                       }
                       onModerateUser={isAdmin ? moderateUser : undefined}
                       onPreviewProfile={onPreviewProfile}
                     />
-                  </div>
-                  {posts.map((post) => (
-                    <div key={post.id} className="px-4">
-                      <PostCard
-                        post={post}
-                        currentUserId={currentUserId || ""}
-                        isAdmin={isAdmin}
-                        onLike={handleLike}
-                        onDelete={handleDelete}
-                        onComment={handleComment}
-                        onAdminDeletePost={
-                          isAdmin ? handleAdminDeletePost : undefined
-                        }
-                        onAdminDeleteComment={
-                          isAdmin ? handleAdminDeleteComment : undefined
-                        }
-                        onModerateUser={isAdmin ? moderateUser : undefined}
-                        onPreviewProfile={onPreviewProfile}
-                      />
-                    </div>
                   ))}
                 </div>
                 {posts.length === 0 && (
-                  <div className="text-center py-12">
-                    <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                    <p className="text-muted-foreground">No community posts yet</p>
+                  <div className="py-12 text-center">
+                    <MessageSquare className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" />
+                    <p className="text-muted-foreground">
+                      No community posts yet
+                    </p>
                     <p className="text-sm text-muted-foreground/70">
                       Be the first member to share an update.
                     </p>
@@ -457,7 +594,6 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
               </>
             )}
 
-            {/* Load More Trigger */}
             <div ref={loadMoreRef} className="h-4" />
             {loadingMore && (
               <div className="flex items-center justify-center py-4">
@@ -468,25 +604,27 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
         </div>
       </div>
 
-      {/* Welcome board panel - desktop */}
-      {!isMobile && layout !== "feed" ? (
+      {!isMobile && layout === "split" ? (
         <WelcomeBoardPanel
           layout={layout}
           chatWidth={chatWidth}
           onLayoutChange={setLayout}
-          onResizeStart={startResize}
           onPreviewProfile={onPreviewProfile}
         />
       ) : null}
 
-      {/* Welcome board - mobile full panel */}
       {isMobile && mobileView === "welcome" && (
         <div className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-1 lg:hidden">
-          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card/80">
             <WelcomeBoard onPreviewProfile={onPreviewProfile} />
           </div>
         </div>
       )}
+
+      <GuidelinesDialog
+        open={guidelinesOpen}
+        onClose={() => setGuidelinesOpen(false)}
+      />
     </div>
   );
 }
