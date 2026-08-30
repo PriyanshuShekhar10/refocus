@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -192,25 +192,33 @@ export async function POST(
   ];
 
   if (mentionedUserIds.length > 0) {
-    void notifyCommunityMentions({
-      db,
-      kind: "mention",
-      actorUserId: userId,
-      actorName: authorName,
-      contentPreview: comment.content,
-      recipientIds: mentionedUserIds,
-    });
+    after(() =>
+      notifyCommunityMentions({
+        db,
+        kind: "mention",
+        actorUserId: userId,
+        actorName: authorName,
+        contentPreview: comment.content,
+        recipientIds: mentionedUserIds,
+      }).catch((err) => {
+        console.error("[email] community mention notify failed:", err);
+      }),
+    );
   }
 
   if (threadReplyIds.length > 0) {
-    void notifyCommunityMentions({
-      db,
-      kind: "thread_reply",
-      actorUserId: userId,
-      actorName: authorName,
-      contentPreview: comment.content,
-      recipientIds: threadReplyIds,
-    });
+    after(() =>
+      notifyCommunityMentions({
+        db,
+        kind: "thread_reply",
+        actorUserId: userId,
+        actorName: authorName,
+        contentPreview: comment.content,
+        recipientIds: threadReplyIds,
+      }).catch((err) => {
+        console.error("[email] community thread reply notify failed:", err);
+      }),
+    );
   }
 
   return NextResponse.json({

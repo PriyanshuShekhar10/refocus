@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -219,14 +219,18 @@ export async function POST(req: NextRequest) {
     "User";
 
   if (mentionedUserIds.length > 0) {
-    void notifyCommunityMentions({
-      db,
-      kind: "mention",
-      actorUserId: userId,
-      actorName: authorName,
-      contentPreview: post.content,
-      recipientIds: mentionedUserIds,
-    });
+    after(() =>
+      notifyCommunityMentions({
+        db,
+        kind: "mention",
+        actorUserId: userId,
+        actorName: authorName,
+        contentPreview: post.content,
+        recipientIds: mentionedUserIds,
+      }).catch((err) => {
+        console.error("[email] community mention notify failed:", err);
+      }),
+    );
   }
 
   return NextResponse.json({
