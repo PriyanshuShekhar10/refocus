@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LogIn,
   Mail,
+  Megaphone,
   MoreHorizontal,
   Settings2,
   Shield,
@@ -37,6 +38,7 @@ import AdminMailbox, {
 } from "./AdminMailbox";
 import AdminCrew from "./AdminCrew";
 import AdminTestCall from "./AdminTestCall";
+import AdminUpdates from "./AdminUpdates";
 
 type AdminSection =
   | "overview"
@@ -49,6 +51,7 @@ type AdminSection =
   | "logins"
   | "crew"
   | "test-call"
+  | "updates"
   | "config";
 
 type DailyAccountRow = {
@@ -262,6 +265,7 @@ const SECTIONS: {
   { id: "logins", label: "Logins", icon: LogIn },
   { id: "deleted", label: "Deleted", icon: UserX },
   { id: "mailbox", label: "Mailbox", icon: Mail },
+  { id: "updates", label: "Updates", icon: Megaphone },
   { id: "ip-activity", label: "Banned IP activity", icon: Activity },
   { id: "reports", label: "Reports", icon: Flag },
   { id: "history", label: "History", icon: History },
@@ -287,6 +291,8 @@ const ACTION_LABELS: Record<string, string> = {
   "test_call.create": "Created Daily test call",
   "session.club": "Clubbed sessions",
   "daily.switch_account": "Switched Daily.co account",
+  "update.publish": "Published product update",
+  "update.delete": "Deleted product update",
 };
 
 function StatCard({
@@ -1403,6 +1409,8 @@ export default function AdminPanel() {
         {section === "crew" ? <AdminCrew active /> : null}
 
         {section === "test-call" ? <AdminTestCall active /> : null}
+
+        {section === "updates" ? <AdminUpdates active={section === "updates"} /> : null}
 
         {section === "users" ? (
           <div className="space-y-4">

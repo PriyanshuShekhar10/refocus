@@ -6,6 +6,8 @@ import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { VerifiedName } from "@/components/verified-tag";
+import DeviceTestModal from "../DeviceTestModal";
+import SidebarUpdatesBox from "../Updates/SidebarUpdatesBox";
 
 function JoinCountdown({ startTime }: { startTime: string | Date }) {
   const [timeLeft, setTimeLeft] = useState<{ minutes: number; seconds: number } | null>(null);
@@ -136,6 +138,7 @@ export function CalendarRightSidebar({
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
+  const [deviceTestOpen, setDeviceTestOpen] = useState(false);
   
   useEffect(() => {
     setMounted(true);
@@ -565,6 +568,8 @@ export function CalendarRightSidebar({
         </div>
       )}
 
+      <SidebarUpdatesBox />
+
       <div className="min-h-0 flex-1" aria-hidden="true" />
 
       {joinableSession ? (
@@ -597,6 +602,29 @@ export function CalendarRightSidebar({
 
             <button
               type="button"
+              onClick={() => setDeviceTestOpen(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200/80 bg-white px-3 py-2 text-xs font-semibold text-[#54657E] transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              Test audio and video
+            </button>
+
+            <button
+              type="button"
               onClick={() => {
                 void navigator.clipboard.writeText(
                   `${window.location.origin}/sessions/${joinableSession.id}`,
@@ -609,7 +637,31 @@ export function CalendarRightSidebar({
           </div>
         </div>
       ) : (
-        <div className="shrink-0 space-y-0.5 border-t border-gray-100/80 pt-2 dark:border-gray-800/70">
+        <div className="shrink-0 space-y-1.5 border-t border-gray-100/80 pt-2 dark:border-gray-800/70">
+          <button
+            type="button"
+            onClick={() => setDeviceTestOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200/80 bg-white px-3 py-2 text-xs font-semibold text-[#54657E] transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-3.5 w-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+            Test audio and video
+          </button>
+
+          <div className="space-y-0.5">
           <button
             type="button"
             onClick={() => {
@@ -667,8 +719,14 @@ export function CalendarRightSidebar({
             </svg>
             Sign Out
           </button>
+          </div>
         </div>
       )}
+
+      <DeviceTestModal
+        open={deviceTestOpen}
+        onClose={() => setDeviceTestOpen(false)}
+      />
         </div>
       </div>
     </aside>

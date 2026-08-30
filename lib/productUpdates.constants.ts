@@ -1,0 +1,2 @@
+export const PRODUCT_UPDATE_BODY_MAX = 280;
+export const PRODUCT_UPDATE_TITLE_MAX = 80;
