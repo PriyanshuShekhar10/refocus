@@ -868,25 +868,7 @@
   opacity: 0.01;
 }
 
-/* ───────── REVEAL ───────── */
-.reveal {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  will-change: opacity, transform;
-}
-.revealIn {
-  opacity: 1;
-  transform: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .reveal,
-  .revealIn {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
   .arrow {
     transition: none;
   }

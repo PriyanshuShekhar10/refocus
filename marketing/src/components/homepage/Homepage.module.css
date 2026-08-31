@@ -3,7 +3,7 @@
    Design system:
      · type: Inter (display + body), Geist Mono for labels/numerals
      · color: warm neutrals + Plum (action) + Sage (presence)
-     · motion: fade-up on scroll, 3px arrow shift
+     · motion: 3px arrow shift on hover only
    ───────────────────────────────────────────────────────────── */
 
 .root {
@@ -671,37 +671,11 @@
   transition: opacity 0.5s ease;
 }
 .focusStatusJoining {
-  opacity: 1;
+  opacity: 0;
 }
 .focusStatusLive {
-  opacity: 0;
+  opacity: 1;
   color: var(--sage-ink);
-}
-.revealIn .focusStatusJoining {
-  animation: focusStatusOut 2.4s ease forwards;
-}
-.revealIn .focusStatusLive {
-  animation: focusStatusIn 2.4s ease forwards;
-}
-@keyframes focusStatusOut {
-  0%,
-  45% {
-    opacity: 1;
-  }
-  60%,
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes focusStatusIn {
-  0%,
-  50% {
-    opacity: 0;
-  }
-  65%,
-  100% {
-    opacity: 1;
-  }
 }
 
 .micRow {
@@ -830,18 +804,7 @@
   stroke-width: 2.75;
   stroke-linecap: round;
   stroke-dasharray: 339.292;
-  stroke-dashoffset: 110;
-}
-.revealIn .timerProgress {
-  animation: timerProgress 5.5s ease-out both;
-}
-@keyframes timerProgress {
-  from {
-    stroke-dashoffset: 95;
-  }
-  to {
-    stroke-dashoffset: 165;
-  }
+  stroke-dashoffset: 165;
 }
 .timerTime {
   position: relative;
@@ -902,31 +865,7 @@
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-}
-.revealIn .timerLink {
-  animation: timerSyncPulse 2.8s ease-in-out 0.4s both;
-}
-.revealIn .timerSyncLabel {
-  animation: timerSyncLabelIn 2.8s ease 0.4s both;
-}
-@keyframes timerSyncPulse {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  40%,
-  60% {
-    opacity: 1;
-  }
-}
-@keyframes timerSyncLabelIn {
-  0% {
-    opacity: 0;
-  }
-  35%,
-  100% {
-    opacity: 1;
-  }
+  opacity: 1;
 }
 
 /* Friends */
@@ -1006,11 +945,11 @@
   gap: 7px;
 }
 .friendMetaOffline {
-  opacity: 1;
+  opacity: 0;
   color: #b7b3ad;
 }
 .friendMetaOnline {
-  opacity: 0;
+  opacity: 1;
   color: var(--sage-ink);
 }
 .friendInvite {
@@ -1026,32 +965,6 @@
 .friendInvite:hover {
   color: var(--plum-hover);
   text-decoration: underline;
-}
-.revealIn .friendRowLin .friendMetaOffline {
-  animation: friendMetaSwapOut 3.2s ease forwards;
-}
-.revealIn .friendRowLin .friendMetaOnline {
-  animation: friendMetaSwapIn 3.2s ease forwards;
-}
-@keyframes friendMetaSwapOut {
-  0%,
-  55% {
-    opacity: 1;
-  }
-  70%,
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes friendMetaSwapIn {
-  0%,
-  64% {
-    opacity: 0;
-  }
-  75%,
-  100% {
-    opacity: 1;
-  }
 }
 
 /* Lounge chat */
@@ -1095,23 +1008,8 @@
 }
 .bubbleAppear,
 .bubbleAppearLate {
-  opacity: 0;
-}
-.revealIn .bubbleAppear {
-  animation: bubbleIn 0.55s ease 0.7s forwards;
-}
-.revealIn .bubbleAppearLate {
-  animation: bubbleIn 0.55s ease 1.5s forwards;
-}
-@keyframes bubbleIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  opacity: 1;
+  transform: none;
 }
 
 @media (max-width: 640px) {
@@ -1447,57 +1345,8 @@
   opacity: 0.01;
 }
 
-/* ───────── REVEAL ───────── */
-.reveal {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  will-change: opacity, transform;
-}
-.revealIn {
-  opacity: 1;
-  transform: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .reveal,
-  .revealIn {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
   .arrow {
     transition: none;
-  }
-  .revealIn .focusStatusJoining,
-  .revealIn .focusStatusLive,
-  .revealIn .timerProgress,
-  .revealIn .timerLink,
-  .revealIn .timerSyncLabel,
-  .revealIn .friendRowLin .friendMetaOffline,
-  .revealIn .friendRowLin .friendMetaOnline,
-  .revealIn .bubbleAppear,
-  .revealIn .bubbleAppearLate {
-    animation: none;
-  }
-  .focusStatusJoining {
-    opacity: 0;
-  }
-  .focusStatusLive {
-    opacity: 1;
-  }
-  .timerSyncLabel {
-    opacity: 1;
-  }
-  .friendMetaOffline {
-    opacity: 0;
-  }
-  .friendMetaOnline {
-    opacity: 1;
-  }
-  .bubbleAppear,
-  .bubbleAppearLate {
-    opacity: 1;
-    transform: none;
   }
 }
