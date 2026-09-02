@@ -8,7 +8,7 @@ export async function createOrGetDailyRoom(sessionId: string, exp?: number) {
   // Room name must be URL-safe and unique per session
   const roomName = `session-${sessionId}`;
   const roomProperties = {
-    enable_prejoin_ui: false,
+    enable_prejoin_ui: true,
     enable_screenshare: true,
     enable_chat: true,
     // Lock the room down: anyone with the token can join, no one is room owner.

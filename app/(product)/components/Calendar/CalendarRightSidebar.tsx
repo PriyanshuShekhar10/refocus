@@ -586,6 +586,7 @@ export function CalendarRightSidebar({
           <div className="flex flex-col gap-1.5">
             <Link
               href={`/sessions/${joinableSession.id}`}
+              onClick={() => setDeviceTestOpen(false)}
               className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5D1C6A] px-3 py-2 text-center text-xs font-semibold text-white transition-colors hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]"
             >
               <svg

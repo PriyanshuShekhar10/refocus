@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { formatLocalDateTime } from "@/lib/localTime";
+import type { DailyCall } from "@daily-co/daily-js";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
+import MediaPermissionHelp, {
+  type DailyDeviceError,
+} from "@/app/(product)/components/MediaPermissionHelp";
 import { WRAP_UP_MINUTES } from "@/lib/sessionWindow";
 import { playSessionCompleteSound, unlockSessionCompleteSound } from "@/lib/sessionCompleteSound";
 import { getAblyClient } from "@/lib/ably-client";
@@ -19,7 +22,7 @@ import {
   SessionTaskSheet,
 } from "./SessionTaskRail";
 
-type Phase = "loading" | "ready" | "in-call" | "ended" | "error";
+type Phase = "loading" | "in-call" | "ended" | "error";
 
 type PrejoinInfo = {
   partnerName: string | null;
@@ -93,9 +96,9 @@ export default function ClientCall({
 
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState<string | null>(null);
-  const [dailyUrl, setDailyUrl] = useState<string | null>(null);
+  const [joinIframeUrl, setJoinIframeUrl] = useState<string | null>(null);
   const [muted, setMuted] = useState<boolean>(false);
-  const [videoOff, setVideoOff] = useState<boolean>(false);
+  const [deviceError, setDeviceError] = useState<DailyDeviceError | null>(null);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState<boolean>(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
@@ -109,11 +112,6 @@ export default function ClientCall({
 
   const partnerDisplayName =
     partner?.name ?? prejoin.partnerName ?? "session partner";
-  const partnerInitial =
-    partnerDisplayName.charAt(0).toUpperCase() ||
-    prejoin.partnerInitial ||
-    "P";
-  const partnerAvatarUrl = partner?.avatarUrl ?? prejoin.partnerAvatarUrl ?? null;
 
   const endMs = useMemo(() => new Date(prejoin.endIso).getTime(), [prejoin.endIso]);
   const startMs = useMemo(() => new Date(prejoin.startIso).getTime(), [prejoin.startIso]);
@@ -133,7 +131,8 @@ export default function ClientCall({
   const wrapUpEndingShownRef = useRef<boolean>(false);
   const completeSoundPlayedRef = useRef<boolean>(false);
   const attendanceReportedRef = useRef<boolean>(false);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const callContainerRef = useRef<HTMLDivElement | null>(null);
+  const callFrameRef = useRef<DailyCall | null>(null);
 
   const reportAttendance = useCallback(() => {
     if (attendanceReportedRef.current) return;
@@ -197,7 +196,6 @@ export default function ClientCall({
 
         const query = new URLSearchParams({
           t: tokenData.token,
-          prejoin: "false",
           theme: isDark ? "dark" : "light",
           accent: ACCENT,
         });
@@ -206,8 +204,10 @@ export default function ClientCall({
         }
 
         const url = `https://${tokenData.domain}/${tokenData.roomName}?${query.toString()}`;
-        setDailyUrl(url);
-        setPhase("ready");
+        unlockSessionCompleteSound();
+        setJoinIframeUrl(url);
+        setDeviceError(null);
+        setPhase("in-call");
       } catch (e) {
         if (!cancelled) {
           setError((e as Error).message);
@@ -221,9 +221,70 @@ export default function ClientCall({
     };
   }, [sessionId, isDark]);
 
+  const handleLeftMeeting = useCallback(() => {
+    if (endMs - Date.now() < COMPLETION_GRACE_MS) {
+      setCompletedNaturally(true);
+      if (!completeSoundPlayedRef.current) {
+        completeSoundPlayedRef.current = true;
+        playSessionCompleteSound();
+      }
+    }
+    reportAttendance();
+    setPhase("ended");
+  }, [endMs, reportAttendance]);
+
+  // Mount Daily Prebuilt via daily-js so we can listen for camera-error events.
+  useEffect(() => {
+    if (phase !== "in-call" || !joinIframeUrl || !callContainerRef.current) return;
+
+    let cancelled = false;
+    let callFrame: DailyCall | null = null;
+
+    const setup = async () => {
+      const Daily = (await import("@daily-co/daily-js")).default;
+      if (cancelled || !callContainerRef.current) return;
+
+      callFrame = Daily.createFrame(callContainerRef.current, {
+        iframeStyle: {
+          width: "100%",
+          height: "100%",
+          border: "0",
+        },
+        showLeaveButton: false,
+      });
+      callFrameRef.current = callFrame;
+
+      callFrame
+        .on("camera-error", (event) => {
+          if (event.error) {
+            setDeviceError(event.error as DailyDeviceError);
+          }
+        })
+        .on("left-meeting", () => {
+          handleLeftMeeting();
+        });
+
+      try {
+        await callFrame.join({ url: joinIframeUrl });
+      } catch {
+        // Daily surfaces device errors via camera-error; join failures are rare here.
+      }
+    };
+
+    void setup();
+
+    return () => {
+      cancelled = true;
+      if (callFrame) {
+        void callFrame.destroy();
+      }
+      callFrameRef.current = null;
+    };
+  }, [phase, joinIframeUrl, handleLeftMeeting]);
+
   // Keep partner info in sync when the other participant joins mid-wait.
   useEffect(() => {
-    if (phase !== "ready" && phase !== "in-call") return;
+    if (phase !== "in-call") return;
     let cancelled = false;
 
     const syncPartner = async () => {
@@ -246,31 +307,6 @@ export default function ClientCall({
       clearInterval(interval);
     };
   }, [phase, sessionId]);
-
-  // Listen for events emitted by the Daily prebuilt iframe so we can react
-  // to a graceful exit and show our own end-screen instead of leaving the
-  // user stranded in a blank iframe.
-  useEffect(() => {
-    if (phase !== "in-call") return;
-    const handler = (event: MessageEvent) => {
-      const data = event?.data;
-      if (!data || typeof data !== "object") return;
-      const action = (data as { action?: string }).action;
-      if (action === "left-meeting") {
-        if (endMs - Date.now() < COMPLETION_GRACE_MS) {
-          setCompletedNaturally(true);
-          if (!completeSoundPlayedRef.current) {
-            completeSoundPlayedRef.current = true;
-            playSessionCompleteSound();
-          }
-        }
-        reportAttendance();
-        setPhase("ended");
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
-  }, [phase, endMs, reportAttendance]);
 
   // Drive the in-call countdown. Re-computing from the wall clock each tick
   // keeps the timer honest if the tab is throttled while backgrounded.
@@ -390,40 +426,14 @@ export default function ClientCall({
     }
   }, [cheerSending, sessionId]);
 
-  const startCall = useCallback(() => {
-    // Unlock Web Audio during this click so the end-of-session chime can play
-    // later when the timer fires (no user gesture then).
-    unlockSessionCompleteSound();
-    setPhase("in-call");
-  }, []);
-
-  const sendDailyMessage = useCallback((message: Record<string, unknown>) => {
-    const frame = iframeRef.current;
-    if (!frame || !frame.contentWindow) return;
-    try {
-      frame.contentWindow.postMessage({ ...message, what: "iframe-call-message" }, "*");
-    } catch {
-      // ignore
-    }
-  }, []);
-
   const toggleMute = useCallback(() => {
     unlockSessionCompleteSound();
     setMuted((prev) => {
       const next = !prev;
-      sendDailyMessage({ action: "set-audio", state: !next });
+      callFrameRef.current?.setLocalAudio(!next);
       return next;
     });
-  }, [sendDailyMessage]);
-
-  const toggleVideo = useCallback(() => {
-    unlockSessionCompleteSound();
-    setVideoOff((prev) => {
-      const next = !prev;
-      sendDailyMessage({ action: "set-video", state: !next });
-      return next;
-    });
-  }, [sendDailyMessage]);
+  }, []);
 
   const leaveCall = useCallback(() => {
     unlockSessionCompleteSound();
@@ -435,9 +445,17 @@ export default function ClientCall({
       }
     }
     reportAttendance();
-    sendDailyMessage({ action: "leave" });
+    const frame = callFrameRef.current;
+    if (frame) {
+      void frame.leave();
+    }
     setPhase("ended");
-  }, [endMs, reportAttendance, sendDailyMessage]);
+  }, [endMs, reportAttendance]);
+
+  const retryDeviceSetup = useCallback(() => {
+    setDeviceError(null);
+    void callFrameRef.current?.startCamera();
+  }, []);
 
   const inWrapUp = remainingMs === 0 && wrapUpRemainingMs > 0;
   const urgency: "normal" | "warning" | "critical" =
@@ -456,20 +474,6 @@ export default function ClientCall({
     const elapsed = totalMs - remainingMs;
     return Math.max(0, Math.min(1, elapsed / totalMs));
   }, [phase, totalMs, remainingMs]);
-
-  const [startsAt, setStartsAt] = useState("");
-  useEffect(() => {
-    setStartsAt(
-      formatLocalDateTime(prejoin.startIso, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
-    );
-  }, [prejoin.startIso]);
 
   if (phase === "loading") {
     return (
@@ -603,182 +607,8 @@ export default function ClientCall({
     );
   }
 
-  if (phase === "ready") {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#FFF1D3]/50 via-white to-slate-50 p-4 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        <motion.div
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-          className="w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
-        >
-          <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-[#5D1C6A] dark:text-[#CA5995]">
-                  Refocus session
-                </p>
-                <h1 className="mt-0.5 text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  {prejoin.sessionName || `${prejoin.sessionType} · ${prejoin.durationMin} min`}
-                </h1>
-              </div>
-              <Link
-                href="/dashboard"
-                className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-              >
-                ← Dashboard
-              </Link>
-            </div>
-          </div>
-
-          <div className="px-6 py-5">
-            <div className="rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800/60">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                When
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
-                {startsAt || "…"} · {prejoin.durationMin} min
-              </p>
-            </div>
-
-            {partner ? (
-              <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#5D1C6A] text-sm font-semibold text-white">
-                  {partnerAvatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={partnerAvatarUrl}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    partnerInitial
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
-                    {partnerDisplayName}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Your session partner
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowReportDialog(true)}
-                  className="shrink-0 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-950/30"
-                >
-                  Report
-                </button>
-              </div>
-            ) : (
-              <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-                Waiting for your session partner to join…
-              </p>
-            )}
-
-            <div className="mt-4 flex gap-2">
-              <motion.button
-                type="button"
-                onClick={() => setMuted((m) => !m)}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
-                className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                  muted
-                    ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-300"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                }`}
-              >
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.span
-                    key={muted ? "mic-off" : "mic-on"}
-                    initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
-                    transition={{ duration: 0.15 }}
-                    className="inline-block"
-                  >
-                    {muted ? "🔇 Mic off" : "🎙 Mic on"}
-                  </motion.span>
-                </AnimatePresence>
-              </motion.button>
-              <motion.button
-                type="button"
-                onClick={() => setVideoOff((v) => !v)}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
-                className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                  videoOff
-                    ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-300"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                }`}
-              >
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.span
-                    key={videoOff ? "cam-off" : "cam-on"}
-                    initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
-                    transition={{ duration: 0.15 }}
-                    className="inline-block"
-                  >
-                    {videoOff ? "📷 Camera off" : "🎥 Camera on"}
-                  </motion.span>
-                </AnimatePresence>
-              </motion.button>
-            </div>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              You can change these anytime inside the call.
-            </p>
-          </div>
-
-          <div className="border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-700 dark:bg-slate-800/40">
-            <motion.button
-              type="button"
-              onClick={startCall}
-              whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
-              className="w-full rounded-lg bg-[#5D1C6A] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#CA5995] focus:outline-none focus:ring-2 focus:ring-[#CA5995] focus:ring-offset-2 dark:focus:ring-offset-slate-900"
-            >
-              Join session
-            </motion.button>
-          </div>
-        </motion.div>
-        {partner ? (
-          <ReportDialog
-            open={showReportDialog}
-            onClose={() => setShowReportDialog(false)}
-            targetType="session_call"
-            targetId={sessionId}
-            reportedUserId={partner.userId}
-            reportedLabel={partnerDisplayName}
-            contentPreview={`Session with ${partnerDisplayName}`}
-          />
-        ) : null}
-      </div>
-    );
-  }
-
   // phase === "in-call"
-  if (!dailyUrl) return null;
-  // Build the URL with the latest mute/video state so the iframe joins
-  // exactly the way the user configured on the pre-join screen.
-  const iframeUrl = (() => {
-    try {
-      const u = new URL(dailyUrl);
-      if (muted) {
-        u.searchParams.set("startAudioOff", "true");
-      } else {
-        u.searchParams.delete("startAudioOff");
-      }
-      if (videoOff) {
-        u.searchParams.set("startVideoOff", "true");
-      } else {
-        u.searchParams.delete("startVideoOff");
-      }
-      return u.toString();
-    } catch {
-      return dailyUrl;
-    }
-  })();
+  if (!joinIframeUrl) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-950">
@@ -851,13 +681,18 @@ export default function ClientCall({
       </div>
 
       <div className="relative flex min-h-0 flex-1">
-        <iframe
-          ref={iframeRef}
-          src={iframeUrl}
-          allow="camera *; microphone *; fullscreen *; display-capture *; autoplay *; clipboard-read *; clipboard-write *"
-          title="Refocus session"
-          className="min-w-0 flex-1 border-0"
+        <div
+          ref={callContainerRef}
+          className="min-w-0 flex-1"
+          aria-label="Video call"
         />
+        {deviceError ? (
+          <MediaPermissionHelp
+            error={deviceError}
+            onTryAgain={retryDeviceSetup}
+            onDismiss={() => setDeviceError(null)}
+          />
+        ) : null}
         {cheerBurstId > 0 ? (
           <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
             <Confetti
@@ -1048,8 +883,6 @@ export default function ClientCall({
         )}
       </AnimatePresence>
 
-      {/* helper hooks for the parent to wire up if ever needed */}
-      <span hidden onClick={toggleMute} onContextMenu={toggleVideo} />
       {partner ? (
         <ReportDialog
           open={showReportDialog}

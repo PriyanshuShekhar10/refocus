@@ -16,6 +16,9 @@ function mediaErrorMessage(err: unknown): string {
     if (err.name === "NotFoundError") {
       return "No camera or microphone was found on this device.";
     }
+    if (err.name === "NotReadableError" || err.name === "AbortError") {
+      return "Your camera or microphone is in use by another app or tab. Close Zoom, Teams, or other video apps, then try again.";
+    }
   }
   return "Could not access your camera or microphone.";
 }
