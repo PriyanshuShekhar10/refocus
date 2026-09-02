@@ -72,12 +72,10 @@ export const CATEGORIES_ID = {
     topics: [
       "study with me online: rutinitas belajar UTBK/SNBT yang konsisten",
       "ruang belajar online untuk persiapan seleksi PTN sendirian di rumah",
-      "UTBK: blok revisi harian yang benar-benar bisa dimulai",
-      "SNBT: struktur sesi setelah tryout buruk tanpa spiral seharian",
-      "belajar sendirian persiapan ujian: mengatasi isolasi dengan co-presence",
       "active recall untuk materi UTBK: sesi fokus vs baca ulang pasif",
       "tiga target belajar hari ini saat silabus UTBK terasa tak berujung",
       "belajar malam hari saat semua sudah tidur — tetap fokus tanpa scroll",
+      "seleksi PTN: jadwal mingguan revisi tanpa burnout",
     ],
   },
 

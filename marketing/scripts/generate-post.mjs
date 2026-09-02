@@ -149,41 +149,124 @@ function categoriesForLocale(locale) {
   return locale === "id" ? CATEGORIES_ID : CATEGORIES;
 }
 
-function pickTopic(category, existingTitles) {
+/** Topic keywords that must not repeat across recent posts in the same locale. */
+const TOPIC_KEYWORDS = [
+  "utbk",
+  "snbt",
+  "tryout",
+  "seleksi",
+  "body doubling",
+  "body-doubling",
+  "coworking",
+  "focusmate",
+  "adhd",
+  "freelancer",
+  "wfh",
+  "isolasi",
+  "kesepian",
+  "study with me",
+  "upsc",
+  "prelims",
+  "mains",
+  "neet",
+  "jee",
+];
+
+function topicKeywords(text) {
+  const lower = text.toLowerCase();
+  return TOPIC_KEYWORDS.filter((kw) => lower.includes(kw));
+}
+
+function topicClashes(candidate, existingTexts) {
+  const keys = topicKeywords(candidate);
+  if (keys.length === 0) return false;
+  return existingTexts.some((existing) => {
+    const existingKeys = topicKeywords(existing);
+    return keys.some((k) => existingKeys.includes(k));
+  });
+}
+
+function pickTopic(category, existingTexts) {
   const forced =
     getArg("--topic") || process.env.POST_TOPIC?.trim() || "";
-  if (forced) return forced;
+  if (forced) {
+    if (topicClashes(forced, existingTexts)) {
+      throw new Error(
+        `Topic "${forced}" overlaps an existing post keyword — pick a different angle.`,
+      );
+    }
+    return forced;
+  }
 
   const pool = category.topics;
   const seed = Date.now() + Math.floor(Math.random() * 1000);
   const start = seed % pool.length;
   for (let k = 0; k < pool.length; k++) {
     const candidate = pool[(start + k) % pool.length];
-    const key = candidate.split(" ").slice(0, 4).join(" ").toLowerCase();
-    const clash = existingTitles.some((t) =>
-      t.toLowerCase().includes(key.slice(0, 24)),
-    );
-    if (!clash) return candidate;
+    if (!topicClashes(candidate, existingTexts)) return candidate;
   }
-  return pool[start];
+  throw new Error(
+    `No unused topic angle left in ${category.id} — expand the pool or retire overlapping posts.`,
+  );
 }
 
 async function getExistingMeta(blogDir, urlPrefix) {
-  if (!existsSync(blogDir)) return { titles: [], urls: [] };
+  if (!existsSync(blogDir)) {
+    return { titles: [], urls: [], slugs: [], categories: [], dedupTexts: [] };
+  }
   const files = (await readdir(blogDir)).filter((f) => f.endsWith(".md"));
   const titles = [];
   const urls = [];
+  const slugs = [];
+  const categories = [];
+  const dedupTexts = [];
   for (const f of files) {
+    const slug = f.replace(/\.md$/, "");
     const raw = await readFile(join(blogDir, f), "utf8");
-    const m = raw.match(/^title:\s*(.+)$/m);
-    if (m) titles.push(m[1].replace(/^["']|["']$/g, "").trim());
-    urls.push(`${SITE}${urlPrefix}/${f.replace(/\.md$/, "")}`);
+    const titleM = raw.match(/^title:\s*(.+)$/m);
+    const catM = raw.match(/^category:\s*(.+)$/m);
+    const title = titleM
+      ? titleM[1].replace(/^["']|["']$/g, "").trim()
+      : slug;
+    const cat = catM
+      ? catM[1].replace(/^["']|["']$/g, "").trim()
+      : "productivity";
+    titles.push(title);
+    slugs.push(slug);
+    categories.push(cat);
+    dedupTexts.push(`${title} ${slug} ${cat}`);
+    urls.push(`${SITE}${urlPrefix}/${slug}`);
   }
-  return { titles, urls };
+  return { titles, urls, slugs, categories, dedupTexts };
 }
 
-async function uniqueSlug(blogDir, slug) {
+/** Prefer the niche with the fewest posts when rotating by slot (reduces pile-up). */
+function pickCategoryBySlot(slot, locale, categoriesMap, existingCategories) {
+  const ids = CATEGORY_IDS;
+  const counts = Object.fromEntries(ids.map((id) => [id, 0]));
+  for (const c of existingCategories) {
+    if (counts[c] !== undefined) counts[c]++;
+  }
+  const sorted = [...ids].sort((a, b) => counts[a] - counts[b] || a.localeCompare(b));
+  const DAY = Math.floor(Date.now() / 86400000);
+  const slotNum = Number(slot) || 0;
+  const offset = (DAY + slotNum) % sorted.length;
+  return sorted[offset];
+}
+
+async function uniqueSlug(blogDir, slug, existingSlugs = []) {
   const base = slug || "post";
+  const words = base.split("-").filter((w) => w.length > 3);
+  const tooSimilar = existingSlugs.some((s) => {
+    const sw = s.split("-").filter((w) => w.length > 3);
+    const overlap = words.filter((w) => sw.includes(w)).length;
+    return overlap >= 2;
+  });
+  if (tooSimilar) {
+    throw new Error(
+      `Slug "${base}" is too similar to an existing post — use a clearly different angle.`,
+    );
+  }
   if (!existsSync(join(blogDir, `${base}.md`))) return base;
 
   const stamp = new Date()
@@ -488,9 +571,9 @@ async function main() {
   const categoryId = resolveCategoryId(locale);
   const allCategories = categoriesForLocale(locale);
   const category = allCategories[categoryId];
-  const { titles: existingTitles, urls: existingUrls } =
+  const { titles: existingTitles, urls: existingUrls, slugs: existingSlugs, dedupTexts } =
     await getExistingMeta(blogDir, urlPrefix);
-  const topic = pickTopic(category, existingTitles);
+  const topic = pickTopic(category, dedupTexts);
 
   console.log(`Locale: ${locale}`);
   console.log(`Category: ${category.id} (${category.label})`);
@@ -519,7 +602,7 @@ async function main() {
   console.log(`Pillar link: ${pillarUrl(category, locale)}`);
 
   const baseSlug = slugify(result.slug || title);
-  const slug = await uniqueSlug(blogDir, baseSlug);
+  const slug = await uniqueSlug(blogDir, baseSlug, existingSlugs);
 
   const contents = `${toFrontmatter({
     title,
