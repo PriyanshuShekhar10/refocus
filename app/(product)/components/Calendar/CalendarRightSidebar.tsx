@@ -8,6 +8,7 @@ import Link from "next/link";
 import { VerifiedName } from "@/components/verified-tag";
 import DeviceTestModal from "../DeviceTestModal";
 import SidebarUpdatesBox from "../Updates/SidebarUpdatesBox";
+import { releaseAllLocalMediaStreams } from "@/lib/localMedia";
 
 function JoinCountdown({ startTime }: { startTime: string | Date }) {
   const [timeLeft, setTimeLeft] = useState<{ minutes: number; seconds: number } | null>(null);
@@ -586,7 +587,10 @@ export function CalendarRightSidebar({
           <div className="flex flex-col gap-1.5">
             <Link
               href={`/sessions/${joinableSession.id}`}
-              onClick={() => setDeviceTestOpen(false)}
+              onClick={() => {
+                releaseAllLocalMediaStreams();
+                setDeviceTestOpen(false);
+              }}
               className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5D1C6A] px-3 py-2 text-center text-xs font-semibold text-white transition-colors hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]"
             >
               <svg
@@ -726,7 +730,10 @@ export function CalendarRightSidebar({
 
       <DeviceTestModal
         open={deviceTestOpen}
-        onClose={() => setDeviceTestOpen(false)}
+        onClose={() => {
+          releaseAllLocalMediaStreams();
+          setDeviceTestOpen(false);
+        }}
       />
         </div>
       </div>

@@ -12,6 +12,7 @@ import MediaPermissionHelp, {
 } from "@/app/(product)/components/MediaPermissionHelp";
 import { WRAP_UP_MINUTES } from "@/lib/sessionWindow";
 import { playSessionCompleteSound, unlockSessionCompleteSound } from "@/lib/sessionCompleteSound";
+import { prepareForDailyCall, releaseAllLocalMediaStreams } from "@/lib/localMedia";
 import { getAblyClient } from "@/lib/ably-client";
 import { sessionAlertsChannel } from "@/lib/realtimeChannels";
 import type { SessionCheerEvent } from "@/types/sessionCheer";
@@ -133,6 +134,23 @@ export default function ClientCall({
   const attendanceReportedRef = useRef<boolean>(false);
   const callContainerRef = useRef<HTMLDivElement | null>(null);
   const callFrameRef = useRef<DailyCall | null>(null);
+  const deviceHelpDismissedRef = useRef(false);
+
+  const showDeviceError = useCallback((error: DailyDeviceError) => {
+    if (deviceHelpDismissedRef.current) return;
+    setDeviceError(error);
+  }, []);
+
+  const dismissDeviceHelp = useCallback(() => {
+    deviceHelpDismissedRef.current = true;
+    setDeviceError(null);
+  }, []);
+
+  // Session page mounts without the dashboard sidebar — release any streams
+  // the device test may still hold from the previous page during navigation.
+  useEffect(() => {
+    releaseAllLocalMediaStreams();
+  }, []);
 
   const reportAttendance = useCallback(() => {
     if (attendanceReportedRef.current) return;
@@ -205,6 +223,7 @@ export default function ClientCall({
 
         const url = `https://${tokenData.domain}/${tokenData.roomName}?${query.toString()}`;
         unlockSessionCompleteSound();
+        deviceHelpDismissedRef.current = false;
         setJoinIframeUrl(url);
         setDeviceError(null);
         setPhase("in-call");
@@ -244,12 +263,25 @@ export default function ClientCall({
       const Daily = (await import("@daily-co/daily-js")).default;
       if (cancelled || !callContainerRef.current) return;
 
-      callFrame = Daily.createFrame(callContainerRef.current, {
-        iframeStyle: {
-          width: "100%",
-          height: "100%",
-          border: "0",
-        },
+      // Device test holds the camera/mic on the Refocus origin; Daily needs
+      // the physical devices inside its iframe.
+      await prepareForDailyCall();
+
+      const container = callContainerRef.current;
+      container.replaceChildren();
+
+      const iframe = document.createElement("iframe");
+      iframe.title = "Refocus session";
+      iframe.setAttribute(
+        "allow",
+        "camera; microphone; autoplay; display-capture; fullscreen; clipboard-read; clipboard-write",
+      );
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.border = "0";
+      container.appendChild(iframe);
+
+      callFrame = Daily.wrap(iframe, {
         showLeaveButton: false,
       });
       callFrameRef.current = callFrame;
@@ -257,8 +289,14 @@ export default function ClientCall({
       callFrame
         .on("camera-error", (event) => {
           if (event.error) {
-            setDeviceError(event.error as DailyDeviceError);
+            const err = event.error as DailyDeviceError;
+            console.info("[Daily] camera-error", err.type, err.msg ?? "");
+            showDeviceError(err);
           }
+        })
+        .on("started-camera", () => {
+          deviceHelpDismissedRef.current = false;
+          setDeviceError(null);
         })
         .on("left-meeting", () => {
           handleLeftMeeting();
@@ -280,7 +318,7 @@ export default function ClientCall({
       }
       callFrameRef.current = null;
     };
-  }, [phase, joinIframeUrl, handleLeftMeeting]);
+  }, [phase, joinIframeUrl, handleLeftMeeting, showDeviceError]);
 
   // Keep partner info in sync when the other participant joins mid-wait.
   useEffect(() => {
@@ -452,8 +490,10 @@ export default function ClientCall({
     setPhase("ended");
   }, [endMs, reportAttendance]);
 
-  const retryDeviceSetup = useCallback(() => {
+  const retryDeviceSetup = useCallback(async () => {
+    deviceHelpDismissedRef.current = false;
     setDeviceError(null);
+    await prepareForDailyCall();
     void callFrameRef.current?.startCamera();
   }, []);
 
@@ -690,7 +730,7 @@ export default function ClientCall({
           <MediaPermissionHelp
             error={deviceError}
             onTryAgain={retryDeviceSetup}
-            onDismiss={() => setDeviceError(null)}
+            onDismiss={dismissDeviceHelp}
           />
         ) : null}
         {cheerBurstId > 0 ? (

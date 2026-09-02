@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Video, VideoOff, X } from "lucide-react";
+import {
+  registerLocalMediaStream,
+  releaseAllLocalMediaStreams,
+  unregisterLocalMediaStream,
+} from "@/lib/localMedia";
 
 type Props = {
   open: boolean;
@@ -35,7 +40,11 @@ export default function DeviceTestModal({ open, onClose }: Props) {
   const [micLevel, setMicLevel] = useState(0);
 
   const stopStream = useCallback(() => {
-    streamRef.current?.getTracks().forEach((track) => track.stop());
+    const stream = streamRef.current;
+    if (stream) {
+      unregisterLocalMediaStream(stream);
+      stream.getTracks().forEach((track) => track.stop());
+    }
     streamRef.current = null;
     if (audioRef.current) {
       cancelAnimationFrame(audioRef.current.raf);
@@ -58,6 +67,7 @@ export default function DeviceTestModal({ open, onClose }: Props) {
         audio: true,
       });
       streamRef.current = stream;
+      registerLocalMediaStream(stream);
 
       const videoEl = videoRef.current;
       if (videoEl) {
@@ -129,6 +139,7 @@ export default function DeviceTestModal({ open, onClose }: Props) {
 
   const handleClose = () => {
     stopStream();
+    releaseAllLocalMediaStreams();
     onClose();
   };
 

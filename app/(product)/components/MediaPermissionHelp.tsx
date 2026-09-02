@@ -42,13 +42,11 @@ function errorTitle(error: DailyDeviceError): string {
 function errorDescription(error: DailyDeviceError): string {
   switch (error.type) {
     case "permissions":
-      return error.blockedBy === "browser"
-        ? "Your browser blocked access. Update site permissions below, then try again."
-        : "Camera or microphone access was denied. Allow access in your browser settings, then try again.";
+      return "The call runs inside a Daily.co iframe (separate from Refocus). Allow camera and microphone when prompted inside the call window — not just in Refocus site settings. If you used Test audio and video, close it first.";
     case "cam-in-use":
     case "mic-in-use":
     case "cam-mic-in-use":
-      return "Another app or browser tab may be using your camera or microphone. Close Zoom, Teams, or the device test modal, then try again.";
+      return "Another app or browser tab may be using your camera or microphone. Close Zoom, Teams, or the Test audio and video modal, then try again.";
     case "not-found":
       return "We couldn't find a camera or microphone. Check that your devices are connected, then reload and try again.";
     default:
@@ -60,23 +58,25 @@ function permissionSteps(hint: BrowserHint): string[] {
   switch (hint) {
     case "chrome":
       return [
-        "Click the lock or sliders icon to the left of the address bar.",
-        "Set Camera and Microphone to Allow.",
-        "Reload this page and join again.",
+        "Close Test audio and video if it is open.",
+        "Look for a camera/mic prompt inside the call area (Daily.co iframe), not only the Refocus address bar.",
+        "If no prompt appears: lock icon → Site settings → allow Camera and Microphone for dashboard.refocus.co.in.",
+        "Also check chrome://settings/content/camera for your Daily subdomain (*.daily.co) if blocked.",
+        "Click Try again below — reload only if it still fails.",
       ];
     case "safari-mac":
       return [
-        "Open Safari → Settings → Websites.",
-        "Select Camera and Microphone.",
-        "Find this site and set it to Allow or Ask.",
+        "Close Test audio and video if it is open.",
+        "Allow camera/mic when Safari prompts inside the call (Daily.co embed).",
+        "Safari → Settings → Websites → Camera and Microphone → set this site to Allow or Ask.",
         "Reload and join again.",
       ];
     case "safari-ipad":
       return [
-        "Tap aA in the address bar (not the lock icon).",
-        "Tap Website Settings.",
-        "Set Camera and Microphone to Allow.",
-        "Reload and join again.",
+        "Close Test audio and video if it is open.",
+        "Tap aA in the address bar → Website Settings.",
+        "Set Camera and Microphone to Allow for this site.",
+        "Allow access when prompted inside the call window, then try again.",
       ];
     default:
       return [

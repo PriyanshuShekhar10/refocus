@@ -1,9 +1,18 @@
 import type { NextConfig } from "next";
+import { listDailyDomainsFromEnv, listDailyOriginsFromEnv } from "./lib/dailyEnv";
 
-const DAILY_DOMAIN = process.env.DAILY_DOMAIN || "";
-const dailyOrigin = DAILY_DOMAIN ? `https://${DAILY_DOMAIN}` : "";
+const dailyDomains = listDailyDomainsFromEnv();
+const dailyOrigins = listDailyOriginsFromEnv();
+const dailyOrigin = dailyOrigins[0] ?? "";
+const dailyOriginAllowList = dailyOrigins.map((origin) => `"${origin}"`).join(" ");
 const dailyWildcard = "https://*.daily.co";
 const isProd = process.env.NODE_ENV === "production";
+
+if (isProd && dailyDomains.length === 0) {
+  throw new Error(
+    "Missing Daily.co API key/domain env pairs (DAILY_API_KEY + DAILY_DOMAIN)",
+  );
+}
 
 /** Firebase Auth (Google sign-in popups and token exchange). */
 const firebaseAuthConnectSrc = [
@@ -52,7 +61,7 @@ const cspDirectives: Record<string, string[]> = {
   "font-src": ["'self'", "data:"],
   "connect-src": [
     "'self'",
-    dailyOrigin,
+    ...dailyOrigins,
     dailyWildcard,
     "https://api.daily.co",
     "https://*.ably.io",
@@ -69,11 +78,11 @@ const cspDirectives: Record<string, string[]> = {
     ...firebaseAuthConnectSrc,
   ].filter(Boolean),
   "frame-src": [
-    dailyOrigin,
+    ...dailyOrigins,
     dailyWildcard,
     ...firebaseAuthFrameSrc,
   ].filter(Boolean),
-  "media-src": ["'self'", dailyOrigin, dailyWildcard].filter(Boolean),
+  "media-src": ["'self'", ...dailyOrigins, dailyWildcard],
   "worker-src": ["'self'", "blob:"],
   "object-src": ["'none'"],
   "base-uri": ["'self'"],
@@ -97,9 +106,9 @@ const securityHeaders = [
     key: "Permissions-Policy",
     // Camera, mic, and screen-share are needed for the Daily.co prebuilt embed.
     value: [
-      `camera=(self${dailyOrigin ? ` "${dailyOrigin}"` : ""})`,
-      `microphone=(self${dailyOrigin ? ` "${dailyOrigin}"` : ""})`,
-      `display-capture=(self${dailyOrigin ? ` "${dailyOrigin}"` : ""})`,
+      `camera=(self${dailyOriginAllowList ? ` ${dailyOriginAllowList}` : ""})`,
+      `microphone=(self${dailyOriginAllowList ? ` ${dailyOriginAllowList}` : ""})`,
+      `display-capture=(self${dailyOriginAllowList ? ` ${dailyOriginAllowList}` : ""})`,
       "geolocation=()",
       "payment=()",
       "interest-cohort=()",
