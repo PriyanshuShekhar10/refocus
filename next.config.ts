@@ -3,7 +3,6 @@ import { listDailyDomainsFromEnv, listDailyOriginsFromEnv } from "./lib/dailyEnv
 
 const dailyDomains = listDailyDomainsFromEnv();
 const dailyOrigins = listDailyOriginsFromEnv();
-const dailyOrigin = dailyOrigins[0] ?? "";
 const dailyOriginAllowList = dailyOrigins.map((origin) => `"${origin}"`).join(" ");
 const dailyWildcard = "https://*.daily.co";
 const isProd = process.env.NODE_ENV === "production";
