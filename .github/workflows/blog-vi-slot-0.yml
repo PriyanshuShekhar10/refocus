@@ -1,22 +1,22 @@
-name: "Blog: Indonesian (morning)"
+name: "Blog: Vietnamese (evening)"
 
-# One Bahasa post per day at 10:00 UTC. Niche rotates across five categories.
+# One Vietnamese post per day at 18:00 UTC. Niche rotates across five categories.
 on:
   schedule:
-    - cron: "0 10 * * *"
+    - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: blog-id-slot-0
+  group: blog-vi-slot-0
   cancel-in-progress: false
 
 jobs:
   generate:
     uses: ./.github/workflows/blog-reusable.yml
     with:
-      locale: id
-      slot: "1"
+      locale: vi
+      slot: "3"
     secrets: inherit

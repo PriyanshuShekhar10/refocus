@@ -1,9 +1,7 @@
-name: "Blog: Indonesian (evening)"
+name: "Blog: Indonesian (evening) — manual only"
 
-# Second of two daily Bahasa posts (18:00 UTC). Niche rotates across five categories.
+# Disabled: ID is 1/day (blog-id-slot-0 @ 10:00 UTC). Use workflow_dispatch for extras.
 on:
-  schedule:
-    - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:

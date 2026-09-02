@@ -1,0 +1,69 @@
+---
+import { getCollection, render } from "astro:content";
+import BlogPostLocale from "../../../layouts/BlogPostLocale.astro";
+import { SITE_URL, publisherJsonLd, breadcrumbJsonLd } from "../../../lib/seo";
+import { getBlogLocale } from "../../../lib/blog-locales";
+
+const L = getBlogLocale("vi");
+
+export async function getStaticPaths() {
+  const posts = (await getCollection("blogVi", ({ data }) => !data.draft)).sort(
+    (a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate),
+  );
+  return posts.map((post) => {
+    const cat = post.data.category ?? "productivity";
+    const sameCat = posts.filter(
+      (p) => p.id !== post.id && (p.data.category ?? "productivity") === cat,
+    );
+    const fallback = posts.filter((p) => p.id !== post.id);
+    const related = (sameCat.length ? sameCat : fallback).slice(0, 3).map((p) => ({
+      title: p.data.title,
+      slug: p.id,
+      category: p.data.category,
+    }));
+    return { params: { slug: post.id }, props: { post, related } };
+  });
+}
+
+const { post, related } = Astro.props;
+const { Content } = await render(post);
+const canonical = `${L.blogPath}/${post.id}`;
+const words = (post.body ?? "").trim().split(/\s+/).filter(Boolean).length;
+const minutes = Math.max(1, Math.round(words / 200));
+
+const blogPostingJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.data.title,
+  description: post.data.description,
+  inLanguage: "vi",
+  datePublished: new Date(post.data.pubDate).toISOString(),
+  dateModified: new Date(post.data.updatedDate ?? post.data.pubDate).toISOString(),
+  author: { "@type": "Organization", name: post.data.author ?? "Refocus" },
+  publisher: publisherJsonLd(),
+  mainEntityOfPage: `${SITE_URL}${canonical}`,
+  keywords: (post.data.tags ?? []).join(", "),
+  articleSection: L.categoryLabel(post.data.category),
+};
+
+const breadcrumb = breadcrumbJsonLd([
+  { name: L.blog.home, path: L.homePath },
+  { name: "Blog", path: L.blogPath },
+  { name: post.data.title, path: canonical },
+]);
+---
+
+<BlogPostLocale
+  locale={L}
+  title={post.data.title}
+  description={post.data.description}
+  canonical={canonical}
+  pubDate={post.data.pubDate}
+  category={post.data.category}
+  tags={post.data.tags}
+  minutes={minutes}
+  related={related}
+  jsonLd={[blogPostingJsonLd, breadcrumb]}
+>
+  <Content />
+</BlogPostLocale>

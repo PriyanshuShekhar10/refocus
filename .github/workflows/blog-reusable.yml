@@ -17,7 +17,7 @@ on:
         required: false
         type: string
       locale:
-        description: "en (default) or id for Bahasa Indonesia posts"
+        description: "en | id | fil | vi"
         required: false
         type: string
         default: en
@@ -58,7 +58,7 @@ jobs:
           elif [ -n "${INPUT_SLOT}" ]; then
             NICHES=(productivity adhd exams loneliness remote)
             DAY=$(( $(date -u +%s) / 86400 ))
-            INDEX=$(( (DAY * 3 + INPUT_SLOT) % 5 ))
+            INDEX=$(( (DAY * 4 + INPUT_SLOT) % 5 ))
             CATEGORY="${NICHES[$INDEX]}"
             echo "Rotation: day=$DAY slot=$INPUT_SLOT → $CATEGORY"
           else
@@ -87,13 +87,24 @@ jobs:
           git config user.name "refocus-blog-bot"
           git config user.email "bot@refocus.co.in"
           git pull --rebase origin landing || true
-          if [ "$LOCALE" = "id" ]; then
-            BLOG_PATH="marketing/src/content/blog-id"
-            COMMIT_PREFIX="blog(id/$CATEGORY)"
-          else
-            BLOG_PATH="marketing/src/content/blog"
-            COMMIT_PREFIX="blog($CATEGORY)"
-          fi
+          case "$LOCALE" in
+            id)
+              BLOG_PATH="marketing/src/content/blog-id"
+              COMMIT_PREFIX="blog(id/$CATEGORY)"
+              ;;
+            fil)
+              BLOG_PATH="marketing/src/content/blog-fil"
+              COMMIT_PREFIX="blog(fil/$CATEGORY)"
+              ;;
+            vi)
+              BLOG_PATH="marketing/src/content/blog-vi"
+              COMMIT_PREFIX="blog(vi/$CATEGORY)"
+              ;;
+            *)
+              BLOG_PATH="marketing/src/content/blog"
+              COMMIT_PREFIX="blog($CATEGORY)"
+              ;;
+          esac
           if [ -n "$(git status --porcelain "$BLOG_PATH")" ]; then
             git add "$BLOG_PATH"
             git commit -m "$COMMIT_PREFIX: auto-generated post ($(date -u +%Y-%m-%d))"

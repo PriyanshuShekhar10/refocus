@@ -1,0 +1,116 @@
+---
+import type { GetStaticPaths, Page } from "astro";
+import type { CollectionEntry } from "astro:content";
+import Base from "../../../layouts/Base.astro";
+import Navbar from "../../../components/Navbar";
+import { getCollection } from "astro:content";
+import { SITE_URL } from "../../../lib/seo";
+import { CATEGORY_IDS } from "../../../lib/categories";
+import { getBlogLocale } from "../../../lib/blog-locales";
+import "../../../styles/blog.css";
+
+const L = getBlogLocale("vi");
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const posts = (await getCollection("blogVi", ({ data }) => !data.draft)).sort(
+    (a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate),
+  );
+  return paginate(posts, { pageSize: 12 });
+}) satisfies GetStaticPaths;
+
+type Props = { page: Page<CollectionEntry<"blogVi">> };
+const { page } = Astro.props as Props;
+
+const title =
+  page.currentPage > 1
+    ? `Blog — trang ${page.currentPage} — Refocus`
+    : `${L.blog.title} — Refocus`;
+const canonical = page.url.current;
+const robots = page.currentPage > 1 ? "noindex, follow" : undefined;
+
+const fmt = (d: Date) =>
+  new Date(d).toLocaleDateString(L.dateLocale, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+---
+
+<Base
+  title={title}
+  description={L.blog.lede}
+  canonical={canonical}
+  ogTitle={L.blog.heading}
+  ogDescription={L.blog.lede}
+  robots={robots}
+  lang={L.htmlLang}
+  jsonLd={[{
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "Blog Refocus (Tiếng Việt)",
+    url: `${SITE_URL}${L.blogPath}`,
+    inLanguage: "vi",
+    description: L.blog.lede,
+  }]}
+>
+  <div class="blog">
+    <Navbar client:load />
+    <section class="blog-index">
+      <header class="blog-index-head">
+        <p class="blog-eyebrow">Blog Refocus</p>
+        <h1>{L.blog.heading}</h1>
+        <p class="blog-lede">{L.blog.lede}</p>
+        <nav class="blog-topics" aria-label="Topics">
+          {CATEGORY_IDS.map((id) => (
+            <a href={`${L.blogPath}/category/${id}`}>{L.categories[id].label}</a>
+          ))}
+        </nav>
+      </header>
+      {
+        page.data.length === 0 ? (
+          <p class="blog-empty">{L.blog.empty}</p>
+        ) : (
+          <ul class="blog-list">
+            {page.data.map((post) => (
+              <li class="blog-card">
+                <a href={`${L.blogPath}/${post.id}`}>
+                  <p class="blog-card-meta">
+                    {fmt(post.data.pubDate)} · {L.categoryLabel(post.data.category)}
+                  </p>
+                  <h2>{post.data.title}</h2>
+                  <p class="blog-card-desc">{post.data.description}</p>
+                  <span class="blog-card-more">{L.blog.readMore} &rarr;</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+      {
+        page.lastPage > 1 && (
+          <nav class="blog-pagination" aria-label="Pagination">
+            {page.url.prev ? (
+              <a href={page.url.prev}>&larr; {L.blog.paginationNewer}</a>
+            ) : (
+              <span class="is-disabled">&larr; {L.blog.paginationNewer}</span>
+            )}
+            <span class="blog-pagination-count">
+              {L.blog.paginationPage(page.currentPage, page.lastPage)}
+            </span>
+            {page.url.next ? (
+              <a href={page.url.next}>{L.blog.paginationOlder} &rarr;</a>
+            ) : (
+              <span class="is-disabled">{L.blog.paginationOlder} &rarr;</span>
+            )}
+          </nav>
+        )
+      }
+    </section>
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href={L.homePath}>{L.blog.home}</a>
+      <a href={L.blogPath}>Blog</a>
+      <a href="/">{L.blog.english}</a>
+    </footer>
+  </div>
+</Base>

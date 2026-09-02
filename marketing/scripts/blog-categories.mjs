@@ -77,35 +77,30 @@ export const CATEGORIES = {
 
   exams: {
     id: "exams",
-    label: "Competitive exams",
+    label: "Study & focus",
     pillar: {
       path: "/study-with-me",
-      label: "study with me, online",
+      label: "studying with me online",
     },
     audience:
-      "UPSC and other long-haul competitive exam aspirants in India — Prelims, Mains, optional subjects, revision cycles, mock tests — often searching 'study with me' or online study rooms. UPSC-first; secondary: NEET, CAT, GATE, CA, boards.",
+      "students and lifelong learners anywhere — long study sessions, exam-season pressure, studying alone at home — often searching for study-with-me or online focus rooms. Global English; no country-specific exam names.",
     voice:
-      "specific to Indian exam prep life: revision, mocks, syllabus anxiety, peer comparison. Prefer UPSC contexts (Prelims, Mains, optional). Practical study-session design. Where natural, mention studying alongside others ('study with me' / online study rooms).",
+      "practical study-session design: revision blocks, mock review, syllabus overwhelm, staying on your own plan. Generic exam season OK; never name a specific national exam (no UPSC, NEET, UTBK, etc.).",
     mustInclude:
-      "name at least one real exam context — prefer UPSC (Prelims, Mains, optional) or secondary NEET, CAT, GATE, CA, Class 12 boards — and a concrete study-session tactic",
+      "at least one concrete study-session tactic (timer, three targets, mock review structure) without naming a specific country's exam",
     avoid:
-      "generic 'study hard' advice, rank/guarantee promises, coaching ads, vague motivation, JEE-heavy angles unless the topic explicitly requires engineering entrance",
+      "UPSC, NEET, CAT, GATE, JEE, boards, CUET, UTBK, SNBT, PNLE, THPT, or any country-specific exam names; rank guarantees; coaching ads; vague motivation",
     topics: [
-      "study with me, online: turning solo UPSC prep into a focused daily routine",
-      "online study rooms for UPSC aspirants who prep alone at home",
-      "UPSC Prelims: designing a daily revision block you can actually start",
-      "UPSC Mains answer writing: one focused hour without perfectionism",
-      "optional subject deep work for UPSC: one topic, one timer, one outcome",
-      "UPSC mock test analysis: a session structure that doesn't waste the day",
-      "comparing yourself to toppers on Telegram — and getting back to your own plan",
-      "NEET biology revision: active recall sessions that beat passive rereading",
-      "CAT quant practice: short timed sets vs endless untimed grinding",
-      "GATE prep loneliness: studying at home when your friends aren't on the same timeline",
-      "CA Intermediate: protecting evening study hours after a long day of classes",
-      "Class 12 boards: last 60 days without burning out the night before",
-      "CUET / university entrance: when syllabus feels infinite, pick today's three targets",
-      "GRE / GMAT verbal: focus sessions that don't turn into phone scrolls",
-      "free study with me sessions for UPSC when YouTube videos aren't enough",
+      "study with me online: turning solo study into a focused daily routine",
+      "online study rooms when you prep alone at home",
+      "designing a daily revision block you can actually start",
+      "mock test review: a session structure that does not waste the day",
+      "when the syllabus feels infinite, pick today's three targets",
+      "active recall sessions that beat passive rereading",
+      "exam-season focus without burning out the night before",
+      "library energy at home: quiet co-presence while you study",
+      "GRE / IELTS / generic test prep: focus sessions that do not turn into phone scrolls",
+      "free study-with-me options when YouTube ambient is not enough",
     ],
   },
 

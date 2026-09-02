@@ -41,11 +41,11 @@ export const CATEGORIES: Record<CategoryId, CategoryMeta> = {
   },
   exams: {
     id: "exams",
-    label: "Competitive exams",
+    label: "Study & focus",
     description:
-      "Study-session design for UPSC, NEET, CAT, GATE, CA, boards and more — UPSC-first, through long, lonely prep cycles.",
+      "Study-session design for long prep — revision blocks, mock review, studying alone — global, no country-specific exams.",
     intro:
-      "Specific study tactics for real exams: UPSC Prelims/Mains revision blocks, surviving mocks, and staying on your own plan instead of comparing to toppers.",
+      "Concrete tactics for focus sessions, active recall, and staying on your own plan.",
     pillar: { path: "/study-with-me", label: "studying with me online" },
   },
   loneliness: {

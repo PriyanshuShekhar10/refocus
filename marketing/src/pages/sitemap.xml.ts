@@ -15,6 +15,8 @@ type Entry = {
 export const GET: APIRoute = async () => {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
   const postsId = await getCollection("blogId", ({ data }) => !data.draft);
+  const postsFil = await getCollection("blogFil", ({ data }) => !data.draft);
+  const postsVi = await getCollection("blogVi", ({ data }) => !data.draft);
 
   const latestPost = posts
     .map((p) => +new Date(p.data.updatedDate ?? p.data.pubDate))
@@ -28,6 +30,20 @@ export const GET: APIRoute = async () => {
     .sort((a, b) => b - a)[0];
   const blogIdLastmod = latestPostId
     ? new Date(latestPostId).toISOString()
+    : new Date().toISOString();
+
+  const latestPostFil = postsFil
+    .map((p) => +new Date(p.data.updatedDate ?? p.data.pubDate))
+    .sort((a, b) => b - a)[0];
+  const blogFilLastmod = latestPostFil
+    ? new Date(latestPostFil).toISOString()
+    : new Date().toISOString();
+
+  const latestPostVi = postsVi
+    .map((p) => +new Date(p.data.updatedDate ?? p.data.pubDate))
+    .sort((a, b) => b - a)[0];
+  const blogViLastmod = latestPostVi
+    ? new Date(latestPostVi).toISOString()
     : new Date().toISOString();
 
   const staticEntries: Entry[] = [
@@ -94,6 +110,32 @@ export const GET: APIRoute = async () => {
     { loc: `${site}/id/virtual-coworking`, changefreq: "monthly", priority: "0.8" },
     { loc: `${site}/id/study-with-me`, changefreq: "monthly", priority: "0.8" },
     { loc: `${site}/id/focus-room`, changefreq: "monthly", priority: "0.8" },
+    // Filipino (fil) blog-first hub.
+    {
+      loc: `${site}/fil`,
+      lastmod: new Date().toISOString(),
+      changefreq: "weekly",
+      priority: "0.8",
+    },
+    {
+      loc: `${site}/fil/blog`,
+      lastmod: blogFilLastmod,
+      changefreq: "daily",
+      priority: "0.8",
+    },
+    // Vietnamese (vi) blog-first hub.
+    {
+      loc: `${site}/vi`,
+      lastmod: new Date().toISOString(),
+      changefreq: "weekly",
+      priority: "0.8",
+    },
+    {
+      loc: `${site}/vi/blog`,
+      lastmod: blogViLastmod,
+      changefreq: "daily",
+      priority: "0.8",
+    },
   ];
 
   // Category archive pages. Paginated /blog/2…N stay out of the sitemap
@@ -122,11 +164,31 @@ export const GET: APIRoute = async () => {
     priority: "0.7",
   }));
 
+  const postFilEntries: Entry[] = postsFil.map((post) => ({
+    loc: `${site}/fil/blog/${post.id}`,
+    lastmod: new Date(
+      post.data.updatedDate ?? post.data.pubDate,
+    ).toISOString(),
+    changefreq: "monthly",
+    priority: "0.7",
+  }));
+
+  const postViEntries: Entry[] = postsVi.map((post) => ({
+    loc: `${site}/vi/blog/${post.id}`,
+    lastmod: new Date(
+      post.data.updatedDate ?? post.data.pubDate,
+    ).toISOString(),
+    changefreq: "monthly",
+    priority: "0.7",
+  }));
+
   const entries = [
     ...staticEntries,
     ...categoryEntries,
     ...postEntries,
     ...postIdEntries,
+    ...postFilEntries,
+    ...postViEntries,
   ];
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>

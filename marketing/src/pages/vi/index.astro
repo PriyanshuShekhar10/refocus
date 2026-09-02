@@ -1,0 +1,56 @@
+---
+import Base from "../../layouts/Base.astro";
+import Navbar from "../../components/Navbar";
+import { APP_URL } from "../../lib/config";
+import { SITE_URL, organizationJsonLd } from "../../lib/seo";
+import { getBlogLocale } from "../../lib/blog-locales";
+import "../../styles/blog.css";
+
+const L = getBlogLocale("vi");
+const copy = L.home;
+const canonical = "/vi";
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Refocus",
+  url: `${SITE_URL}/vi`,
+  inLanguage: "vi",
+  description: copy.description,
+};
+---
+
+<Base
+  title={copy.title}
+  description={copy.description}
+  canonical={canonical}
+  ogTitle={copy.title}
+  ogDescription={copy.description}
+  jsonLd={[websiteJsonLd, organizationJsonLd()]}
+  lang="vi"
+>
+  <div class="blog">
+    <Navbar client:load />
+    <section class="blog-index">
+      <header class="blog-index-head">
+        <p class="blog-eyebrow">Refocus</p>
+        <h1>{copy.h1}</h1>
+        <p class="blog-lede">{copy.lead}</p>
+        <p style="margin-top: 1.5rem">
+          <a class="blog-cta-btn" href={`${APP_URL}/auth/sign-up`}>
+            Bắt đầu phiên miễn phí &rarr;
+          </a>
+        </p>
+        <p style="margin-top: 1rem">
+          <a href="/vi/blog">Đọc blog (Tiếng Việt) &rarr;</a>
+        </p>
+      </header>
+    </section>
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href="/vi">Trang chủ</a>
+      <a href="/vi/blog">Blog</a>
+      <a href="/">English</a>
+    </footer>
+  </div>
+</Base>

@@ -1,0 +1,126 @@
+---
+import Base from "./Base.astro";
+import Navbar from "../components/Navbar";
+import { APP_URL } from "../lib/config";
+import type { BlogLocaleUi } from "../lib/blog-locales";
+import "../styles/blog.css";
+
+export interface Props {
+  locale: BlogLocaleUi;
+  title: string;
+  description: string;
+  canonical: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  category?: string;
+  tags?: string[];
+  minutes?: number;
+  jsonLd?: unknown[];
+  related?: { title: string; slug: string; category?: string }[];
+}
+
+const {
+  locale: L,
+  title,
+  description,
+  canonical,
+  pubDate,
+  category = "productivity",
+  tags = [],
+  minutes = 5,
+  jsonLd = [],
+  related = [],
+} = Astro.props;
+
+const fmtDate = (d: Date) =>
+  new Date(d).toLocaleDateString(L.dateLocale, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+const isoDate = new Date(pubDate).toISOString();
+const categoryLabel = L.categoryLabel(category);
+const pillar = L.categoryMeta(category).pillar;
+---
+
+<Base
+  title={`${title} — Refocus`}
+  description={description}
+  canonical={canonical}
+  ogTitle={title}
+  ogDescription={description}
+  ogType="article"
+  ogImageAlt={title}
+  jsonLd={jsonLd}
+  lang={L.htmlLang}
+>
+  <div class="blog">
+    <Navbar client:load />
+
+    <article class="blog-article">
+      <header class="blog-header">
+        <a class="blog-back" href={L.blogPath}>&larr; {L.blog.allPosts}</a>
+        <h1>{title}</h1>
+        <p class="blog-meta">
+          <time datetime={isoDate}>{fmtDate(pubDate)}</time>
+          &middot; {minutes} {L.blog.minRead} &middot;
+          <a href={`${L.blogPath}/category/${category}`}>{categoryLabel}</a>
+        </p>
+        {
+          tags.length > 0 && (
+            <ul class="blog-tags">
+              {tags.map((t) => (
+                <li>#{t}</li>
+              ))}
+            </ul>
+          )
+        }
+      </header>
+
+      <hr class="blog-divider" />
+
+      <div class="blog-prose">
+        <slot />
+      </div>
+
+      <aside class="blog-cta">
+        <h3>{L.blog.ctaTitle}</h3>
+        <p>{L.blog.ctaBody}</p>
+        <p class="blog-cta-more">
+          {L.blog.ctaPillar}{" "}
+          <a href={pillar.path}>{pillar.label}</a>.
+        </p>
+        <a class="blog-cta-btn" href={`${APP_URL}/auth/sign-up`}>
+          {L.blog.ctaBtn} &rarr;
+        </a>
+      </aside>
+    </article>
+
+    {
+      related.length > 0 && (
+        <section class="blog-related" aria-label={L.blog.related}>
+          <h2>{L.blog.related}</h2>
+          <ul class="blog-related-list">
+            {related.map((r) => (
+              <li>
+                <a href={`${L.blogPath}/${r.slug}`}>
+                  <h3>{r.title}</h3>
+                  <span class="blog-related-cat">
+                    {L.categoryLabel(r.category)}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href={L.homePath}>{L.blog.home}</a>
+      <a href={L.blogPath}>Blog</a>
+      <a href="/">{L.blog.english}</a>
+    </footer>
+  </div>
+</Base>

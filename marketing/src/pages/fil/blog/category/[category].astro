@@ -5,12 +5,13 @@ import Navbar from "../../../../components/Navbar";
 import { getCollection } from "astro:content";
 import { SITE_URL } from "../../../../lib/seo";
 import { CATEGORY_IDS, type CategoryId } from "../../../../lib/categories";
-import { CATEGORIES_ID, categoryLabelId } from "../../../../lib/categories-id";
-import { hreflangAlternates } from "../../../../lib/i18n";
+import { getBlogLocale } from "../../../../lib/blog-locales";
 import "../../../../styles/blog.css";
 
+const L = getBlogLocale("fil");
+
 export const getStaticPaths = (async () => {
-  const posts = await getCollection("blogId", ({ data }) => !data.draft);
+  const posts = await getCollection("blogFil", ({ data }) => !data.draft);
   return CATEGORY_IDS.map((category) => {
     const filtered = posts
       .filter((p) => (p.data.category ?? "productivity") === category)
@@ -21,16 +22,15 @@ export const getStaticPaths = (async () => {
 
 const { category, posts } = Astro.props as {
   category: CategoryId;
-  posts: Awaited<ReturnType<typeof getCollection<"blogId">>>;
+  posts: Awaited<ReturnType<typeof getCollection<"blogFil">>>;
 };
 
-const meta = CATEGORIES_ID[category];
-const canonical = `/id/blog/category/${category}`;
-const title = `${meta.label} — Blog Refocus`;
+const meta = L.categories[category];
+const canonical = `${L.blogPath}/category/${category}`;
 const robots = posts.length === 0 ? "noindex, follow" : undefined;
 
 const fmt = (d: Date) =>
-  new Date(d).toLocaleDateString("id-ID", {
+  new Date(d).toLocaleDateString(L.dateLocale, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -38,42 +38,37 @@ const fmt = (d: Date) =>
 ---
 
 <Base
-  title={title}
+  title={`${meta.label} — Blog Refocus`}
   description={meta.description}
   canonical={canonical}
-  ogTitle={title}
+  ogTitle={`${meta.label} — Blog Refocus`}
   ogDescription={meta.description}
-  lang="id"
+  lang={L.htmlLang}
   robots={robots}
-  hreflangAlternates={hreflangAlternates(canonical)}
-  jsonLd={[
-    {
-      "@context": "https://schema.org",
-      "@type": "CollectionPage",
-      name: title,
-      url: `${SITE_URL}${canonical}`,
-      description: meta.description,
-    },
-  ]}
+  jsonLd={[{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `${meta.label} — Blog Refocus`,
+    url: `${SITE_URL}${canonical}`,
+    description: meta.description,
+  }]}
 >
   <div class="blog">
     <Navbar client:load />
-
     <section class="blog-index">
       <header class="blog-index-head">
-        <a class="blog-back" href="/id/blog">&larr; Blog</a>
+        <a class="blog-back" href={L.blogPath}>&larr; Blog</a>
         <h1>{meta.label}</h1>
         <p class="blog-lede">{meta.intro}</p>
       </header>
-
       {
         posts.length === 0 ? (
-          <p class="blog-empty">Belum ada artikel di topik ini.</p>
+          <p class="blog-empty">{L.blog.emptyCategory}</p>
         ) : (
           <ul class="blog-list">
             {posts.map((post) => (
               <li class="blog-card">
-                <a href={`/id/blog/${post.id}`}>
+                <a href={`${L.blogPath}/${post.id}`}>
                   <p class="blog-card-meta">{fmt(post.data.pubDate)}</p>
                   <h2>{post.data.title}</h2>
                   <p class="blog-card-desc">{post.data.description}</p>
@@ -84,11 +79,10 @@ const fmt = (d: Date) =>
         )
       }
     </section>
-
     <footer class="blog-foot">
       <span>&copy; {new Date().getFullYear()} Refocus</span>
-      <a href="/id/blog">Blog</a>
-      <a href="/id">Beranda</a>
+      <a href={L.blogPath}>Blog</a>
+      <a href={L.homePath}>{L.blog.home}</a>
     </footer>
   </div>
 </Base>

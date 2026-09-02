@@ -1,4 +1,4 @@
-export type Locale = "en" | "id";
+export type Locale = "en" | "id" | "fil" | "vi";
 
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -8,24 +8,60 @@ export const LOCALES: Record<
 > = {
   en: { label: "English", htmlLang: "en", pathPrefix: "" },
   id: { label: "Bahasa Indonesia", htmlLang: "id", pathPrefix: "/id" },
+  fil: { label: "Filipino (Tagalog)", htmlLang: "fil", pathPrefix: "/fil" },
+  vi: { label: "Tiếng Việt", htmlLang: "vi", pathPrefix: "/vi" },
 };
 
 export function localePath(locale: Locale, path: string): string {
   const normalized = path.startsWith("/") ? path : `/${path}`;
   if (locale === "en") return normalized;
-  if (normalized === "/") return "/id";
-  return `/id${normalized}`;
+  const prefix = LOCALES[locale].pathPrefix;
+  if (normalized === "/") return prefix;
+  return `${prefix}${normalized}`;
 }
 
+/** hreflang alternates for pages that exist in multiple locales. */
 export function hreflangAlternates(path: string): { hreflang: string; href: string }[] {
   const site = "https://refocus.co.in";
-  const enPath = path === "/id" ? "/" : path.replace(/^\/id/, "") || "/";
-  const idPath = path.startsWith("/id") ? path : path === "/" ? "/id" : `/id${path}`;
-  return [
-    { hreflang: "en", href: `${site}${enPath}` },
-    { hreflang: "id", href: `${site}${idPath}` },
-    { hreflang: "x-default", href: `${site}${enPath}` },
-  ];
+
+  // Blog hubs (all four locales have a blog index).
+  if (path === "/blog" || path.endsWith("/blog")) {
+    return [
+      { hreflang: "en", href: `${site}/blog` },
+      { hreflang: "id", href: `${site}/id/blog` },
+      { hreflang: "fil", href: `${site}/fil/blog` },
+      { hreflang: "vi", href: `${site}/vi/blog` },
+      { hreflang: "x-default", href: `${site}/blog` },
+    ];
+  }
+
+  // Indonesian money pages ↔ English equivalents.
+  if (path.startsWith("/id")) {
+    const enPath = path.replace(/^\/id/, "") || "/";
+    return [
+      { hreflang: "en", href: `${site}${enPath}` },
+      { hreflang: "id", href: `${site}${path}` },
+      { hreflang: "x-default", href: `${site}${enPath}` },
+    ];
+  }
+
+  // Filipino blog-first locale (no money-page pairs yet).
+  if (path.startsWith("/fil")) {
+    return [
+      { hreflang: "fil", href: `${site}${path}` },
+      { hreflang: "x-default", href: `${site}/` },
+    ];
+  }
+
+  // Vietnamese blog-first locale.
+  if (path.startsWith("/vi")) {
+    return [
+      { hreflang: "vi", href: `${site}${path}` },
+      { hreflang: "x-default", href: `${site}/` },
+    ];
+  }
+
+  return [{ hreflang: "en", href: `${site}${path}` }, { hreflang: "x-default", href: `${site}${path}` }];
 }
 
 /** Short copy for /id/ money pages (human-reviewed, not auto-translated blog). */
