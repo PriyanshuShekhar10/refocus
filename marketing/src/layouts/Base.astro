@@ -18,6 +18,10 @@ export interface Props {
   /** e.g. "noindex, follow" for paginated blog listings */
   robots?: string;
   jsonLd?: unknown[];
+  /** HTML lang attribute (default en) */
+  lang?: string;
+  /** hreflang alternate URLs for i18n pages */
+  hreflangAlternates?: { hreflang: string; href: string }[];
 }
 
 const {
@@ -31,6 +35,8 @@ const {
   ogImageAlt = "Refocus — a virtual co-working room for deep work",
   robots,
   jsonLd = [],
+  lang = "en",
+  hreflangAlternates = [],
 } = Astro.props;
 
 const site = SITE_URL;
@@ -50,7 +56,7 @@ const posthogHost = (
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -59,6 +65,11 @@ const posthogHost = (
     {robots && <meta name="robots" content={robots} />}
     <meta name="theme-color" content={THEME_COLOR} />
     <link rel="canonical" href={canonicalUrl} />
+    {
+      hreflangAlternates.map((alt) => (
+        <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+      ))
+    }
     <link
       rel="alternate"
       type="application/rss+xml"

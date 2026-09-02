@@ -1,0 +1,79 @@
+---
+import Base from "../../layouts/Base.astro";
+import Navbar from "../../components/Navbar";
+import { APP_URL } from "../../lib/config";
+import { SITE_URL, organizationJsonLd } from "../../lib/seo";
+import { ID_PAGE_COPY, hreflangAlternates } from "../../lib/i18n";
+import "../../styles/blog.css";
+
+const copy = ID_PAGE_COPY.home;
+const canonical = "/id";
+const alternates = hreflangAlternates("/id");
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Refocus",
+  url: `${SITE_URL}/id`,
+  inLanguage: "id",
+  description: copy.description,
+};
+---
+
+<Base
+  title={copy.title}
+  description={copy.description}
+  canonical={canonical}
+  ogTitle={copy.title}
+  ogDescription={copy.description}
+  jsonLd={[websiteJsonLd, organizationJsonLd()]}
+  lang="id"
+  hreflangAlternates={alternates}
+>
+  <div class="blog">
+    <Navbar client:load />
+
+    <section class="blog-index">
+      <header class="blog-index-head">
+        <p class="blog-eyebrow">Refocus</p>
+        <h1>{copy.h1}</h1>
+        <p class="blog-lede">{copy.lead}</p>
+        <p class="blog-lede">
+          Sesi 25, 50, atau 75 menit dengan partner fokus. Kamera untuk presence,
+          mic tenang — bukan lobby ramai seperti Discord atau Zoom.
+        </p>
+        <p style="margin-top: 1.5rem">
+          <a class="blog-cta-btn" href={`${APP_URL}/auth/sign-up`}>
+            Mulai sesi gratis &rarr;
+          </a>
+        </p>
+      </header>
+
+      <section class="blog-prose" style="max-width: 42rem; margin: 2rem auto">
+        <h2>Untuk siapa?</h2>
+        <ul>
+          <li>Siswa persiapan UTBK/SNBT dan seleksi PTN</li>
+          <li>Freelancer dan pekerja remote di Indonesia</li>
+          <li>Siapa pun yang fokus lebih baik di perpustakaan daripada sendirian di kamar</li>
+        </ul>
+        <h2>Halaman populer</h2>
+        <ul>
+          <li><a href="/id/body-doubling">Apa itu body doubling?</a></li>
+          <li><a href="/id/virtual-coworking">Coworking virtual</a></li>
+          <li><a href="/id/study-with-me">Belajar bersama online</a></li>
+          <li><a href="/id/pricing">Harga (periode gratis)</a></li>
+          <li><a href="/id/blog">Blog Bahasa Indonesia</a></li>
+        </ul>
+      </section>
+    </section>
+
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href="/id">Beranda</a>
+      <a href="/id/features">Fitur</a>
+      <a href="/id/pricing">Harga</a>
+      <a href="/id/blog">Blog</a>
+      <a href="/">English</a>
+    </footer>
+  </div>
+</Base>

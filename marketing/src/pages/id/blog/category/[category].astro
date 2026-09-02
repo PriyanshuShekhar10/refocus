@@ -1,0 +1,92 @@
+---
+import type { GetStaticPaths } from "astro";
+import Base from "../../../../layouts/Base.astro";
+import Navbar from "../../../../components/Navbar";
+import { getCollection } from "astro:content";
+import { SITE_URL } from "../../../../lib/seo";
+import { CATEGORY_IDS, type CategoryId } from "../../../../lib/categories";
+import { CATEGORIES_ID, categoryLabelId } from "../../../../lib/categories-id";
+import { hreflangAlternates } from "../../../../lib/i18n";
+import "../../../../styles/blog.css";
+
+export const getStaticPaths = (async () => {
+  const posts = await getCollection("blogId", ({ data }) => !data.draft);
+  return CATEGORY_IDS.map((category) => {
+    const filtered = posts
+      .filter((p) => (p.data.category ?? "productivity") === category)
+      .sort((a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate));
+    return { params: { category }, props: { category, posts: filtered } };
+  });
+}) satisfies GetStaticPaths;
+
+const { category, posts } = Astro.props as {
+  category: CategoryId;
+  posts: Awaited<ReturnType<typeof getCollection<"blogId">>>;
+};
+
+const meta = CATEGORIES_ID[category];
+const canonical = `/id/blog/category/${category}`;
+const title = `${meta.label} — Blog Refocus`;
+
+const fmt = (d: Date) =>
+  new Date(d).toLocaleDateString("id-ID", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+---
+
+<Base
+  title={title}
+  description={meta.description}
+  canonical={canonical}
+  ogTitle={title}
+  ogDescription={meta.description}
+  lang="id"
+  hreflangAlternates={hreflangAlternates(canonical)}
+  jsonLd={[
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: title,
+      url: `${SITE_URL}${canonical}`,
+      description: meta.description,
+    },
+  ]}
+>
+  <div class="blog">
+    <Navbar client:load />
+
+    <section class="blog-index">
+      <header class="blog-index-head">
+        <a class="blog-back" href="/id/blog">&larr; Blog</a>
+        <h1>{meta.label}</h1>
+        <p class="blog-lede">{meta.intro}</p>
+      </header>
+
+      {
+        posts.length === 0 ? (
+          <p class="blog-empty">Belum ada artikel di topik ini.</p>
+        ) : (
+          <ul class="blog-list">
+            {posts.map((post) => (
+              <li class="blog-card">
+                <a href={`/id/blog/${post.id}`}>
+                  <p class="blog-card-meta">{fmt(post.data.pubDate)}</p>
+                  <h2>{post.data.title}</h2>
+                  <p class="blog-card-desc">{post.data.description}</p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href="/id/blog">Blog</a>
+      <a href="/id">Beranda</a>
+    </footer>
+  </div>
+</Base>

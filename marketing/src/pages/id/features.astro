@@ -1,0 +1,73 @@
+---
+import LandingPage from "../../layouts/LandingPage.astro";
+import { SITE_URL, articleJsonLd, faqJsonLd } from "../../lib/seo";
+import { APP_URL } from "../../lib/config";
+import { ID_PAGE_COPY, hreflangAlternates } from "../../lib/i18n";
+
+const UPDATED = "2026-09-02";
+const canonical = "/id/features";
+const copy = ID_PAGE_COPY.features;
+const title = "Fitur Refocus — ruang fokus, timer, partner";
+const description =
+  "Fitur Refocus: sesi 25/50/75 menit, mode fokus, timer sinkron, teman, dan komunitas — gratis untuk mulai.";
+
+const faqs = [
+  {
+    question: "Apa saja fitur utama?",
+    answer:
+      "Sesi terjadwal, partner matching, timer sinkron, mic mute default, teman & permintaan sesi, dan komunitas antara sesi.",
+  },
+  {
+    question: "Apakah harus nyalakan kamera?",
+    answer:
+      "Kamera membantu presence — partner tahu Anda hadir. Mic default mute; Anda bisa matikan kamera kapan saja jika perlu.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+
+const softwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Refocus",
+  url: `${SITE_URL}/id`,
+  applicationCategory: "ProductivityApplication",
+  operatingSystem: "Web",
+  description,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  installUrl: `${APP_URL}/auth/sign-up`,
+};
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Produk"
+  heading={copy.heading}
+  lead={copy.lead}
+  updated={UPDATED}
+  faqs={faqs}
+  lang="id"
+  homePath="/id"
+  hreflangAlternates={hreflangAlternates(canonical)}
+  ctaTitle="Coba fitur lengkap"
+  ctaText="Semua fitur inti tersedia selama periode gratis — daftar dan join sesi pertama."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Mulai sesi gratis"
+  jsonLd={[article, faqJsonLd(faqs), softwareJsonLd]}
+>
+  <ul>
+    <li><strong>Sesi terjadwal</strong> — 25, 50, 75 menit</li>
+    <li><strong>Partner matching</strong> — otomatis, tanpa koordinasi manual</li>
+    <li><strong>Timer sinkron</strong> — start, break, selesai bersama</li>
+    <li><strong>Mode fokus</strong> — mic mute, kamera untuk presence</li>
+    <li><strong>Teman</strong> — simpan partner yang cocok</li>
+    <li><strong>Komunitas</strong> — opsional, tidak noisy</li>
+  </ul>
+</LandingPage>

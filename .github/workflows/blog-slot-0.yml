@@ -1,0 +1,22 @@
+name: "Blog: morning slot (English)"
+
+# One English post per day at 06:00 UTC. Niche rotates across five categories.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-slot-0
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      slot: "0"
+      locale: en
+    secrets: inherit

@@ -43,9 +43,9 @@ export const CATEGORIES: Record<CategoryId, CategoryMeta> = {
     id: "exams",
     label: "Competitive exams",
     description:
-      "Study-session design for UPSC, JEE, NEET, CAT, GATE, CA, boards and more — through long, lonely prep cycles.",
+      "Study-session design for UPSC, NEET, CAT, GATE, CA, boards and more — UPSC-first, through long, lonely prep cycles.",
     intro:
-      "Specific study tactics for real exams: revision blocks, surviving mocks, and staying on your own plan instead of comparing to toppers.",
+      "Specific study tactics for real exams: UPSC Prelims/Mains revision blocks, surviving mocks, and staying on your own plan instead of comparing to toppers.",
     pillar: { path: "/study-with-me", label: "studying with me online" },
   },
   loneliness: {

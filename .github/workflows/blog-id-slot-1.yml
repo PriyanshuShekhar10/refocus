@@ -1,0 +1,22 @@
+name: "Blog: Indonesian (evening)"
+
+# Second of two daily Bahasa posts (18:00 UTC). Niche rotates across five categories.
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-id-slot-1
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      locale: id
+      slot: "1"
+    secrets: inherit

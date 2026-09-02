@@ -1,0 +1,131 @@
+---
+import Base from "./Base.astro";
+import Navbar from "../components/Navbar";
+import { APP_URL } from "../lib/config";
+import { categoryLabelId, categoryMetaId } from "../lib/categories-id";
+import { hreflangAlternates } from "../lib/i18n";
+import "../styles/blog.css";
+
+export interface Props {
+  title: string;
+  description: string;
+  canonical: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  category?: string;
+  tags?: string[];
+  author?: string;
+  minutes?: number;
+  jsonLd?: unknown[];
+  related?: { title: string; slug: string; category?: string }[];
+}
+
+const {
+  title,
+  description,
+  canonical,
+  pubDate,
+  category = "productivity",
+  tags = [],
+  minutes = 5,
+  jsonLd = [],
+  related = [],
+} = Astro.props;
+
+const fmtDate = (d: Date) =>
+  new Date(d).toLocaleDateString("id-ID", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+const isoDate = new Date(pubDate).toISOString();
+const categoryLabel = categoryLabelId(category);
+const pillar = categoryMetaId(category).pillar;
+---
+
+<Base
+  title={`${title} — Refocus`}
+  description={description}
+  canonical={canonical}
+  ogTitle={title}
+  ogDescription={description}
+  ogType="article"
+  ogImageAlt={title}
+  jsonLd={jsonLd}
+  lang="id"
+  hreflangAlternates={hreflangAlternates(canonical)}
+>
+  <div class="blog">
+    <Navbar client:load />
+
+    <article class="blog-article">
+      <header class="blog-header">
+        <a class="blog-back" href="/id/blog">&larr; Semua artikel</a>
+        <h1>{title}</h1>
+        <p class="blog-meta">
+          <time datetime={isoDate}>{fmtDate(pubDate)}</time>
+          &middot; {minutes} menit baca &middot;
+          <a href={`/id/blog/category/${category}`}>{categoryLabel}</a>
+        </p>
+        {
+          tags.length > 0 && (
+            <ul class="blog-tags">
+              {tags.map((t) => (
+                <li>#{t}</li>
+              ))}
+            </ul>
+          )
+        }
+      </header>
+
+      <hr class="blog-divider" />
+
+      <div class="blog-prose">
+        <slot />
+      </div>
+
+      <aside class="blog-cta">
+        <h3>Butuh teman tenang saat belajar atau kerja?</h3>
+        <p>
+          Banyak orang fokus lebih baik dengan orang lain di ruangan — bahkan
+          tanpa ngobrol. Coba sesi coworking terjadwal di Refocus, atau lanjut
+          dengan sistem yang sudah cocok di artikel ini.
+        </p>
+        <p class="blog-cta-more">
+          Baru dengar istilahnya? Baca panduan{" "}
+          <a href={pillar.path}>{pillar.label}</a>.
+        </p>
+        <a class="blog-cta-btn" href={`${APP_URL}/auth/sign-up`}>
+          Lihat cara sesi bekerja &rarr;
+        </a>
+      </aside>
+    </article>
+
+    {
+      related.length > 0 && (
+        <section class="blog-related" aria-label="Artikel terkait">
+          <h2>Lanjut baca</h2>
+          <ul class="blog-related-list">
+            {related.map((r) => (
+              <li>
+                <a href={`/id/blog/${r.slug}`}>
+                  <h3>{r.title}</h3>
+                  <span class="blog-related-cat">
+                    {categoryLabelId(r.category)}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <footer class="blog-foot">
+      <span>&copy; {new Date().getFullYear()} Refocus</span>
+      <a href="/id">Beranda</a>
+      <a href="/id/blog">Blog</a>
+      <a href="/">English</a>
+    </footer>
+  </div>
+</Base>

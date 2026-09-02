@@ -1,0 +1,63 @@
+---
+import LandingPage from "../../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../../lib/seo";
+import { APP_URL } from "../../lib/config";
+import { ID_PAGE_COPY, hreflangAlternates } from "../../lib/i18n";
+
+const UPDATED = "2026-09-02";
+const canonical = "/id/study-with-me";
+const title = "Belajar bersama online — study with me untuk UTBK/SNBT";
+const description =
+  "Belajar bersama online (study with me) untuk persiapan UTBK, SNBT, dan seleksi PTN — co-presence tenang tanpa study group yang ramai.";
+
+const faqs = [
+  {
+    question: "Apa itu study with me?",
+    answer:
+      "Format belajar di mana Anda dan orang lain mengerjakan materi masing-masing sambil hadir bersama — sering lewat video — tanpa mengajar satu sama lain. Fokus pada co-presence, bukan diskusi.",
+  },
+  {
+    question: "Apakah cocok untuk persiapan UTBK?",
+    answer:
+      "Ya. Banyak siswa UTBK belajar sendiri di rumah berbulan-bulan. Study with me online mengurangi isolasi dan membantu memulai blok revisi yang sering ditunda.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Ujian"
+  heading="Belajar bersama online untuk persiapan ujian"
+  lead="Study with me bukan bimbel — Anda tetap belajar materi sendiri, dengan partner yang juga fokus. Cocok untuk UTBK, SNBT, dan seleksi PTN."
+  updated={UPDATED}
+  faqs={faqs}
+  lang="id"
+  homePath="/id"
+  hreflangAlternates={hreflangAlternates(canonical)}
+  ctaTitle="Coba sesi belajar fokus"
+  ctaText="Join sesi terjadwal, sebut tiga target belajar hari ini, dan kerjakan bersama partner dengan timer 50 menit."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Mulai sesi gratis"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <h2>Rutinitas sesi belajar 50 menit</h2>
+  <ol>
+    <li>Tulis 3 target konkret (mis. 20 soal TPS, 1 bab literasi).</li>
+    <li>Join sesi study with me — mic mute, kamera opsional.</li>
+    <li>Kerjakan target tanpa buka tab distraksi.</li>
+    <li>Catat apa yang selesai; ulang besok.</li>
+  </ol>
+  <p>
+    Baca juga artikel <a href="/id/blog">blog</a> tentang UTBK dan belajar
+    sendirian di rumah.
+  </p>
+</LandingPage>

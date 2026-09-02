@@ -24,6 +24,9 @@ export interface Props {
   ctaHref?: string;
   ctaLabel?: string;
   jsonLd?: unknown[]; // page passes Article + FAQPage; breadcrumb is auto-added
+  lang?: string;
+  hreflangAlternates?: { hreflang: string; href: string }[];
+  homePath?: string;
 }
 
 const {
@@ -41,10 +44,16 @@ const {
   ctaHref = `${APP_URL}/auth/sign-up`,
   ctaLabel = "Start a free session",
   jsonLd = [],
+  lang = "en",
+  hreflangAlternates = [],
+  homePath = "/",
 } = Astro.props;
 
+const isId = lang === "id";
+const footHome = homePath;
+
 const breadcrumb = breadcrumbJsonLd([
-  { name: "Home", path: "/" },
+  { name: isId ? "Beranda" : "Home", path: homePath },
   { name: heading, path: canonical },
 ]);
 const allJsonLd = [breadcrumb, ...jsonLd];
@@ -68,13 +77,15 @@ const updatedLabel = fmt(updated);
   ogDescription={description}
   ogType="article"
   jsonLd={allJsonLd}
+  lang={lang}
+  hreflangAlternates={hreflangAlternates}
 >
   <div class="blog">
     <Navbar client:load />
 
     <article class="blog-article">
       <header class="blog-header">
-        <a class="blog-back" href="/">&larr; Home</a>
+        <a class="blog-back" href={homePath}>&larr; {isId ? "Beranda" : "Home"}</a>
         {eyebrow && <p class="blog-eyebrow">{eyebrow}</p>}
         <h1>{heading}</h1>
         <p class="blog-lede">{lead}</p>
@@ -92,8 +103,8 @@ const updatedLabel = fmt(updated);
 
         {
           faqs.length > 0 && (
-            <section class="lp-faq" aria-label="Frequently asked questions">
-              <h2>Frequently asked questions</h2>
+            <section class="lp-faq" aria-label={isId ? "Pertanyaan umum" : "Frequently asked questions"}>
+              <h2>{isId ? "Pertanyaan umum" : "Frequently asked questions"}</h2>
               {faqs.map((f) => (
                 <div class="lp-faq-item">
                   <h3>{f.question}</h3>
@@ -114,16 +125,32 @@ const updatedLabel = fmt(updated);
 
     <footer class="blog-foot">
       <span>&copy; {new Date().getFullYear()} Refocus</span>
-      <a href="/">Home</a>
-      <a href="/free">Free</a>
-      <a href="/features">Features</a>
-      <a href="/pricing">Pricing</a>
-      <a href="/body-doubling">Body doubling</a>
-      <a href="/virtual-coworking">Virtual coworking</a>
-      <a href="/focus-room">Focus room</a>
-      <a href="/study-partner">Study partner</a>
-      <a href="/study-with-me">Study with me</a>
-      <a href="/blog">Blog</a>
+      {
+        isId ? (
+          <>
+            <a href={footHome}>Beranda</a>
+            <a href="/id/features">Fitur</a>
+            <a href="/id/pricing">Harga</a>
+            <a href="/id/body-doubling">Body doubling</a>
+            <a href="/id/virtual-coworking">Coworking virtual</a>
+            <a href="/id/focus-room">Ruang fokus</a>
+            <a href="/id/blog">Blog</a>
+          </>
+        ) : (
+          <>
+            <a href="/">Home</a>
+            <a href="/free">Free</a>
+            <a href="/features">Features</a>
+            <a href="/pricing">Pricing</a>
+            <a href="/body-doubling">Body doubling</a>
+            <a href="/virtual-coworking">Virtual coworking</a>
+            <a href="/focus-room">Focus room</a>
+            <a href="/study-partner">Study partner</a>
+            <a href="/study-with-me">Study with me</a>
+            <a href="/blog">Blog</a>
+          </>
+        )
+      }
     </footer>
   </div>
 </Base>

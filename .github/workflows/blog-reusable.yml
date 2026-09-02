@@ -1,18 +1,26 @@
 name: Blog niche (reusable)
 
-# Called by blog-publish.yml (Mon/Wed/Fri) and by per-niche
-# workflow_dispatch workflows. Checks out `landing`, generates one
-# post for the given category, commits, builds, and deploys to Cloudflare.
-# Posts are usefulness/SEO-first (outbound links); free/commercial topics
-# also link to /pricing, /free, or alternatives hubs.
+# Called by daily slot crons (rotating niches) or by a per-niche manual run.
+# Checks out `landing`, generates one post, commits, builds, and deploys to
+# Cloudflare. Posts are usefulness/SEO-first (outbound links); Refocus is
+# optional & soft.
 
 on:
   workflow_call:
     inputs:
       category:
         description: "productivity | adhd | exams | loneliness | remote"
-        required: true
+        required: false
         type: string
+      slot:
+        description: "0, 1, or 2 — picks a rotating niche when category is omitted"
+        required: false
+        type: string
+      locale:
+        description: "en (default) or id for Bahasa Indonesia posts"
+        required: false
+        type: string
+        default: en
 
 permissions:
   contents: write
@@ -25,7 +33,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: landing
-          # Need a token that can push; default GITHUB_TOKEN is fine for same repo.
           fetch-depth: 0
 
       - name: Setup Node
@@ -39,23 +46,57 @@ jobs:
         working-directory: marketing
         run: npm ci
 
-      - name: Generate ${{ inputs.category }} post
+      - name: Resolve category
+        id: niche
+        env:
+          INPUT_CATEGORY: ${{ inputs.category }}
+          INPUT_SLOT: ${{ inputs.slot }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_CATEGORY}" ]; then
+            CATEGORY="$INPUT_CATEGORY"
+          elif [ -n "${INPUT_SLOT}" ]; then
+            NICHES=(productivity adhd exams loneliness remote)
+            DAY=$(( $(date -u +%s) / 86400 ))
+            INDEX=$(( (DAY * 3 + INPUT_SLOT) % 5 ))
+            CATEGORY="${NICHES[$INDEX]}"
+            echo "Rotation: day=$DAY slot=$INPUT_SLOT → $CATEGORY"
+          else
+            echo "Provide category or slot" >&2
+            exit 1
+          fi
+          echo "category=$CATEGORY" >> "$GITHUB_OUTPUT"
+
+      - name: Generate ${{ steps.niche.outputs.category }} post (${{ inputs.locale }})
         working-directory: marketing
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
-          POST_CATEGORY: ${{ inputs.category }}
-        run: node scripts/generate-post.mjs --category "${{ inputs.category }}"
+          POST_CATEGORY: ${{ steps.niche.outputs.category }}
+          POST_LOCALE: ${{ inputs.locale }}
+        run: >-
+          node scripts/generate-post.mjs
+          --category "${{ steps.niche.outputs.category }}"
+          --locale "${{ inputs.locale }}"
 
       - name: Commit & push to landing
+        env:
+          LOCALE: ${{ inputs.locale }}
+          CATEGORY: ${{ steps.niche.outputs.category }}
         run: |
           git config user.name "refocus-blog-bot"
           git config user.email "bot@refocus.co.in"
-          # Rebase if another niche pushed while we were generating
           git pull --rebase origin landing || true
-          if [ -n "$(git status --porcelain marketing/src/content/blog)" ]; then
-            git add marketing/src/content/blog
-            git commit -m "blog(${{ inputs.category }}): auto-generated post ($(date -u +%Y-%m-%d))"
+          if [ "$LOCALE" = "id" ]; then
+            BLOG_PATH="marketing/src/content/blog-id"
+            COMMIT_PREFIX="blog(id/$CATEGORY)"
+          else
+            BLOG_PATH="marketing/src/content/blog"
+            COMMIT_PREFIX="blog($CATEGORY)"
+          fi
+          if [ -n "$(git status --porcelain "$BLOG_PATH")" ]; then
+            git add "$BLOG_PATH"
+            git commit -m "$COMMIT_PREFIX: auto-generated post ($(date -u +%Y-%m-%d))"
             for i in 1 2 3; do
               git push origin HEAD:landing && break
               echo "Push conflict — rebase and retry ($i)"

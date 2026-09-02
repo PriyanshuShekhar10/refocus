@@ -1,13 +1,9 @@
 name: "Blog: publish (every other day)"
 
-# Single rotating niche publish — Mon/Wed/Fri at 06:00 UTC (~11:30 IST).
-# Replaces five daily niche crons to avoid thin/near-duplicate flooding.
-# Category rotates by UTC day-of-year. Manual niche runs remain via
-# blog-productivity / blog-adhd / … workflow_dispatch only.
+# Superseded by blog-slot-0.yml (1 English post/day at 06:00 UTC).
+# Kept for manual niche runs only — do not re-enable the schedule alongside slot crons.
 
 on:
-  schedule:
-    - cron: "0 6 * * 1,3,5"
   workflow_dispatch:
     inputs:
       category:

@@ -25,6 +25,11 @@ const faqs = [
     answer:
       "Yes. Refocus is free to start with no credit card. See the pricing page for what's included.",
   },
+  {
+    question: "Is this a group lobby or a one-to-one room?",
+    answer:
+      "One-to-one. You work with a single partner and a shared timer — not a crowded Discord or Zoom lobby. That keeps the session quiet and accountable.",
+  },
 ];
 
 const article = articleJsonLd({
@@ -74,12 +79,43 @@ const softwareJsonLd = {
   ctaLabel="Start a free session"
   jsonLd={[article, softwareJsonLd, faqJsonLd(faqs)]}
 >
+  <h2>The session flow</h2>
+  <p>
+    Refocus is a ritual, not a dashboard tour. Every feature exists to support
+    one loop: match → share a goal → work with a synced timer → check in when
+    time is up.
+  </p>
+  <ol>
+    <li>
+      <strong>Match</strong> — get paired with someone else who is ready to
+      focus, or invite a friend you already know.
+    </li>
+    <li>
+      <strong>Goal</strong> — say what you are working on in one line so both of
+      you start with intent.
+    </li>
+    <li>
+      <strong>Focus</strong> — mics stay quiet; cameras stay on for presence;
+      the timer runs for both of you.
+    </li>
+    <li>
+      <strong>Checkout</strong> — when the block ends, optionally unmute for a
+      short check-in, then leave with the work done (or clearer).
+    </li>
+  </ol>
+  <p>
+    That is the same idea as
+    <a href="/body-doubling">body doubling</a> and a quiet
+    <a href="/focus-room">online focus room</a> — co-presence without a meeting.
+  </p>
+
   <h2>Three lengths. One ritual.</h2>
   <p>
     <strong>25-minute</strong> sprints for quick wins, <strong>50-minute</strong>
     deep-work blocks for the real thing, and <strong>75-minute</strong>
     marathons for writing or research. Pick a length, start the timer — the
-    structure does the rest.
+    structure does the rest. Students often stack two 50s for exam prep; remote
+    workers often protect a single 75 for deep work.
   </p>
 
   <h2>Focus mode</h2>
@@ -88,26 +124,55 @@ const softwareJsonLd = {
     not performing. Unmute at the end of the session to check in if you want.
     That's the same idea as a library desk — co-presence without a meeting.
   </p>
+  <p>
+    If “just focus” advice has never worked for ADHD-like brains, quiet presence
+    is often the missing piece. Start with a short block and our
+    <a href="/body-doubling">body doubling</a> guide.
+  </p>
 
   <h2>Synced timers</h2>
   <p>
     When your partner starts, you start. Breaks land together. No coordination
     overhead — sit down and the timer takes care of the rhythm. See also our
     guides on <a href="/focus-room">online focus rooms</a> and
-    <a href="/body-doubling">body doubling</a>.
+    <a href="/virtual-coworking">virtual coworking</a>.
   </p>
 
   <h2>Friends and session requests</h2>
   <p>
     Work with the people you focus best with. Send friend requests, send session
     requests, and see who's free, who's in a session, and how long is left on
-    their timer.
+    their timer. Random matching is fine for a first session; friends make the
+    habit stick.
   </p>
 
   <h2>Community between sessions</h2>
   <p>
     Share wins, ask for advice, and cheer others on when you're not in a room —
-    quiet company while you work, supportive community when you don't.
+    quiet company while you work, supportive community when you don't. The room
+    stays one-to-one; the lounge is optional.
+  </p>
+
+  <h2>Built for different kinds of deep work</h2>
+  <h3>Students &amp; exams</h3>
+  <p>
+    Timed blocks for JEE, NEET, UPSC, CA, and other long prep seasons —
+    especially when studying alone at home feels endless. Pair with
+    <a href="/study-with-me">study with me</a> and
+    <a href="/study-partner">study partner</a> if that is your main use case.
+  </p>
+  <h3>Remote workers &amp; freelancers</h3>
+  <p>
+    A container for deep work when Slack and Zoom eat the day. Refocus is not
+    another meeting — it is a scheduled quiet block with a partner. Compare
+    approaches on our
+    <a href="/focusmate-alternative">Focusmate alternative</a> page.
+  </p>
+  <h3>ADHD-friendly accountability</h3>
+  <p>
+    Task initiation is often harder than the work itself. Having someone else
+    “there” lowers the activation energy without forcing conversation. Read
+    <a href="/body-doubling">body doubling</a>, then try a 25-minute session.
   </p>
 
   <h2>Pricing</h2>

@@ -5,13 +5,14 @@
  * Usage:
  *   node scripts/generate-post.mjs
  *   node scripts/generate-post.mjs --category exams
- *   node scripts/generate-post.mjs --category adhd --topic "body doubling for study"
+ *   node scripts/generate-post.mjs --category exams --locale id
  *
  * Env:
  *   OPENAI_API_KEY   (required)
  *   OPENAI_MODEL     (optional, default gpt-4o-mini)
  *   POST_CATEGORY    (optional)  — productivity | adhd | exams | loneliness | remote
  *   POST_TOPIC       (optional)  — override the topic angle
+ *   POST_LOCALE      (optional)  — en (default) | id
  *
  * SEO / usefulness goals (not hard promotion):
  *   - Specific, niche angles (exams, ADHD, loneliness, etc.)
@@ -31,14 +32,32 @@ import {
   isFreeCommercialTopic,
   pickCategoryByUtcHour,
 } from "./blog-categories.mjs";
+import { CATEGORIES_ID, getCategoryId } from "./blog-categories-id.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MARKETING_DIR = resolve(__dirname, "..");
 const REPO_ROOT = resolve(MARKETING_DIR, "..");
-const BLOG_DIR = join(MARKETING_DIR, "src/content/blog");
 
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const SITE = "https://refocus.co.in";
+
+function resolveLocale() {
+  const raw = (getArg("--locale") || process.env.POST_LOCALE || "en")
+    .trim()
+    .toLowerCase();
+  if (raw === "id") return "id";
+  return "en";
+}
+
+function blogDirForLocale(locale) {
+  return locale === "id"
+    ? join(MARKETING_DIR, "src/content/blog-id")
+    : join(MARKETING_DIR, "src/content/blog");
+}
+
+function blogUrlPrefix(locale) {
+  return locale === "id" ? "/id/blog" : "/blog";
+}
 
 /**
  * Cluster landing pages every niche can reference. Each niche's own `pillar`
@@ -54,9 +73,22 @@ const LANDING_PAGES = [
   "/focusmate-alternative — Honest Refocus vs Focusmate comparison",
 ];
 
+const LANDING_PAGES_ID = [
+  "/id/body-doubling — Panduan body doubling online",
+  "/id/virtual-coworking — Coworking virtual untuk fokus",
+  "/id/study-with-me — Belajar bersama online untuk persiapan ujian",
+  "/id/pricing — Harga periode gratis Refocus",
+  "/id/features — Fitur Refocus",
+];
+
 /** Absolute URL of the pillar page for a category. */
-function pillarUrl(category) {
-  return `${SITE}${category.pillar?.path || "/body-doubling"}`;
+function pillarUrl(category, locale) {
+  const path = category.pillar?.path || (locale === "id" ? "/id/body-doubling" : "/body-doubling");
+  return `${SITE}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function landingPages(locale) {
+  return locale === "id" ? LANDING_PAGES_ID : LANDING_PAGES;
 }
 
 async function loadEnvFile(path) {
@@ -97,10 +129,11 @@ function getArg(flag) {
   return "";
 }
 
-function resolveCategoryId() {
+function resolveCategoryId(locale) {
   const fromArg = getArg("--category") || process.env.POST_CATEGORY || "";
   if (fromArg) {
-    const cat = getCategory(fromArg);
+    const cat =
+      locale === "id" ? getCategoryId(fromArg) : getCategory(fromArg);
     if (!cat) {
       console.error(
         `Unknown category "${fromArg}". Use one of: ${CATEGORY_IDS.join(", ")}`,
@@ -110,6 +143,10 @@ function resolveCategoryId() {
     return cat.id;
   }
   return pickCategoryByUtcHour();
+}
+
+function categoriesForLocale(locale) {
+  return locale === "id" ? CATEGORIES_ID : CATEGORIES;
 }
 
 function pickTopic(category, existingTitles) {
@@ -131,34 +168,30 @@ function pickTopic(category, existingTitles) {
   return pool[start];
 }
 
-async function getExistingMeta() {
-  if (!existsSync(BLOG_DIR)) return { titles: [], urls: [] };
-  const files = (await readdir(BLOG_DIR)).filter((f) => f.endsWith(".md"));
+async function getExistingMeta(blogDir, urlPrefix) {
+  if (!existsSync(blogDir)) return { titles: [], urls: [] };
+  const files = (await readdir(blogDir)).filter((f) => f.endsWith(".md"));
   const titles = [];
   const urls = [];
   for (const f of files) {
-    const raw = await readFile(join(BLOG_DIR, f), "utf8");
+    const raw = await readFile(join(blogDir, f), "utf8");
     const m = raw.match(/^title:\s*(.+)$/m);
     if (m) titles.push(m[1].replace(/^["']|["']$/g, "").trim());
-    urls.push(`${SITE}/blog/${f.replace(/\.md$/, "")}`);
+    urls.push(`${SITE}${urlPrefix}/${f.replace(/\.md$/, "")}`);
   }
   return { titles, urls };
 }
 
-/**
- * Refuse numeric suffix collisions (`slug-2`) that create near-duplicate URLs.
- * Prefer a distinct angle slug, or fail so CI does not ship cannibalizing posts.
- */
-async function uniqueSlug(slug) {
+async function uniqueSlug(blogDir, slug) {
   const base = slug || "post";
-  if (!existsSync(join(BLOG_DIR, `${base}.md`))) return base;
+  if (!existsSync(join(blogDir, `${base}.md`))) return base;
 
   const stamp = new Date()
     .toISOString()
     .slice(0, 10)
     .replace(/-/g, "");
   const angled = `${base}-${stamp}`;
-  if (!existsSync(join(BLOG_DIR, `${angled}.md`))) {
+  if (!existsSync(join(blogDir, `${angled}.md`))) {
     console.warn(
       `Slug "${base}" already exists — using dated slug "${angled}" instead of -2.`,
     );
@@ -214,35 +247,74 @@ const LINK_BANK = {
   ],
 };
 
-function buildSystemPrompt(category, topic) {
+const LINK_BANK_ID = {
+  productivity: [
+    "https://id.wikipedia.org/wiki/Manajemen_waktu — manajemen waktu",
+    "https://www.kompas.com/tag/produktivitas — Kompas (produktivitas)",
+  ],
+  adhd: [
+    "https://id.wikipedia.org/wiki/Gangguan_belahan_otak_dengan_hipertivitas — ADHD (Wikipedia ID)",
+  ],
+  exams: [
+    "https://snbt.kemdikbud.go.id/ — SNBT resmi Kemdikbud",
+    "https://utbk-sbmptn.id/ — informasi UTBK/SBMPTN",
+    "https://id.wikipedia.org/wiki/Seleksi_Bersama_Masuk_Perguruan_Tinggi_Negeri — SBMP TN",
+  ],
+  loneliness: [
+    "https://id.wikipedia.org/wiki/Kesepian — kesepian",
+  ],
+  remote: [
+    "https://id.wikipedia.org/wiki/Kerja_jarak_jauh — kerja jarak jauh",
+    "https://www.kompas.com/tag/freelancer — Kompas freelancer",
+  ],
+};
+
+function linkBank(categoryId, locale) {
+  if (locale === "id") {
+    return LINK_BANK_ID[categoryId] || LINK_BANK_ID.productivity;
+  }
+  return LINK_BANK[categoryId] || LINK_BANK.productivity;
+}
+
+function buildSystemPrompt(category, topic, locale) {
   const freeCommercial = isFreeCommercialTopic(topic);
+  const pricingPath = locale === "id" ? "/id/pricing" : "/pricing";
+  const freePath = locale === "id" ? "/id/features" : "/free";
+  const altPath = locale === "id" ? "/id/features" : "/focusmate-alternative";
   const commercialRule = freeCommercial
-    ? `5b. COMMERCIAL HUB LINK (required for this free/pricing/alternative topic): also include EXACTLY ONE Markdown link to one of these pages — ${COMMERCIAL_HUBS.map((h) => `${SITE}${h.path} (${h.label})`).join("; ")}. Place it naturally mid-article as further reading (e.g. pricing or comparison detail). This is separate from the pillar link. Do not hard-sell; one calm sentence is enough.`
-    : `5b. COMMERCIAL HUB LINK (optional): if you mention free tools, pricing, or Focusmate/FLOWN-style alternatives, you MAY add one link to ${SITE}/pricing, ${SITE}/free, or ${SITE}/focusmate-alternative. Otherwise omit.`;
+    ? `5b. COMMERCIAL HUB LINK (required for this free/pricing/alternative topic): also include EXACTLY ONE Markdown link to one of these pages — ${SITE}${pricingPath}; ${SITE}${freePath}; ${SITE}${altPath}. Place it naturally mid-article.`
+    : `5b. COMMERCIAL HUB LINK (optional): if you mention free tools or pricing, you MAY add one link to ${SITE}${pricingPath}. Otherwise omit.`;
+
+  const langRule =
+    locale === "id"
+      ? "Write the ENTIRE article in natural Bahasa Indonesia. Do NOT mention JEE, UPSC, NEET, or Indian exams. Use UTBK/SNBT/Indonesia context for exam niche."
+      : "Write in English for an India-primary audience. UPSC-first for exam niche; avoid JEE-heavy angles unless the topic requires it.";
+
+  const bank = linkBank(category.id, locale);
 
   return `You write SEO-friendly, genuinely useful long-form articles. Readers should leave with tactics they can use today — even if they never hear of any product.
+
+${langRule}
 
 Niche for this article: ${category.label}
 Audience: ${category.audience}
 Voice: ${category.voice}
 
 Hard requirements:
-1. TITLE: specific and searchable. No brand names in the title unless comparing publicly known tools (Focusmate, Discord, Zoom). Prefer including a concrete exam, situation, or named tactic when the niche calls for it.
-2. Do NOT pitch or center any product as the whole article. The piece must stand alone as useful content. Soft product mentions are allowed only as instructed below.
-3. OUTBOUND LINKS (critical for usefulness + SEO): include 3–5 Markdown links to real external resources (official sites, reputable orgs, well-known references). Prefer links from this bank when they fit, and only use real https URLs you are confident exist:
-${(LINK_BANK[category.id] || LINK_BANK.productivity).map((l) => `   - ${l}`).join("\n")}
-   Spread links through the article (not dumped at the end). Anchor text should be natural ("NTA's JEE Main site", "CHADD's ADHD overview"), not "click here".
-4. OPTIONAL soft tool mention: You MAY mention Refocus (https://refocus.co.in) at most ONCE, mid-article, as a quiet example of virtual body doubling / co-working — never in the title or intro, never as a CTA, never more than 1–2 sentences. If the article is stronger without it, omit Refocus entirely.
-5. INTERNAL LINK (required): include EXACTLY ONE Markdown link to our guide at ${pillarUrl(category)}, placed naturally high in the article (within the first few paragraphs) as "further reading", with descriptive anchor text (e.g. "our guide to ${category.pillar?.label || "body doubling"}"). This is an internal reference, not a CTA, and does NOT count toward the 3–5 outbound links above. Do not link it more than once.
+1. TITLE: specific and searchable. No brand names in the title unless comparing publicly known tools (Focusmate, Discord, Zoom).
+2. Do NOT pitch or center any product as the whole article. Soft product mentions allowed only as instructed below.
+3. OUTBOUND LINKS: include 3–5 Markdown links to real external resources. Prefer:
+${bank.map((l) => `   - ${l}`).join("\n")}
+4. OPTIONAL soft tool mention: You MAY mention Refocus (${SITE}) at most ONCE, mid-article, as a quiet example of virtual body doubling — never in title or intro.
+5. INTERNAL LINK (required): include EXACTLY ONE Markdown link to ${pillarUrl(category, locale)}, placed naturally high in the article as further reading.
 ${commercialRule}
 6. Must include: ${category.mustInclude}
 7. Avoid: ${category.avoid}
-8. Structure: Markdown with 3–5 "##" headings, short paragraphs, occasional lists. ~900–1200 words. No emojis. No "In conclusion". No invented statistics or fake studies.
-9. Be specific: name exams, tools, routines, times of day, failure modes. Vague motivational writing is a failure.
-10. Do NOT try to own head commercial keywords as if this post were a product landing page. Leave "free Focusmate alternative" ownership to ${SITE}/focusmate-alternative; this post supports long-tail intent.`;
+8. Structure: Markdown with 3–5 "##" headings, ~900–1200 words. No emojis. No "In conclusion".
+9. Be specific: name exams, tools, routines. Vague motivational writing is a failure.`;
 }
 
-function buildUserPrompt(category, topic, existingTitles, existingUrls) {
+function buildUserPrompt(category, topic, existingTitles, existingUrls, locale) {
   const avoidTitles =
     existingTitles.length > 0
       ? `\n\nAlready published titles — pick a clearly different angle:\n${existingTitles
@@ -252,29 +324,38 @@ function buildUserPrompt(category, topic, existingTitles, existingUrls) {
       : "";
   const internal =
     existingUrls.length > 0
-      ? `\n\nIf natural, you may add 0–1 internal link to a related older post on our site (same niche feel):\n${existingUrls
+      ? `\n\nIf natural, you may add 0–1 internal link to a related older post:\n${existingUrls
           .slice(0, 8)
           .map((u) => `- ${u}`)
           .join("\n")}`
       : "";
-  const commercialNote = isFreeCommercialTopic(topic)
-    ? `\n\nThis topic is free/commercial-angled. Required: one link to a commercial hub (${COMMERCIAL_HUBS.map((h) => SITE + h.path).join(", ")}) in addition to the pillar link.`
-    : "";
-  const landing = `\n\nRequired internal link — link to this guide exactly once, high in the article, as further reading:\n- ${pillarUrl(category)}\nOther related internal pages you MAY link if genuinely relevant:\n${LANDING_PAGES.map((p) => `- ${SITE}${p}`).join("\n")}${commercialNote}`;
+  const landing = `\n\nRequired internal link — link to this guide exactly once, high in the article:\n- ${pillarUrl(category, locale)}\nOther related internal pages:\n${landingPages(locale).map((p) => `- ${SITE}${p.split(" — ")[0]}`).join("\n")}`;
 
-  return `Write a blog post in the "${category.label}" niche about: ${topic}.${avoidTitles}${landing}${internal}
+  const lang =
+    locale === "id"
+      ? "Write in Bahasa Indonesia."
+      : "Write in English.";
 
-Return ONLY JSON with these keys:
+  return `${lang} Write a blog post in the "${category.label}" niche about: ${topic}.${avoidTitles}${landing}${internal}
+
+Return ONLY JSON:
 {
   "title": "specific, searchable, under 70 chars, no brand",
   "slug": "kebab-case-url-slug",
-  "description": "meta description under 155 chars, specific",
+  "description": "meta description under 155 chars",
   "tags": ["2-5", "lowercase", "tags"],
   "body_markdown": "full Markdown body (no H1). Must include 3-5 outbound https links."
 }`;
 }
 
-async function callOpenAI(apiKey, category, topic, existingTitles, existingUrls) {
+async function callOpenAI(
+  apiKey,
+  category,
+  topic,
+  existingTitles,
+  existingUrls,
+  locale,
+) {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -286,7 +367,7 @@ async function callOpenAI(apiKey, category, topic, existingTitles, existingUrls)
       temperature: 0.85,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: buildSystemPrompt(category, topic) },
+        { role: "system", content: buildSystemPrompt(category, topic, locale) },
         {
           role: "user",
           content: buildUserPrompt(
@@ -294,6 +375,7 @@ async function callOpenAI(apiKey, category, topic, existingTitles, existingUrls)
             topic,
             existingTitles,
             existingUrls,
+            locale,
           ),
         },
       ],
@@ -343,10 +425,9 @@ function ensureOutboundLinks(body, categoryId) {
  * If the model omitted it, inject a natural "further reading" line after the
  * first paragraph. Internal links don't count toward the outbound requirement.
  */
-function ensurePillarLink(body, category) {
-  const path = category.pillar?.path || "/body-doubling";
+function ensurePillarLink(body, category, locale) {
+  const path = category.pillar?.path || (locale === "id" ? "/id/body-doubling" : "/body-doubling");
   const label = category.pillar?.label || "body doubling";
-  // Already links the pillar (relative or absolute)? Leave it alone.
   const linksPillar = new RegExp(
     `\\]\\((?:${SITE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})?${path.replace(
       /[.*+?^${}()|[\]\\]/g,
@@ -356,7 +437,10 @@ function ensurePillarLink(body, category) {
   ).test(body);
   if (linksPillar) return body;
 
-  const sentence = `If you're new to the idea, see our guide to [${label}](${SITE}${path}).`;
+  const sentence =
+    locale === "id"
+      ? `Jika baru mengenal konsep ini, baca [panduan ${label}](${SITE}${path}) kami.`
+      : `If you're new to the idea, see our guide to [${label}](${SITE}${path}).`;
   const paras = body.split(/\n{2,}/);
   // Insert after the first non-heading paragraph so it sits high in the article.
   const idx = paras.findIndex((p) => p.trim() && !p.trim().startsWith("#"));
@@ -365,21 +449,22 @@ function ensurePillarLink(body, category) {
   return paras.join("\n\n");
 }
 
-function toFrontmatter({ title, description, tags, category }) {
+function toFrontmatter({ title, description, tags, category, locale }) {
   const pubDate = new Date().toISOString();
   const q = (s) => JSON.stringify(String(s));
   const tagList = Array.isArray(tags) ? tags : [];
-  // Ensure category id is among tags for listing filters.
   if (!tagList.map((t) => String(t).toLowerCase()).includes(category.id)) {
     tagList.unshift(category.id);
   }
+  const localeLine =
+    locale === "id" ? `\nlocale: ${q("id")}` : "";
   return `---
 title: ${q(title)}
 description: ${q(description)}
 pubDate: ${q(pubDate)}
 category: ${q(category.id)}
 tags: [${tagList.map((t) => q(t)).join(", ")}]
-author: ${q("Refocus Team")}
+author: ${q(locale === "id" ? "Tim Refocus" : "Refocus Team")}${localeLine}
 draft: false
 ---
 `;
@@ -397,12 +482,17 @@ async function main() {
     process.exit(1);
   }
 
-  const categoryId = resolveCategoryId();
-  const category = CATEGORIES[categoryId];
+  const locale = resolveLocale();
+  const blogDir = blogDirForLocale(locale);
+  const urlPrefix = blogUrlPrefix(locale);
+  const categoryId = resolveCategoryId(locale);
+  const allCategories = categoriesForLocale(locale);
+  const category = allCategories[categoryId];
   const { titles: existingTitles, urls: existingUrls } =
-    await getExistingMeta();
+    await getExistingMeta(blogDir, urlPrefix);
   const topic = pickTopic(category, existingTitles);
 
+  console.log(`Locale: ${locale}`);
   console.log(`Category: ${category.id} (${category.label})`);
   console.log(`Topic: ${topic}`);
   console.log(`Model: ${MODEL}`);
@@ -413,6 +503,7 @@ async function main() {
     topic,
     existingTitles,
     existingUrls,
+    locale,
   );
 
   const title = sanitizeTitle(result.title || "");
@@ -421,27 +512,28 @@ async function main() {
   let body = String(result.body_markdown || "").trim();
   if (body.length < 200) throw new Error("Model returned an empty/short body.");
   body = ensureOutboundLinks(body, category.id);
-  body = ensurePillarLink(body, category);
+  body = ensurePillarLink(body, category, locale);
 
   const outbound = countOutboundLinks(body);
   console.log(`Outbound links (non-Refocus): ${outbound}`);
-  console.log(`Pillar link: ${pillarUrl(category)}`);
+  console.log(`Pillar link: ${pillarUrl(category, locale)}`);
 
   const baseSlug = slugify(result.slug || title);
-  const slug = await uniqueSlug(baseSlug);
+  const slug = await uniqueSlug(blogDir, baseSlug);
 
   const contents = `${toFrontmatter({
     title,
     description,
     tags: result.tags,
     category,
+    locale,
   })}\n${body}\n`;
-  const outPath = join(BLOG_DIR, `${slug}.md`);
+  const outPath = join(blogDir, `${slug}.md`);
   await writeFile(outPath, contents, "utf8");
 
   console.log(`\nWrote ${outPath}`);
   console.log(`Title: ${title}`);
-  console.log(`URL:   ${SITE}/blog/${slug}`);
+  console.log(`URL:   ${SITE}${urlPrefix}/${slug}`);
 }
 
 main().catch((err) => {

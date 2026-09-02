@@ -1,0 +1,81 @@
+---
+import LandingPage from "../../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../../lib/seo";
+import { APP_URL } from "../../lib/config";
+import { ID_PAGE_COPY, hreflangAlternates } from "../../lib/i18n";
+
+const UPDATED = "2026-09-02";
+const canonical = "/id/body-doubling";
+const copy = ID_PAGE_COPY.bodyDoubling;
+const title = "Body doubling gratis online — panduan fokus Refocus";
+const description =
+  "Apa itu body doubling, mengapa membantu fokus dan ADHD, dan cara body doubling online gratis tanpa langganan mahal.";
+
+const faqs = [
+  {
+    question: "Apa itu body doubling?",
+    answer:
+      "Body doubling berarti mengerjakan tugas sendiri sementara orang lain juga hadir dan bekerja. Mereka tidak membantu mengerjakan — kehadiran tenang saja membuat lebih mudah memulai dan tetap on track. Strategi populer untuk ADHD, tapi membantu siapa pun yang sulit mulai.",
+  },
+  {
+    question: "Apakah ada body doubling gratis?",
+    answer:
+      "Ya. Refocus menawarkan sesi body doubling gratis selama periode kampanye — tanpa kartu kredit dan tanpa batas sesi mingguan. Anda dipasangkan untuk blok fokus dengan timer bersama.",
+  },
+  {
+    question: "Mengapa body doubling efektif?",
+    answer:
+      "Partner yang bekerja menambah accountability eksternal lembut dan rasa fokus bersama, sehingga friksi memulai menurun. Untuk otak ADHD, cue eksternal bisa menggantikan sinyal internal 'langsung mulai' yang lebih sulit diraih sendiri.",
+  },
+  {
+    question: "Apakah body doubling hanya untuk ADHD?",
+    answer:
+      "Tidak. Body doubling populer di komunitas ADHD karena menarget task initiation, tapi siswa, pekerja remote, freelancer, dan penulis juga memakainya. Jika Anda fokus lebih baik di kafe atau perpustakaan daripada rumah, body doubling meniru efek itu.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Panduan"
+  heading={copy.heading}
+  lead={copy.lead}
+  updated={UPDATED}
+  faqs={faqs}
+  lang="id"
+  homePath="/id"
+  hreflangAlternates={hreflangAlternates(canonical)}
+  ctaTitle="Coba sesi fokus"
+  ctaText="Refocus adalah ruang coworking virtual: pilih durasi sesi, dapatkan partner yang juga ingin fokus, dan kerjakan tugas berdampingan dengan timer bersama."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Mulai sesi gratis"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <p>
+    Jika Anda bisa fokus di perpustakaan tapi berantakan sendirian di rumah,
+    body doubling mungkin yang kurang. Ini bukan study group — tidak ada diskusi
+    materi. Anda dan partner masing-masing mengerjakan tugas sendiri, dengan
+    kamera untuk presence dan mic yang tetap tenang.
+  </p>
+  <h2>Cara body doubling online</h2>
+  <ol>
+    <li>Join sesi terjadwal (25, 50, atau 75 menit).</li>
+    <li>Sebut satu target konkret untuk sesi ini.</li>
+    <li>Kerjakan tugas berdampingan; mic mute, kamera sesuai kenyamanan.</li>
+    <li>Check-in singkat di akhir — opsional.</li>
+  </ol>
+  <p>
+    Refocus mencocokkan Anda otomatis sehingga tidak perlu koordinasi manual
+    dengan teman. Lihat juga <a href="/id/virtual-coworking">coworking virtual</a>
+    dan <a href="/id/study-with-me">belajar bersama online</a> untuk konteks ujian.
+  </p>
+</LandingPage>

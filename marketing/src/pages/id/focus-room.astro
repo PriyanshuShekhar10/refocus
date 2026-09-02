@@ -1,0 +1,49 @@
+---
+import LandingPage from "../../layouts/LandingPage.astro";
+import { articleJsonLd } from "../../lib/seo";
+import { APP_URL } from "../../lib/config";
+import { ID_PAGE_COPY, hreflangAlternates } from "../../lib/i18n";
+
+const UPDATED = "2026-09-02";
+const canonical = "/id/focus-room";
+const copy = ID_PAGE_COPY.focusRoom;
+const title = "Ruang fokus online — sesi deep work Refocus";
+const description =
+  "Ruang fokus online dengan timer bersama dan partner accountability. 25, 50, atau 75 menit — gratis selama periode kampanye.";
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Produk"
+  heading={copy.heading}
+  lead={copy.lead}
+  updated={UPDATED}
+  lang="id"
+  homePath="/id"
+  hreflangAlternates={hreflangAlternates(canonical)}
+  ctaTitle="Masuk ruang fokus"
+  ctaText="Daftar gratis, pilih durasi sesi, dan mulai blok fokus dengan partner yang juga hadir untuk mengerjakan tugasnya."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Mulai sesi gratis"
+  jsonLd={[article]}
+>
+  <p>
+    Ruang fokus Refocus bukan lobby grup. Anda dipasangkan satu lawan satu
+    dengan timer sinkron — mirip meja bersebelahan di coworking space, tapi
+    dari rumah.
+  </p>
+  <ul>
+    <li><strong>25 menit</strong> — warm-up atau tugas kecil</li>
+    <li><strong>50 menit</strong> — deep work standar</li>
+    <li><strong>75 menit</strong> — blok panjang untuk materi berat</li>
+  </ul>
+</LandingPage>

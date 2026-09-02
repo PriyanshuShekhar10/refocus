@@ -1,0 +1,68 @@
+---
+import LandingPage from "../../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../../lib/seo";
+import { APP_URL } from "../../lib/config";
+import { ID_PAGE_COPY, hreflangAlternates } from "../../lib/i18n";
+
+const UPDATED = "2026-09-02";
+const canonical = "/id/virtual-coworking";
+const copy = ID_PAGE_COPY.virtualCoworking;
+const title = "Coworking virtual untuk kerja dan belajar sendirian";
+const description =
+  "Coworking virtual untuk deep work: sesi fokus dengan orang lain yang juga mengerjakan tugasnya — bukan meeting atau lobby ramai.";
+
+const faqs = [
+  {
+    question: "Apa bedanya coworking virtual dan Zoom meeting?",
+    answer:
+      "Meeting untuk diskusi; coworking virtual untuk kerja paralel. Di Refocus, mic default mute dan fokus pada timer bersama — bukan presentasi atau obrolan.",
+  },
+  {
+    question: "Apakah cocok untuk freelancer Indonesia?",
+    answer:
+      "Ya. Banyak freelancer WFH di Jakarta, Bali, atau kota lain yang kangen energi kantor. Sesi 50 menit bisa jadi 'jam kantor' sebelum client call atau deadline.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Panduan"
+  heading={copy.heading}
+  lead={copy.lead}
+  updated={UPDATED}
+  faqs={faqs}
+  lang="id"
+  homePath="/id"
+  hreflangAlternates={hreflangAlternates(canonical)}
+  ctaTitle="Coba coworking virtual"
+  ctaText="Pilih durasi sesi, dapatkan partner fokus, dan kerjakan daftar tugas dengan timer bersama."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Mulai sesi gratis"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <p>
+    Coworking virtual meniru perpustakaan atau kantor shared: ada orang lain
+    yang sedang bekerja, tanpa harus ngobrol. Cocok untuk menulis proposal,
+    coding, desain, atau belajar materi UTBK tanpa distraksi tab sosial media.
+  </p>
+  <h2>Kapan memakai coworking virtual</h2>
+  <ul>
+    <li>Pagi hari sebelum meeting menumpuk</li>
+    <li>Sore hari saat energi drop tapi deadline masih jauh</li>
+    <li>Saat WFH terasa terlalu sunyi dan mudah procrastinate</li>
+  </ul>
+  <p>
+    Pelajari juga <a href="/id/body-doubling">body doubling</a> — konsep inti
+    di balik kehadiran tenang ini.
+  </p>
+</LandingPage>

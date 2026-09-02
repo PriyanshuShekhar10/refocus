@@ -1,0 +1,21 @@
+name: "Blog: evening slot (English)"
+
+# Disabled — English reduced to 1/day (blog-slot-0). Evening slot repurposed for
+# Indonesian posts via blog-id-slot-1.yml. Manual English runs still available.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-slot-2
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      slot: "2"
+      locale: en
+    secrets: inherit

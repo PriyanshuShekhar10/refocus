@@ -23,9 +23,10 @@ function FocusModeVisual() {
             <img
               className={styles.micAvatar}
               src={AVATARS.maya}
-              alt=""
+              alt="Maya in a focus session"
               width={36}
               height={36}
+              loading="lazy"
               decoding="async"
             />
             <div className={styles.micName}>Maya</div>
@@ -39,9 +40,10 @@ function FocusModeVisual() {
             <img
               className={styles.micAvatar}
               src={AVATARS.you}
-              alt=""
+              alt="You in a focus session"
               width={36}
               height={36}
+              loading="lazy"
               decoding="async"
             />
             <div className={styles.micName}>You</div>
@@ -102,9 +104,10 @@ function FriendsVisual() {
           <img
             className={styles.friendAv}
             src={AVATARS.priya}
-            alt=""
+            alt="Priya"
             width={24}
             height={24}
+            loading="lazy"
             decoding="async"
           />
           <span className={styles.friendLabel}>Priya K.</span>
@@ -118,9 +121,10 @@ function FriendsVisual() {
           <img
             className={styles.friendAv}
             src={AVATARS.tomas}
-            alt=""
+            alt="Tomás"
             width={24}
             height={24}
+            loading="lazy"
             decoding="async"
           />
           <span className={styles.friendLabel}>Tomás</span>
@@ -135,9 +139,10 @@ function FriendsVisual() {
           <img
             className={styles.friendAv}
             src={AVATARS.lin}
-            alt=""
+            alt="Lin"
             width={24}
             height={24}
+            loading="lazy"
             decoding="async"
           />
           <span className={styles.friendLabel}>Lin</span>

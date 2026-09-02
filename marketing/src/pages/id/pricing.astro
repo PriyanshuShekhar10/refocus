@@ -1,0 +1,61 @@
+---
+import LandingPage from "../../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../../lib/seo";
+import { APP_URL } from "../../lib/config";
+import { ID_PAGE_COPY, hreflangAlternates } from "../../lib/i18n";
+
+const UPDATED = "2026-09-02";
+const canonical = "/id/pricing";
+const copy = ID_PAGE_COPY.pricing;
+const title = "Harga Refocus — gratis, tanpa kartu kredit";
+const description =
+  "Refocus gratis selama periode kampanye: tanpa kartu kredit, tanpa batas sesi mingguan. Body doubling, partner matching, timer sinkron.";
+
+const faqs = [
+  {
+    question: "Apakah Refocus benar-benar gratis?",
+    answer:
+      "Ya, selama periode gratis berlangsung. Tidak perlu kartu kredit dan tidak ada batas sesi per minggu.",
+  },
+  {
+    question: "Apa yang termasuk?",
+    answer:
+      "Sesi 25/50/75 menit, partner matching, timer sinkron, mode fokus (mic mute), teman, dan komunitas opsional.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Harga"
+  heading={copy.heading}
+  lead={copy.lead}
+  updated={UPDATED}
+  faqs={faqs}
+  lang="id"
+  homePath="/id"
+  hreflangAlternates={hreflangAlternates(canonical)}
+  ctaTitle="Mulai sekarang"
+  ctaText="Daftar gratis dan join sesi fokus pertama hari ini — dashboard masih dalam Bahasa Inggris, tapi sesi fokusnya universal."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Daftar gratis"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <h2>Yang Anda dapatkan</h2>
+  <ul>
+    <li>Sesi fokus 25, 50, atau 75 menit</li>
+    <li>Pencocokan partner accountability</li>
+    <li>Timer sinkron dan mode quiet</li>
+    <li>Kamera untuk presence — mic tenang</li>
+    <li>Teman, permintaan sesi, dan komunitas</li>
+  </ul>
+</LandingPage>
