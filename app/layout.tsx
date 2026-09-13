@@ -4,8 +4,6 @@ import "./globals.css";
 import Providers from "@/components/providers";
 import { ChatDock } from "@/components/chat-dock";
 // import Navbar from "@/components/navbar/navbar";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GoogleAnalytics } from "@/components/google-analytics";
 import { getSiteUrl } from "@/lib/site";
 
@@ -63,8 +61,6 @@ export default function RootLayout({
         {/* beforeInteractive scripts must live in the root layout */}
         <GoogleAnalytics />
         <Providers>
-          <Analytics />
-          <SpeedInsights />
           {children}
           <ChatDock />
         </Providers>
