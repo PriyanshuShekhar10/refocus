@@ -62,6 +62,7 @@ describe("POST /api/sessions", () => {
       new Response(JSON.stringify({ error: "Too many" }), { status: 429 }),
     );
     sessionsCol.findOne.mockResolvedValue(null); // no overlap by default
+    sessionsCol.countDocuments.mockResolvedValue(0);
     sessionsCol.insertOne.mockResolvedValue({ insertedId: new ObjectId() });
   });
 
@@ -119,7 +120,11 @@ describe("POST /api/sessions", () => {
   });
 
   it("rejects overlap with existing user session (409)", async () => {
-    sessionsCol.findOne.mockResolvedValueOnce({ _id: new ObjectId() });
+    // Gate attendance check (null = never attended), then overlap hit.
+    sessionsCol.findOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ _id: new ObjectId() });
+    sessionsCol.countDocuments.mockResolvedValue(0);
     const start = alignedFutureIso();
     const req = mockRequest("/api/sessions", {
       body: { start, durationMin: 25, sessionType: "focus" },
@@ -127,6 +132,19 @@ describe("POST /api/sessions", () => {
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(409);
     expect(json.error).toMatch(/already have a session/);
+  });
+
+  it("rejects second booking for users who have never attended (403)", async () => {
+    sessionsCol.findOne.mockResolvedValue(null);
+    sessionsCol.countDocuments.mockResolvedValue(1);
+    const start = alignedFutureIso();
+    const req = mockRequest("/api/sessions", {
+      body: { start, durationMin: 25, sessionType: "focus" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(403);
+    expect(json.code).toBe("FIRST_SESSION_REQUIRED");
+    expect(sessionsCol.insertOne).not.toHaveBeenCalled();
   });
 
   it("creates a session when valid + non-overlapping", async () => {

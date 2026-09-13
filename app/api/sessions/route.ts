@@ -14,6 +14,7 @@ import { getBlockedUserIds } from "@/lib/blocking";
 import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 import { scheduleRecordAccessIp } from "@/lib/userIps";
 import { isEngagementCrewUserId } from "@/lib/engagementCrew";
+import { assertCanBookAnotherSession } from "@/lib/sessionAttendanceGate";
 
 // GET /api/sessions?from=ISO&to=ISO
 // GET /api/sessions?mineUpcoming=1  — caller's future/in-progress sessions only
@@ -474,6 +475,10 @@ export async function POST(req: NextRequest) {
 
   // Server-side overlap check so a malicious or buggy client can't double-book.
   const db = await getDb();
+
+  const firstSessionGate = await assertCanBookAnotherSession(db, userId);
+  if (firstSessionGate) return firstSessionGate;
+
   if (await hasSessionOverlap(db, userId, s, e)) {
     return NextResponse.json(
       { error: "You already have a session during this time" },

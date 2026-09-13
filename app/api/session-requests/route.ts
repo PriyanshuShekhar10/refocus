@@ -10,6 +10,7 @@ import { requireNotCommunityBanned } from "@/lib/communityModeration";
 import { areUsersBlocked } from "@/lib/blocking";
 import { createSessionRequest } from "@/lib/sessionRequests";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { assertCanBookAnotherSession } from "@/lib/sessionAttendanceGate";
 
 type SessionRequestDoc = {
   _id: ObjectId;
@@ -94,6 +95,11 @@ export async function POST(req: NextRequest) {
       { status: 403 },
     );
   }
+
+  const firstSessionGate = await assertCanBookAnotherSession(db, currentUserId, {
+    countPendingRequests: true,
+  });
+  if (firstSessionGate) return firstSessionGate;
 
   try {
     const { sessionRequestId } = await createSessionRequest({

@@ -8,6 +8,10 @@ import {
 } from "@/constants/calendar";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
+import {
+  FIRST_SESSION_REQUIRED_CODE,
+  FIRST_SESSION_REQUIRED_MESSAGE,
+} from "@/lib/sessionAttendanceMessages";
 
 export type CreatedSession = {
   id: string;
@@ -205,7 +209,13 @@ export default function BookSessionButton({
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || "Failed to create session");
+      if (!res.ok) {
+        throw new Error(
+          data?.code === FIRST_SESSION_REQUIRED_CODE
+            ? FIRST_SESSION_REQUIRED_MESSAGE
+            : data?.error || "Failed to create session",
+        );
+      }
 
       onCreated?.({
         id: data?.id ?? "",

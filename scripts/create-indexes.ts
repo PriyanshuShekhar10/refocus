@@ -199,6 +199,27 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
     ],
   },
   {
+    collection: "session_no_show_events",
+    indexes: [
+      {
+        name: "noshow_miss_uniq",
+        keys: { type: 1, sessionId: 1, userId: 1 },
+        options: {
+          unique: true,
+          partialFilterExpression: { type: "miss" },
+        },
+      },
+      {
+        name: "noshow_day_wipe_uniq",
+        keys: { type: 1, userId: 1, localDate: 1 },
+        options: {
+          unique: true,
+          partialFilterExpression: { type: "day_wipe" },
+        },
+      },
+    ],
+  },
+  {
     collection: "friends",
     indexes: [
       {

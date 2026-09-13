@@ -30,6 +30,7 @@ describe("POST /api/sessions/:id/join", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSession(USER_ID);
+    sessionsCol.countDocuments.mockResolvedValue(0);
   });
 
   it("returns 401 when not authenticated", async () => {
@@ -99,7 +100,7 @@ describe("POST /api/sessions/:id/join", () => {
   });
 
   it("returns 409 when session already has 2 participants", async () => {
-    // First findOne: pre-fetch the session (full slot, user not in).
+    // Pre-fetch session (full slot, user not in).
     sessionsCol.findOne.mockResolvedValueOnce({
       _id: SESSION_ID,
       owner_id: "owner1",
@@ -110,11 +111,13 @@ describe("POST /api/sessions/:id/join", () => {
         { user_id: "other2", joined_at: new Date() },
       ],
     });
-    // Second findOne: overlap check (no conflict for this user).
+    // Attendance gate: never attended.
+    sessionsCol.findOne.mockResolvedValueOnce(null);
+    // Overlap check: no conflict for this user.
     sessionsCol.findOne.mockResolvedValueOnce(null);
     // Atomic update fails because the slot is full.
     sessionsCol.findOneAndUpdate.mockResolvedValue(null);
-    // Third findOne: distinguish-reason re-fetch.
+    // Distinguish-reason re-fetch.
     sessionsCol.findOne.mockResolvedValueOnce({
       _id: SESSION_ID,
       owner_id: "owner1",
@@ -135,7 +138,6 @@ describe("POST /api/sessions/:id/join", () => {
   });
 
   it("successfully joins when atomic update succeeds", async () => {
-    // Pre-fetch: open slot in the future, user not in.
     sessionsCol.findOne.mockResolvedValueOnce({
       _id: SESSION_ID,
       owner_id: "owner1",
@@ -143,7 +145,9 @@ describe("POST /api/sessions/:id/join", () => {
       end_time: FUTURE_END,
       session_participants: [{ user_id: "owner1", joined_at: new Date() }],
     });
-    // Overlap check: no conflict.
+    // Attendance gate.
+    sessionsCol.findOne.mockResolvedValueOnce(null);
+    // Overlap check.
     sessionsCol.findOne.mockResolvedValueOnce(null);
     sessionsCol.findOneAndUpdate.mockResolvedValue({
       _id: SESSION_ID,
@@ -178,7 +182,8 @@ describe("POST /api/sessions/:id/join", () => {
       end_time: FUTURE_END,
       session_participants: [{ user_id: "owner1", joined_at: new Date() }],
     });
-    sessionsCol.findOne.mockResolvedValueOnce(null);
+    sessionsCol.findOne.mockResolvedValueOnce(null); // attendance
+    sessionsCol.findOne.mockResolvedValueOnce(null); // overlap
     sessionsCol.findOneAndUpdate.mockResolvedValue({
       _id: SESSION_ID,
       owner_id: "owner1",
@@ -227,6 +232,7 @@ describe("POST /api/sessions/:id/join", () => {
       end_time: stillRunning,
       session_participants: [{ user_id: "owner1", joined_at: new Date() }],
     });
+    sessionsCol.findOne.mockResolvedValueOnce(null); // attendance gate
 
     const req = mockRequest(`/api/sessions/${SESSION_ID}/join`, {
       body: {},
@@ -249,6 +255,7 @@ describe("POST /api/sessions/:id/join", () => {
       end_time: pastEnd,
       session_participants: [{ user_id: "owner1", joined_at: new Date() }],
     });
+    sessionsCol.findOne.mockResolvedValueOnce(null); // attendance gate
 
     const req = mockRequest(`/api/sessions/${SESSION_ID}/join`, {
       body: {},
@@ -268,6 +275,7 @@ describe("POST /api/sessions/:id/join", () => {
       end_time: FUTURE_END,
       session_participants: [{ user_id: "owner1", joined_at: new Date() }],
     });
+    sessionsCol.findOne.mockResolvedValueOnce(null); // attendance
     // Overlap check finds another session the user is in.
     sessionsCol.findOne.mockResolvedValueOnce({
       _id: new ObjectId(),
@@ -281,6 +289,28 @@ describe("POST /api/sessions/:id/join", () => {
     );
     expect(status).toBe(409);
     expect(json.error).toBe("You already have a session during this time");
+  });
+
+  it("returns 403 FIRST_SESSION_REQUIRED when never attended with an upcoming session", async () => {
+    sessionsCol.findOne.mockResolvedValueOnce({
+      _id: SESSION_ID,
+      owner_id: "owner1",
+      start_time: FUTURE_START,
+      end_time: FUTURE_END,
+      session_participants: [{ user_id: "owner1", joined_at: new Date() }],
+    });
+    sessionsCol.findOne.mockResolvedValueOnce(null); // never attended
+    sessionsCol.countDocuments.mockResolvedValue(1);
+
+    const req = mockRequest(`/api/sessions/${SESSION_ID}/join`, {
+      body: {},
+    });
+    const { status, json } = await parseResponse(
+      await POST(req, makeParams(String(SESSION_ID)))
+    );
+    expect(status).toBe(403);
+    expect(json.code).toBe("FIRST_SESSION_REQUIRED");
+    expect(sessionsCol.findOneAndUpdate).not.toHaveBeenCalled();
   });
 
   it("returns 400 for an invalid session id", async () => {

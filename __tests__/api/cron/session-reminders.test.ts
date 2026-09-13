@@ -4,10 +4,15 @@ import { parseResponse } from "../../helpers";
 
 const mocks = vi.hoisted(() => ({
   runTimedSessionReminders: vi.fn(),
+  runSessionNoShowCancellations: vi.fn(),
 }));
 
 vi.mock("@/lib/sessionReminderJobs", () => ({
   runTimedSessionReminders: mocks.runTimedSessionReminders,
+}));
+
+vi.mock("@/lib/sessionNoShowCancel", () => ({
+  runSessionNoShowCancellations: mocks.runSessionNoShowCancellations,
 }));
 
 import { GET } from "@/app/api/cron/session-reminders/route";
@@ -22,6 +27,13 @@ describe("GET /api/cron/session-reminders", () => {
       sent: 0,
       skipped: 0,
       failed: 0,
+    });
+    mocks.runSessionNoShowCancellations.mockResolvedValue({
+      missesDetected: 0,
+      dayWipes: 0,
+      sessionsAffected: 0,
+      partnerEmails: 0,
+      userEmails: 0,
     });
   });
 
@@ -41,5 +53,15 @@ describe("GET /api/cron/session-reminders", () => {
     expect(json.ok).toBe(true);
     expect(mocks.runTimedSessionReminders).toHaveBeenCalledTimes(1);
     expect(mocks.runTimedSessionReminders).toHaveBeenCalledWith("1h");
+    expect(mocks.runSessionNoShowCancellations).toHaveBeenCalledWith({
+      lookbackMinutes: 90,
+    });
+    expect(json.results.noShows).toEqual({
+      missesDetected: 0,
+      dayWipes: 0,
+      sessionsAffected: 0,
+      partnerEmails: 0,
+      userEmails: 0,
+    });
   });
 });

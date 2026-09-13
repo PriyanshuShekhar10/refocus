@@ -18,6 +18,10 @@ import { useFriendsData } from "@/hooks/useFriendsData";
 import { Shell } from "@/components/design";
 import { useWallpaperSurface } from "@/hooks/useWallpaperSurface";
 import { Users } from "lucide-react";
+import {
+  FIRST_SESSION_REQUIRED_CODE,
+  FIRST_SESSION_REQUIRED_MESSAGE,
+} from "@/lib/sessionAttendanceMessages";
 
 type ProfilePreviewPayload = {
   username: string;
@@ -137,7 +141,13 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
         body: JSON.stringify({ action, message: note }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Failed to respond");
+      if (!res.ok) {
+        throw new Error(
+          data.code === FIRST_SESSION_REQUIRED_CODE
+            ? FIRST_SESSION_REQUIRED_MESSAGE
+            : data.error || "Failed to respond",
+        );
+      }
       setRespondNoteById((prev) => ({ ...prev, [id]: "" }));
       await refresh();
     } catch (e) {

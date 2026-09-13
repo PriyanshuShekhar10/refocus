@@ -11,14 +11,15 @@ import type { DurationMin, SessionType } from "@/constants/calendar";
 // ============================================
 
 export type ApiResult<T> =
-  | { ok: true; data: T; error?: never }
-  | { ok: false; data?: never; error: string };
+  | { ok: true; data: T; error?: never; code?: never }
+  | { ok: false; data?: never; error: string; code?: string };
 
 export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status?: number,
     public readonly body?: unknown,
+    public readonly code?: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -56,6 +57,26 @@ function getErrorMessage(data: unknown, fallback: string): string {
   return fallback;
 }
 
+function getErrorCode(data: unknown): string | undefined {
+  if (
+    data &&
+    typeof data === "object" &&
+    "code" in data &&
+    typeof (data as { code: unknown }).code === "string"
+  ) {
+    return (data as { code: string }).code;
+  }
+  return undefined;
+}
+
+function errorResult(data: unknown, fallback: string): ApiResult<never> {
+  return {
+    ok: false,
+    error: getErrorMessage(data, fallback),
+    code: getErrorCode(data),
+  };
+}
+
 // ============================================
 // API methods
 // ============================================
@@ -74,10 +95,7 @@ export async function list(
   const data = await parseJson(res);
 
   if (!res.ok) {
-    return {
-      ok: false,
-      error: getErrorMessage(data, res.statusText || "Failed to load sessions"),
-    };
+    return errorResult(data, res.statusText || "Failed to load sessions");
   }
 
   const payload = (data || {}) as {
@@ -103,10 +121,7 @@ export async function listMineUpcoming(): Promise<ApiResult<ListSessionsPayload>
   const data = await parseJson(res);
 
   if (!res.ok) {
-    return {
-      ok: false,
-      error: getErrorMessage(data, res.statusText || "Failed to load sessions"),
-    };
+    return errorResult(data, res.statusText || "Failed to load sessions");
   }
 
   const payload = (data || {}) as {
@@ -146,10 +161,7 @@ export async function create(params: {
   const data = await parseJson(res);
 
   if (!res.ok) {
-    return {
-      ok: false,
-      error: getErrorMessage(data, "Failed to create session"),
-    };
+    return errorResult(data, "Failed to create session");
   }
 
   const id = (data as { id?: string } | null)?.id;
@@ -174,10 +186,7 @@ export async function join(
   const data = await parseJson(res);
 
   if (!res.ok) {
-    return {
-      ok: false,
-      error: getErrorMessage(data, "Failed to join session"),
-    };
+    return errorResult(data, "Failed to join session");
   }
   return { ok: true, data: {} };
 }
@@ -197,10 +206,7 @@ export async function leave(
   const data = await parseJson(res);
 
   if (!res.ok) {
-    return {
-      ok: false,
-      error: getErrorMessage(data, "Failed to leave session"),
-    };
+    return errorResult(data, "Failed to leave session");
   }
   return { ok: true, data: {} };
 }
@@ -220,10 +226,7 @@ export async function deleteSession(
   const data = await parseJson(res);
 
   if (!res.ok) {
-    return {
-      ok: false,
-      error: getErrorMessage(data, "Failed to delete session"),
-    };
+    return errorResult(data, "Failed to delete session");
   }
   return { ok: true, data: {} };
 }
@@ -243,10 +246,7 @@ export async function patch(
   const data = await parseJson(res);
 
   if (!res.ok) {
-    return {
-      ok: false,
-      error: getErrorMessage(data, "Failed to update session"),
-    };
+    return errorResult(data, "Failed to update session");
   }
   return { ok: true, data: {} };
 }
@@ -254,6 +254,6 @@ export async function patch(
 // Optional: throw helpers for callers that prefer try/catch
 export function assertOk<T>(result: ApiResult<T>): asserts result is { ok: true; data: T } {
   if (!result.ok) {
-    throw new ApiError(result.error);
+    throw new ApiError(result.error, undefined, undefined, result.code);
   }
 }

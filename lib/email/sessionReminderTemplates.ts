@@ -347,3 +347,140 @@ ${params.calendarUrl}
     bodyText,
   });
 }
+
+export type NoShowCancelledSessionItem = {
+  title: string;
+  startsAtLabel: string;
+};
+
+export function buildNoShowDayCancelledEmail(params: {
+  firstName?: string | null;
+  missedSessionTitle: string;
+  missedStartsAtLabel: string;
+  cancelledSessions: NoShowCancelledSessionItem[];
+  calendarUrl: string;
+}): { subject: string; html: string; text: string } {
+  const greet = greeting(params.firstName);
+  const subject = "We cleared your sessions for today";
+  const missedTitle = escapeHtml(params.missedSessionTitle);
+  const missedStarts = escapeHtml(params.missedStartsAtLabel);
+
+  const listHtml =
+    params.cancelledSessions.length === 0
+      ? `<p style="margin:0;font-size:14px;color:${emailBrand.inkSoft};">No other sessions were on your calendar for the rest of today.</p>`
+      : `<ul style="margin:0;padding:0 0 0 18px;color:${emailBrand.inkSoft};">
+${params.cancelledSessions
+  .map(
+    (s) =>
+      `<li style="margin:0 0 10px;"><strong style="color:${emailBrand.ink};">${escapeHtml(s.title)}</strong><br /><span style="font-size:13px;">${escapeHtml(s.startsAtLabel)}</span></li>`,
+  )
+  .join("")}
+</ul>`;
+
+  const listText =
+    params.cancelledSessions.length === 0
+      ? "No other sessions were on your calendar for the rest of today."
+      : params.cancelledSessions
+          .map((s) => `- ${s.title}\n  ${s.startsAtLabel}`)
+          .join("\n");
+
+  const bodyText = `${greet}
+
+We noticed you missed a booked session (${params.missedSessionTitle} · ${params.missedStartsAtLabel}).
+
+To keep rooms from sitting empty, we cancelled your remaining Refocus sessions for today:
+
+${listText}
+
+You're always welcome back — book a fresh session when you're ready to show up.
+
+${params.calendarUrl}
+
+— The Refocus team`;
+
+  const bodyHtml = `
+    <p style="margin:0 0 16px;font-size:17px;line-height:1.5;color:${emailBrand.ink};font-weight:500;">${greet}</p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">
+      We noticed you missed a booked session
+      (<strong style="color:${emailBrand.ink};">${missedTitle}</strong>
+      · ${missedStarts}).
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">
+      To keep focus rooms from sitting empty, we cancelled your remaining sessions for today:
+    </p>
+    <div style="margin:0 0 24px;padding:16px;border-radius:12px;border:1px solid ${emailBrand.line};background:${emailBrand.bg};">
+      ${listHtml}
+    </div>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">
+      You're always welcome back — book a fresh session when you're ready to show up.
+    </p>
+    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 8px;">
+      <tr>
+        <td style="border-radius:10px;background:${emailBrand.ink};">
+          <a href="${params.calendarUrl}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:${emailBrand.accentInk};text-decoration:none;">Open calendar</a>
+        </td>
+      </tr>
+    </table>`;
+
+  return emailShell({
+    eyebrow: "Sessions updated",
+    subject,
+    bodyHtml,
+    bodyText,
+  });
+}
+
+export function buildPartnerRemovedForInactivityEmail(params: {
+  firstName?: string | null;
+  removedName: string;
+  sessionTitle: string;
+  startsAtLabel: string;
+  calendarUrl: string;
+}): { subject: string; html: string; text: string } {
+  const greet = greeting(params.firstName);
+  const removed = params.removedName.trim() || "Your partner";
+  const removedHtml = escapeHtml(removed);
+  const titleHtml = escapeHtml(params.sessionTitle);
+  const startsHtml = escapeHtml(params.startsAtLabel);
+  const subject = `${removed} was removed from your session`;
+
+  const bodyText = `${greet}
+
+${removed} was removed from your session due to inactivity (they didn't join the call).
+
+Your session is open again on the calendar — you can stay listed for a new partner, or cancel if you prefer.
+
+${params.sessionTitle}
+${params.startsAtLabel}
+
+${params.calendarUrl}
+
+— The Refocus team`;
+
+  const bodyHtml = `
+    <p style="margin:0 0 16px;font-size:17px;line-height:1.5;color:${emailBrand.ink};font-weight:500;">${greet}</p>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">
+      <strong style="color:${emailBrand.ink};">${removedHtml}</strong> was removed from your session due to inactivity — they didn't join the call.
+    </p>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">
+      Your session is open again on the calendar. You can stay listed for a new partner, or cancel if you prefer.
+    </p>
+    <div style="margin:0 0 24px;padding:16px;border-radius:12px;border:1px solid ${emailBrand.line};background:${emailBrand.bg};">
+      <p style="margin:0 0 6px;font-size:16px;font-weight:600;color:${emailBrand.ink};">${titleHtml}</p>
+      <p style="margin:0;font-size:14px;color:${emailBrand.inkSoft};">${startsHtml}</p>
+    </div>
+    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 8px;">
+      <tr>
+        <td style="border-radius:10px;background:${emailBrand.ink};">
+          <a href="${params.calendarUrl}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:${emailBrand.accentInk};text-decoration:none;">Open calendar</a>
+        </td>
+      </tr>
+    </table>`;
+
+  return emailShell({
+    eyebrow: "Partner update",
+    subject,
+    bodyHtml,
+    bodyText,
+  });
+}

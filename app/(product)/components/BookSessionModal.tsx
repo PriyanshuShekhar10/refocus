@@ -4,6 +4,10 @@ import { FiX } from "react-icons/fi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 import {
+  FIRST_SESSION_REQUIRED_CODE,
+  FIRST_SESSION_REQUIRED_MESSAGE,
+} from "@/lib/sessionAttendanceMessages";
+import {
   BOOKING_MINUTE_OPTIONS,
   DEFAULT_DURATION,
   isValidDuration,
@@ -199,7 +203,13 @@ export default function BookSessionModal({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send request");
+      if (!res.ok) {
+        throw new Error(
+          data.code === FIRST_SESSION_REQUIRED_CODE
+            ? FIRST_SESSION_REQUIRED_MESSAGE
+            : data.error || "Failed to send request",
+        );
+      }
       onSuccess?.();
       onClose();
     } catch (e) {

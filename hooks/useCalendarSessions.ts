@@ -414,7 +414,12 @@ export function useCalendarSessions({
 
       if (!result.ok) {
         setEvents((prev) => prev.filter((e) => e.id !== tempId));
-        throw new sessionsApi.ApiError(result.error);
+        throw new sessionsApi.ApiError(
+          result.error,
+          undefined,
+          undefined,
+          result.code,
+        );
       }
 
       const newId = result.data.id;
@@ -480,7 +485,12 @@ export function useCalendarSessions({
             ev.id === id ? { ...ev, status: "available" } : ev,
           ),
         );
-        throw new sessionsApi.ApiError(result.error);
+        throw new sessionsApi.ApiError(
+          result.error,
+          undefined,
+          undefined,
+          result.code,
+        );
       }
       refreshMineUpcoming();
       refreshInBackground();

@@ -10,6 +10,7 @@ import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { areUsersBlocked } from "@/lib/blocking";
 import { notifySessionMatched } from "@/lib/notifySessionMatched";
 import { hasSessionStarted } from "@/lib/sessionWindow";
+import { assertCanBookAnotherSession } from "@/lib/sessionAttendanceGate";
 
 export async function POST(
   req: NextRequest,
@@ -71,6 +72,9 @@ export async function POST(
     (p) => String(p.user_id) === String(userId),
   );
   if (alreadyIn) return NextResponse.json({ ok: true });
+
+  const firstSessionGate = await assertCanBookAnotherSession(db, userId);
+  if (firstSessionGate) return firstSessionGate;
 
   const startTime = new Date(existing.start_time);
   const endTime = new Date(existing.end_time);

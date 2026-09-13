@@ -12,6 +12,7 @@ import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { areUsersBlocked } from "@/lib/blocking";
 import { notifySessionMatched } from "@/lib/notifySessionMatched";
+import { assertCanBookAnotherSession } from "@/lib/sessionAttendanceGate";
 
 // POST /api/session-requests/:id { action: 'accept'|'decline', message?: string }
 // On accept: create a session and add both users as participants
@@ -43,6 +44,12 @@ export async function POST(
     return NextResponse.json({ error: "Invalid request id" }, { status: 400 });
   }
   const db = await getDb();
+
+  if (action === "accept") {
+    const firstSessionGate = await assertCanBookAnotherSession(db, currentUserId);
+    if (firstSessionGate) return firstSessionGate;
+  }
+
   const trimmedMessage = message ? String(message).slice(0, 500) : null;
   const nextStatus = action === "accept" ? "accepted" : "declined";
 

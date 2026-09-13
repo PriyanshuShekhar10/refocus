@@ -11,6 +11,8 @@ import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { requireNotCommunityBanned } from "@/lib/communityModeration";
 import { areUsersBlocked } from "@/lib/blocking";
 import { createSessionRequest } from "@/lib/sessionRequests";
+import { assertCanBookAnotherSession } from "@/lib/sessionAttendanceGate";
+
 
 type MessageDoc = {
   _id: ObjectId;
@@ -211,6 +213,11 @@ export async function POST(
         { status: 400 },
       );
     }
+
+    const firstSessionGate = await assertCanBookAnotherSession(db, currentUserId, {
+      countPendingRequests: true,
+    });
+    if (firstSessionGate) return firstSessionGate;
 
     try {
       const { id, sessionRequestId } = await createSessionRequest({
