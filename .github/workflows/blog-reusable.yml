@@ -1,8 +1,9 @@
 name: Blog niche (reusable)
 
-# Called by daily English slots, the locale daily rotator, or a per-niche
+# Called by daily English slots (2/day), the locale daily rotator, or a per-niche
 # manual run. Checks out `landing`, generates one post (topic-first dedupe,
-# optional single illustration), commits, builds, and deploys to Cloudflare.
+# English quality gate, optional single illustration), commits, builds, and
+# deploys to Cloudflare.
 
 on:
   workflow_call:

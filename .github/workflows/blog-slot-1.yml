@@ -1,6 +1,6 @@
 name: "Blog: afternoon slot (English)"
 
-# Second of three English posts/day. Niche rotates across five categories.
+# Second of two English posts/day. Niche rotates across five categories.
 on:
   schedule:
     - cron: "0 12 * * *"

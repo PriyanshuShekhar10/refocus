@@ -31,12 +31,22 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const MARKETING_DIR = resolve(__dirname, "..");
 const REPO_ROOT = resolve(MARKETING_DIR, "..");
 
-const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const MODEL_DEFAULT = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const MODEL_EN =
+  process.env.OPENAI_MODEL_EN || process.env.OPENAI_MODEL || "gpt-4o";
 const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
 const SITE = "https://refocus.co.in";
 const TOPIC_ATTEMPTS = 3;
+const DRAFT_ATTEMPTS = 3;
+const MIN_WORDS_EN = 1200;
+const MIN_WORDS_OTHER = 900;
+const TARGET_WORDS_EN = "1300–1700";
 const STYLE_PREFIX =
   "Calm flat editorial illustration, soft neutral palette, no text, no logos, no watermarks, no photoreal close-up faces. ";
+
+function resolveModel(localeKey) {
+  return localeKey === "en" ? MODEL_EN : MODEL_DEFAULT;
+}
 
 function resolveLocale() {
   const raw = (getArg("--locale") || process.env.POST_LOCALE || "en")
@@ -220,7 +230,7 @@ function unusedPoolTopics(category, existingTexts) {
   return category.topics.filter((t) => !topicClashes(t, existingTexts));
 }
 
-async function chatJson(apiKey, system, user, temperature = 0.85) {
+async function chatJson(apiKey, system, user, temperature = 0.85, model = MODEL_DEFAULT) {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -228,7 +238,7 @@ async function chatJson(apiKey, system, user, temperature = 0.85) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: MODEL,
+      model,
       temperature,
       response_format: { type: "json_object" },
       messages: [
@@ -475,7 +485,20 @@ function buildSystemPrompt(category, topic, config, angle, repeating) {
     ? `10. This theme has been covered before. Write a NEW article: different opening scene, different examples, different protocol. No synonym spinning.`
     : `10. Keep the article concrete and distinct from older posts. New scene, new examples, new if-then rules.`;
 
-  return `You write SEO-friendly, genuinely useful long-form articles. Readers should leave with tactics they can use today — even if they never hear of any product.
+  const isEn = config.id === "en";
+  const wordTarget = isEn ? TARGET_WORDS_EN : "900–1200";
+  const qualityBlock = isEn
+    ? `Quality bar (English — failure if missed):
+- Open with a concrete scene (time, place, what the person is avoiding) in the first 120 words — not a definition or pep talk.
+- Include at least TWO named tactics with durations, scripts, or if-then rules a reader can run today.
+- Include ONE realistic failure mode and the recovery step.
+- Prefer depth over breadth: fewer ideas, fully worked. No numbered "secrets" listicles. No filler phrases like "In today's fast-paced world", "It's important to note", "In conclusion".
+- Every ## section must earn its place with new information, not restate the intro.`
+    : `Quality bar:
+- Be specific: name tools, routines, durations. Vague motivational writing is a failure.
+- Prefer concrete scenes and protocols over generic advice.`;
+
+  return `You write genuinely useful long-form articles for humans. Rankings follow from specificity — not from repeating the same post in new words. Readers should leave with tactics they can run today, even if they never hear of any product.
 
 ${config.langRule}
 
@@ -485,7 +508,7 @@ Voice: ${category.voice}
 Required scene / constraint for THIS draft: ${angle}
 
 Hard requirements:
-1. TITLE: specific and searchable. No brand names in the title unless comparing publicly known tools (Focusmate, Discord, Zoom).
+1. TITLE: specific and searchable. Names a situation or constraint, not a generic theme. No brand names in the title unless comparing publicly known tools (Focusmate, Discord, Zoom).
 2. Do NOT pitch or center any product as the whole article. Soft product mentions allowed only as instructed below.
 3. OUTBOUND LINKS: include 3–5 Markdown links to real external resources. Prefer:
 ${bank.map((l) => `   - ${l}`).join("\n")}
@@ -494,8 +517,8 @@ ${bank.map((l) => `   - ${l}`).join("\n")}
 ${commercialRule}
 6. Must include: ${category.mustInclude}
 7. Avoid: ${category.avoid}
-8. Structure: Markdown with 3–5 "##" headings, ~900–1200 words. No emojis. No "In conclusion".
-9. Be specific: name tools, routines. Vague motivational writing is a failure.
+8. Structure: Markdown with 3–5 "##" headings, ${wordTarget} words. No emojis. No "In conclusion".
+9. ${qualityBlock}
 ${repeatRule}`;
 }
 
@@ -535,12 +558,13 @@ Return ONLY JSON:
   "slug": "kebab-case-url-slug",
   "description": "meta description under 155 chars",
   "tags": ["2-5", "lowercase", "tags"],
-  "body_markdown": "full Markdown body (no H1). Must include 3-5 outbound https links."
+  "body_markdown": "full Markdown body (no H1). Must include 3-5 outbound https links and meet the word target."
 }`;
 }
 
 async function callOpenAI(
   apiKey,
+  model,
   category,
   topic,
   existingTitles,
@@ -549,6 +573,7 @@ async function callOpenAI(
   angle,
   repeating,
 ) {
+  const temperature = config.id === "en" ? 0.75 : 0.9;
   return chatJson(
     apiKey,
     buildSystemPrompt(category, topic, config, angle, repeating),
@@ -561,7 +586,8 @@ async function callOpenAI(
       angle,
       repeating,
     ),
-    0.9,
+    temperature,
+    model,
   );
 }
 
@@ -576,6 +602,45 @@ function sanitizeTitle(title) {
 function countOutboundLinks(body) {
   const matches = body.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) || [];
   return matches.filter((m) => !/refocus\.co\.in/i.test(m)).length;
+}
+
+function wordCount(markdown) {
+  return String(markdown || "")
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+const FILLER_RE =
+  /in today'?s fast[- ]paced|it'?s important to note|in conclusion|unlock your potential|game[- ]changer|in this article,? we will|without further ado/i;
+
+function qualityIssues(title, body, config) {
+  const issues = [];
+  const words = wordCount(body);
+  const minWords = config.id === "en" ? MIN_WORDS_EN : MIN_WORDS_OTHER;
+  const headings = (body.match(/^##\s+/gm) || []).length;
+  const outbound = countOutboundLinks(body);
+
+  if (!title) issues.push("missing title");
+  if (body.length < 200) issues.push("body too short");
+  if (words < minWords) issues.push(`only ${words} words (need ≥${minWords})`);
+  if (headings < 3) issues.push(`only ${headings} ## headings (need ≥3)`);
+  if (outbound < 3) issues.push(`only ${outbound} outbound links (need ≥3)`);
+  if (FILLER_RE.test(body) || FILLER_RE.test(title)) {
+    issues.push("contains filler / listicle phrasing");
+  }
+  if (config.id === "en") {
+    const opening = body.replace(/^#.+\n+/gm, "").trim().slice(0, 400);
+    if (
+      /^(body doubling is|productivity is|focus is|in a world where|many people struggle)/i.test(
+        opening,
+      )
+    ) {
+      issues.push("opening is generic definition/pep-talk, not a scene");
+    }
+  }
+  return issues;
 }
 
 function ensureOutboundLinks(body, categoryId, config) {
@@ -782,6 +847,7 @@ async function main() {
   const angle = proposal.angle || pickVariation();
   const repeating = Boolean(proposal.repeating);
 
+  const model = resolveModel(localeKey);
   console.log(`Locale: ${config.id}`);
   console.log(`Category: ${category.id} (${category.label})`);
   console.log(
@@ -789,40 +855,58 @@ async function main() {
   );
   console.log(`Working title hint: ${proposal.working_title}`);
   console.log(`Angle: ${angle}`);
-  console.log(`Model: ${MODEL}`);
+  console.log(`Model: ${model}`);
 
   let result;
   let title = "";
   let body = "";
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  let lastIssues = [];
+  for (let attempt = 1; attempt <= DRAFT_ATTEMPTS; attempt++) {
+    const angleForAttempt =
+      attempt === 1
+        ? angle
+        : `${angle} — prior draft failed quality: ${lastIssues.join("; ")}. Fix those issues. Pick a clearly different title if needed.`;
     result = await callOpenAI(
       apiKey,
+      model,
       category,
       topic,
       existingTitles,
       existingUrls,
       config,
-      attempt === 1 ? angle : `${angle} — pick a clearly different title and slug than existing posts`,
-      repeating || attempt === 2,
+      angleForAttempt,
+      repeating || attempt > 1,
     );
     title = sanitizeTitle(result.title || "");
     body = String(result.body_markdown || "").trim();
-    if (!title) throw new Error("Model did not return a usable title.");
-    if (body.length < 200) throw new Error("Model returned an empty/short body.");
+    body = ensureOutboundLinks(body, category.id, config);
+    body = ensurePillarLink(body, category, config);
+
     const close = titleTooClose(title, existingTitles);
-    if (close && attempt === 1) {
-      console.warn("Title too close after draft — regenerating with pivot…");
-      continue;
+    const issues = qualityIssues(title, body, config);
+    if (close) issues.push("title too close to an existing post");
+    lastIssues = issues;
+
+    if (issues.length === 0) {
+      console.log(`Draft words: ${wordCount(body)} (attempt ${attempt})`);
+      break;
     }
-    if (close) {
-      console.warn("Title still overlaps; continuing with dated slug if needed.");
+
+    console.warn(
+      `Quality gate failed (attempt ${attempt}/${DRAFT_ATTEMPTS}): ${issues.join("; ")}`,
+    );
+    if (attempt === DRAFT_ATTEMPTS) {
+      // English must meet the bar; other locales may soft-accept last draft if not empty.
+      if (config.id === "en" || !title || body.length < 200) {
+        throw new Error(
+          `Draft failed quality gate after ${DRAFT_ATTEMPTS} attempts: ${issues.join("; ")}`,
+        );
+      }
+      console.warn("Accepting last non-English draft despite quality issues.");
     }
-    break;
   }
 
   const description = String(result.description || "").slice(0, 160);
-  body = ensureOutboundLinks(body, category.id, config);
-  body = ensurePillarLink(body, category, config);
 
   const outbound = countOutboundLinks(body);
   console.log(`Outbound links (non-Refocus): ${outbound}`);

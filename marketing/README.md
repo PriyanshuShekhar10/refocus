@@ -68,16 +68,15 @@ Goal: **useful, searchable content that ranks** — not product pitches. Posts s
 - Listing: `/blog` · Post: `/blog/<slug>`
 - Sitemap: `/sitemap.xml` (includes posts)
 
-### Cadence (3 English + 1 locale / day)
+### Cadence (2 English + 1 locale / day)
 
-Three English slots plus one rotating non-English post. Locale cycles **id → fil → vi** by UTC day. Niches rotate so coverage stays even. The generator proposes a topic first, clash-checks, and pivots before writing; at most one optional in-article illustration.
+Two English slots (quality over volume) plus one rotating non-English post. Locale cycles **id → fil → vi** by UTC day. Niches rotate so coverage stays even. The generator proposes a topic first, clash-checks, and pivots before writing; English drafts are quality-gated (length, specificity, outbound links). At most one optional in-article illustration.
 
 | Slot | Workflow | Locale | UTC cron | ~IST |
 | --- | --- | --- | --- | --- |
 | 0 | `Blog: morning slot (English)` | en | `0 6 * * *` | 11:30 |
 | 1 | `Blog: afternoon slot (English)` | en | `0 12 * * *` | 17:30 |
 | Locale | `Blog: locale daily (id / fil / vi)` | id/fil/vi | `0 14 * * *` | 19:30 |
-| 2 | `Blog: evening slot (English)` | en | `0 18 * * *` | 23:30 |
 
 | Niche | Manual workflow | Local script |
 | --- | --- | --- |
@@ -87,7 +86,7 @@ Three English slots plus one rotating non-English post. Locale cycles **id → f
 | Loneliness / studying alone | `Blog: Loneliness & studying alone` | `npm run blog:loneliness` |
 | Remote work & freelancing | `Blog: Remote work & freelancing` | `npm run blog:remote` |
 
-**Four posts per day total** (3 EN + 1 locale), staggered so deploys don’t collide. Each job checks out `landing`, commits there (including `public/blog/` images when present), builds, and deploys to Cloudflare — never touches `test-dash` / Vercel. Per-niche and per-locale workflows are **manual only**.
+**Three posts per day total** (2 EN + 1 locale), staggered so deploys don’t collide. Each job checks out `landing`, commits there (including `public/blog/` images when present), builds, and deploys to Cloudflare — never touches `test-dash` / Vercel. Per-niche, evening English, and per-locale workflows are **manual only**.
 
 Topic pools + prompts: `scripts/blog-categories.mjs` (+ locale variants). Generator: `scripts/generate-post.mjs`.
 

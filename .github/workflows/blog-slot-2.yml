@@ -1,9 +1,8 @@
 name: "Blog: evening slot (English)"
 
-# Third of three English posts/day. Niche rotates across five categories.
+# Manual only — English capped at 2 high-quality posts/day
+# (blog-slot-0 morning + blog-slot-1 afternoon).
 on:
-  schedule:
-    - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:
