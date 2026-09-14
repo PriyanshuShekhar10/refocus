@@ -1,0 +1,43 @@
+name: "Blog: locale daily (id / fil / vi)"
+
+# One non-English post per day. Locale cycles id → fil → vi by UTC day.
+# Niche rotates so coverage stays even across the five categories.
+on:
+  schedule:
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-locale-daily
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      locale: ${{ steps.rotate.outputs.locale }}
+      category: ${{ steps.rotate.outputs.category }}
+    steps:
+      - name: Resolve rotating locale + niche
+        id: rotate
+        run: |
+          set -euo pipefail
+          LOCALES=(id fil vi)
+          NICHES=(productivity adhd exams loneliness remote)
+          DAY=$(( $(date -u +%s) / 86400 ))
+          LOCALE="${LOCALES[$(( DAY % 3 ))]}"
+          CATEGORY="${NICHES[$(( DAY % 5 ))]}"
+          echo "Rotation: day=$DAY → locale=$LOCALE category=$CATEGORY"
+          echo "locale=$LOCALE" >> "$GITHUB_OUTPUT"
+          echo "category=$CATEGORY" >> "$GITHUB_OUTPUT"
+
+  generate:
+    needs: resolve
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      locale: ${{ needs.resolve.outputs.locale }}
+      category: ${{ needs.resolve.outputs.category }}
+    secrets: inherit

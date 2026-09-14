@@ -1,9 +1,8 @@
-name: "Blog: Filipino Tagalog (afternoon)"
+name: "Blog: Filipino Tagalog (manual)"
 
-# One Tagalog post per day at 14:00 UTC. Niche rotates across five categories.
+# Manual only — scheduled non-English publishing is blog-locale-daily.yml
+# (1 post/day cycling id → fil → vi).
 on:
-  schedule:
-    - cron: "0 14 * * *"
   workflow_dispatch:
 
 permissions:

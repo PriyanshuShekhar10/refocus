@@ -68,15 +68,16 @@ Goal: **useful, searchable content that ranks** — not product pitches. Posts s
 - Listing: `/blog` · Post: `/blog/<slug>`
 - Sitemap: `/sitemap.xml` (includes posts)
 
-### Niches (3 posts/day, rotating)
+### Cadence (3 English + 1 locale / day)
 
-Five niches, three scheduled slots. The slot number plus the UTC date picks the category so every niche gets the same number of posts over a 5-day cycle.
+Three English slots plus one rotating non-English post. Locale cycles **id → fil → vi** by UTC day. Niches rotate so coverage stays even. The generator proposes a topic first, clash-checks, and pivots before writing; at most one optional in-article illustration.
 
-| Slot | Workflow | UTC cron | ~IST |
-| --- | --- | --- | --- |
-| 0 | `Blog: morning slot` | `0 6 * * *` | 11:30 |
-| 1 | `Blog: afternoon slot` | `0 12 * * *` | 17:30 |
-| 2 | `Blog: evening slot` | `0 18 * * *` | 23:30 |
+| Slot | Workflow | Locale | UTC cron | ~IST |
+| --- | --- | --- | --- | --- |
+| 0 | `Blog: morning slot (English)` | en | `0 6 * * *` | 11:30 |
+| 1 | `Blog: afternoon slot (English)` | en | `0 12 * * *` | 17:30 |
+| Locale | `Blog: locale daily (id / fil / vi)` | id/fil/vi | `0 14 * * *` | 19:30 |
+| 2 | `Blog: evening slot (English)` | en | `0 18 * * *` | 23:30 |
 
 | Niche | Manual workflow | Local script |
 | --- | --- | --- |
@@ -86,9 +87,9 @@ Five niches, three scheduled slots. The slot number plus the UTC date picks the 
 | Loneliness / studying alone | `Blog: Loneliness & studying alone` | `npm run blog:loneliness` |
 | Remote work & freelancing | `Blog: Remote work & freelancing` | `npm run blog:remote` |
 
-**Three posts per day**, staggered so deploys don’t collide. Each job checks out `landing`, commits there, builds, and deploys to Cloudflare — never touches `test-dash` / Vercel. Per-niche workflows are **manual only**.
+**Four posts per day total** (3 EN + 1 locale), staggered so deploys don’t collide. Each job checks out `landing`, commits there (including `public/blog/` images when present), builds, and deploys to Cloudflare — never touches `test-dash` / Vercel. Per-niche and per-locale workflows are **manual only**.
 
-Topic pools + prompts: `scripts/blog-categories.mjs`. Generator: `scripts/generate-post.mjs`.
+Topic pools + prompts: `scripts/blog-categories.mjs` (+ locale variants). Generator: `scripts/generate-post.mjs`.
 
 ### Write a post by hand
 
@@ -116,11 +117,11 @@ Each generated post should include **3–5 outbound links** (NTA, UPSC, CDC/CHAD
 
 ### Manual run in GitHub
 
-Actions → pick a daily slot (**Blog: morning/afternoon/evening slot**) or a niche workflow (e.g. **Blog: Competitive exams**) → Run workflow.
+Actions → pick a daily English slot, **Blog: locale daily**, or a niche workflow (e.g. **Blog: Competitive exams**) → Run workflow.
 
 Required secrets (on the repo): `OPENAI_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 
-**Note:** Scheduled workflows run from the **default branch** (`test-dash`). The slot workflow files must exist there; they always check out `landing` for content.
+**Note:** Scheduled workflows run from the **default branch** (`landing`). They always check out `landing` for content.
 ## Deploy
 
 - **On push** to `landing` (paths under `marketing/`): workflow `Deploy marketing site`

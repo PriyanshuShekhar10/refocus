@@ -2,6 +2,9 @@
 /**
  * Generate a niche blog post for the Refocus marketing site (OpenAI).
  *
+ * Flow: propose topic → clash-check / pivot → write article → optional
+ * single illustration. Never hard-fail solely because a theme was covered.
+ *
  * Usage:
  *   node scripts/generate-post.mjs
  *   node scripts/generate-post.mjs --category exams --locale id
@@ -11,13 +14,12 @@
  * Locales: en | id | fil | vi
  */
 
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   CATEGORY_IDS,
-  COMMERCIAL_HUBS,
   isFreeCommercialTopic,
 } from "./blog-categories.mjs";
 import {
@@ -30,7 +32,11 @@ const MARKETING_DIR = resolve(__dirname, "..");
 const REPO_ROOT = resolve(MARKETING_DIR, "..");
 
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
 const SITE = "https://refocus.co.in";
+const TOPIC_ATTEMPTS = 3;
+const STYLE_PREFIX =
+  "Calm flat editorial illustration, soft neutral palette, no text, no logos, no watermarks, no photoreal close-up faces. ";
 
 function resolveLocale() {
   const raw = (getArg("--locale") || process.env.POST_LOCALE || "en")
@@ -44,8 +50,7 @@ function blogDirForConfig(config) {
 }
 
 function pillarUrl(category, config) {
-  const path =
-    category.pillar?.path || config.defaultPillar.path;
+  const path = category.pillar?.path || config.defaultPillar.path;
   return `${SITE}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
@@ -105,10 +110,33 @@ function resolveCategoryId(config) {
 }
 
 const TOPIC_KEYWORDS = [
-  "utbk", "snbt", "tryout", "seleksi", "pnle", "let", "upcat", "board exam",
-  "thpt", "bpo", "body doubling", "body-doubling", "coworking", "focusmate",
-  "adhd", "freelancer", "wfh", "isolasi", "kesepian", "kalungkutan", "cô đơn",
-  "study with me", "upsc", "prelims", "mains", "neet", "jee",
+  "utbk",
+  "snbt",
+  "tryout",
+  "seleksi",
+  "pnle",
+  "let",
+  "upcat",
+  "board exam",
+  "thpt",
+  "bpo",
+  "body doubling",
+  "body-doubling",
+  "coworking",
+  "focusmate",
+  "adhd",
+  "freelancer",
+  "wfh",
+  "isolasi",
+  "kesepian",
+  "kalungkutan",
+  "cô đơn",
+  "study with me",
+  "upsc",
+  "prelims",
+  "mains",
+  "neet",
+  "jee",
 ];
 
 function topicKeywords(text) {
@@ -125,26 +153,266 @@ function topicClashes(candidate, existingTexts) {
   });
 }
 
-function pickTopic(category, existingTexts) {
-  const forced = getArg("--topic") || process.env.POST_TOPIC?.trim() || "";
-  if (forced) {
-    if (topicClashes(forced, existingTexts)) {
-      throw new Error(
-        `Topic "${forced}" overlaps an existing post keyword — pick a different angle.`,
-      );
-    }
-    return forced;
+function significantWords(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 3);
+}
+
+function titleTooClose(candidate, existingTitles) {
+  const a = new Set(significantWords(candidate));
+  if (a.size === 0) return false;
+  return existingTitles.some((title) => {
+    const b = new Set(significantWords(title));
+    if (b.size === 0) return false;
+    let inter = 0;
+    for (const w of a) if (b.has(w)) inter += 1;
+    const union = a.size + b.size - inter;
+    return union > 0 && inter / union >= 0.5;
+  });
+}
+
+function slugTooClose(candidate, existingSlugs) {
+  const words = String(candidate || "")
+    .split("-")
+    .filter((w) => w.length > 3);
+  if (words.length === 0) return false;
+  return existingSlugs.some((s) => {
+    const sw = s.split("-").filter((w) => w.length > 3);
+    return words.filter((w) => sw.includes(w)).length >= 2;
+  });
+}
+
+function proposalClashes(proposal, existingTitles, existingSlugs, dedupTexts) {
+  const blob = `${proposal.topic} ${proposal.working_title} ${proposal.slug_hint}`;
+  if (titleTooClose(proposal.working_title, existingTitles)) {
+    return "title too close to an existing post";
   }
-  const pool = category.topics;
-  const seed = Date.now() + Math.floor(Math.random() * 1000);
-  const start = seed % pool.length;
-  for (let k = 0; k < pool.length; k++) {
-    const candidate = pool[(start + k) % pool.length];
-    if (!topicClashes(candidate, existingTexts)) return candidate;
+  if (slugTooClose(slugify(proposal.slug_hint || proposal.working_title), existingSlugs)) {
+    return "slug too similar to an existing post";
   }
-  throw new Error(
-    `No unused topic angle left in ${category.id} — expand the pool or retire overlapping posts.`,
+  if (topicClashes(blob, dedupTexts)) {
+    return "topic keywords overlap an existing post";
+  }
+  return "";
+}
+
+const VARIATION_ANGLES = [
+  "the first 45 minutes after waking, before picking up the phone",
+  "restarting after a failed or abandoned session earlier the same day",
+  "a shared room with family or a roommate just out of sight",
+  "only one 50-minute block available today — nothing else will be protected",
+  "a late session when energy is already low and willpower is gone",
+  "coming back after a week of avoidance without a dramatic reset",
+  "no proper desk: bed, floor, kitchen table, or a noisy cafe",
+  "the gap between classes, client calls, or shifts",
+  "a skeptic who already knows the usual advice and needs a tighter protocol",
+  "a silent partner who will not chat — they only sit and work",
+];
+
+function pickVariation() {
+  return VARIATION_ANGLES[Math.floor(Math.random() * VARIATION_ANGLES.length)];
+}
+
+function unusedPoolTopics(category, existingTexts) {
+  return category.topics.filter((t) => !topicClashes(t, existingTexts));
+}
+
+async function chatJson(apiKey, system, user, temperature = 0.85) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      temperature,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`OpenAI API error ${res.status}: ${text}`);
+  }
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error("OpenAI returned no content.");
+  return JSON.parse(content);
+}
+
+async function proposeTopic(
+  apiKey,
+  category,
+  config,
+  existingTitles,
+  rejected,
+  preferredPool,
+) {
+  const avoid =
+    existingTitles.length > 0
+      ? existingTitles
+          .slice(-80)
+          .map((t) => `- ${t}`)
+          .join("\n")
+      : "(none yet)";
+  const rejectedBlock =
+    rejected.length > 0
+      ? `\nRejected proposals — do NOT reuse these themes or synonyms:\n${rejected
+          .map((r) => `- ${r.topic} / ${r.working_title} (${r.reason})`)
+          .join("\n")}`
+      : "";
+  const poolHint =
+    preferredPool.length > 0
+      ? `\nPrefer inventing a concrete angle near one of these unused seeds (or invent something entirely new that still fits the niche):\n${preferredPool
+          .slice(0, 8)
+          .map((t) => `- ${t}`)
+          .join("\n")}`
+      : `\nInvent a fresh concrete angle for this niche. Do not synonym-spin common covered themes.`;
+
+  return chatJson(
+    apiKey,
+    `You propose DISTINCT blog angles for a ${config.id} site. Output JSON only.
+Niche: ${category.label}. Audience: ${category.audience}.
+Must include later: ${category.mustInclude}. Avoid: ${category.avoid}.
+Return: {"topic":"...","working_title":"...","slug_hint":"kebab-case","angle":"one concrete scene/constraint"}`,
+    `${config.langUser} Propose ONE unused blog angle for "${category.label}".
+Already published titles:
+${avoid}${rejectedBlock}${poolHint}
+
+Requirements:
+- working_title names a situation or constraint, not a generic theme
+- angle is a specific time/place/constraint (not a synonym of rejected ones)
+- slug_hint is kebab-case and must not echo existing slugs`,
+    0.95,
   );
+}
+
+async function resolveTopicProposal(
+  apiKey,
+  category,
+  config,
+  existingTitles,
+  existingSlugs,
+  dedupTexts,
+) {
+  const forced = getArg("--topic") || process.env.POST_TOPIC?.trim() || "";
+  const preferredPool = unusedPoolTopics(category, dedupTexts);
+  const rejected = [];
+
+  if (forced) {
+    const proposal = {
+      topic: forced,
+      working_title: forced,
+      slug_hint: slugify(forced),
+      angle: pickVariation(),
+    };
+    const reason = proposalClashes(
+      proposal,
+      existingTitles,
+      existingSlugs,
+      dedupTexts,
+    );
+    if (reason) {
+      console.warn(
+        `Forced topic clashes (${reason}); pivoting to a new proposal…`,
+      );
+      rejected.push({ ...proposal, reason });
+    } else {
+      return { ...proposal, repeating: false };
+    }
+  }
+
+  for (let attempt = 1; attempt <= TOPIC_ATTEMPTS; attempt++) {
+    if (preferredPool.length > 0 && attempt === 1 && !forced) {
+      const seed =
+        preferredPool[Math.floor(Math.random() * preferredPool.length)];
+      const proposal = {
+        topic: seed,
+        working_title: seed,
+        slug_hint: slugify(seed),
+        angle: pickVariation(),
+      };
+      const reason = proposalClashes(
+        proposal,
+        existingTitles,
+        existingSlugs,
+        dedupTexts,
+      );
+      if (!reason) {
+        console.log(`Topic seed from pool (unused): ${seed}`);
+        return { ...proposal, repeating: false };
+      }
+      rejected.push({ ...proposal, reason });
+    }
+
+    const raw = await proposeTopic(
+      apiKey,
+      category,
+      config,
+      existingTitles,
+      rejected,
+      preferredPool,
+    );
+    const proposal = {
+      topic: String(raw.topic || "").trim(),
+      working_title: String(raw.working_title || raw.topic || "").trim(),
+      slug_hint: slugify(raw.slug_hint || raw.working_title || raw.topic || ""),
+      angle: String(raw.angle || pickVariation()).trim(),
+    };
+    if (!proposal.topic || !proposal.working_title) {
+      rejected.push({
+        topic: proposal.topic || "(empty)",
+        working_title: proposal.working_title || "(empty)",
+        reason: "empty proposal",
+      });
+      continue;
+    }
+    const reason = proposalClashes(
+      proposal,
+      existingTitles,
+      existingSlugs,
+      dedupTexts,
+    );
+    if (reason) {
+      console.warn(`Topic attempt ${attempt} rejected: ${reason}`);
+      rejected.push({ ...proposal, reason });
+      continue;
+    }
+    return { ...proposal, repeating: false };
+  }
+
+  // Last resort: accept a pivoted LLM proposal even if keywords overlap,
+  // but keep a strong distinct angle so the full article can diverge.
+  const fallback = await proposeTopic(
+    apiKey,
+    category,
+    config,
+    existingTitles,
+    rejected,
+    preferredPool,
+  );
+  const proposal = {
+    topic: String(fallback.topic || category.topics[0] || category.label).trim(),
+    working_title: String(
+      fallback.working_title || fallback.topic || category.label,
+    ).trim(),
+    slug_hint: slugify(
+      fallback.slug_hint || fallback.working_title || fallback.topic || "post",
+    ),
+    angle: String(fallback.angle || pickVariation()).trim(),
+    repeating: true,
+  };
+  console.warn(
+    "Topic pool exhausted — proceeding with pivoted angle (repeating theme).",
+  );
+  return proposal;
 }
 
 async function getExistingMeta(blogDir, urlPrefix) {
@@ -177,43 +445,35 @@ async function getExistingMeta(blogDir, urlPrefix) {
   return { titles, urls, slugs, categories, dedupTexts };
 }
 
-async function uniqueSlug(blogDir, slug, existingSlugs = []) {
+async function uniqueSlug(blogDir, slug) {
   const base = slug || "post";
-  const words = base.split("-").filter((w) => w.length > 3);
-  const tooSimilar = existingSlugs.some((s) => {
-    const sw = s.split("-").filter((w) => w.length > 3);
-    return words.filter((w) => sw.includes(w)).length >= 2;
-  });
-  if (tooSimilar) {
-    throw new Error(
-      `Slug "${base}" is too similar to an existing post — use a clearly different angle.`,
-    );
-  }
   if (!existsSync(join(blogDir, `${base}.md`))) return base;
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const angled = `${base}-${stamp}`;
   if (!existsSync(join(blogDir, `${angled}.md`))) {
-    console.warn(
-      `Slug "${base}" already exists — using dated slug "${angled}" instead of -2.`,
-    );
+    console.warn(`Slug "${base}" already exists — using dated slug "${angled}".`);
     return angled;
   }
-  throw new Error(
-    `Slug collision for "${base}" (and dated fallback). Pick a clearly different title/slug.`,
-  );
+  const hour = new Date().toISOString().slice(11, 13);
+  const timed = `${base}-${stamp}-${hour}`;
+  if (!existsSync(join(blogDir, `${timed}.md`))) return timed;
+  return `${timed}-${Math.floor(Math.random() * 1000)}`;
 }
 
 function linkBank(categoryId, config) {
   return config.linkBank[categoryId] || config.linkBank.productivity;
 }
 
-function buildSystemPrompt(category, topic, config) {
+function buildSystemPrompt(category, topic, config, angle, repeating) {
   const freeCommercial = isFreeCommercialTopic(topic);
   const commercialRule = freeCommercial
     ? `5b. COMMERCIAL HUB LINK (required): include EXACTLY ONE Markdown link to one of — ${SITE}${config.pricingPath}; ${SITE}${config.freePath}; ${SITE}${config.altPath}. Place naturally mid-article.`
     : `5b. COMMERCIAL HUB LINK (optional): if you mention free tools or pricing, you MAY add one link to ${SITE}${config.pricingPath}. Otherwise omit.`;
 
   const bank = linkBank(category.id, config);
+  const repeatRule = repeating
+    ? `10. This theme has been covered before. Write a NEW article: different opening scene, different examples, different protocol. No synonym spinning.`
+    : `10. Keep the article concrete and distinct from older posts. New scene, new examples, new if-then rules.`;
 
   return `You write SEO-friendly, genuinely useful long-form articles. Readers should leave with tactics they can use today — even if they never hear of any product.
 
@@ -222,6 +482,7 @@ ${config.langRule}
 Niche for this article: ${category.label}
 Audience: ${category.audience}
 Voice: ${category.voice}
+Required scene / constraint for THIS draft: ${angle}
 
 Hard requirements:
 1. TITLE: specific and searchable. No brand names in the title unless comparing publicly known tools (Focusmate, Discord, Zoom).
@@ -234,27 +495,39 @@ ${commercialRule}
 6. Must include: ${category.mustInclude}
 7. Avoid: ${category.avoid}
 8. Structure: Markdown with 3–5 "##" headings, ~900–1200 words. No emojis. No "In conclusion".
-9. Be specific: name tools, routines. Vague motivational writing is a failure.`;
+9. Be specific: name tools, routines. Vague motivational writing is a failure.
+${repeatRule}`;
 }
 
-function buildUserPrompt(category, topic, existingTitles, existingUrls, config) {
+function buildUserPrompt(
+  category,
+  topic,
+  existingTitles,
+  existingUrls,
+  config,
+  angle,
+  repeating,
+) {
   const avoidTitles =
     existingTitles.length > 0
-      ? `\n\nAlready published titles — pick a clearly different angle:\n${existingTitles
-          .slice(0, 40)
+      ? `\n\nAlready published titles — your title, outline, and examples must not echo these:\n${existingTitles
+          .slice(-80)
           .map((t) => `- ${t}`)
           .join("\n")}`
       : "";
   const internal =
     existingUrls.length > 0
       ? `\n\nIf natural, you may add 0–1 internal link to a related older post:\n${existingUrls
-          .slice(0, 8)
+          .slice(-8)
           .map((u) => `- ${u}`)
           .join("\n")}`
       : "";
   const landing = `\n\nRequired internal link — link to this guide exactly once, high in the article:\n- ${pillarUrl(category, config)}\nOther related internal pages:\n${config.landingPages.map((p) => `- ${SITE}${p.split(" — ")[0]}`).join("\n")}`;
+  const reuse = repeating
+    ? `\n\nThis broad topic has been covered before. Reuse the theme, not the article. New angle: ${angle}.`
+    : `\n\nWrite from this concrete scenario (do not ignore it): ${angle}.`;
 
-  return `${config.langUser} Write a blog post in the "${category.label}" niche about: ${topic}.${avoidTitles}${landing}${internal}
+  return `${config.langUser} Write a blog post in the "${category.label}" niche about: ${topic}.${reuse}${avoidTitles}${landing}${internal}
 
 Return ONLY JSON:
 {
@@ -273,42 +546,23 @@ async function callOpenAI(
   existingTitles,
   existingUrls,
   config,
+  angle,
+  repeating,
 ) {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      temperature: 0.85,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: buildSystemPrompt(category, topic, config) },
-        {
-          role: "user",
-          content: buildUserPrompt(
-            category,
-            topic,
-            existingTitles,
-            existingUrls,
-            config,
-          ),
-        },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`OpenAI API error ${res.status}: ${text}`);
-  }
-
-  const data = await res.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("OpenAI returned no content.");
-  return JSON.parse(content);
+  return chatJson(
+    apiKey,
+    buildSystemPrompt(category, topic, config, angle, repeating),
+    buildUserPrompt(
+      category,
+      topic,
+      existingTitles,
+      existingUrls,
+      config,
+      angle,
+      repeating,
+    ),
+    0.9,
+  );
 }
 
 function sanitizeTitle(title) {
@@ -381,6 +635,118 @@ draft: false
 `;
 }
 
+function promptLooksWeak(prompt) {
+  const p = String(prompt || "").toLowerCase();
+  if (p.length < 24) return true;
+  const bad = [
+    "logo",
+    "watermark",
+    "screenshot",
+    "ui mock",
+    "refocus app",
+    "stock photo",
+    "generic productivity",
+    "abstract metaphor",
+  ];
+  return bad.some((b) => p.includes(b));
+}
+
+function injectImageMarkdown(body, afterHeading, alt, src) {
+  const md = `![${alt}](${src})`;
+  if (afterHeading) {
+    const headingRe = new RegExp(
+      `^(##\\s+${afterHeading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*)$`,
+      "im",
+    );
+    if (headingRe.test(body)) {
+      return body.replace(headingRe, `$1\n\n${md}`);
+    }
+  }
+  const firstHeading = body.match(/^##\s+.+$/m);
+  if (firstHeading) {
+    return body.replace(firstHeading[0], `${firstHeading[0]}\n\n${md}`);
+  }
+  const paras = body.split(/\n{2,}/);
+  if (paras.length > 0) {
+    paras.splice(1, 0, md);
+    return paras.join("\n\n");
+  }
+  return `${md}\n\n${body}`;
+}
+
+async function maybeAddIllustration(apiKey, title, body, slug) {
+  try {
+    const headings = [...body.matchAll(/^##\s+(.+)$/gm)].map((m) => m[1].trim());
+    const plan = await chatJson(
+      apiKey,
+      `You decide whether a blog post needs ONE minimal editorial illustration.
+Return JSON: {"skip":boolean,"after_heading":"exact ## text or empty","alt":"short alt","prompt":"concrete scene description"}.
+Skip unless there is a concrete physical scene (desk, room, cafe, exam desk, timer on table). Never invent logos, UI, or brand faces.`,
+      `Title: ${title}\nHeadings:\n${headings.map((h) => `- ${h}`).join("\n")}\n\nOpening:\n${body.slice(0, 900)}\n\nPrefer skip:true when unsure. At most one image.`,
+      0.4,
+    );
+
+    if (plan.skip === true || plan.skip === "true") {
+      console.log("Illustration: skipped (no strong scene fit).");
+      return body;
+    }
+    const prompt = String(plan.prompt || "").trim();
+    const alt = String(plan.alt || title).trim().slice(0, 120);
+    const afterHeading = String(plan.after_heading || "").trim();
+    if (promptLooksWeak(prompt)) {
+      console.warn("Illustration: weak/irrelevant prompt — skipping.");
+      return body;
+    }
+
+    const imgRes = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: IMAGE_MODEL,
+        prompt: `${STYLE_PREFIX}${prompt}`,
+        size: "1024x1024",
+        n: 1,
+      }),
+    });
+    if (!imgRes.ok) {
+      const text = await imgRes.text();
+      console.warn(`Illustration: image API ${imgRes.status} — ${text.slice(0, 200)}`);
+      return body;
+    }
+    const imgData = await imgRes.json();
+    const b64 = imgData.data?.[0]?.b64_json;
+    const url = imgData.data?.[0]?.url;
+    let bytes;
+    if (b64) {
+      bytes = Buffer.from(b64, "base64");
+    } else if (url) {
+      const fetched = await fetch(url);
+      if (!fetched.ok) {
+        console.warn("Illustration: failed to download image URL — skipping.");
+        return body;
+      }
+      bytes = Buffer.from(await fetched.arrayBuffer());
+    } else {
+      console.warn("Illustration: empty image response — skipping.");
+      return body;
+    }
+
+    const outDir = join(MARKETING_DIR, "public", "blog", slug);
+    await mkdir(outDir, { recursive: true });
+    const filePath = join(outDir, "01.png");
+    await writeFile(filePath, bytes);
+    const publicSrc = `/blog/${slug}/01.png`;
+    console.log(`Illustration: wrote ${filePath}`);
+    return injectImageMarkdown(body, afterHeading, alt, publicSrc);
+  } catch (err) {
+    console.warn(`Illustration: ${err.message || err} — keeping text-only.`);
+    return body;
+  }
+}
+
 async function main() {
   await loadEnvFile(join(REPO_ROOT, ".env"));
   await loadEnvFile(join(MARKETING_DIR, ".env"));
@@ -397,29 +763,64 @@ async function main() {
   const urlPrefix = config.urlPrefix;
   const categoryId = resolveCategoryId(config);
   const category = config.categories[categoryId];
-  const { titles: existingTitles, urls: existingUrls, slugs: existingSlugs, dedupTexts } =
-    await getExistingMeta(blogDir, urlPrefix);
-  const topic = pickTopic(category, dedupTexts);
+  const {
+    titles: existingTitles,
+    urls: existingUrls,
+    slugs: existingSlugs,
+    dedupTexts,
+  } = await getExistingMeta(blogDir, urlPrefix);
+
+  const proposal = await resolveTopicProposal(
+    apiKey,
+    category,
+    config,
+    existingTitles,
+    existingSlugs,
+    dedupTexts,
+  );
+  const topic = proposal.topic;
+  const angle = proposal.angle || pickVariation();
+  const repeating = Boolean(proposal.repeating);
 
   console.log(`Locale: ${config.id}`);
   console.log(`Category: ${category.id} (${category.label})`);
-  console.log(`Topic: ${topic}`);
+  console.log(
+    `Topic: ${topic}${repeating ? " (theme reuse — new angle required)" : ""}`,
+  );
+  console.log(`Working title hint: ${proposal.working_title}`);
+  console.log(`Angle: ${angle}`);
   console.log(`Model: ${MODEL}`);
 
-  const result = await callOpenAI(
-    apiKey,
-    category,
-    topic,
-    existingTitles,
-    existingUrls,
-    config,
-  );
+  let result;
+  let title = "";
+  let body = "";
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    result = await callOpenAI(
+      apiKey,
+      category,
+      topic,
+      existingTitles,
+      existingUrls,
+      config,
+      attempt === 1 ? angle : `${angle} — pick a clearly different title and slug than existing posts`,
+      repeating || attempt === 2,
+    );
+    title = sanitizeTitle(result.title || "");
+    body = String(result.body_markdown || "").trim();
+    if (!title) throw new Error("Model did not return a usable title.");
+    if (body.length < 200) throw new Error("Model returned an empty/short body.");
+    const close = titleTooClose(title, existingTitles);
+    if (close && attempt === 1) {
+      console.warn("Title too close after draft — regenerating with pivot…");
+      continue;
+    }
+    if (close) {
+      console.warn("Title still overlaps; continuing with dated slug if needed.");
+    }
+    break;
+  }
 
-  const title = sanitizeTitle(result.title || "");
-  if (!title) throw new Error("Model did not return a usable title.");
   const description = String(result.description || "").slice(0, 160);
-  let body = String(result.body_markdown || "").trim();
-  if (body.length < 200) throw new Error("Model returned an empty/short body.");
   body = ensureOutboundLinks(body, category.id, config);
   body = ensurePillarLink(body, category, config);
 
@@ -427,8 +828,15 @@ async function main() {
   console.log(`Outbound links (non-Refocus): ${outbound}`);
   console.log(`Pillar link: ${pillarUrl(category, config)}`);
 
-  const baseSlug = slugify(result.slug || title);
-  const slug = await uniqueSlug(blogDir, baseSlug, existingSlugs);
+  let baseSlug = slugify(result.slug || proposal.slug_hint || title);
+  if (slugTooClose(baseSlug, existingSlugs)) {
+    const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    baseSlug = `${baseSlug}-${stamp}`;
+    console.warn(`Slug overlapped existing tokens — using ${baseSlug}`);
+  }
+  const slug = await uniqueSlug(blogDir, baseSlug);
+
+  body = await maybeAddIllustration(apiKey, title, body, slug);
 
   const contents = `${toFrontmatter({
     title,

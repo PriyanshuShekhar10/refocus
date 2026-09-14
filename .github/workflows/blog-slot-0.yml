@@ -1,6 +1,6 @@
 name: "Blog: morning slot (English)"
 
-# One English post per day at 06:00 UTC. Niche rotates across five categories.
+# First of three English posts/day. Niche rotates across five categories.
 on:
   schedule:
     - cron: "0 6 * * *"

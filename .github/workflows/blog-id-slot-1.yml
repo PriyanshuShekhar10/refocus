@@ -1,6 +1,6 @@
-name: "Blog: Indonesian (evening) — manual only"
+name: "Blog: Indonesian evening (manual)"
 
-# Disabled: ID is 1/day (blog-id-slot-0 @ 10:00 UTC). Use workflow_dispatch for extras.
+# Manual only — scheduled non-English publishing is blog-locale-daily.yml.
 on:
   workflow_dispatch:
 

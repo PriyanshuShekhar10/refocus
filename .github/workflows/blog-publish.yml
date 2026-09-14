@@ -1,6 +1,6 @@
 name: "Blog: publish (every other day)"
 
-# Superseded by blog-slot-0.yml (1 English post/day at 06:00 UTC).
+# Superseded by blog-slot-0/1/2 (3 EN/day) + blog-locale-daily (1 locale/day).
 # Kept for manual niche runs only — do not re-enable the schedule alongside slot crons.
 
 on:

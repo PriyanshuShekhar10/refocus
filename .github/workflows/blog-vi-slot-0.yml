@@ -1,9 +1,8 @@
-name: "Blog: Vietnamese (evening)"
+name: "Blog: Vietnamese (manual)"
 
-# One Vietnamese post per day at 18:00 UTC. Niche rotates across five categories.
+# Manual only — scheduled non-English publishing is blog-locale-daily.yml
+# (1 post/day cycling id → fil → vi).
 on:
-  schedule:
-    - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:
