@@ -5,6 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
+import { accumulateAttendanceStats } from "@/lib/sessionAttendanceStats";
 
 
 type SessionTypeBreakdown = Record<string, number>;
@@ -135,20 +136,24 @@ export async function GET() {
   // For streaks, collect unique completion days and walk back from today.
   const completedDays = new Set<string>();
 
+  const attendanceInputs = [];
+
   for (const s of sessions) {
     const me = s.me;
     if (!me) continue;
 
-    booked += 1;
-    if (s.owner_id === userId) asOwner += 1;
-
     const hadPartner = s.participantCount >= 2;
-    if (hadPartner) withPartner += 1;
-    else solo += 1;
-
     const didAttend = Boolean(me.call_joined_at);
     const didComplete = Boolean(me.call_completed);
-    if (didAttend) attended += 1;
+
+    attendanceInputs.push({
+      participantCount: s.participantCount,
+      ownerId: s.owner_id,
+      didAttend,
+      didComplete,
+      durationMin: s.duration_min || 0,
+    });
+
     if (didComplete) {
       completed += 1;
       totalMinutes += s.duration_min || 0;
@@ -197,6 +202,15 @@ export async function GET() {
       });
     }
   }
+
+  const attendance = accumulateAttendanceStats(attendanceInputs, userId);
+  booked = attendance.booked;
+  attended = attendance.attended;
+  withPartner = attendance.withPartner;
+  solo = attendance.solo;
+  asOwner = attendance.asOwner;
+  const missed = attendance.missed;
+  const attendanceRate = attendance.attendanceRate;
 
   const partnerIds = Array.from(
     new Set(recent.map((r) => r.partnerId).filter(Boolean) as string[]),
@@ -249,8 +263,6 @@ export async function GET() {
     };
   });
 
-  const missed = Math.max(0, booked - attended);
-  const attendanceRate = booked > 0 ? attended / booked : 0;
   const completionRate = attended > 0 ? completed / attended : 0;
 
   // Streaks: consecutive days (counting back from today / yesterday) with

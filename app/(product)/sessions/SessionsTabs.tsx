@@ -28,13 +28,17 @@ export function SessionsTabs({ upcoming, past, currentUserId }: SessionsTabsProp
     for (const s of past) {
       const me = s.participants.find((p) => p.userId === currentUserId);
       if (!me) continue;
-      booked += 1;
-      if (me.attended) attended += 1;
+      const matched = s.participants.length >= 2;
+      // Solo/unmatched sessions cannot be joined — exclude from booked/attendance.
+      if (matched) {
+        booked += 1;
+        if (me.attended) attended += 1;
+        withPartner += 1;
+      }
       if (me.completed) {
         completed += 1;
         minutes += s.durationMin || 0;
       }
-      if (s.participants.length >= 2) withPartner += 1;
     }
     return { booked, attended, completed, minutes, withPartner };
   }, [past, currentUserId]);
@@ -52,7 +56,7 @@ export function SessionsTabs({ upcoming, past, currentUserId }: SessionsTabsProp
           active={tab === "past"}
           onClick={() => setTab("past")}
           label="History"
-          count={stats.booked}
+          count={past.length}
         />
       </div>
 

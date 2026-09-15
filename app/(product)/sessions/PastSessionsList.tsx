@@ -49,7 +49,7 @@ interface PastSessionsListProps {
   };
 }
 
-type Attendance = "missed" | "left-early" | "completed";
+type Attendance = "missed" | "left-early" | "completed" | "unmatched";
 
 function getParticipantName(p: PastParticipant): string {
   if (p.firstname || p.lastname) {
@@ -109,9 +109,12 @@ function formatTotalMinutes(total: number): string {
   return `${hours}h ${mins}m`;
 }
 
-function attendanceOf(
+/** Solo sessions cannot be joined — show Unmatched, not Missed. */
+export function attendanceOf(
   me: PastParticipant | undefined,
+  wasSolo: boolean,
 ): Attendance {
+  if (wasSolo && !me?.attended) return "unmatched";
   if (!me?.attended) return "missed";
   if (me.completed) return "completed";
   return "left-early";
@@ -120,12 +123,14 @@ function attendanceOf(
 function attendanceLabel(a: Attendance): string {
   if (a === "completed") return "Completed";
   if (a === "missed") return "Missed";
+  if (a === "unmatched") return "Unmatched";
   return "Left early";
 }
 
 function dotClass(a: Attendance): string {
   if (a === "completed") return "bg-[#5D1C6A] dark:bg-[#CA5995]";
   if (a === "missed") return "bg-red-400";
+  if (a === "unmatched") return "bg-gray-300 dark:bg-gray-600";
   return "bg-amber-400";
 }
 
@@ -181,7 +186,7 @@ export function PastSessionsList({
                   (p) => p.userId === currentUserId,
                 );
                 const wasSolo = session.participants.length < 2;
-                const attendance = attendanceOf(me);
+                const attendance = attendanceOf(me, wasSolo);
                 const title =
                   session.name?.trim() ||
                   (partnerName
