@@ -408,6 +408,13 @@ export function RecentActivityList({ recent }: { recent: RecentSession[] }) {
         {recent.map((r) => {
           const partnerInitial =
             r.partnerName?.[0]?.toUpperCase() || (r.solo ? null : "P");
+          const tone = r.solo && !r.attended
+            ? "unmatched"
+            : !r.attended
+              ? "missed"
+              : r.completed
+                ? "completed"
+                : "partial";
           return (
             <li
               key={r.id}
@@ -431,15 +438,7 @@ export function RecentActivityList({ recent }: { recent: RecentSession[] }) {
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                <RecentDot
-                  tone={
-                    !r.attended
-                      ? "missed"
-                      : r.completed
-                        ? "completed"
-                        : "partial"
-                  }
-                />
+                <RecentDot tone={tone} />
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p
@@ -469,15 +468,7 @@ export function RecentActivityList({ recent }: { recent: RecentSession[] }) {
                       : "With partner"}
                 </p>
               </div>
-              <RecentBadge
-                tone={
-                  !r.attended
-                    ? "missed"
-                    : r.completed
-                      ? "completed"
-                      : "partial"
-                }
-              />
+              <RecentBadge tone={tone} />
             </li>
           );
         })}
@@ -649,14 +640,16 @@ function TypeBars({
 function RecentDot({
   tone,
 }: {
-  tone: "completed" | "partial" | "missed";
+  tone: "completed" | "partial" | "missed" | "unmatched";
 }) {
   const color =
     tone === "completed"
       ? "var(--success)"
       : tone === "missed"
         ? "var(--danger)"
-        : "var(--ink-mute)";
+        : tone === "unmatched"
+          ? "var(--ink-mute)"
+          : "var(--ink-mute)";
   return (
     <span
       aria-hidden
@@ -675,12 +668,17 @@ function RecentDot({
 function RecentBadge({
   tone,
 }: {
-  tone: "completed" | "partial" | "missed";
+  tone: "completed" | "partial" | "missed" | "unmatched";
 }) {
   const map = {
     completed: { label: "Completed", bg: "var(--success-soft)", fg: "var(--success)" },
     partial: { label: "Left early", bg: "var(--line-soft)", fg: "var(--ink-soft)" },
     missed: { label: "Missed", bg: "var(--danger-soft)", fg: "var(--danger)" },
+    unmatched: {
+      label: "Unmatched",
+      bg: "var(--line-soft)",
+      fg: "var(--ink-mute)",
+    },
   } as const;
   const t = map[tone];
   return (
