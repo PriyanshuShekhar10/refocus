@@ -17,6 +17,7 @@ export const GET: APIRoute = async () => {
   const postsId = await getCollection("blogId", ({ data }) => !data.draft);
   const postsFil = await getCollection("blogFil", ({ data }) => !data.draft);
   const postsVi = await getCollection("blogVi", ({ data }) => !data.draft);
+  const postsDe = await getCollection("blogDe", ({ data }) => !data.draft);
 
   const latestPost = posts
     .map((p) => +new Date(p.data.updatedDate ?? p.data.pubDate))
@@ -44,6 +45,13 @@ export const GET: APIRoute = async () => {
     .sort((a, b) => b - a)[0];
   const blogViLastmod = latestPostVi
     ? new Date(latestPostVi).toISOString()
+    : new Date().toISOString();
+
+  const latestPostDe = postsDe
+    .map((p) => +new Date(p.data.updatedDate ?? p.data.pubDate))
+    .sort((a, b) => b - a)[0];
+  const blogDeLastmod = latestPostDe
+    ? new Date(latestPostDe).toISOString()
     : new Date().toISOString();
 
   const staticEntries: Entry[] = [
@@ -136,6 +144,19 @@ export const GET: APIRoute = async () => {
       changefreq: "daily",
       priority: "0.8",
     },
+    // German (de) blog-first hub.
+    {
+      loc: `${site}/de`,
+      lastmod: new Date().toISOString(),
+      changefreq: "weekly",
+      priority: "0.8",
+    },
+    {
+      loc: `${site}/de/blog`,
+      lastmod: blogDeLastmod,
+      changefreq: "daily",
+      priority: "0.8",
+    },
   ];
 
   // Category archive pages. Paginated /blog/2…N stay out of the sitemap
@@ -182,6 +203,15 @@ export const GET: APIRoute = async () => {
     priority: "0.7",
   }));
 
+  const postDeEntries: Entry[] = postsDe.map((post) => ({
+    loc: `${site}/de/blog/${post.id}`,
+    lastmod: new Date(
+      post.data.updatedDate ?? post.data.pubDate,
+    ).toISOString(),
+    changefreq: "monthly",
+    priority: "0.7",
+  }));
+
   const entries = [
     ...staticEntries,
     ...categoryEntries,
@@ -189,6 +219,7 @@ export const GET: APIRoute = async () => {
     ...postIdEntries,
     ...postFilEntries,
     ...postViEntries,
+    ...postDeEntries,
   ];
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>

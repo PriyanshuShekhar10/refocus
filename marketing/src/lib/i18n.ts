@@ -1,4 +1,4 @@
-export type Locale = "en" | "id" | "fil" | "vi";
+export type Locale = "en" | "id" | "fil" | "vi" | "de";
 
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -10,6 +10,7 @@ export const LOCALES: Record<
   id: { label: "Bahasa Indonesia", htmlLang: "id", pathPrefix: "/id" },
   fil: { label: "Filipino (Tagalog)", htmlLang: "fil", pathPrefix: "/fil" },
   vi: { label: "Tiếng Việt", htmlLang: "vi", pathPrefix: "/vi" },
+  de: { label: "Deutsch", htmlLang: "de", pathPrefix: "/de" },
 };
 
 export function localePath(locale: Locale, path: string): string {
@@ -24,13 +25,14 @@ export function localePath(locale: Locale, path: string): string {
 export function hreflangAlternates(path: string): { hreflang: string; href: string }[] {
   const site = "https://refocus.co.in";
 
-  // Blog hubs (all four locales have a blog index).
+  // Blog hubs (all locales with a blog index).
   if (path === "/blog" || path.endsWith("/blog")) {
     return [
       { hreflang: "en", href: `${site}/blog` },
       { hreflang: "id", href: `${site}/id/blog` },
       { hreflang: "fil", href: `${site}/fil/blog` },
       { hreflang: "vi", href: `${site}/vi/blog` },
+      { hreflang: "de", href: `${site}/de/blog` },
       { hreflang: "x-default", href: `${site}/blog` },
     ];
   }
@@ -57,6 +59,14 @@ export function hreflangAlternates(path: string): { hreflang: string; href: stri
   if (path.startsWith("/vi")) {
     return [
       { hreflang: "vi", href: `${site}${path}` },
+      { hreflang: "x-default", href: `${site}/` },
+    ];
+  }
+
+  // German blog-first locale.
+  if (path.startsWith("/de")) {
+    return [
+      { hreflang: "de", href: `${site}${path}` },
       { hreflang: "x-default", href: `${site}/` },
     ];
   }

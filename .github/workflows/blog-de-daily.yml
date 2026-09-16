@@ -1,0 +1,38 @@
+name: "Blog: German daily"
+
+# One German post per day. Niche rotates across five categories by UTC day.
+on:
+  schedule:
+    - cron: "0 16 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blog-de-daily
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      category: ${{ steps.rotate.outputs.category }}
+    steps:
+      - name: Resolve rotating niche
+        id: rotate
+        run: |
+          set -euo pipefail
+          NICHES=(productivity adhd exams loneliness remote)
+          DAY=$(( $(date -u +%s) / 86400 ))
+          CATEGORY="${NICHES[$(( DAY % 5 ))]}"
+          echo "Rotation: day=$DAY → de/$CATEGORY"
+          echo "category=$CATEGORY" >> "$GITHUB_OUTPUT"
+
+  generate:
+    needs: resolve
+    uses: ./.github/workflows/blog-reusable.yml
+    with:
+      locale: de
+      category: ${{ needs.resolve.outputs.category }}
+    secrets: inherit

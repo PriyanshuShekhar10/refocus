@@ -1,5 +1,5 @@
 /**
- * Locale registry for blog post generation (en | id | fil | vi).
+ * Locale registry for blog post generation (en | id | fil | vi | de).
  */
 
 import {
@@ -10,8 +10,9 @@ import {
 import { CATEGORIES_ID, getCategoryId } from "./blog-categories-id.mjs";
 import { CATEGORIES_FIL, getCategoryFil } from "./blog-categories-fil.mjs";
 import { CATEGORIES_VI, getCategoryVi } from "./blog-categories-vi.mjs";
+import { CATEGORIES_DE, getCategoryDe } from "./blog-categories-de.mjs";
 
-export const LOCALE_IDS = ["en", "id", "fil", "vi"];
+export const LOCALE_IDS = ["en", "id", "fil", "vi", "de"];
 
 const LANDING_PAGES_EN = [
   "/body-doubling — What body doubling is and how to do it online",
@@ -134,6 +135,36 @@ const LINK_BANK_VI = {
   ],
 };
 
+const LANDING_PAGES_DE = [
+  "/de/blog — Blog Refocus (Deutsch)",
+  "/body-doubling — Body Doubling Guide (Englisch)",
+  "/virtual-coworking — Virtuelles Coworking",
+  "/study-with-me — Study with me online",
+  "/pricing — Preise",
+];
+
+const LINK_BANK_DE = {
+  productivity: [
+    "https://de.wikipedia.org/wiki/Zeitmanagement — Zeitmanagement",
+    "https://de.wikipedia.org/wiki/Pomodoro-Technik — Pomodoro-Technik",
+  ],
+  adhd: [
+    "https://de.wikipedia.org/wiki/Aufmerksamkeitsdefizit-/Hyperaktivit%C3%A4tsst%C3%B6rung — ADHS",
+    "https://en.wikipedia.org/wiki/Body_doubling — Body Doubling",
+  ],
+  exams: [
+    "https://de.wikipedia.org/wiki/Abitur — Abitur",
+    "https://de.wikipedia.org/wiki/Numerus_clausus — Numerus clausus",
+  ],
+  loneliness: [
+    "https://de.wikipedia.org/wiki/Einsamkeit — Einsamkeit",
+  ],
+  remote: [
+    "https://de.wikipedia.org/wiki/Telearbeit — Telearbeit / Homeoffice",
+    "https://de.wikipedia.org/wiki/Freiberufler — Freiberufler",
+  ],
+};
+
 export const LOCALE_CONFIG = {
   en: {
     id: "en",
@@ -218,6 +249,27 @@ export const LOCALE_CONFIG = {
     pillarInject:
       "Nếu bạn mới biết ý tưởng này, xem hướng dẫn [{label}]({url}) của chúng tôi.",
     localeField: "vi",
+  },
+  de: {
+    id: "de",
+    contentSubdir: "blog-de",
+    urlPrefix: "/de/blog",
+    categories: CATEGORIES_DE,
+    getCategory: getCategoryDe,
+    pickCategory: pickCategoryByUtcHour,
+    author: "Refocus Team",
+    landingPages: LANDING_PAGES_DE,
+    linkBank: LINK_BANK_DE,
+    defaultPillar: { path: "/body-doubling", label: "Body Doubling" },
+    langRule:
+      "Write the ENTIRE article in natural German (Deutsch). Use DACH exam context (Abitur, Uni-Klausuren, Staatsexamen, Numerus Clausus) for exam niche. Do NOT mention Indian, Indonesian, Filipino, or Vietnamese exams.",
+    langUser: "Write in German (Deutsch).",
+    pricingPath: "/pricing",
+    freePath: "/free",
+    altPath: "/focusmate-alternative",
+    pillarInject:
+      "Falls du das Konzept noch nicht kennst, lies unseren Guide zu [{label}]({url}).",
+    localeField: "de",
   },
 };
 

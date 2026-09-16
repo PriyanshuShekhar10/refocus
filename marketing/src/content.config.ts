@@ -68,4 +68,21 @@ const blogVi = defineCollection({
   }),
 });
 
-export const collections = { blog, blogId, blogFil, blogVi };
+const blogDe = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/blog-de" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.coerce.date(),
+    updatedDate: z.coerce.date().optional(),
+    category: z
+      .enum(["productivity", "adhd", "exams", "loneliness", "remote"])
+      .default("productivity"),
+    tags: z.array(z.string()).default([]),
+    author: z.string().default("Refocus Team"),
+    draft: z.boolean().default(false),
+    locale: z.literal("de").default("de"),
+  }),
+});
+
+export const collections = { blog, blogId, blogFil, blogVi, blogDe };

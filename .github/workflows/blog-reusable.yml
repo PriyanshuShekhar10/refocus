@@ -17,7 +17,7 @@ on:
         required: false
         type: string
       locale:
-        description: "en | id | fil | vi"
+        description: "en | id | fil | vi | de"
         required: false
         type: string
         default: en
@@ -99,6 +99,10 @@ jobs:
             vi)
               BLOG_PATH="marketing/src/content/blog-vi"
               COMMIT_PREFIX="blog(vi/$CATEGORY)"
+              ;;
+            de)
+              BLOG_PATH="marketing/src/content/blog-de"
+              COMMIT_PREFIX="blog(de/$CATEGORY)"
               ;;
             *)
               BLOG_PATH="marketing/src/content/blog"

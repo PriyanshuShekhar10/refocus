@@ -1,12 +1,12 @@
 import type { CategoryId } from "./categories";
 
-export type BlogLocaleKey = "id" | "fil" | "vi";
+export type BlogLocaleKey = "id" | "fil" | "vi" | "de";
 
 export type BlogLocaleUi = {
   key: BlogLocaleKey;
   htmlLang: string;
   pathPrefix: string;
-  collection: "blogId" | "blogFil" | "blogVi";
+  collection: "blogId" | "blogFil" | "blogVi" | "blogDe";
   dateLocale: string;
   homePath: string;
   blogPath: string;
@@ -44,6 +44,7 @@ export type BlogLocaleUi = {
 import { CATEGORIES_ID, categoryLabelId, categoryMetaId } from "./categories-id";
 import { CATEGORIES_FIL, categoryLabelFil, categoryMetaFil } from "./categories-fil";
 import { CATEGORIES_VI, categoryLabelVi, categoryMetaVi } from "./categories-vi";
+import { CATEGORIES_DE, categoryLabelDe, categoryMetaDe } from "./categories-de";
 
 export const BLOG_LOCALES: Record<BlogLocaleKey, BlogLocaleUi> = {
   id: {
@@ -159,6 +160,44 @@ export const BLOG_LOCALES: Record<BlogLocaleKey, BlogLocaleUi> = {
     categoryLabel: categoryLabelVi,
     categoryMeta: categoryMetaVi,
     categories: CATEGORIES_VI,
+  },
+  de: {
+    key: "de",
+    htmlLang: "de",
+    pathPrefix: "/de",
+    collection: "blogDe",
+    dateLocale: "de-DE",
+    homePath: "/de",
+    blogPath: "/de/blog",
+    blog: {
+      title: "Blog",
+      heading: "Notizen zu Fokus, Prüfungen, ADHS & Coworking",
+      lede: "Praktische Tipps zu Deep Work, Abitur & Uni, Homeoffice und Body Doubling — auf Deutsch.",
+      readMore: "Lesen",
+      allPosts: "Alle Artikel",
+      minRead: "Min. Lesezeit",
+      related: "Weiterlesen",
+      empty: "Noch keine Artikel — bald verfügbar.",
+      emptyCategory: "Noch keine Artikel in diesem Thema.",
+      home: "Start",
+      english: "English",
+      paginationNewer: "Neuer",
+      paginationOlder: "Älter",
+      paginationPage: (cur, total) => `Seite ${cur} von ${total}`,
+      ctaTitle: "Brauchst du eine ruhige Person neben dir beim Lernen oder Arbeiten?",
+      ctaBody: "Viele Menschen fokussieren besser, wenn jemand anderes im Raum ist — auch ohne Smalltalk.",
+      ctaPillar: "Neu beim Konzept? Lies den Guide zu",
+      ctaBtn: "So funktionieren Sessions",
+    },
+    home: {
+      title: "Refocus — Virtueller Fokusraum & Coworking",
+      description: "Kostenloser virtueller Fokusraum zum Lernen und Arbeiten — Body Doubling, kein lautes Lobby.",
+      h1: "Virtueller Fokusraum für Deep Work",
+      lead: "Geplante Sessions mit gemeinsamen Timer. Body Doubling online.",
+    },
+    categoryLabel: categoryLabelDe,
+    categoryMeta: categoryMetaDe,
+    categories: CATEGORIES_DE,
   },
 };
 
