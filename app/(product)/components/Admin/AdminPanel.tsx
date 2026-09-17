@@ -44,6 +44,7 @@ type AdminSection =
   | "overview"
   | "users"
   | "deleted"
+  | "blocked"
   | "mailbox"
   | "reports"
   | "history"
@@ -83,6 +84,8 @@ type Stats = {
     pendingSessionRequests: number;
     pendingReports: number;
     bannedIpActivityWeek: number;
+    userBlocks: number;
+    uniqueBlockers: number;
   };
 };
 
@@ -236,6 +239,14 @@ type PendingFriendRequest = {
   to: AdminPerson;
 };
 
+type UserBlockEntry = {
+  id: string;
+  createdAt: string | null;
+  summary: string;
+  blocker: AdminPerson;
+  blocked: AdminPerson;
+};
+
 type ReportEntry = {
   id: string;
   reporterEmail: string | null;
@@ -264,6 +275,7 @@ const SECTIONS: {
   { id: "test-call", label: "Test call", icon: Video },
   { id: "logins", label: "Logins", icon: LogIn },
   { id: "deleted", label: "Deleted", icon: UserX },
+  { id: "blocked", label: "Blocked", icon: Ban },
   { id: "mailbox", label: "Mailbox", icon: Mail },
   { id: "updates", label: "Updates", icon: Megaphone },
   { id: "ip-activity", label: "Banned IP activity", icon: Activity },
@@ -788,6 +800,10 @@ export default function AdminPanel() {
   const [deletedUsers, setDeletedUsers] = useState<DeletedProfile[]>([]);
   const [deletedTotal, setDeletedTotal] = useState(0);
   const [deletedQuery, setDeletedQuery] = useState("");
+  const [userBlocks, setUserBlocks] = useState<UserBlockEntry[]>([]);
+  const [userBlocksTotal, setUserBlocksTotal] = useState(0);
+  const [uniqueBlockers, setUniqueBlockers] = useState(0);
+  const [blocksQuery, setBlocksQuery] = useState("");
   const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([]);
   const [auditTotal, setAuditTotal] = useState(0);
   const [reports, setReports] = useState<ReportEntry[]>([]);
@@ -875,6 +891,20 @@ export default function AdminPanel() {
       setDeletedTotal(data.total ?? 0);
     },
     [deletedQuery],
+  );
+
+  const loadUserBlocks = useCallback(
+    async (q = blocksQuery) => {
+      const params = new URLSearchParams({ limit: "80" });
+      if (q.trim()) params.set("q", q.trim());
+      const res = await fetch(`/api/admin/blocks?${params}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load blocks");
+      setUserBlocks(data.blocks || []);
+      setUserBlocksTotal(data.total ?? 0);
+      setUniqueBlockers(data.uniqueBlockers ?? 0);
+    },
+    [blocksQuery],
   );
 
   const loadAuditLog = useCallback(async () => {
@@ -1043,6 +1073,7 @@ export default function AdminPanel() {
         if (friendRequestsExpanded) await loadPendingFriendRequests();
       } else if (section === "users") await loadUsers();
       else if (section === "deleted") await loadDeletedUsers();
+      else if (section === "blocked") await loadUserBlocks();
       else if (section === "mailbox") setMailEpoch((n) => n + 1);
       else if (section === "reports") await loadReports();
       else if (section === "history") await loadAuditLog();
@@ -1065,6 +1096,7 @@ export default function AdminPanel() {
     loadPendingFriendRequests,
     loadUsers,
     loadDeletedUsers,
+    loadUserBlocks,
     loadReports,
     loadAuditLog,
     loadIpActivity,
@@ -1221,6 +1253,17 @@ export default function AdminPanel() {
                   label="Deleted profiles"
                   value={stats.users.deleted}
                   hint="People who deleted their account"
+                />
+              </button>
+              <button
+                type="button"
+                onClick={() => setSection("blocked")}
+                className="text-left"
+              >
+                <StatCard
+                  label="User blocks"
+                  value={stats.moderation.userBlocks ?? 0}
+                  hint={`${stats.moderation.uniqueBlockers ?? 0} people blocked someone`}
                 />
               </button>
               <StatCard
@@ -1787,6 +1830,84 @@ export default function AdminPanel() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        ) : null}
+
+        {section === "blocked" ? (
+          <div className="space-y-4">
+            <form
+              className="flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void loadUserBlocks();
+              }}
+            >
+              <input
+                type="search"
+                value={blocksQuery}
+                onChange={(e) => setBlocksQuery(e.target.value)}
+                placeholder="Search blocker or blocked email, username, or name…"
+                className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+              <button
+                type="submit"
+                className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995]"
+              >
+                Search
+              </button>
+            </form>
+            <p className="text-xs text-gray-500">
+              {userBlocksTotal} block{userBlocksTotal === 1 ? "" : "s"}
+              {uniqueBlockers
+                ? ` from ${uniqueBlockers} person${uniqueBlockers === 1 ? "" : "s"}`
+                : ""}
+              . People on this list cannot see each other in sessions, community,
+              or matchmaking.
+            </p>
+            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                  <tr>
+                    <th className="px-4 py-3">When</th>
+                    <th className="px-4 py-3">Blocked by</th>
+                    <th className="px-4 py-3">Blocked user</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                  {userBlocks.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={3}
+                        className="px-4 py-8 text-center text-sm text-gray-500"
+                      >
+                        No user blocks yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    userBlocks.map((b) => (
+                      <tr key={b.id}>
+                        <td className="px-4 py-3 align-top text-gray-500">
+                          {b.createdAt
+                            ? new Date(b.createdAt).toLocaleString()
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3 align-top text-sm">
+                          <PersonLine person={b.blocker} />
+                        </td>
+                        <td className="px-4 py-3 align-top text-sm">
+                          <PersonLine person={b.blocked} />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+              {userBlocksTotal > userBlocks.length ? (
+                <p className="border-t border-gray-100 px-4 py-2 text-xs text-gray-500 dark:border-gray-800">
+                  Showing {userBlocks.length} of {userBlocksTotal}
+                </p>
+              ) : null}
             </div>
           </div>
         ) : null}

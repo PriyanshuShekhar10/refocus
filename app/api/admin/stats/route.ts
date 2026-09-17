@@ -30,6 +30,8 @@ export async function GET() {
     pendingSessionRequests,
     pendingReports,
     bannedIpActivityWeek,
+    userBlocks,
+    uniqueBlockers,
   ] = await Promise.all([
     db.collection("users").countDocuments(),
     db.collection("users").countDocuments({ createdAt: { $gte: weekAgo } }),
@@ -95,6 +97,8 @@ export async function GET() {
     db.collection("banned_ip_activity").countDocuments({
       createdAt: { $gte: weekAgo },
     }),
+    db.collection("user_blocks").countDocuments(),
+    db.collection("user_blocks").distinct("blocker_id"),
   ]);
 
   return NextResponse.json({
@@ -129,6 +133,8 @@ export async function GET() {
       pendingSessionRequests,
       pendingReports,
       bannedIpActivityWeek,
+      userBlocks,
+      uniqueBlockers: Array.isArray(uniqueBlockers) ? uniqueBlockers.length : 0,
     },
   });
 }
