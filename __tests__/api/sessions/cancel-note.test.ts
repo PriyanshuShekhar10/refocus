@@ -158,4 +158,24 @@ describe("session cancel notes", () => {
       }),
     );
   });
+
+  it("emails the owner when a participant leaves without a note", async () => {
+    mockSession(String(JOINER_ID));
+    const req = mockRequest(`/api/sessions/${SESSION_ID}/leave`, {
+      body: {},
+    });
+    const { status, json } = await parseResponse(
+      await LEAVE(req, makeParams(String(SESSION_ID))),
+    );
+    expect(status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(notifySessionCancelled).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        actorUserId: String(JOINER_ID),
+        message: null,
+        kind: "leave",
+      }),
+    );
+  });
 });

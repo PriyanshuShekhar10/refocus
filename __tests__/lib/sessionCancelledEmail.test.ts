@@ -24,6 +24,20 @@ describe("buildSessionCancelledEmail", () => {
     const email = buildSessionCancelledEmail({ ...base, kind: "leave" });
     expect(email.subject).toBe("Priya left your session");
     expect(email.html).toContain("Session left");
+    expect(email.html).toContain("and sent a note");
+  });
+
+  it("sends a leave email without a quoted note when none was written", () => {
+    const email = buildSessionCancelledEmail({
+      ...base,
+      kind: "leave",
+      message: "",
+    });
+    expect(email.subject).toBe("Priya left your session");
+    expect(email.text).toContain("Priya left the session you had together.");
+    expect(email.text).not.toContain("and sent a note");
+    expect(email.html).not.toContain("<blockquote");
+    expect(email.html).not.toContain("and sent a note");
   });
 
   it("escapes HTML in the note", () => {

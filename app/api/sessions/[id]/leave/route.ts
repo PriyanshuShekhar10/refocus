@@ -101,7 +101,7 @@ export async function POST(
     });
   }
 
-  if (message && s.start_time) {
+  if (s.start_time) {
     const snapshot = { ...s, start_time: s.start_time };
     after(() =>
       notifySessionCancelled(db, {

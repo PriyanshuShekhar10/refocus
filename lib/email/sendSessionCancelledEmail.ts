@@ -22,7 +22,7 @@ export async function sendSessionCancelledEmail(input: {
   firstName?: string | null;
   fromName: string;
   fromEmail?: string | null;
-  message: string;
+  message?: string | null;
   sessionTitle: string;
   startsAtLabel: string;
   calendarUrl: string;

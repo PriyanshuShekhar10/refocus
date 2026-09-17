@@ -123,4 +123,27 @@ describe("notifySessionCancelled", () => {
 
     expect(sendSessionCancelledEmail).not.toHaveBeenCalled();
   });
+
+  it("still emails the partner when someone leaves without a note", async () => {
+    mockUsers([
+      { _id: OWNER_ID, email: "host@example.com", firstname: "Priya" },
+      { _id: JOINER_ID, email: "joiner@example.com", firstname: "Alex" },
+    ]);
+
+    await notifySessionCancelled(db as never, {
+      session,
+      actorUserId: String(JOINER_ID),
+      message: null,
+      kind: "leave",
+    });
+
+    expect(sendSessionCancelledEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "host@example.com",
+        fromName: "Alex",
+        message: "",
+        kind: "leave",
+      }),
+    );
+  });
 });

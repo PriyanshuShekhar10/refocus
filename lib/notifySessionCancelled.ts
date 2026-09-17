@@ -44,15 +44,16 @@ function sessionTitleFor(session: SessionLike, userId: string): string {
 }
 
 /**
- * Email the remaining partner a personal note when someone deletes or leaves
- * a booked session. No-op without a partner, email, or message.
+ * Email the remaining partner when someone deletes or leaves a booked session.
+ * The personal note is optional — leave/cancel still notifies without one.
+ * No-op without a partner or email.
  */
 export async function notifySessionCancelled(
   db: Db,
   input: {
     session: SessionLike;
     actorUserId: string;
-    message: string;
+    message?: string | null;
     kind: "delete" | "leave";
   },
 ): Promise<void> {
@@ -87,7 +88,7 @@ export async function notifySessionCancelled(
       firstName: displayName(partner),
       fromName: displayName(actor) || "Your partner",
       fromEmail: actor?.email?.trim() || null,
-      message: input.message,
+      message: input.message ?? "",
       sessionTitle: sessionTitleFor(input.session, partnerId),
       startsAtLabel: formatSessionTimeIST(new Date(input.session.start_time), tz),
       calendarUrl: `${getAppUrl()}/sessions`,
