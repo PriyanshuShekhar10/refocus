@@ -38,9 +38,10 @@ const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
 const SITE = "https://refocus.co.in";
 const TOPIC_ATTEMPTS = 3;
 const DRAFT_ATTEMPTS = 3;
-const MIN_WORDS_EN = 1200;
+const MIN_WORDS_EN = 600;
 const MIN_WORDS_OTHER = 900;
-const TARGET_WORDS_EN = "1300–1700";
+const MIN_HEADINGS = 2;
+const TARGET_WORDS_EN = "800–1200";
 const STYLE_PREFIX =
   "Calm flat editorial illustration, soft neutral palette, no text, no logos, no watermarks, no photoreal close-up faces. ";
 
@@ -517,7 +518,7 @@ ${bank.map((l) => `   - ${l}`).join("\n")}
 ${commercialRule}
 6. Must include: ${category.mustInclude}
 7. Avoid: ${category.avoid}
-8. Structure: Markdown with 3–5 "##" headings, ${wordTarget} words. No emojis. No "In conclusion".
+8. Structure: Markdown with 2–4 "##" headings, ${wordTarget} words. No emojis. No "In conclusion".
 9. ${qualityBlock}
 ${repeatRule}`;
 }
@@ -625,7 +626,8 @@ function qualityIssues(title, body, config) {
   if (!title) issues.push("missing title");
   if (body.length < 200) issues.push("body too short");
   if (words < minWords) issues.push(`only ${words} words (need ≥${minWords})`);
-  if (headings < 3) issues.push(`only ${headings} ## headings (need ≥3)`);
+  if (headings < MIN_HEADINGS)
+    issues.push(`only ${headings} ## headings (need ≥${MIN_HEADINGS})`);
   if (outbound < 3) issues.push(`only ${outbound} outbound links (need ≥3)`);
   if (FILLER_RE.test(body) || FILLER_RE.test(title)) {
     issues.push("contains filler / listicle phrasing");
