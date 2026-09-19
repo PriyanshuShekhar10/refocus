@@ -127,6 +127,9 @@ const nextConfig: NextConfig = {
   // Keep firebase-admin outside the serverless bundle so its native deps load
   // from node_modules at runtime (avoids ESM/CJS packaging issues on Vercel).
   serverExternalPackages: ["firebase-admin", "disposable-email-domains"],
+  experimental: {
+    optimizePackageImports: ["lucide-react", "react-icons", "framer-motion"],
+  },
   images: {
     qualities: [75, 90],
     remotePatterns: [

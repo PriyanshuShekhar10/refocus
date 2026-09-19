@@ -22,6 +22,7 @@ import {
   SessionTaskRail,
   SessionTaskSheet,
 } from "./SessionTaskRail";
+import { PreparingSessionShell } from "./PreparingSessionShell";
 
 type Phase = "loading" | "in-call" | "ended" | "error";
 
@@ -516,17 +517,7 @@ export default function ClientCall({
   }, [phase, totalMs, remainingMs]);
 
   if (phase === "loading") {
-    return (
-      <CenteredCard>
-        <Spinner />
-        <h2 className="mt-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Preparing your session
-        </h2>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          Connecting you to the call…
-        </p>
-      </CenteredCard>
-    );
+    return <PreparingSessionShell />;
   }
 
   if (phase === "error") {
@@ -945,12 +936,6 @@ function CenteredCard({ children }: { children: React.ReactNode }) {
         {children}
       </div>
     </div>
-  );
-}
-
-function Spinner() {
-  return (
-    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-[#5D1C6A] dark:border-slate-700 dark:border-t-[#CA5995]" />
   );
 }
 

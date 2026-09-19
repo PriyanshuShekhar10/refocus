@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LocalDateTime } from "@/components/local-datetime";
-import ClientCall from "./ClientCall";
+import ClientCallGate from "./ClientCallGate";
 import SessionCountdown from "./SessionCountdown";
 import { CALL_JOIN_GRACE_MINUTES, isWithinCallWindow } from "@/lib/sessionAccess";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
@@ -85,7 +85,7 @@ export default async function SessionJoinPage({
 
   if (canJoinNow) {
     return (
-      <ClientCall
+      <ClientCallGate
         sessionId={id}
         currentUserId={currentUserId}
         prejoin={{

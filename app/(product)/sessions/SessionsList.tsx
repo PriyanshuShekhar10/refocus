@@ -2,9 +2,22 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import { mutate as globalMutate } from "swr";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatLocalDate, formatLocalTime } from "@/lib/localTime";
 import { isCallJoinable } from "@/lib/sessionWindow";
+import * as sessionsApi from "@/lib/api/sessionsApi";
+import { swrKeys } from "@/lib/swr/keys";
+
+const ConfirmModal = dynamic(
+  () =>
+    import("@/app/(product)/components/Calendar/Modals/ConfirmModal").then(
+      (m) => m.ConfirmModal,
+    ),
+  { ssr: false },
+);
 
 interface Participant {
   userId: string;
@@ -51,12 +64,12 @@ function getTimeUntil(startTime: string): string {
   const now = new Date();
   const start = new Date(startTime);
   const diff = start.getTime() - now.getTime();
-  
+
   if (diff <= 0) return "Now";
-  
+
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  
+
   if (hours > 24) {
     const days = Math.floor(hours / 24);
     return `in ${days} day${days > 1 ? "s" : ""}`;
@@ -101,7 +114,14 @@ function getInitials(name: string): string {
 }
 
 export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
+  const router = useRouter();
   const [, setTick] = useState(0);
+  const [leaveTarget, setLeaveTarget] = useState<Session | null>(null);
+  const [visibleSessions, setVisibleSessions] = useState(sessions);
+
+  useEffect(() => {
+    setVisibleSessions(sessions);
+  }, [sessions]);
 
   // Update every minute to refresh "time until" and joinability
   useEffect(() => {
@@ -109,7 +129,26 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
     return () => clearInterval(interval);
   }, []);
 
-  if (sessions.length === 0) {
+  const partnerForLeave = leaveTarget
+    ? leaveTarget.participants.find((p) => p.userId !== currentUserId)
+    : null;
+  const partnerNameForLeave = partnerForLeave
+    ? getParticipantName(partnerForLeave)
+    : null;
+
+  const handleLeave = async (message?: string) => {
+    if (!leaveTarget) return;
+    const result = await sessionsApi.leave(leaveTarget.id, message);
+    if (!result.ok) {
+      throw new Error(result.error);
+    }
+    setVisibleSessions((prev) => prev.filter((s) => s.id !== leaveTarget.id));
+    setLeaveTarget(null);
+    void globalMutate(swrKeys.sessionsMineUpcoming);
+    router.refresh();
+  };
+
+  if (visibleSessions.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -133,7 +172,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
 
   // Group sessions by date
   const groupedSessions: { [key: string]: Session[] } = {};
-  sessions.forEach((s) => {
+  visibleSessions.forEach((s) => {
     const dateKey = formatLocalDate(s.start, {
       weekday: "long",
       month: "long",
@@ -159,7 +198,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
               const joinable = isJoinable(session.start, session.end);
               const timeUntil = getTimeUntil(session.start);
               const isBooked = session.participants.length >= 2;
-              
+
               // Find partner (the other participant)
               const partner = session.participants.find(
                 (p) => p.userId !== currentUserId
@@ -171,7 +210,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                   key={session.id}
                   className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex items-start gap-4">
                       {/* Time */}
                       <div className="text-center min-w-[60px]">
@@ -185,7 +224,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
 
                       {/* Details */}
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <h3 className="font-medium text-gray-900 dark:text-white">
                             {session.name || `${session.sessionType} session`}
                           </h3>
@@ -225,17 +264,17 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                       {!joinable && (
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           {timeUntil}
                         </span>
                       )}
-                      
+
                       {joinable && isBooked ? (
                         <Link
                           href={`/sessions/${session.id}`}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-[#5D1C6A] hover:bg-[#CA5995] rounded-lg transition-colors"
+                          className="inline-flex min-h-10 items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-[#5D1C6A] hover:bg-[#CA5995] rounded-lg transition-colors"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
@@ -245,11 +284,21 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                       ) : (
                         <Link
                           href={`/sessions/${session.id}`}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                          className="inline-flex min-h-10 items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                         >
                           View Details
                         </Link>
                       )}
+
+                      {!session.isOwner ? (
+                        <button
+                          type="button"
+                          onClick={() => setLeaveTarget(session)}
+                          className="inline-flex min-h-10 items-center gap-1.5 px-4 py-2 text-sm font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/60 dark:border-amber-500/50 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                        >
+                          Leave session
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -258,6 +307,26 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
           </div>
         </div>
       ))}
+
+      {leaveTarget ? (
+        <ConfirmModal
+          title="Leave session"
+          description="Leave this session? The slot will be available for someone else."
+          confirmText="Leave session"
+          cancelText="Cancel"
+          confirmVariant="danger"
+          messageField={
+            partnerNameForLeave
+              ? {
+                  label: `Leave a note for ${partnerNameForLeave} (optional, emailed)`,
+                  placeholder: "Something came up — sorry!",
+                }
+              : false
+          }
+          onCancel={() => setLeaveTarget(null)}
+          onConfirm={handleLeave}
+        />
+      ) : null}
     </div>
   );
 }
