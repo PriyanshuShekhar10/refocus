@@ -9,6 +9,7 @@ import { VerifiedName } from "@/components/verified-tag";
 import DeviceTestModal from "../DeviceTestModal";
 import SidebarUpdatesBox from "../Updates/SidebarUpdatesBox";
 import { releaseAllLocalMediaStreams } from "@/lib/localMedia";
+import { AttendanceHighlight } from "@/components/attendance-highlight";
 
 function JoinCountdown({ startTime }: { startTime: string | Date }) {
   const [timeLeft, setTimeLeft] = useState<{ minutes: number; seconds: number } | null>(null);
@@ -85,6 +86,7 @@ type DetailedProfile = {
   website: string | null;
   createdAt: string | null;
   emailVerified?: boolean;
+  attendance?: { percent: number; booked: number; attended: number } | null;
 };
 
 function getGreeting(): string {
@@ -424,6 +426,15 @@ export function CalendarRightSidebar({
               <p className="mt-3 text-xs leading-relaxed whitespace-pre-wrap text-gray-700 dark:text-gray-300">
                 {previewAbout}
               </p>
+
+              {detailedProfile?.attendance ? (
+                <div className="mt-3">
+                  <AttendanceHighlight
+                    attendance={detailedProfile.attendance}
+                    variant="app"
+                  />
+                </div>
+              ) : null}
 
               {(detailedProfile?.location || joinedDate || websiteHref) && (
                 <div className="mt-3 space-y-1.5 text-[11px] text-gray-600 dark:text-gray-300">

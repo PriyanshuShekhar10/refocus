@@ -9,6 +9,8 @@ import { getLocalSessionColor } from "@/lib/sessionColors";
 import { isCallJoinable, hasSessionStarted } from "@/lib/sessionWindow";
 import { formatLocalTime } from "@/lib/localTime";
 import { VerifiedName } from "@/components/verified-tag";
+import { AttendanceHighlight } from "@/components/attendance-highlight";
+import type { PublicAttendance } from "@/lib/sessionAttendanceStats";
 
 function hasSessionEnded(endTime: Date | string, now = new Date()): boolean {
   return new Date(endTime).getTime() < now.getTime();
@@ -98,6 +100,9 @@ export function CalendarEventCard({
   const [canJoin, setCanJoin] = useState(() => isJoinable(event.start, event.end));
   const [isPast, setIsPast] = useState(() => hasSessionEnded(event.end));
   const [showCompactPartnerCard, setShowCompactPartnerCard] = useState(false);
+  const [hoverAttendance, setHoverAttendance] = useState<PublicAttendance | null>(
+    null,
+  );
   const hidePartnerCardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
@@ -165,6 +170,31 @@ export function CalendarEventCard({
         .substring(0, 2)
         .toUpperCase()
     : "P";
+
+  useEffect(() => {
+    if (!showCompactPartnerCard) return;
+    const username = compactPartner?.username;
+    if (!username) {
+      setHoverAttendance(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/profile/${encodeURIComponent(username)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        const next = data?.user?.attendance ?? null;
+        setHoverAttendance(
+          next && typeof next.percent === "number" ? next : null,
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setHoverAttendance(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showCompactPartnerCard, compactPartner?.username]);
 
   const compactPalette = isDark
     ? COMPACT_PASTEL_COLORS_DARK
@@ -241,7 +271,7 @@ export function CalendarEventCard({
 
         {compactPartner && (
           <div
-            className={`pointer-events-auto absolute left-[calc(100%+10px)] top-1/2 z-[130] w-60 -translate-y-1/2 rounded-xl border border-[#FFB090]/80 dark:border-[#CA5995]/60 bg-white/95 dark:bg-gray-900/95 p-3 shadow-2xl backdrop-blur-sm transition-all duration-150 ${
+            className={`pointer-events-auto absolute left-[calc(100%+10px)] top-1/2 z-[130] w-64 -translate-y-1/2 rounded-xl border border-[#FFB090]/80 dark:border-[#CA5995]/60 bg-white/95 dark:bg-gray-900/95 p-3 shadow-2xl backdrop-blur-sm transition-all duration-150 ${
               showCompactPartnerCard
                 ? "opacity-100 translate-x-0 visible"
                 : "opacity-0 -translate-x-1 invisible"
@@ -275,6 +305,11 @@ export function CalendarEventCard({
                 </p>
               </div>
             </div>
+            {hoverAttendance ? (
+              <div className="mt-2">
+                <AttendanceHighlight attendance={hoverAttendance} variant="app" />
+              </div>
+            ) : null}
             <p className="mt-2 line-clamp-3 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">
               {compactPartner.about?.trim() ||
                 "Focused member. Open profile to learn more."}

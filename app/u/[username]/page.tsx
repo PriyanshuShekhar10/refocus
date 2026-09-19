@@ -11,6 +11,11 @@ import { authOptions } from "@/lib/auth";
 import { isUserAdmin } from "@/lib/admin";
 import { getSiteUrl } from "@/lib/site";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { AttendanceHighlight } from "@/components/attendance-highlight";
+import {
+  getAttendanceTotalsForUser,
+  toPublicAttendance,
+} from "@/lib/sessionAttendanceStats";
 
 type Props = { params: Promise<{ username: string }> };
 const siteUrl = getSiteUrl();
@@ -171,6 +176,9 @@ export default async function PublicProfilePage({ params }: Props) {
         : "";
     return { prompt, value };
   }).filter((entry) => entry.value.length > 0);
+  const attendance = toPublicAttendance(
+    await getAttendanceTotalsForUser(await getDb(), String(user._id)),
+  );
   const profilePath = `/u/${user.username}`;
   const profileUrl = `${siteUrl}${profilePath}`;
   const profileDescription = user.about || `${displayName}'s profile on Refocus`;
@@ -284,11 +292,13 @@ export default async function PublicProfilePage({ params }: Props) {
               marginTop: 18,
               display: "flex",
               flexWrap: "wrap",
+              alignItems: "center",
               gap: "8px 18px",
               fontSize: 13,
               color: "var(--ink-soft)",
             }}
           >
+            {attendance ? <AttendanceHighlight attendance={attendance} /> : null}
             {user.location && (
               <span
                 style={{ display: "inline-flex", alignItems: "center", gap: 6 }}

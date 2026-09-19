@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accumulateAttendanceStats } from "@/lib/sessionAttendanceStats";
+import { accumulateAttendanceStats, toPublicAttendance, formatPublicAttendance } from "@/lib/sessionAttendanceStats";
 import { attendanceOf } from "@/app/(product)/sessions/PastSessionsList";
 
 const USER = "user-a";
@@ -71,6 +71,62 @@ describe("accumulateAttendanceStats", () => {
     expect(stats.attended).toBe(0);
     expect(stats.missed).toBe(0);
     expect(stats.attendanceRate).toBe(0);
+  });
+});
+
+describe("toPublicAttendance", () => {
+  it("hides percent when there are no partner sessions", () => {
+    expect(
+      toPublicAttendance(
+        accumulateAttendanceStats(
+          [
+            {
+              participantCount: 1,
+              ownerId: USER,
+              didAttend: false,
+              didComplete: false,
+            },
+          ],
+          USER,
+        ),
+      ),
+    ).toBeNull();
+  });
+
+  it("rounds partner attendance to a percent", () => {
+    expect(
+      toPublicAttendance(
+        accumulateAttendanceStats(
+          [
+            {
+              participantCount: 2,
+              ownerId: USER,
+              didAttend: true,
+              didComplete: true,
+            },
+            {
+              participantCount: 2,
+              ownerId: USER,
+              didAttend: true,
+              didComplete: true,
+            },
+            {
+              participantCount: 2,
+              ownerId: USER,
+              didAttend: false,
+              didComplete: false,
+            },
+          ],
+          USER,
+        ),
+      ),
+    ).toEqual({ percent: 67, booked: 3, attended: 2 });
+    expect(
+      formatPublicAttendance({ percent: 80, booked: 25, attended: 20 }),
+    ).toBe("80% attendance, 20 sessions attended");
+    expect(
+      formatPublicAttendance({ percent: 100, booked: 1, attended: 1 }),
+    ).toBe("100% attendance, 1 session attended");
   });
 });
 

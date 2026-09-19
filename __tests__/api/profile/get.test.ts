@@ -3,7 +3,8 @@ import { NextRequest } from "next/server";
 import { mockCollection, mockDb, parseResponse } from "../../helpers";
 
 const usersCol = mockCollection();
-const db = mockDb({ users: usersCol });
+const sessionsCol = mockCollection();
+const db = mockDb({ users: usersCol, sessions: sessionsCol });
 
 vi.mock("@/lib/mongodb", () => ({
   getDb: vi.fn().mockImplementation(() => Promise.resolve(db)),
@@ -43,6 +44,17 @@ describe("GET /api/profile/[username]", () => {
     vi.clearAllMocks();
     vi.mocked(getServerSession).mockResolvedValue(null);
     vi.mocked(isUserAdmin).mockResolvedValue(false);
+    sessionsCol.find.mockReturnValue({
+      project: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([]),
+      }),
+      sort: vi.fn().mockReturnValue({
+        limit: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+      toArray: vi.fn().mockResolvedValue([]),
+    });
   });
 
   it("returns public profile", async () => {
@@ -58,7 +70,48 @@ describe("GET /api/profile/[username]", () => {
     );
     expect(status).toBe(200);
     expect(json.user.username).toBe("alice");
+    expect(json.user.attendance).toBeNull();
     expect(json.adminView).toBeUndefined();
+  });
+
+  it("includes partner-session attendance percent", async () => {
+    usersCol.findOne.mockResolvedValue({
+      _id: "user-a",
+      username: "alice",
+      name: "Alice",
+      preferences: { publicProfile: true },
+      interests: [],
+    });
+    sessionsCol.find.mockReturnValue({
+      project: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([
+          {
+            owner_id: "user-a",
+            session_participants: [
+              { user_id: "user-a", call_joined_at: new Date() },
+              { user_id: "user-b", call_joined_at: new Date() },
+            ],
+          },
+          {
+            owner_id: "user-a",
+            session_participants: [
+              { user_id: "user-a" },
+              { user_id: "user-c" },
+            ],
+          },
+        ]),
+      }),
+    });
+
+    const { status, json } = await parseResponse(
+      await GET(makeReq(), { params: Promise.resolve({ username: "alice" }) }),
+    );
+    expect(status).toBe(200);
+    expect(json.user.attendance).toEqual({
+      percent: 50,
+      booked: 2,
+      attended: 1,
+    });
   });
 
   it("hides private profile from non-admins", async () => {

@@ -3,6 +3,8 @@
  * Solo (unmatched) sessions cannot be joined and must not inflate missed.
  */
 
+import type { Db } from "mongodb";
+
 export type AttendanceSessionInput = {
   participantCount: number;
   ownerId: string;
@@ -56,4 +58,64 @@ export function accumulateAttendanceStats(
     asOwner,
     attendanceRate,
   };
+}
+
+export type PublicAttendance = {
+  percent: number;
+  booked: number;
+  attended: number;
+};
+
+/** Rounded percent for display, or null when there are no partner sessions. */
+export function toPublicAttendance(
+  totals: AttendanceTotals,
+): PublicAttendance | null {
+  if (totals.booked <= 0) return null;
+  return {
+    percent: Math.round(totals.attendanceRate * 100),
+    booked: totals.booked,
+    attended: totals.attended,
+  };
+}
+
+export function formatPublicAttendance(attendance: PublicAttendance): string {
+  const noun = attendance.attended === 1 ? "session" : "sessions";
+  return `${attendance.percent}% attendance, ${attendance.attended} ${noun} attended`;
+}
+
+type SessionAttendanceDoc = {
+  owner_id?: unknown;
+  session_participants?: Array<{
+    user_id?: unknown;
+    call_joined_at?: Date | string | null;
+    call_completed?: boolean | null;
+  }>;
+};
+
+export async function getAttendanceTotalsForUser(
+  db: Db,
+  userId: string,
+  now = new Date(),
+): Promise<AttendanceTotals> {
+  const docs = (await db
+    .collection("sessions")
+    .find({
+      end_time: { $lt: now },
+      "session_participants.user_id": userId,
+    })
+    .project({ owner_id: 1, session_participants: 1 })
+    .toArray()) as SessionAttendanceDoc[];
+
+  const inputs: AttendanceSessionInput[] = docs.map((doc) => {
+    const participants = doc.session_participants ?? [];
+    const me = participants.find((p) => String(p.user_id) === String(userId));
+    return {
+      participantCount: participants.length,
+      ownerId: String(doc.owner_id ?? ""),
+      didAttend: Boolean(me?.call_joined_at),
+      didComplete: Boolean(me?.call_completed),
+    };
+  });
+
+  return accumulateAttendanceStats(inputs, String(userId));
 }
