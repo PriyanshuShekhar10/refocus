@@ -86,12 +86,16 @@ function normalizePublicAttendance(value: unknown): PublicAttendance | null {
 }
 
 export function readStoredPublicAttendance(
-  user: StoredPublicAttendanceFields | null | undefined,
+  user: unknown,
   now = new Date(),
 ): StoredAttendanceRead {
-  const computedAt = toDate(user?.publicAttendanceAt);
+  const rec =
+    user && typeof user === "object"
+      ? (user as StoredPublicAttendanceFields)
+      : null;
+  const computedAt = toDate(rec?.publicAttendanceAt);
   return {
-    attendance: normalizePublicAttendance(user?.publicAttendance),
+    attendance: normalizePublicAttendance(rec?.publicAttendance),
     computedAt,
     fresh: Boolean(
       computedAt && now.getTime() - computedAt.getTime() < PUBLIC_ATTENDANCE_TTL_MS,
@@ -230,7 +234,7 @@ export function schedulePublicAttendanceRefresh(userIds: string[]): void {
 export async function resolvePublicAttendanceForUser(
   db: Db,
   userId: string,
-  stored?: StoredPublicAttendanceFields | null,
+  stored?: unknown,
 ): Promise<PublicAttendance | null> {
   const cached = readStoredPublicAttendance(stored);
   if (cached.computedAt) {
