@@ -181,3 +181,70 @@ export function decodeCrewMemberParam(param: string): string {
     return param;
   }
 }
+
+export type CrewListRow = {
+  member: CrewMemberStats;
+  totals: Omit<DayCounts, "date">;
+  compliantDays: number;
+};
+
+export type CrewSortKey =
+  | "person"
+  | MetricKey
+  | "compliantDays"
+  | "inactiveDays";
+
+export type CrewSortDir = "asc" | "desc";
+
+export const CREW_SORT_LABELS: Record<CrewSortKey, string> = {
+  person: "Person",
+  created: "Created",
+  deleted: "Deleted",
+  joined: "Joined",
+  attended: "Attended",
+  finished: "Finished",
+  compliantDays: "Compliant days",
+  inactiveDays: "Inactive days",
+};
+
+export function defaultCrewSortDir(key: CrewSortKey): CrewSortDir {
+  return key === "person" ? "asc" : "desc";
+}
+
+export function nextCrewSort(
+  currentKey: CrewSortKey,
+  currentDir: CrewSortDir,
+  nextKey: CrewSortKey,
+): { key: CrewSortKey; dir: CrewSortDir } {
+  if (currentKey === nextKey) {
+    return { key: nextKey, dir: currentDir === "asc" ? "desc" : "asc" };
+  }
+  return { key: nextKey, dir: defaultCrewSortDir(nextKey) };
+}
+
+function crewSortValue(row: CrewListRow, key: CrewSortKey): string | number {
+  if (key === "person") {
+    return (row.member.name || "Unnamed").toLocaleLowerCase("en");
+  }
+  if (key === "compliantDays") return row.compliantDays;
+  if (key === "inactiveDays") return row.member.inactiveDays;
+  return row.totals[key];
+}
+
+export function sortCrewMemberRows(
+  rows: CrewListRow[],
+  key: CrewSortKey,
+  dir: CrewSortDir,
+): CrewListRow[] {
+  const mul = dir === "asc" ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    const av = crewSortValue(a, key);
+    const bv = crewSortValue(b, key);
+    const cmp =
+      typeof av === "string" && typeof bv === "string"
+        ? av.localeCompare(bv)
+        : Number(av) - Number(bv);
+    if (cmp !== 0) return cmp * mul;
+    return a.member.email.localeCompare(b.member.email);
+  });
+}

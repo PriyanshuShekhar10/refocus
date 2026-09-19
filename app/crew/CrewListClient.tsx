@@ -6,12 +6,60 @@ import {
   countCompliantDays,
   CREW_ACTIVITY_FORMULA,
   CREW_METRICS,
+  CREW_SORT_LABELS,
   crewMemberPath,
   crewRangeQuery,
+  nextCrewSort,
+  sortCrewMemberRows,
   sumCrewDays,
+  defaultCrewSortDir,
   type CrewRangeMode,
+  type CrewSortDir,
+  type CrewSortKey,
   type CrewStatsPayload,
 } from "./crewShared";
+
+function SortHeader({
+  column,
+  align = "right",
+  sortKey,
+  sortDir,
+  onSort,
+}: {
+  column: CrewSortKey;
+  align?: "left" | "right";
+  sortKey: CrewSortKey;
+  sortDir: CrewSortDir;
+  onSort: (key: CrewSortKey) => void;
+}) {
+  const active = sortKey === column;
+  const ariaSort = active
+    ? sortDir === "asc"
+      ? "ascending"
+      : "descending"
+    : "none";
+  return (
+    <th
+      className={`py-3 font-medium ${
+        align === "left" ? "px-4 text-left" : "px-3 text-right"
+      }`}
+      aria-sort={ariaSort}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(column)}
+        className={`inline-flex items-center gap-1 rounded-md py-0.5 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 ${
+          align === "right" ? "w-full justify-end" : ""
+        } ${active ? "text-neutral-900" : "text-neutral-500"}`}
+      >
+        {CREW_SORT_LABELS[column]}
+        <span className="inline-block w-3 text-[10px] tabular-nums" aria-hidden>
+          {active ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
+        </span>
+      </button>
+    </th>
+  );
+}
 
 export default function CrewListClient() {
   const [rangeMode, setRangeMode] = useState<CrewRangeMode>(30);
@@ -19,6 +67,8 @@ export default function CrewListClient() {
   const [error, setError] = useState<string | null>(null);
   const [initialLoad, setInitialLoad] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [sortKey, setSortKey] = useState<CrewSortKey>("person");
+  const [sortDir, setSortDir] = useState<CrewSortDir>("asc");
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -52,11 +102,20 @@ export default function CrewListClient() {
     return "Last 30 days";
   }, [rangeMode]);
 
-  const memberRows = members.map((m) => ({
-    member: m,
-    totals: sumCrewDays(m.days),
-    compliantDays: countCompliantDays(m.days),
-  }));
+  const memberRows = useMemo(() => {
+    const rows = members.map((m) => ({
+      member: m,
+      totals: sumCrewDays(m.days),
+      compliantDays: countCompliantDays(m.days),
+    }));
+    return sortCrewMemberRows(rows, sortKey, sortDir);
+  }, [members, sortDir, sortKey]);
+
+  const onSort = (key: CrewSortKey) => {
+    const next = nextCrewSort(sortKey, sortDir, key);
+    setSortKey(next.key);
+    setSortDir(next.dir);
+  };
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
@@ -68,7 +127,8 @@ export default function CrewListClient() {
               {dateRangeLabel} · {data?.timezone ?? "Asia/Kolkata"}
             </p>
             <p className="mt-0.5 text-xs text-neutral-400">
-              Totals for the selected window · tap a person for details
+              Totals for the selected window · tap a column to sort · tap a
+              person for details
               {refreshing ? " · Updating…" : ""}
             </p>
           </div>
@@ -115,6 +175,39 @@ export default function CrewListClient() {
 
         {/* Mobile: stacked cards */}
         <div className={`space-y-3 md:hidden ${refreshing ? "opacity-70" : ""}`}>
+          <div className="flex items-center gap-2">
+            <label className="sr-only" htmlFor="crew-sort">
+              Sort by
+            </label>
+            <select
+              id="crew-sort"
+              value={sortKey}
+              onChange={(e) => {
+                const key = e.target.value as CrewSortKey;
+                setSortKey(key);
+                setSortDir(defaultCrewSortDir(key));
+              }}
+              className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700"
+            >
+              {(Object.keys(CREW_SORT_LABELS) as CrewSortKey[]).map((key) => (
+                <option key={key} value={key}>
+                  Sort by {CREW_SORT_LABELS[key]}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() =>
+                setSortDir((dir) => (dir === "asc" ? "desc" : "asc"))
+              }
+              className="shrink-0 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700"
+              aria-label={
+                sortDir === "asc" ? "Sort descending" : "Sort ascending"
+              }
+            >
+              {sortDir === "asc" ? "↑" : "↓"}
+            </button>
+          </div>
           {memberRows.length === 0 && !initialLoad ? (
             <div className="rounded-xl border border-neutral-200 bg-white px-4 py-10 text-center text-sm text-neutral-500">
               No crew members yet
@@ -177,21 +270,34 @@ export default function CrewListClient() {
             <table className="w-full min-w-[36rem] text-sm">
               <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Person</th>
+                  <SortHeader
+                    column="person"
+                    align="left"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                  />
                   {CREW_METRICS.map((m) => (
-                    <th
+                    <SortHeader
                       key={m.key}
-                      className="px-3 py-3 text-right font-medium"
-                    >
-                      {m.label}
-                    </th>
+                      column={m.key}
+                      sortKey={sortKey}
+                      sortDir={sortDir}
+                      onSort={onSort}
+                    />
                   ))}
-                  <th className="px-3 py-3 text-right font-medium">
-                    Compliant days
-                  </th>
-                  <th className="px-3 py-3 text-right font-medium">
-                    Inactive days
-                  </th>
+                  <SortHeader
+                    column="compliantDays"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                  />
+                  <SortHeader
+                    column="inactiveDays"
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                  />
                 </tr>
               </thead>
               <tbody>
