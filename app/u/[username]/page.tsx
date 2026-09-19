@@ -12,10 +12,7 @@ import { isUserAdmin } from "@/lib/admin";
 import { getSiteUrl } from "@/lib/site";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 import { AttendanceHighlight } from "@/components/attendance-highlight";
-import {
-  getAttendanceTotalsForUser,
-  toPublicAttendance,
-} from "@/lib/sessionAttendanceStats";
+import { resolvePublicAttendanceForUser } from "@/lib/sessionAttendanceQuery";
 
 type Props = { params: Promise<{ username: string }> };
 const siteUrl = getSiteUrl();
@@ -66,6 +63,8 @@ async function getUser(username: string) {
         createdAt: 1,
         avatar_url: 1,
         image: 1,
+        publicAttendance: 1,
+        publicAttendanceAt: 1,
         "preferences.publicProfile": 1,
       },
     }
@@ -176,8 +175,10 @@ export default async function PublicProfilePage({ params }: Props) {
         : "";
     return { prompt, value };
   }).filter((entry) => entry.value.length > 0);
-  const attendance = toPublicAttendance(
-    await getAttendanceTotalsForUser(await getDb(), String(user._id)),
+  const attendance = await resolvePublicAttendanceForUser(
+    await getDb(),
+    String(user._id),
+    user,
   );
   const profilePath = `/u/${user.username}`;
   const profileUrl = `${siteUrl}${profilePath}`;
@@ -291,14 +292,26 @@ export default async function PublicProfilePage({ params }: Props) {
             style={{
               marginTop: 18,
               display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: "8px 18px",
-              fontSize: 13,
-              color: "var(--ink-soft)",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: 14,
             }}
           >
-            {attendance ? <AttendanceHighlight attendance={attendance} /> : null}
+            {attendance ? (
+              <div style={{ width: "100%", maxWidth: 280 }}>
+                <AttendanceHighlight attendance={attendance} />
+              </div>
+            ) : null}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: "8px 18px",
+                fontSize: 13,
+                color: "var(--ink-soft)",
+              }}
+            >
             {user.location && (
               <span
                 style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
@@ -331,6 +344,7 @@ export default async function PublicProfilePage({ params }: Props) {
                 Joined {joinedDate}
               </span>
             )}
+            </div>
           </div>
 
           {/* About */}

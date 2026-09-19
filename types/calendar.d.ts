@@ -27,6 +27,11 @@ export type CalendarEvent = {
     about?: string;
     avatar_url?: string;
     emailVerified?: boolean;
+    attendance?: {
+      percent: number;
+      booked: number;
+      attended: number;
+    } | null;
   } | null;
   participants?: {
     user_id: string;
@@ -40,6 +45,11 @@ export type CalendarEvent = {
     quiet?: boolean;
     avatar_url?: string;
     emailVerified?: boolean;
+    attendance?: {
+      percent: number;
+      booked: number;
+      attended: number;
+    } | null;
   }[];
 };
 
@@ -63,6 +73,11 @@ export type FetchedSession = {
     about?: string;
     avatar_url?: string;
     emailVerified?: boolean;
+    attendance?: {
+      percent: number;
+      booked: number;
+      attended: number;
+    } | null;
   } | null;
   participants?: Array<{
     user_id: string;
@@ -75,6 +90,11 @@ export type FetchedSession = {
     avatar_url?: string;
     emailVerified?: boolean;
     quiet?: boolean;
+    attendance?: {
+      percent: number;
+      booked: number;
+      attended: number;
+    } | null;
   }>;
 };
 

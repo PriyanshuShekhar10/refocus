@@ -5,10 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { isUserAdmin } from "@/lib/admin";
 import { isEmailVerified } from "@/lib/emailVerification";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
-import {
-  getAttendanceTotalsForUser,
-  toPublicAttendance,
-} from "@/lib/sessionAttendanceStats";
+import { resolvePublicAttendanceForUser } from "@/lib/sessionAttendanceQuery";
 
 /** GET /api/profile/:username — public profile data (admins can view private profiles) */
 export async function GET(
@@ -40,6 +37,8 @@ export async function GET(
         website: 1,
         createdAt: 1,
         emailVerified: 1,
+        publicAttendance: 1,
+        publicAttendanceAt: 1,
         "preferences.publicProfile": 1,
       },
     }
@@ -60,8 +59,10 @@ export async function GET(
     adminView = true;
   }
 
-  const attendance = toPublicAttendance(
-    await getAttendanceTotalsForUser(db, String(user._id)),
+  const attendance = await resolvePublicAttendanceForUser(
+    db,
+    String(user._id),
+    user,
   );
 
   return NextResponse.json({

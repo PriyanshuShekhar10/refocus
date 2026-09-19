@@ -16,6 +16,7 @@ import {
   isCommunityMuted,
 } from "@/lib/communityModeration";
 import { scheduleRecordAccessIp } from "@/lib/userIps";
+import { resolvePublicAttendanceForUser } from "@/lib/sessionAttendanceQuery";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -44,9 +45,12 @@ export async function GET(req: NextRequest) {
         emailVerified: 1,
         communityBannedAt: 1,
         communityMutedUntil: 1,
+        publicAttendance: 1,
+        publicAttendanceAt: 1,
       },
     }
   )) as null | {
+    _id?: unknown;
     email?: string;
     username?: string | null;
     name?: string | null;
@@ -62,11 +66,16 @@ export async function GET(req: NextRequest) {
     emailVerified?: Date | string | null;
     communityBannedAt?: Date | null;
     communityMutedUntil?: Date | null;
+    publicAttendance?: { percent: number; booked: number; attended: number } | null;
+    publicAttendanceAt?: Date | string | null;
   };
 
   const verified = user ? isEmailVerified(user.emailVerified) : false;
   const communityBanned = user ? isCommunityBanned(user) : false;
   const communityMuted = user ? isCommunityMuted(user) : false;
+  const attendance = user
+    ? await resolvePublicAttendanceForUser(db, userId, user)
+    : null;
 
   return NextResponse.json({
     user: user
@@ -86,6 +95,7 @@ export async function GET(req: NextRequest) {
           communityBanned,
           communityMuted,
           communityMutedUntil: user.communityMutedUntil ?? null,
+          attendance,
         }
       : null,
   });

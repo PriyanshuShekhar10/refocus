@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { accumulateAttendanceStats, toPublicAttendance, formatPublicAttendance } from "@/lib/sessionAttendanceStats";
+import { accumulateAttendanceStats, toPublicAttendance, formatPublicAttendance, toPublicAttendanceFromRates } from "@/lib/sessionAttendanceStats";
+import { sessionParticipantIdValues, readStoredPublicAttendance, PUBLIC_ATTENDANCE_TTL_MS } from "@/lib/sessionAttendanceQuery";
 import { attendanceOf } from "@/app/(product)/sessions/PastSessionsList";
 
 const USER = "user-a";
@@ -127,6 +128,58 @@ describe("toPublicAttendance", () => {
     expect(
       formatPublicAttendance({ percent: 100, booked: 1, attended: 1 }),
     ).toBe("100% attendance, 1 session attended");
+  });
+
+  it("builds public attendance from booked/attended rates", () => {
+    expect(
+      toPublicAttendanceFromRates({
+        booked: 10,
+        attended: 8,
+        attendanceRate: 0.8,
+      }),
+    ).toEqual({ percent: 80, booked: 10, attended: 8 });
+    expect(
+      toPublicAttendanceFromRates({
+        booked: 0,
+        attended: 0,
+        attendanceRate: 0,
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("sessionParticipantIdValues", () => {
+  it("adds an ObjectId twin for canonical hex ids", () => {
+    const hex = "64b0a1c2d3e4f56789abcdef";
+    const values = sessionParticipantIdValues(hex);
+    expect(values[0]).toBe(hex);
+    expect(values).toHaveLength(2);
+    expect(String(values[1])).toBe(hex);
+  });
+
+  it("keeps non-hex ids as strings only", () => {
+    expect(sessionParticipantIdValues("user-a")).toEqual(["user-a"]);
+  });
+});
+
+describe("readStoredPublicAttendance", () => {
+  it("treats a recent stored snapshot as fresh", () => {
+    const stored = readStoredPublicAttendance({
+      publicAttendance: { percent: 90, booked: 10, attended: 9 },
+      publicAttendanceAt: new Date(),
+    });
+    expect(stored.fresh).toBe(true);
+    expect(stored.attendance).toEqual({ percent: 90, booked: 10, attended: 9 });
+  });
+
+  it("treats an old snapshot as stale but still readable", () => {
+    const stored = readStoredPublicAttendance({
+      publicAttendance: { percent: 40, booked: 5, attended: 2 },
+      publicAttendanceAt: new Date(Date.now() - PUBLIC_ATTENDANCE_TTL_MS - 1000),
+    });
+    expect(stored.fresh).toBe(false);
+    expect(stored.computedAt).not.toBeNull();
+    expect(stored.attendance).toEqual({ percent: 40, booked: 5, attended: 2 });
   });
 });
 

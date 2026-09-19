@@ -114,6 +114,65 @@ describe("GET /api/profile/[username]", () => {
     });
   });
 
+  it("returns cached attendance without scanning sessions", async () => {
+    const { ObjectId } = await import("mongodb");
+    usersCol.findOne.mockResolvedValue({
+      _id: new ObjectId(),
+      username: "alice",
+      name: "Alice",
+      preferences: { publicProfile: true },
+      interests: [],
+      publicAttendance: { percent: 80, booked: 10, attended: 8 },
+      publicAttendanceAt: new Date(),
+    });
+
+    const { status, json } = await parseResponse(
+      await GET(makeReq(), { params: Promise.resolve({ username: "alice" }) }),
+    );
+    expect(status).toBe(200);
+    expect(json.user.attendance).toEqual({
+      percent: 80,
+      booked: 10,
+      attended: 8,
+    });
+    expect(sessionsCol.find).not.toHaveBeenCalled();
+  });
+
+  it("counts attendance when participant user_id is an ObjectId", async () => {
+    const { ObjectId } = await import("mongodb");
+    const id = new ObjectId();
+    usersCol.findOne.mockResolvedValue({
+      _id: id,
+      username: "alice",
+      name: "Alice",
+      preferences: { publicProfile: true },
+      interests: [],
+    });
+    sessionsCol.find.mockReturnValue({
+      project: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([
+          {
+            owner_id: id,
+            session_participants: [
+              { user_id: id, call_joined_at: new Date() },
+              { user_id: "user-b", call_joined_at: new Date() },
+            ],
+          },
+        ]),
+      }),
+    });
+
+    const { status, json } = await parseResponse(
+      await GET(makeReq(), { params: Promise.resolve({ username: "alice" }) }),
+    );
+    expect(status).toBe(200);
+    expect(json.user.attendance).toEqual({
+      percent: 100,
+      booked: 1,
+      attended: 1,
+    });
+  });
+
   it("hides private profile from non-admins", async () => {
     usersCol.findOne.mockResolvedValue({
       username: "alice",

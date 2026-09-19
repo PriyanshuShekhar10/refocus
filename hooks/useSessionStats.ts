@@ -41,7 +41,10 @@ type StatsResponse = { stats?: SessionStats };
 
 export function useSessionStats() {
   const { data, error, isLoading, isValidating, mutate } =
-    useSWR<StatsResponse>(swrKeys.userStats);
+    useSWR<StatsResponse>(swrKeys.userStats, {
+      dedupingInterval: 60_000,
+      revalidateOnFocus: false,
+    });
 
   return {
     stats: data?.stats ?? null,

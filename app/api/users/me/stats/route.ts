@@ -6,6 +6,7 @@ import { ObjectId } from "mongodb";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 import { accumulateAttendanceStats } from "@/lib/sessionAttendanceStats";
+import { sessionParticipantIdValues } from "@/lib/sessionAttendanceQuery";
 
 
 type SessionTypeBreakdown = Record<string, number>;
@@ -42,6 +43,7 @@ export async function GET() {
 
   const db = await getDb();
   const now = new Date();
+  const participantIdValues = sessionParticipantIdValues(userId);
 
   const sessions = (await db
     .collection("sessions")
@@ -49,7 +51,7 @@ export async function GET() {
       {
         $match: {
           end_time: { $lt: now },
-          "session_participants.user_id": userId,
+          "session_participants.user_id": { $in: participantIdValues },
         },
       },
       {
@@ -65,7 +67,7 @@ export async function GET() {
               {
                 $filter: {
                   input: "$session_participants",
-                  cond: { $eq: ["$$this.user_id", userId] },
+                  cond: { $in: ["$$this.user_id", participantIdValues] },
                 },
               },
               0,
@@ -78,7 +80,7 @@ export async function GET() {
                   input: {
                     $filter: {
                       input: "$session_participants",
-                      cond: { $ne: ["$$this.user_id", userId] },
+                      cond: { $not: { $in: ["$$this.user_id", participantIdValues] } },
                     }
                   },
                   as: "p",
@@ -148,7 +150,7 @@ export async function GET() {
 
     attendanceInputs.push({
       participantCount: s.participantCount,
-      ownerId: s.owner_id,
+      ownerId: String(s.owner_id ?? ""),
       didAttend,
       didComplete,
       durationMin: s.duration_min || 0,

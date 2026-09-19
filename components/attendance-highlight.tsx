@@ -14,7 +14,7 @@ export function AttendanceHighlight({
 
   if (variant === "app") {
     return (
-      <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-[#CA5995]/20 bg-[#CA5995]/[0.07] dark:border-[#CA5995]/30 dark:bg-[#CA5995]/10">
+      <div className="grid w-full grid-cols-2 overflow-hidden rounded-lg border border-[#CA5995]/20 bg-[#CA5995]/[0.07] dark:border-[#CA5995]/30 dark:bg-[#CA5995]/10">
         <div className="px-2.5 py-1.5">
           <p className="text-[15px] font-semibold tabular-nums leading-none text-[#5D1C6A] dark:text-[#FFB090]">
             {attendance.percent}%

@@ -1,9 +1,9 @@
 /**
  * Attendance / missed math for profile stats.
  * Solo (unmatched) sessions cannot be joined and must not inflate missed.
+ *
+ * Keep this module free of mongodb so client components can import it.
  */
-
-import type { Db } from "mongodb";
 
 export type AttendanceSessionInput = {
   participantCount: number;
@@ -83,39 +83,18 @@ export function formatPublicAttendance(attendance: PublicAttendance): string {
   return `${attendance.percent}% attendance, ${attendance.attended} ${noun} attended`;
 }
 
-type SessionAttendanceDoc = {
-  owner_id?: unknown;
-  session_participants?: Array<{
-    user_id?: unknown;
-    call_joined_at?: Date | string | null;
-    call_completed?: boolean | null;
-  }>;
-};
-
-export async function getAttendanceTotalsForUser(
-  db: Db,
-  userId: string,
-  now = new Date(),
-): Promise<AttendanceTotals> {
-  const docs = (await db
-    .collection("sessions")
-    .find({
-      end_time: { $lt: now },
-      "session_participants.user_id": userId,
-    })
-    .project({ owner_id: 1, session_participants: 1 })
-    .toArray()) as SessionAttendanceDoc[];
-
-  const inputs: AttendanceSessionInput[] = docs.map((doc) => {
-    const participants = doc.session_participants ?? [];
-    const me = participants.find((p) => String(p.user_id) === String(userId));
-    return {
-      participantCount: participants.length,
-      ownerId: String(doc.owner_id ?? ""),
-      didAttend: Boolean(me?.call_joined_at),
-      didComplete: Boolean(me?.call_completed),
-    };
+export function toPublicAttendanceFromRates(input: {
+  booked: number;
+  attended: number;
+  attendanceRate: number;
+}): PublicAttendance | null {
+  return toPublicAttendance({
+    booked: input.booked,
+    attended: input.attended,
+    missed: Math.max(0, input.booked - input.attended),
+    solo: 0,
+    withPartner: input.booked,
+    asOwner: 0,
+    attendanceRate: input.attendanceRate,
   });
-
-  return accumulateAttendanceStats(inputs, String(userId));
 }

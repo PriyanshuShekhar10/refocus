@@ -67,6 +67,7 @@ interface CalendarEventCardProps {
     about?: string | null;
     avatarUrl?: string | null;
     emailVerified?: boolean;
+    attendance?: PublicAttendance | null;
   }) => void;
 }
 
@@ -133,33 +134,37 @@ export function CalendarEventCard({
   });
 
   const compactPartner = (() => {
-    const ownerName = [event.owner?.firstname, event.owner?.lastname]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-    if (event.owner && ownerName) {
-    return {
-      name: ownerName,
-      username: event.owner.username ?? null,
-      about: event.owner.about ?? null,
-      avatar_url: event.owner.avatar_url ?? null,
-      emailVerified: event.owner.emailVerified,
+    const fromUser = (
+      user:
+        | CalendarEvent["owner"]
+        | NonNullable<CalendarEvent["participants"]>[number]
+        | null
+        | undefined,
+      fallbackName: string,
+    ) => {
+      if (!user) return null;
+      const named = "firstname" in user || "lastname" in user
+        ? [user.firstname, user.lastname].filter(Boolean).join(" ").trim()
+        : "";
+      return {
+        name: named || fallbackName,
+        username: user.username ?? null,
+        about: user.about ?? null,
+        avatar_url: user.avatar_url ?? null,
+        emailVerified: user.emailVerified,
+        attendance: user.attendance ?? null,
+      };
     };
+
+    if (event.owner) {
+      return fromUser(
+        event.owner,
+        event.owner.username?.trim() || "Partner",
+      );
     }
 
     const firstParticipant = event.participants?.[0];
-    if (!firstParticipant) return null;
-    const participantName = [firstParticipant.firstname, firstParticipant.lastname]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-    return {
-      name: participantName || "Partner",
-      username: firstParticipant.username ?? null,
-      about: firstParticipant.about ?? null,
-      avatar_url: firstParticipant.avatar_url ?? null,
-      emailVerified: firstParticipant.emailVerified,
-    };
+    return fromUser(firstParticipant, "Partner");
   })();
 
   const compactPartnerInitials = compactPartner?.name
@@ -172,29 +177,40 @@ export function CalendarEventCard({
     : "P";
 
   useEffect(() => {
+    if (compactPartner?.attendance) {
+      setHoverAttendance(compactPartner.attendance);
+    }
+  }, [compactPartner?.attendance]);
+
+  useEffect(() => {
     if (!showCompactPartnerCard) return;
-    const username = compactPartner?.username;
-    if (!username) {
-      setHoverAttendance(null);
+    if (compactPartner?.attendance) {
+      setHoverAttendance(compactPartner.attendance);
       return;
     }
+    const username = compactPartner?.username;
+    if (!username) return;
     let cancelled = false;
     fetch(`/api/profile/${encodeURIComponent(username)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled) return;
         const next = data?.user?.attendance ?? null;
-        setHoverAttendance(
-          next && typeof next.percent === "number" ? next : null,
-        );
+        if (next && typeof next.percent === "number") {
+          setHoverAttendance(next);
+        }
       })
       .catch(() => {
-        if (!cancelled) setHoverAttendance(null);
+        // Keep any attendance already shown from the session payload.
       });
     return () => {
       cancelled = true;
     };
-  }, [showCompactPartnerCard, compactPartner?.username]);
+  }, [
+    showCompactPartnerCard,
+    compactPartner?.username,
+    compactPartner?.attendance,
+  ]);
 
   const compactPalette = isDark
     ? COMPACT_PASTEL_COLORS_DARK
@@ -329,6 +345,7 @@ export function CalendarEventCard({
                       about: compactPartner.about,
                       avatarUrl: compactPartner.avatar_url,
                       emailVerified: compactPartner.emailVerified,
+                      attendance: compactPartner.attendance ?? hoverAttendance,
                     });
                     return;
                   }

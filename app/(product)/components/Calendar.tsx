@@ -67,6 +67,11 @@ type SidebarProfilePreview = {
   about?: string | null;
   avatarUrl?: string | null;
   emailVerified?: boolean;
+  attendance?: {
+    percent: number;
+    booked: number;
+    attended: number;
+  } | null;
 };
 
 // ============================================

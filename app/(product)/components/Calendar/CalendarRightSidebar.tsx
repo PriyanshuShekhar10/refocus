@@ -69,6 +69,7 @@ interface CalendarRightSidebarProps {
     about?: string | null;
     avatarUrl?: string | null;
     emailVerified?: boolean;
+    attendance?: { percent: number; booked: number; attended: number } | null;
   } | null;
   onClearProfilePreview?: () => void;
   onCollapseChange?: (collapsed: boolean) => void;
@@ -141,6 +142,11 @@ export function CalendarRightSidebar({
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
+  const [myAttendance, setMyAttendance] = useState<{
+    percent: number;
+    booked: number;
+    attended: number;
+  } | null>(null);
   const [deviceTestOpen, setDeviceTestOpen] = useState(false);
   
   useEffect(() => {
@@ -149,16 +155,31 @@ export function CalendarRightSidebar({
 
   useEffect(() => {
     const fromSession = session?.user?.image?.trim();
-    if (fromSession) {
-      setMyAvatarUrl(fromSession);
-      return;
-    }
+    if (fromSession) setMyAvatarUrl(fromSession);
+
     let cancelled = false;
     (async () => {
       try {
         const res = await fetch("/api/users/me");
         const data = await res.json().catch(() => ({}));
-        if (!cancelled && res.ok && data?.user?.avatarUrl) {
+        if (cancelled || !res.ok) return;
+        const nextAttendance = data?.user?.attendance;
+        if (
+          nextAttendance &&
+          typeof nextAttendance.percent === "number" &&
+          typeof nextAttendance.attended === "number"
+        ) {
+          setMyAttendance(nextAttendance);
+          try {
+            sessionStorage.setItem(
+              "refocus.attendance.me",
+              JSON.stringify(nextAttendance),
+            );
+          } catch {
+            // ignore quota / private mode
+          }
+        }
+        if (data?.user?.avatarUrl) {
           setMyAvatarUrl(data.user.avatarUrl);
         }
       } catch {
@@ -169,6 +190,31 @@ export function CalendarRightSidebar({
       cancelled = true;
     };
   }, [session?.user?.image]);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("refocus.attendance.me");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as {
+        percent?: number;
+        booked?: number;
+        attended?: number;
+      };
+      if (
+        typeof parsed.percent === "number" &&
+        typeof parsed.attended === "number" &&
+        (parsed.booked ?? 0) > 0
+      ) {
+        setMyAttendance({
+          percent: parsed.percent,
+          booked: parsed.booked ?? parsed.attended,
+          attended: parsed.attended,
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     if (profilePreview) {
@@ -263,6 +309,8 @@ export function CalendarRightSidebar({
       ? detailedProfile.website
       : `https://${detailedProfile.website}`
     : null;
+  const previewAttendance =
+    detailedProfile?.attendance ?? profilePreview?.attendance ?? null;
 
   return (
     <aside
@@ -413,29 +461,25 @@ export function CalendarRightSidebar({
             </div>
           </div>
 
+          {previewAttendance ? (
+            <div className="mt-3">
+              <AttendanceHighlight
+                attendance={previewAttendance}
+                variant="app"
+              />
+            </div>
+          ) : null}
+
+          <p className="mt-3 line-clamp-4 text-xs leading-relaxed whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+            {previewAbout}
+          </p>
+
           {isProfileLoading ? (
             <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
               Loading profile details...
             </p>
-          ) : profileError ? (
-            <p className="mt-3 text-xs text-red-600/80 dark:text-red-400/80">
-              {profileError}
-            </p>
-          ) : (
+          ) : profileError ? null : (
             <>
-              <p className="mt-3 text-xs leading-relaxed whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-                {previewAbout}
-              </p>
-
-              {detailedProfile?.attendance ? (
-                <div className="mt-3">
-                  <AttendanceHighlight
-                    attendance={detailedProfile.attendance}
-                    variant="app"
-                  />
-                </div>
-              ) : null}
-
               {(detailedProfile?.location || joinedDate || websiteHref) && (
                 <div className="mt-3 space-y-1.5 text-[11px] text-gray-600 dark:text-gray-300">
                   {detailedProfile?.location && (
@@ -512,6 +556,12 @@ export function CalendarRightSidebar({
               {sessionCount} session{sessionCount !== 1 ? "s" : ""} today
               <ChevronRight className="h-3 w-3 text-[#9BAE9B]" />
             </Link>
+
+            {myAttendance ? (
+              <div className="mt-3 w-full min-w-0 self-stretch">
+                <AttendanceHighlight attendance={myAttendance} variant="app" />
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-3 space-y-0.5 border-t border-gray-100/80 pt-2 dark:border-gray-800/70">

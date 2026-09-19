@@ -12,6 +12,7 @@ import {
   designStyles,
 } from "@/components/design";
 import { ProfileStats } from "@/components/profile-stats";
+import { AttendanceHighlight } from "@/components/attendance-highlight";
 import {
   EmailVerificationBanner,
   EmailVerifiedBadge,
@@ -67,6 +68,7 @@ type UserInfo = {
   website?: string | null;
   aboutMe?: Partial<Record<AboutMeKey, string>> | null;
   avatarUrl?: string | null;
+  attendance?: { percent: number; booked: number; attended: number } | null;
 };
 
 type EditableFields = {
@@ -352,6 +354,12 @@ export function ProfileView({ embedded = false }: Props) {
       : undefined;
   const usernameOk =
     usernameStatus === "available" ? "Username is available" : undefined;
+  const myAttendance =
+    user?.attendance &&
+    typeof user.attendance.percent === "number" &&
+    user.attendance.booked > 0
+      ? user.attendance
+      : null;
 
   return (
     <div
@@ -538,6 +546,11 @@ export function ProfileView({ embedded = false }: Props) {
               )}
             </div>
           )}
+          {!isEditing && myAttendance ? (
+            <div style={{ marginTop: 14 }}>
+              <AttendanceHighlight attendance={myAttendance} />
+            </div>
+          ) : null}
         </div>
         <div>
           {!isEditing ? (

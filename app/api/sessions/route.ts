@@ -15,6 +15,10 @@ import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 import { scheduleRecordAccessIp } from "@/lib/userIps";
 import { isEngagementCrewUserId } from "@/lib/engagementCrew";
 import { assertCanBookAnotherSession } from "@/lib/sessionAttendanceGate";
+import {
+  readStoredPublicAttendance,
+  schedulePublicAttendanceRefresh,
+} from "@/lib/sessionAttendanceQuery";
 
 // GET /api/sessions?from=ISO&to=ISO
 // GET /api/sessions?mineUpcoming=1  — caller's future/in-progress sessions only
@@ -243,6 +247,8 @@ export async function GET(req: NextRequest) {
     image?: string | null;
     avatar_url?: string | null;
     emailVerified?: Date | string | null;
+    publicAttendance?: { percent: number; booked: number; attended: number } | null;
+    publicAttendanceAt?: Date | string | null;
   };
 
   let usersById: Record<
@@ -256,6 +262,8 @@ export async function GET(req: NextRequest) {
       about?: string | null;
       avatar_url?: string | null;
       emailVerified: boolean;
+      attendance?: { percent: number; booked: number; attended: number } | null;
+      attendanceFresh?: boolean;
     }
   > = {};
   if (userIdSet.size > 0) {
@@ -274,25 +282,48 @@ export async function GET(req: NextRequest) {
           image: 1,
           avatar_url: 1,
           emailVerified: 1,
+          publicAttendance: 1,
+          publicAttendanceAt: 1,
         })
         .toArray()) as unknown as DbUser[];
       usersById = Object.fromEntries(
-        users.map((u) => [
-          String(u._id),
-          {
-            id: String(u._id),
-            email: u.email ?? null,
-            firstname:
-              u.firstname ?? (u.name ? String(u.name).split(" ")[0] : null),
-            lastname: u.lastname ?? null,
-            username: u.username ?? null,
-            about: u.about ?? null,
-            avatar_url: u.avatar_url ?? u.image ?? null,
-            emailVerified: isEmailVerified(u.emailVerified),
-          },
-        ]),
+        users.map((u) => {
+          const stored = readStoredPublicAttendance(u);
+          return [
+            String(u._id),
+            {
+              id: String(u._id),
+              email: u.email ?? null,
+              firstname:
+                u.firstname ?? (u.name ? String(u.name).split(" ")[0] : null),
+              lastname: u.lastname ?? null,
+              username: u.username ?? null,
+              about: u.about ?? null,
+              avatar_url: u.avatar_url ?? u.image ?? null,
+              emailVerified: isEmailVerified(u.emailVerified),
+              attendance: stored.attendance,
+              attendanceFresh: stored.fresh,
+            },
+          ];
+        }),
       );
     }
+  }
+
+  const openSlotUserIds = new Set<string>();
+  for (const s of sessions ?? []) {
+    if (participantCount(s) >= 2) continue;
+    if (s.owner_id) openSlotUserIds.add(String(s.owner_id));
+    for (const p of s.session_participants ?? []) {
+      if (p.user_id) openSlotUserIds.add(String(p.user_id));
+    }
+  }
+  const staleAttendanceIds = Array.from(openSlotUserIds).filter((id) => {
+    const user = usersById[id];
+    return !user || user.attendanceFresh !== true;
+  });
+  if (staleAttendanceIds.length > 0) {
+    schedulePublicAttendanceRefresh(staleAttendanceIds);
   }
 
   const mapped = sessions.map((s) => {
@@ -327,6 +358,7 @@ export async function GET(req: NextRequest) {
         avatar_url: usersById[p.user_id]?.avatar_url ?? undefined,
         emailVerified: usersById[p.user_id]?.emailVerified ?? false,
         quiet: Boolean(p.quiet),
+        attendance: usersById[p.user_id]?.attendance ?? null,
       })),
       owner: owner
         ? {
@@ -338,6 +370,7 @@ export async function GET(req: NextRequest) {
             about: owner.about ?? undefined,
             avatar_url: owner.avatar_url ?? undefined,
             emailVerified: owner.emailVerified,
+            attendance: owner.attendance ?? null,
           }
         : null,
       status,
