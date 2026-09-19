@@ -7,11 +7,13 @@ import {
   CREW_DAYS_PAGE_SIZE,
   CREW_METRICS,
   CREW_METRIC_COLORS,
-  CREW_RANGE_OPTIONS,
+  crewRangeQuery,
   filterCrewDays,
   formatCrewDateRange,
+  parseCrewRangeMode,
   sumCrewDays,
   type CrewMemberStats,
+  type CrewRangeMode,
   type CrewStatsPayload,
   type DayCounts,
   type MetricKey,
@@ -355,7 +357,9 @@ export default function CrewMemberClient({
   email: string;
   initialDays: number;
 }) {
-  const [days, setDays] = useState(initialDays);
+  const [rangeMode, setRangeMode] = useState<CrewRangeMode>(
+    parseCrewRangeMode(String(initialDays)),
+  );
   const [member, setMember] = useState<CrewMemberStats | null>(null);
   const [meta, setMeta] = useState<{
     timezone: string;
@@ -377,7 +381,9 @@ export default function CrewMemberClient({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/crew/stats?days=${days}`);
+      const res = await fetch(
+        `/api/crew/stats?days=${crewRangeQuery(rangeMode)}`,
+      );
       const json = (await res.json()) as CrewStatsPayload & { error?: string };
       if (!res.ok) throw new Error(json.error || "Failed to load");
       const found =
@@ -402,7 +408,7 @@ export default function CrewMemberClient({
     } finally {
       setLoading(false);
     }
-  }, [days, email]);
+  }, [rangeMode, email]);
 
   useEffect(() => {
     void load();
@@ -466,7 +472,7 @@ export default function CrewMemberClient({
   };
 
   const onChartSelectDate = (date: string) => {
-    // Click a day → focus that single day; use the From/To inputs for a wider range.
+    // Click a day → focus that single day; Full window restores the range.
     setSummaryRange(date, date);
   };
 
@@ -524,20 +530,28 @@ export default function CrewMemberClient({
                 ) : null}
               </div>
               <div className="flex w-full shrink-0 gap-1 rounded-lg border border-neutral-200 bg-white p-1 sm:w-auto">
-                {CREW_RANGE_OPTIONS.map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setDays(n)}
-                    className={`flex-1 rounded-md px-3 py-1.5 text-sm sm:flex-none ${
-                      days === n
-                        ? "bg-neutral-900 text-white"
-                        : "text-neutral-600 hover:bg-neutral-100"
-                    }`}
-                  >
-                    {n}d
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  onClick={() => setRangeMode(30)}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-sm sm:flex-none ${
+                    rangeMode === 30
+                      ? "bg-neutral-900 text-white"
+                      : "text-neutral-600 hover:bg-neutral-100"
+                  }`}
+                >
+                  30d
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRangeMode("all")}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-sm sm:flex-none ${
+                    rangeMode === "all"
+                      ? "bg-neutral-900 text-white"
+                      : "text-neutral-600 hover:bg-neutral-100"
+                  }`}
+                >
+                  All time
+                </button>
               </div>
             </header>
 
@@ -546,55 +560,19 @@ export default function CrewMemberClient({
                 <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
                   Range totals
                 </p>
-                <div className="flex flex-col gap-2 text-sm text-neutral-600 sm:flex-row sm:flex-wrap sm:items-center">
-                  <label className="flex min-w-0 items-center gap-1.5">
-                    <span className="w-10 shrink-0 text-xs uppercase tracking-wide text-neutral-400 sm:w-auto">
-                      From
-                    </span>
-                    <input
-                      type="date"
-                      value={summaryFrom ?? meta?.fromKey ?? ""}
-                      min={meta?.fromKey}
-                      max={summaryTo ?? meta?.toKey}
-                      onChange={(e) => {
-                        const next = e.target.value;
-                        if (!next) return;
-                        setSummaryFrom(next);
-                      }}
-                      className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm sm:flex-none"
-                    />
-                  </label>
-                  <label className="flex min-w-0 items-center gap-1.5">
-                    <span className="w-10 shrink-0 text-xs uppercase tracking-wide text-neutral-400 sm:w-auto">
-                      To
-                    </span>
-                    <input
-                      type="date"
-                      value={summaryTo ?? meta?.toKey ?? ""}
-                      min={summaryFrom ?? meta?.fromKey}
-                      max={meta?.toKey}
-                      onChange={(e) => {
-                        const next = e.target.value;
-                        if (!next) return;
-                        setSummaryTo(next);
-                      }}
-                      className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm sm:flex-none"
-                    />
-                  </label>
-                  {meta &&
-                  (summaryFrom !== meta.fromKey ||
-                    summaryTo !== meta.toKey) ? (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSummaryRange(meta.fromKey, meta.toKey)
-                      }
-                      className="rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50"
-                    >
-                      Full window
-                    </button>
-                  ) : null}
-                </div>
+                {meta &&
+                (summaryFrom !== meta.fromKey ||
+                  summaryTo !== meta.toKey) ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSummaryRange(meta.fromKey, meta.toKey)
+                    }
+                    className="rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50"
+                  >
+                    Full window
+                  </button>
+                ) : null}
               </div>
               {summaryRangeLabel ? (
                 <p className="mb-3 text-xs text-neutral-400">

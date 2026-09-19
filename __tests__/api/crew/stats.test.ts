@@ -23,18 +23,25 @@ describe("/api/crew/stats", () => {
   });
 
   it("returns stats publicly without a token", async () => {
-    const req = mockRequest("/api/crew/stats?days=7", { method: "GET" });
+    const req = mockRequest("/api/crew/stats?days=30", { method: "GET" });
     const { status, json } = await parseResponse(await GET(req));
     expect(status).toBe(200);
     expect(json.members).toEqual([]);
-    expect(getCrewStats).toHaveBeenCalledWith(7);
+    expect(getCrewStats).toHaveBeenCalledWith(30);
   });
 
   it("defaults days when omitted", async () => {
     const req = mockRequest("/api/crew/stats", { method: "GET" });
     const { status } = await parseResponse(await GET(req));
     expect(status).toBe(200);
-    expect(getCrewStats).toHaveBeenCalledWith(14);
+    expect(getCrewStats).toHaveBeenCalledWith(30);
+  });
+
+  it("maps all to the all-time lookback", async () => {
+    const req = mockRequest("/api/crew/stats?days=all", { method: "GET" });
+    const { status } = await parseResponse(await GET(req));
+    expect(status).toBe(200);
+    expect(getCrewStats).toHaveBeenCalledWith(365);
   });
 
   it("rejects invalid days", async () => {

@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { decodeCrewMemberParam } from "../../crewShared";
+import {
+  CREW_ALL_TIME_DAYS,
+  CREW_DEFAULT_DAYS,
+  decodeCrewMemberParam,
+  parseCrewRangeMode,
+} from "../../crewShared";
 import CrewMemberClient from "./CrewMemberClient";
 
 export const metadata: Metadata = {
@@ -17,8 +22,9 @@ export default async function CrewMemberPage({
   const { member } = await params;
   const sp = await searchParams;
   const email = decodeCrewMemberParam(member);
-  const daysRaw = Number(sp.days ?? 14);
-  const initialDays = Number.isFinite(daysRaw) ? daysRaw : 14;
+  const range = parseCrewRangeMode(sp.days);
+  const initialDays =
+    range === "all" ? CREW_ALL_TIME_DAYS : CREW_DEFAULT_DAYS;
 
   return <CrewMemberClient email={email} initialDays={initialDays} />;
 }

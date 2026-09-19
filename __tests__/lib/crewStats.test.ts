@@ -152,12 +152,12 @@ describe("crewStats", () => {
     expect(hire?.inactiveDays).toBe(2);
   });
 
-  it("clamps days between 1 and 90", async () => {
+  it("clamps days between 1 and 365", async () => {
     sessionsCol.find.mockReturnValue(findToArray([]));
     lifecycleCol.find.mockReturnValue(findToArray([]));
     const low = await getCrewStats(0);
     expect(low.days).toBe(1);
     const high = await getCrewStats(999);
-    expect(high.days).toBe(90);
+    expect(high.days).toBe(365);
   });
 });

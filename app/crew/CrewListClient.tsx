@@ -5,33 +5,32 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   countCompliantDays,
   CREW_ACTIVITY_FORMULA,
-  CREW_MAX_DAYS,
   CREW_METRICS,
-  CREW_RANGE_OPTIONS,
   crewMemberPath,
-  formatCrewDateRange,
+  crewRangeQuery,
   sumCrewDays,
   type CrewRangeMode,
   type CrewStatsPayload,
 } from "./crewShared";
 
 export default function CrewListClient() {
-  const [rangeMode, setRangeMode] = useState<CrewRangeMode>(14);
-  const fetchDays = rangeMode === "custom" ? CREW_MAX_DAYS : rangeMode;
+  const [rangeMode, setRangeMode] = useState<CrewRangeMode>(30);
   const [data, setData] = useState<CrewStatsPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [initialLoad, setInitialLoad] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [customFrom, setCustomFrom] = useState<string | null>(null);
-  const [customTo, setCustomTo] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setRefreshing(true);
     setError(null);
     try {
-      const res = await fetch(`/api/crew/stats?days=${fetchDays}`);
-      const json = (await res.json()) as CrewStatsPayload & { error?: string };
-      if (!res.ok) throw new Error(json.error || "Failed to load");
+      const statsRes = await fetch(
+        `/api/crew/stats?days=${crewRangeQuery(rangeMode)}`,
+      );
+      const json = (await statsRes.json()) as CrewStatsPayload & {
+        error?: string;
+      };
+      if (!statsRes.ok) throw new Error(json.error || "Failed to load");
       setData(json);
     } catch (e) {
       setError((e as Error).message);
@@ -39,73 +38,25 @@ export default function CrewListClient() {
       setRefreshing(false);
       setInitialLoad(false);
     }
-  }, [fetchDays]);
+  }, [rangeMode]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  useEffect(() => {
-    if (!data || rangeMode !== "custom") return;
-    setCustomFrom((prev) => {
-      if (prev && prev >= data.fromKey && prev <= data.toKey) return prev;
-      return data.fromKey;
-    });
-    setCustomTo((prev) => {
-      if (prev && prev >= data.fromKey && prev <= data.toKey) return prev;
-      return data.toKey;
-    });
-  }, [data, rangeMode]);
-
   const members = data?.members ?? [];
-
-  const effectiveFrom = useMemo(() => {
-    if (!data) return null;
-    if (rangeMode !== "custom") return data.fromKey;
-    if (!customFrom || !customTo) return data.fromKey;
-    return customFrom <= customTo ? customFrom : customTo;
-  }, [customFrom, customTo, data, rangeMode]);
-
-  const effectiveTo = useMemo(() => {
-    if (!data) return null;
-    if (rangeMode !== "custom") return data.toKey;
-    if (!customFrom || !customTo) return data.toKey;
-    return customFrom <= customTo ? customTo : customFrom;
-  }, [customFrom, customTo, data, rangeMode]);
+  const memberHrefDays = crewRangeQuery(rangeMode);
 
   const dateRangeLabel = useMemo(() => {
-    if (!effectiveFrom || !effectiveTo) return null;
-    if (rangeMode !== "custom") {
-      return `Last ${rangeMode} days`;
-    }
-    return formatCrewDateRange(effectiveFrom, effectiveTo);
-  }, [effectiveFrom, effectiveTo, rangeMode]);
+    if (rangeMode === "all") return "All time";
+    return "Last 30 days";
+  }, [rangeMode]);
 
-  const isFullCustomWindow =
-    rangeMode === "custom" &&
-    !!data &&
-    customFrom === data.fromKey &&
-    customTo === data.toKey;
-
-  const resetCustomWindow = () => {
-    if (!data) return;
-    setCustomFrom(data.fromKey);
-    setCustomTo(data.toKey);
-  };
-
-  const memberRows = members.map((m) => {
-    const sliced =
-      effectiveFrom && effectiveTo
-        ? m.days.filter(
-            (d) => d.date >= effectiveFrom && d.date <= effectiveTo,
-          )
-        : m.days;
-    return {
-      member: m,
-      totals: sumCrewDays(sliced),
-      compliantDays: countCompliantDays(sliced),
-    };
-  });
+  const memberRows = members.map((m) => ({
+    member: m,
+    totals: sumCrewDays(m.days),
+    compliantDays: countCompliantDays(m.days),
+  }));
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
@@ -114,100 +65,38 @@ export default function CrewListClient() {
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight">Crew</h1>
             <p className="mt-1 text-sm text-neutral-500 break-words">
-              {dateRangeLabel
-                ? `${dateRangeLabel} · ${data?.timezone ?? "Asia/Kolkata"}`
-                : "Session activity by person"}
+              {dateRangeLabel} · {data?.timezone ?? "Asia/Kolkata"}
             </p>
             <p className="mt-0.5 text-xs text-neutral-400">
-              {rangeMode === "custom"
-                ? "Totals for the custom range · tap a person for details"
-                : "Totals for the selected window · tap a person for details"}
+              Totals for the selected window · tap a person for details
               {refreshing ? " · Updating…" : ""}
             </p>
           </div>
           <div className="flex w-full shrink-0 gap-1 rounded-lg border border-neutral-200 bg-white p-1 sm:w-auto">
-            {CREW_RANGE_OPTIONS.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setRangeMode(n)}
-                className={`flex-1 rounded-md px-3 py-1.5 text-sm sm:flex-none ${
-                  rangeMode === n
-                    ? "bg-neutral-900 text-white"
-                    : "text-neutral-600 hover:bg-neutral-100"
-                }`}
-              >
-                {n}d
-              </button>
-            ))}
             <button
               type="button"
-              onClick={() => setRangeMode("custom")}
+              onClick={() => setRangeMode(30)}
               className={`flex-1 rounded-md px-3 py-1.5 text-sm sm:flex-none ${
-                rangeMode === "custom"
+                rangeMode === 30
                   ? "bg-neutral-900 text-white"
                   : "text-neutral-600 hover:bg-neutral-100"
               }`}
             >
-              Custom
+              30d
+            </button>
+            <button
+              type="button"
+              onClick={() => setRangeMode("all")}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm sm:flex-none ${
+                rangeMode === "all"
+                  ? "bg-neutral-900 text-white"
+                  : "text-neutral-600 hover:bg-neutral-100"
+              }`}
+            >
+              All time
             </button>
           </div>
         </header>
-
-        {rangeMode === "custom" ? (
-          <div className="mb-5 flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-3 sm:mb-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:py-2.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">
-              Custom range
-            </span>
-            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
-              <label className="flex min-w-0 items-center gap-1.5 text-sm text-neutral-600">
-                <span className="w-10 shrink-0 text-xs text-neutral-400 sm:w-auto">
-                  From
-                </span>
-                <input
-                  type="date"
-                  value={customFrom ?? data?.fromKey ?? ""}
-                  min={data?.fromKey}
-                  max={customTo ?? data?.toKey}
-                  disabled={!data}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    if (!next) return;
-                    setCustomFrom(next);
-                  }}
-                  className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm disabled:opacity-50 sm:flex-none"
-                />
-              </label>
-              <label className="flex min-w-0 items-center gap-1.5 text-sm text-neutral-600">
-                <span className="w-10 shrink-0 text-xs text-neutral-400 sm:w-auto">
-                  To
-                </span>
-                <input
-                  type="date"
-                  value={customTo ?? data?.toKey ?? ""}
-                  min={customFrom ?? data?.fromKey}
-                  max={data?.toKey}
-                  disabled={!data}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    if (!next) return;
-                    setCustomTo(next);
-                  }}
-                  className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm disabled:opacity-50 sm:flex-none"
-                />
-              </label>
-            </div>
-            {!isFullCustomWindow && data ? (
-              <button
-                type="button"
-                onClick={resetCustomWindow}
-                className="rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-xs text-neutral-600 hover:bg-neutral-50 sm:ml-auto"
-              >
-                Full {CREW_MAX_DAYS}d window
-              </button>
-            ) : null}
-          </div>
-        ) : null}
 
         {initialLoad && !data ? (
           <p className="text-sm text-neutral-500">Loading…</p>
@@ -234,7 +123,7 @@ export default function CrewListClient() {
           {memberRows.map(({ member: m, totals, compliantDays }) => (
             <Link
               key={m.email}
-              href={`${crewMemberPath(m.email)}?days=${fetchDays}`}
+              href={`${crewMemberPath(m.email)}?days=${memberHrefDays}`}
               className="block rounded-xl border border-neutral-200 bg-white p-4 active:bg-neutral-50"
             >
               <div className="font-medium text-neutral-900">
@@ -320,7 +209,7 @@ export default function CrewListClient() {
                   <tr key={m.email} className="border-t border-neutral-100">
                     <td className="px-4 py-3">
                       <Link
-                        href={`${crewMemberPath(m.email)}?days=${fetchDays}`}
+                        href={`${crewMemberPath(m.email)}?days=${memberHrefDays}`}
                         className="block hover:underline"
                       >
                         <div className="font-medium text-neutral-900">
@@ -339,7 +228,7 @@ export default function CrewListClient() {
                         className="px-3 py-3 text-right tabular-nums text-neutral-800"
                       >
                         <Link
-                          href={`${crewMemberPath(m.email)}?days=${fetchDays}`}
+                          href={`${crewMemberPath(m.email)}?days=${memberHrefDays}`}
                           className="block"
                           title={`Today: ${m.today[metricCol.key]}`}
                         >

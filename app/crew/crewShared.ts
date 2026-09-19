@@ -47,12 +47,29 @@ export const CREW_METRIC_COLORS: Record<MetricKey, string> = {
   finished: "#7c3aed", // violet
 };
 
-export const CREW_RANGE_OPTIONS = [7, 14, 30] as const;
+export const CREW_DEFAULT_DAYS = 30;
+/** Lookback used for the All time filter (matches crew streak history). */
+export const CREW_ALL_TIME_DAYS = 365;
 
-export type CrewRangeMode = (typeof CREW_RANGE_OPTIONS)[number] | "custom";
+export type CrewRangeMode = 30 | "all";
 
-/** Max days the stats API will return (used for custom range mode). */
-export const CREW_MAX_DAYS = 90;
+export function crewFetchDays(mode: CrewRangeMode): number {
+  return mode === "all" ? CREW_ALL_TIME_DAYS : CREW_DEFAULT_DAYS;
+}
+
+export function parseCrewRangeMode(
+  raw: string | null | undefined,
+): CrewRangeMode {
+  if (!raw) return CREW_DEFAULT_DAYS;
+  if (raw === "all") return "all";
+  const n = Number(raw);
+  if (Number.isFinite(n) && n > CREW_DEFAULT_DAYS) return "all";
+  return CREW_DEFAULT_DAYS;
+}
+
+export function crewRangeQuery(mode: CrewRangeMode): string {
+  return mode === "all" ? "all" : String(CREW_DEFAULT_DAYS);
+}
 
 export const CREW_DAYS_PAGE_SIZE = 7;
 
@@ -102,7 +119,7 @@ export const CREW_ACTIVITY_FORMULA = {
     },
     {
       heading: "Inactive days",
-      body: "Consecutive days of inactivity as of today — how long since the last compliant day (today counts if still below 3). Not affected by the From/To range picker.",
+      body: "Consecutive days of inactivity as of today — how long since the last compliant day (today counts if still below 3). Not affected by the 30-day / All time filter.",
     },
     {
       heading: "Qualifying session",

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   dayHasAnyActivity,
   filterCrewDays,
+  parseCrewRangeMode,
   type DayCounts,
 } from "@/app/crew/crewShared";
 
@@ -44,5 +45,19 @@ describe("filterCrewDays", () => {
 
   it("can include empty days", () => {
     expect(filterCrewDays(days, "all", "created")).toHaveLength(3);
+  });
+});
+
+describe("parseCrewRangeMode", () => {
+  it("defaults to 30 days", () => {
+    expect(parseCrewRangeMode(undefined)).toBe(30);
+    expect(parseCrewRangeMode("7")).toBe(30);
+    expect(parseCrewRangeMode("30")).toBe(30);
+  });
+
+  it("treats all and longer windows as all-time", () => {
+    expect(parseCrewRangeMode("all")).toBe("all");
+    expect(parseCrewRangeMode("90")).toBe("all");
+    expect(parseCrewRangeMode("365")).toBe("all");
   });
 });

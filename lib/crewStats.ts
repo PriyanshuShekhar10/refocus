@@ -145,7 +145,7 @@ function toQualifyingSession(doc: {
 }
 
 async function computeCrewStats(days: number): Promise<CrewStatsResult> {
-  const safeDays = Math.min(90, Math.max(1, Math.floor(days)));
+  const safeDays = Math.min(STREAK_LOOKBACK_DAYS, Math.max(1, Math.floor(days)));
   const now = new Date();
   const dayKeys = buildDayKeys(safeDays, now);
   const streakDayKeys = buildDayKeys(STREAK_LOOKBACK_DAYS, now);
@@ -376,8 +376,8 @@ async function computeCrewStats(days: number): Promise<CrewStatsResult> {
  * Aggregate crew session metrics for the last `days` IST calendar days
  * ending today (inclusive). Responses are cached briefly in memory.
  */
-export async function getCrewStats(days = 14): Promise<CrewStatsResult> {
-  const safeDays = Math.min(90, Math.max(1, Math.floor(days)));
+export async function getCrewStats(days = 30): Promise<CrewStatsResult> {
+  const safeDays = Math.min(STREAK_LOOKBACK_DAYS, Math.max(1, Math.floor(days)));
   const cacheKey = String(safeDays);
   const cached = crewStatsCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
