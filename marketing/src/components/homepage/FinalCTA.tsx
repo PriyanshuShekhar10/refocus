@@ -12,7 +12,9 @@ export function FinalCTA() {
           <br />
           Get the thing done.
         </Reveal>
-        <Reveal as="p">Free to start. One click to your first session.</Reveal>
+        <Reveal as="p">
+          Free to start — open your first focus room in one click.
+        </Reveal>
         <Reveal className={styles.finalCtaRow}>
           <a
             href={url("/auth/sign-up")}

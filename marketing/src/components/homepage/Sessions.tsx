@@ -73,7 +73,7 @@ export function Sessions() {
           <span className={styles.eyebrow}>01 — Sessions</span>
           <h2 className={styles.sectionTitle}>Choose your focus time.</h2>
           <p className={styles.sectionSub}>
-            Pick a session length that matches the work in front of you.
+            Pick a length that matches the work — then join a quiet focus room.
           </p>
         </Reveal>
 
