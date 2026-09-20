@@ -1,0 +1,1364 @@
+#!/usr/bin/env python3
+"""Build docs/mobile-api.json — machine catalog for AI/mobile clients."""
+from __future__ import annotations
+
+import json
+import shutil
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "docs" / "mobile-api.json"
+LANDING = Path("/Users/priyanshu/Desktop/Work/refocus-landing/marketing/public/developers/mobile-api.json")
+
+RL429 = {
+    "error": "Too many requests",
+    "message": "Please slow down and try again later.",
+    "retryAfter": "number (seconds)",
+}
+EMAIL_403 = {
+    "error": "Verify your email to use this feature. You can browse until then.",
+    "code": "EMAIL_NOT_VERIFIED",
+}
+FIRST_403 = {
+    "error": "Attend your first session before booking another. Finish the one you already have, then you can schedule more.",
+    "code": "FIRST_SESSION_REQUIRED",
+}
+UNAUTH = {"error": "Unauthorized"}
+
+
+def R(
+    method,
+    path,
+    *,
+    auth,
+    content_type=None,
+    rate_limit=None,
+    query=None,
+    body=None,
+    path_params=None,
+    success=None,
+    errors=None,
+    notes=None,
+    also_gates=None,
+    body_variants=None,
+    extra=None,
+):
+    d = {
+        "method": method,
+        "path": path,
+        "auth": auth,
+        "contentType": content_type,
+        "rateLimit": rate_limit,
+        "query": query or [],
+        "pathParams": path_params or [],
+        "body": body or [],
+        "bodyVariants": body_variants,
+        "alsoGates": also_gates or [],
+        "success": success,
+        "errors": errors or [],
+        "notes": notes,
+    }
+    if extra:
+        d.update(extra)
+    return {k: v for k, v in d.items() if v is not None and v != []}
+
+
+routes = [
+    R(
+        "POST",
+        "/api/auth/register",
+        auth="none",
+        content_type="application/json",
+        rate_limit={"bucket": "auth", "key": "ip"},
+        body=[
+            {"name": "email", "type": "string", "required": True},
+            {"name": "password", "type": "string", "required": True, "maxLength": 128},
+            {"name": "name", "type": "string", "required": False},
+            {"name": "firstName", "type": "string", "required": False},
+            {"name": "lastName", "type": "string", "required": False},
+        ],
+        success={"status": 200, "body": {"id": "string (Mongo ObjectId hex)"}},
+        errors=[
+            {"status": 400, "body": {"error": "Missing fields"}},
+            {"status": 400, "body": {"error": "Invalid email"}},
+            {
+                "status": 400,
+                "body": {
+                    "error": "Temporary or disposable email addresses aren't allowed. Please use a permanent email."
+                },
+            },
+            {
+                "status": 400,
+                "body": {
+                    "error": "Password is too weak",
+                    "requirements": {
+                        "length": "boolean",
+                        "uppercase": "boolean",
+                        "lowercase": "boolean",
+                        "number": "boolean",
+                        "specialChar": "boolean",
+                    },
+                },
+            },
+            {"status": 403, "body": {"error": "This email cannot be used to create an account."}},
+            {"status": 409, "body": {"error": "User already exists"}},
+            {"status": 429, "body": RL429},
+        ],
+        notes="Creates user + sends verification email. Does NOT set session cookie.",
+    ),
+    R(
+        "POST",
+        "/api/auth/forgot-password",
+        auth="none",
+        content_type="application/json",
+        rate_limit={"bucket": "auth", "key": "ip"},
+        body=[{"name": "email", "type": "string", "required": True}],
+        success={"status": 200, "body": {"ok": True}, "notes": "Always ok (no enumeration)"},
+        errors=[{"status": 400, "body": {"error": "Email is required"}}, {"status": 429, "body": RL429}],
+    ),
+    R(
+        "GET",
+        "/api/auth/reset-password",
+        auth="none",
+        query=[{"name": "token", "type": "string", "required": True}],
+        success={"status": 200, "body": {"valid": "boolean"}},
+        errors=[{"status": 400, "body": {"valid": False}}],
+    ),
+    R(
+        "POST",
+        "/api/auth/reset-password",
+        auth="none",
+        content_type="application/json",
+        rate_limit={"bucket": "auth", "key": "ip"},
+        body=[
+            {"name": "token", "type": "string", "required": True},
+            {"name": "password", "type": "string", "required": True, "maxLength": 128},
+        ],
+        success={"status": 200, "body": {"ok": True}},
+        errors=[
+            {"status": 400, "body": {"error": "Token and password are required"}},
+            {"status": 400, "body": {"error": "Password is too weak", "requirements": "object"}},
+            {"status": 400, "body": {"error": "Invalid or expired reset link"}},
+            {"status": 429, "body": RL429},
+        ],
+    ),
+    R(
+        "POST",
+        "/api/auth/change-password",
+        auth="session",
+        content_type="application/json",
+        rate_limit={"bucket": "auth", "key": "userId"},
+        body=[
+            {"name": "currentPassword", "type": "string", "required": True},
+            {"name": "newPassword", "type": "string", "required": True, "maxLength": 128},
+        ],
+        success={"status": 200, "body": {"ok": True}},
+        errors=[
+            {"status": 401, "body": UNAUTH},
+            {"status": 400, "body": {"error": "Both current and new passwords are required"}},
+            {"status": 400, "body": {"error": "New password must be different from the current one"}},
+            {"status": 400, "body": {"error": "New password is too weak", "requirements": "object"}},
+            {"status": 400, "body": {"error": "This account does not use a password"}},
+            {"status": 401, "body": {"error": "Current password is incorrect"}},
+            {"status": 404, "body": {"error": "User not found"}},
+            {"status": 429, "body": RL429},
+        ],
+    ),
+    R(
+        "POST",
+        "/api/auth/resend-verification",
+        auth="session",
+        rate_limit={"bucket": "auth", "key": "verify-email:{userId}"},
+        success=[
+            {"status": 200, "body": {"ok": True}},
+            {"status": 200, "body": {"ok": True, "alreadyVerified": True}},
+        ],
+        errors=[
+            {"status": 401, "body": UNAUTH},
+            {"status": 404, "body": {"error": "User not found"}},
+            {"status": 503, "body": {"error": "Email service is not configured"}},
+            {"status": 503, "body": {"error": "Failed to send verification email"}},
+            {"status": 429, "body": RL429},
+        ],
+    ),
+    R(
+        "GET",
+        "/api/auth/verify-email",
+        auth="none",
+        query=[{"name": "token", "type": "string", "required": True}],
+        success={"status": 302, "redirect": "{NEXTAUTH_URL}/auth/verify-email?status=success"},
+        errors=[
+            {"status": 302, "redirect": "...?status=missing"},
+            {"status": 302, "redirect": "...?status=invalid"},
+        ],
+        notes="Browser redirect only. RN must deep-link or open in-app browser then re-fetch GET /api/users/me.",
+    ),
+    # users
+    R(
+        "GET",
+        "/api/users/me",
+        auth="session",
+        success={
+            "status": 200,
+            "body": {
+                "user": {
+                    "email": "string?",
+                    "username": "string|null",
+                    "name": "string|null",
+                    "firstname": "string|null",
+                    "lastname": "string|null",
+                    "about": "string|null",
+                    "aboutMe": "Record<string,string>",
+                    "interests": "string[]",
+                    "location": "string|null",
+                    "website": "string|null",
+                    "avatarUrl": "string|null",
+                    "emailVerified": "boolean",
+                    "communityBanned": "boolean",
+                    "communityMuted": "boolean",
+                    "communityMutedUntil": "Date|null",
+                    "attendance": {
+                        "percent": "number",
+                        "booked": "number",
+                        "attended": "number",
+                    },
+                }
+            },
+        },
+        errors=[{"status": 401, "body": UNAUTH}],
+    ),
+    R(
+        "PATCH",
+        "/api/users/me",
+        auth="session+verified",
+        content_type="application/json",
+        rate_limit={"bucket": "api", "key": "userId"},
+        body=[
+            {
+                "name": "username",
+                "type": "string",
+                "required": False,
+                "pattern": "^[a-z0-9_-]{3,20}$",
+            },
+            {"name": "firstname", "type": "string", "required": False},
+            {"name": "lastname", "type": "string", "required": False},
+            {"name": "about", "type": "string", "required": False},
+            {
+                "name": "aboutMe",
+                "type": "Record<string,string>",
+                "required": False,
+                "notes": "string values trimmed, max 500 each",
+            },
+            {"name": "interests", "type": "string[]", "required": False},
+            {"name": "location", "type": "string", "required": False},
+            {"name": "website", "type": "string", "required": False},
+        ],
+        success={"status": 200, "body": {"ok": True}},
+        errors=[
+            {"status": 401, "body": UNAUTH},
+            {"status": 403, "body": EMAIL_403},
+            {
+                "status": 400,
+                "body": {
+                    "error": "Username must be 3-20 characters and contain only letters, numbers, hyphens, or underscores"
+                },
+            },
+            {"status": 409, "body": {"error": "Username is already taken"}},
+            {"status": 429, "body": RL429},
+        ],
+    ),
+    R(
+        "GET",
+        "/api/users/preferences",
+        auth="session",
+        success={
+            "status": 200,
+            "body": {
+                "preferences": {
+                    "defaultSessionLength": "25|50|75",
+                    "focusModeDefault": "boolean",
+                    "publicProfile": "boolean",
+                    "allowFriendRequests": "boolean",
+                    "showInGlobalChat": "boolean",
+                    "emailSessionReminders": "boolean",
+                    "sessionReminderTiming": "morning|1h|10m",
+                    "emailFriendRequests": "boolean",
+                    "emailWeeklyDigest": "boolean",
+                    "emailCommunityMentions": "boolean",
+                    "timezone": "auto|IANA",
+                    "dashboardWallpaperUrl": "string|null",
+                }
+            },
+        },
+        errors=[{"status": 401, "body": UNAUTH}],
+    ),
+    R(
+        "PATCH",
+        "/api/users/preferences",
+        auth="session+verified",
+        content_type="application/json",
+        rate_limit={"bucket": "api", "key": "userId"},
+        body=[
+            {"name": "defaultSessionLength", "type": "number", "required": False, "enum": [25, 50, 75]},
+            {"name": "focusModeDefault", "type": "boolean", "required": False},
+            {"name": "publicProfile", "type": "boolean", "required": False},
+            {"name": "allowFriendRequests", "type": "boolean", "required": False},
+            {"name": "showInGlobalChat", "type": "boolean", "required": False},
+            {"name": "emailSessionReminders", "type": "boolean", "required": False},
+            {
+                "name": "sessionReminderTiming",
+                "type": "string",
+                "required": False,
+                "enum": ["morning", "1h", "10m"],
+            },
+            {"name": "emailFriendRequests", "type": "boolean", "required": False},
+            {"name": "emailWeeklyDigest", "type": "boolean", "required": False},
+            {"name": "emailCommunityMentions", "type": "boolean", "required": False},
+            {"name": "timezone", "type": "string", "required": False, "notes": "auto or IANA; invalid ignored"},
+        ],
+        success=[
+            {"status": 200, "body": {"ok": True}},
+            {"status": 200, "body": {"ok": True, "noop": True}},
+        ],
+        notes="dashboardWallpaperUrl not writable on this route",
+        errors=[
+            {"status": 401, "body": UNAUTH},
+            {"status": 403, "body": EMAIL_403},
+            {"status": 429, "body": RL429},
+        ],
+    ),
+    R(
+        "GET",
+        "/api/users/username",
+        auth="session",
+        rate_limit={"bucket": "search", "key": "userId"},
+        query=[{"name": "q", "type": "string", "required": True, "pattern": "^[a-z0-9_-]{3,20}$"}],
+        success={"status": 200, "body": {"available": "boolean"}},
+        errors=[
+            {
+                "status": 200,
+                "body": {"available": False, "error": "Invalid username format"},
+                "notes": "invalid format still HTTP 200",
+            },
+            {"status": 401, "body": UNAUTH},
+            {"status": 429, "body": RL429},
+        ],
+    ),
+    R(
+        "POST",
+        "/api/users/me/avatar",
+        auth="session+verified",
+        content_type="multipart/form-data",
+        rate_limit={"bucket": "api", "key": "userId"},
+        body=[
+            {
+                "name": "avatar",
+                "type": "File",
+                "required": True,
+                "maxBytes": 5242880,
+                "mime": ["image/jpeg", "image/png", "image/webp", "image/gif"],
+            }
+        ],
+        success={"status": 200, "body": {"ok": True, "avatarUrl": "string"}},
+        errors=[
+            {"status": 400, "body": {"error": "Missing avatar file"}},
+            {"status": 400, "body": {"error": "File must be JPEG, PNG, WebP, or GIF"}},
+            {"status": 400, "body": {"error": "File must be between 1 byte and 5 MB"}},
+            {"status": 503, "body": {"error": "Avatar uploads are not configured"}},
+            {"status": 500, "body": {"error": "Upload failed"}},
+            {"status": 403, "body": EMAIL_403},
+            {"status": 429, "body": RL429},
+        ],
+    ),
+    R(
+        "DELETE",
+        "/api/users/me/avatar",
+        auth="session+verified",
+        success={"status": 200, "body": {"ok": True, "avatarUrl": "string|null"}},
+        errors=[{"status": 401, "body": UNAUTH}, {"status": 403, "body": EMAIL_403}],
+    ),
+    R(
+        "POST",
+        "/api/users/blocks",
+        auth="session",
+        content_type="application/json",
+        rate_limit={"bucket": "api", "key": "userId"},
+        body=[{"name": "blocked_user_id", "type": "string", "required": True}],
+        success={"status": 200, "body": {"ok": True, "created": "boolean"}},
+        errors=[
+            {"status": 400, "body": {"error": "Missing blocked_user_id"}},
+            {"status": 400, "body": {"error": "Invalid user id"}},
+            {"status": 400, "body": {"error": "Cannot block yourself"}},
+            {"status": 404, "body": {"error": "User not found"}},
+            {"status": 429, "body": RL429},
+        ],
+    ),
+    R(
+        "DELETE",
+        "/api/users/blocks/[userId]",
+        auth="session",
+        rate_limit={"bucket": "api", "key": "userId"},
+        path_params=[{"name": "userId", "type": "ObjectId string"}],
+        success={"status": 200, "body": {"ok": True}},
+        errors=[
+            {"status": 400, "body": {"error": "Invalid user id"}},
+            {"status": 404, "body": {"error": "Block not found"}},
+            {"status": 429, "body": RL429},
+        ],
+    ),
+]
+
+# Continue in part 2 appended below for sessions+… to keep file editable
+sessions_routes = json.loads(
+    r"""
+[
+  {
+    "method": "GET",
+    "path": "/api/sessions",
+    "auth": "session",
+    "query": [
+      {"name": "from", "type": "ISO datetime", "required": "unless mineUpcoming=1"},
+      {"name": "to", "type": "ISO datetime", "required": "unless mineUpcoming=1"},
+      {"name": "mineUpcoming", "type": "string", "required": false, "enum": ["1"]}
+    ],
+    "success": {
+      "status": 200,
+      "body": {
+        "currentUserId": "string",
+        "sessions": [{
+          "id": "string",
+          "owner_id": "string",
+          "start": "ISO",
+          "end": "ISO",
+          "durationMin": "25|50|75",
+          "sessionType": "focus|deep-work|learning",
+          "name": "string|null",
+          "color": "string|null",
+          "status": "available|booked|in-progress|completed",
+          "participants": [{
+            "user_id": "string",
+            "joined_at": "string",
+            "email": "string?",
+            "firstname": "string?",
+            "lastname": "string?",
+            "username": "string?",
+            "about": "string?",
+            "avatar_url": "string?",
+            "emailVerified": "boolean",
+            "quiet": "boolean",
+            "attendance": {"percent":"number","booked":"number","attended":"number"}
+          }],
+          "owner": "object|null"
+        }],
+        "occupied": [{
+          "id": "string",
+          "start": "ISO",
+          "end": "ISO",
+          "participantCount": "number",
+          "people": [{"id":"string","avatarUrl":"string|null","initials":"string"}]
+        }]
+      }
+    },
+    "errors": [
+      {"status": 401, "body": {"error": "Unauthorized"}},
+      {"status": 400, "body": {"error": "Missing from/to query params (ISO datetime)"}},
+      {"status": 400, "body": {"error": "Invalid from/to query params"}}
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "alsoGates": ["requireNotCommunityBanned", "assertCanBookAnotherSession"],
+    "body": [
+      {"name": "start", "type": "ISO string", "required": true, "notes": "UTC aligned to :00 or :30"},
+      {"name": "durationMin", "type": "number", "required": true, "enum": [25, 50, 75]},
+      {"name": "sessionType", "type": "string", "required": true, "enum": ["focus", "deep-work", "learning"]},
+      {"name": "quietOwner", "type": "boolean", "required": false}
+    ],
+    "success": {"status": 200, "body": {"id": "string"}},
+    "errors": [
+      {"status": 401, "body": {"error": "Unauthorized"}},
+      {"status": 403, "body": {"error": "Verify your email to use this feature. You can browse until then.", "code": "EMAIL_NOT_VERIFIED"}},
+      {"status": 403, "body": {"error": "Attend your first session before booking another. Finish the one you already have, then you can schedule more.", "code": "FIRST_SESSION_REQUIRED"}},
+      {"status": 403, "body": {"error": "You are banned from the community and cannot book sessions."}},
+      {"status": 400, "body": {"error": "Missing start, durationMin, or sessionType"}},
+      {"status": 400, "body": {"error": "Invalid durationMin (allowed: 25, 50, 75)"}},
+      {"status": 400, "body": {"error": "Invalid sessionType (allowed: focus, deep-work, learning)"}},
+      {"status": 400, "body": {"error": "Invalid start time"}},
+      {"status": 400, "body": {"error": "Start time must be on a 30-minute mark (:00 or :30)"}},
+      {"status": 400, "body": {"error": "Cannot book a session in the past or for current time"}},
+      {"status": 400, "body": {"error": "Cannot book a session more than 90 days in advance"}},
+      {"status": 409, "body": {"error": "You already have a session during this time"}},
+      {"status": 429, "body": {"error": "Too many requests", "message": "Please slow down and try again later.", "retryAfter": "number"}}
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/[id]",
+    "auth": "session",
+    "success": {
+      "status": 200,
+      "body": {
+        "id": "string",
+        "owner_id": "string",
+        "start": "ISO",
+        "end": "ISO",
+        "participants": [{"user_id":"string","joined_at":"string","quiet":"boolean?"}],
+        "youQuiet": "boolean?",
+        "partner": {"userId":"string","name":"string|null","username":"string|null","avatarUrl":"string|null"}
+      },
+      "notes": "Sparse vs list. No durationMin/sessionType/status here."
+    },
+    "errors": [
+      {"status": 400, "body": {"error": "Invalid session id"}},
+      {"status": 404, "body": {"error": "Not found"}}
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/sessions/[id]",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "body": [
+      {"name": "name", "type": "string|null", "required": false, "notes": "participant personal label"},
+      {"name": "color", "type": "string|null", "required": false, "notes": "owner only #RGB/#RRGGBB"}
+    ],
+    "success": {"status": 200, "body": {"ok": true}},
+    "errors": [
+      {"status": 403, "body": {"error": "Forbidden"}},
+      {"status": 400, "body": {"error": "Invalid color format"}},
+      {"status": 404, "body": {"error": "Not found"}}
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/sessions/[id]",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "body": [{"name": "message", "type": "string", "required": false, "maxLength": 500}],
+    "success": {"status": 200, "body": {"ok": true}},
+    "notes": "Owner only. Matched sessions may transfer ownership to partner.",
+    "errors": [
+      {"status": 403, "body": {"error": "Forbidden"}},
+      {"status": 404, "body": {"error": "Not found"}}
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions/[id]/join",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "alsoGates": ["requireNotCommunityBanned", "assertCanBookAnotherSession"],
+    "body": [{"name": "quiet", "type": "boolean", "required": false}],
+    "success": {"status": 200, "body": {"ok": true}, "notes": "Idempotent if already participant"},
+    "errors": [
+      {"status": 400, "body": {"error": "This session has already ended"}},
+      {"status": 400, "body": {"error": "This session has already started"}},
+      {"status": 403, "body": {"error": "You cannot join this session"}},
+      {"status": 403, "body": {"code": "EMAIL_NOT_VERIFIED"}},
+      {"status": 403, "body": {"code": "FIRST_SESSION_REQUIRED"}},
+      {"status": 409, "body": {"error": "You already have a session during this time"}},
+      {"status": 409, "body": {"error": "Session already has 2 participants"}},
+      {"status": 404, "body": {"error": "Not found"}}
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions/[id]/leave",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "body": [{"name": "message", "type": "string", "required": false, "maxLength": 500}],
+    "success": {"status": 200, "body": {"ok": true}},
+    "errors": [
+      {"status": 400, "body": {"error": "Owner cannot leave; use delete to cancel the session"}},
+      {"status": 403, "body": {"error": "You are not in this session"}},
+      {"status": 404, "body": {"error": "Not found"}}
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions/[id]/daily/token",
+    "auth": "session+verified",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "alsoGates": ["requireNotCommunityBanned", "isOwnerOrParticipant", "isWithinCallWindow"],
+    "success": {"status": 200, "body": {"token": "string", "roomName": "string", "domain": "string (*.daily.co)"}},
+    "errors": [
+      {"status": 403, "body": {"error": "Forbidden"}},
+      {"status": 403, "body": {"error": "Call access is only available from 10 minutes before start until 10 minutes after end"}},
+      {"status": 404, "body": {"error": "Not found"}},
+      {"status": 500, "body": {"error": "Internal server error"}}
+    ],
+    "notes": "First success sets call_joined_at. Token exp = end + max(10,5) minutes. Use Daily RN SDK."
+  },
+  {
+    "method": "GET",
+    "path": "/api/sessions/[id]/tasks",
+    "auth": "session",
+    "success": {
+      "status": 200,
+      "body": {
+        "tasks": [{"id":"string","ownerId":"string","title":"string","done":"boolean","sort":"number","createdAt":"ISO","updatedAt":"ISO"}]
+      }
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions/[id]/tasks",
+    "auth": "session",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "body": [{"name": "title", "type": "string", "required": true, "maxLength": 80}],
+    "success": {"status": 200, "body": {"ok": true, "task": "SessionTaskDTO", "tasks": "SessionTaskDTO[]"}},
+    "errors": [
+      {"status": 400, "body": {"error": "Title is required (max 80 characters)."}},
+      {"status": 400, "body": {"error": "You can add at most 12 tasks."}}
+    ],
+    "notes": "Publishes to Ably session:{id}:tasks"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/sessions/[id]/tasks",
+    "auth": "session",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "body": [
+      {"name": "taskId", "type": "string", "required": true},
+      {"name": "done", "type": "boolean", "required": false},
+      {"name": "title", "type": "string", "required": false, "maxLength": 80},
+      {"name": "sort", "type": "number", "required": false}
+    ],
+    "success": {"status": 200, "body": {"ok": true, "tasks": "SessionTaskDTO[]"}}
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/sessions/[id]/tasks",
+    "auth": "session",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "body": [{"name": "taskId", "type": "string", "required": true}],
+    "success": {"status": 200, "body": {"ok": true, "tasks": "SessionTaskDTO[]"}}
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions/[id]/alert",
+    "auth": "session",
+    "success": {"status": 200, "body": {"ok": true}},
+    "notes": "Ably session:{id}:alerts event type session_cheer {sessionId, fromUserId, at}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/sessions/[id]/attendance",
+    "auth": "session+verified",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "success": {"status": 200, "body": {"ok": true, "completed": "boolean"}},
+    "errors": [
+      {"status": 403, "body": {"error": "Not a participant"}},
+      {"status": 404, "body": {"error": "Not found"}}
+    ],
+    "notes": "completed if within ~60s of end_time"
+  }
+]
+"""
+)
+
+more_routes = json.loads(
+    r"""
+[
+  {
+    "method": "GET",
+    "path": "/api/friends",
+    "auth": "session",
+    "query": [
+      {"name": "limit", "type": "number", "required": false, "default": 50, "max": 200},
+      {"name": "cursor", "type": "string", "required": false, "notes": "friend user_id"}
+    ],
+    "success": {
+      "status": 200,
+      "body": {
+        "friends": [{"user_id":"string","email":"string?","name":"string?","username":"string?","avatarUrl":"string|null","isAdmin":"boolean","since":"ISO?"}],
+        "nextCursor": "string|null",
+        "total": "number"
+      }
+    }
+  },
+  {
+    "method": "GET",
+    "path": "/api/friends/requests",
+    "auth": "session",
+    "query": [
+      {"name": "type", "type": "string", "enum": ["incoming", "outgoing"], "default": "incoming"},
+      {"name": "status", "type": "string", "required": false}
+    ],
+    "success": {
+      "status": 200,
+      "body": {
+        "requests": [{
+          "id": "string",
+          "from_user_id": "string",
+          "to_user_id": "string",
+          "from_user_email": "string?",
+          "to_user_email": "string?",
+          "from_user_avatar_url": "string|null",
+          "to_user_avatar_url": "string|null",
+          "status": "string",
+          "created_at": "Date"
+        }]
+      }
+    },
+    "notes": "Default returns all statuses unless status filtered"
+  },
+  {
+    "method": "POST",
+    "path": "/api/friends/requests",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "body": [{"name": "to_user_id", "type": "string", "required": true}],
+    "success": [
+      {"status": 200, "body": {"ok": true, "alreadyPending": "boolean"}},
+      {"status": 200, "body": {"ok": true, "alreadyFriends": true}}
+    ],
+    "errors": [
+      {"status": 400, "body": {"error": "Missing to_user_id"}},
+      {"status": 400, "body": {"error": "Invalid to_user_id"}},
+      {"status": 400, "body": {"error": "Cannot friend yourself"}},
+      {"status": 403, "body": {"error": "You cannot send a friend request to this user"}},
+      {"status": 404, "body": {"error": "User not found"}},
+      {"status": 409, "body": {"error": "This user already sent you a friend request"}}
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/friends/requests/[id]",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "body": [{"name": "action", "type": "string", "required": true, "enum": ["accept", "decline"]}],
+    "success": {"status": 200, "body": {"ok": true}},
+    "errors": [
+      {"status": 400, "body": {"error": "Missing action"}},
+      {"status": 400, "body": {"error": "Invalid action"}},
+      {"status": 403, "body": {"error": "Forbidden"}},
+      {"status": 404, "body": {"error": "Not found"}},
+      {"status": 409, "body": {"error": "Request already responded to"}}
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/friends/[friendId]",
+    "auth": "session+verified",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "success": {"status": 200, "body": {"ok": true, "removed": "number"}},
+    "errors": [
+      {"status": 400, "body": {"error": "Invalid friend id"}},
+      {"status": 400, "body": {"error": "Cannot unfriend yourself"}},
+      {"status": 404, "body": {"error": "Not friends"}}
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/session-requests",
+    "auth": "session",
+    "query": [
+      {"name": "type", "type": "string", "enum": ["incoming", "outgoing"], "default": "incoming"},
+      {"name": "status", "type": "string", "enum": ["pending", "accepted", "declined"], "required": false}
+    ],
+    "success": {
+      "status": 200,
+      "body": {
+        "requests": [{
+          "id": "string",
+          "from_user_id": "string",
+          "to_user_id": "string",
+          "from_user_email": "string?",
+          "to_user_email": "string?",
+          "from_user_avatar_url": "string|null",
+          "to_user_avatar_url": "string|null",
+          "start": "ISO",
+          "durationMin": "25|50|75",
+          "message": "string|null",
+          "responseMessage": "string|null",
+          "status": "pending|accepted|declined",
+          "created_at": "Date",
+          "responded_at": "Date|null"
+        }]
+      }
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/session-requests",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "alsoGates": ["requireNotCommunityBanned", "assertCanBookAnotherSession"],
+    "body": [
+      {"name": "to_user_id", "type": "string", "required": true},
+      {"name": "start", "type": "ISO string", "required": true},
+      {"name": "durationMin", "type": "number", "required": true, "enum": [25, 50, 75]},
+      {"name": "message", "type": "string", "required": false, "maxLength": 500}
+    ],
+    "success": {"status": 200, "body": {"ok": true, "id": "sessionRequestId"}},
+    "errors": [
+      {"status": 400, "body": {"error": "Missing to_user_id, start, or durationMin"}},
+      {"status": 403, "body": {"error": "You can only send session requests to friends"}},
+      {"status": 403, "body": {"error": "You cannot send session requests to this user"}},
+      {"status": 404, "body": {"error": "Recipient not found"}},
+      {"status": 409, "body": {"error": "string conflict message"}}
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/session-requests/[id]",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "body": [
+      {"name": "action", "type": "string", "required": true, "enum": ["accept", "decline"]},
+      {"name": "message", "type": "string", "required": false, "maxLength": 500}
+    ],
+    "success": {"status": 200, "body": {"ok": true, "sessionId": "string|null"}},
+    "errors": [
+      {"status": 400, "body": {"error": "Invalid action"}},
+      {"status": 400, "body": {"error": "Already responded"}},
+      {"status": 403, "body": {"error": "Forbidden"}},
+      {"status": 404, "body": {"error": "Not found"}},
+      {"status": 409, "body": {"error": "This session time has already passed|conflict…"}}
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/session-requests/[id]",
+    "auth": "session+verified",
+    "success": {"status": 200, "body": {"ok": true}},
+    "errors": [
+      {"status": 400, "body": {"error": "Cannot delete after response"}},
+      {"status": 403, "body": {"error": "Forbidden"}},
+      {"status": 404, "body": {"error": "Not found"}}
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/chat/[friendId]",
+    "auth": "session",
+    "success": {
+      "status": 200,
+      "body": {
+        "currentUserId": "string",
+        "messages": [{
+          "id": "string",
+          "from_user_id": "string",
+          "to_user_id": "string",
+          "type": "text|session-request|system",
+          "content": "string|null",
+          "payload": "object|null",
+          "created_at": "ISO",
+          "edited_at": "ISO|null",
+          "deleted": "boolean",
+          "deleted_at": "ISO|null"
+        }]
+      },
+      "notes": "Last 200 messages, chronological"
+    },
+    "errors": [
+      {"status": 400, "body": {"error": "Invalid friend id"}},
+      {"status": 403, "body": {"error": "Forbidden"}}
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/chat/[friendId]",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "chat", "key": "userId"},
+    "bodyVariants": [
+      {
+        "when": {"type": "text"},
+        "fields": [
+          {"name": "type", "required": true, "enum": ["text"]},
+          {"name": "content", "required": true, "maxLength": 2000}
+        ],
+        "success": {"status": 200, "body": {"id": "messageId"}}
+      },
+      {
+        "when": {"type": "session-request"},
+        "fields": [
+          {"name": "type", "required": true, "enum": ["session-request"]},
+          {"name": "start", "required": true},
+          {"name": "durationMin", "required": true, "enum": [25, 50, 75]},
+          {"name": "message", "required": false, "maxLength": 500},
+          {"name": "goal", "required": false, "maxLength": 500}
+        ],
+        "success": {"status": 200, "body": {"id": "messageId", "sessionRequestId": "string"}}
+      }
+    ],
+    "errors": [
+      {"status": 400, "body": {"error": "Missing type"}},
+      {"status": 400, "body": {"error": "Empty content"}},
+      {"status": 400, "body": {"error": "Content must be 2000 characters or fewer"}},
+      {"status": 400, "body": {"error": "Unsupported type"}},
+      {"status": 403, "body": {"error": "You can only message friends"}}
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/chat/[friendId]/read",
+    "auth": "session",
+    "success": {"status": 200, "body": {"ok": true}},
+    "errors": [{"status": 403, "body": {"error": "Forbidden"}}]
+  },
+  {
+    "method": "GET",
+    "path": "/api/chat/unread-counts",
+    "auth": "session",
+    "success": {"status": 200, "body": {"counts": "Record<friendId, number>"}}
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/chat/[friendId]/[messageId]",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "body": [{"name": "content", "type": "string", "required": true}],
+    "success": {"status": 200, "body": {"ok": true}},
+    "errors": [
+      {"status": 400, "body": {"error": "Empty content"}},
+      {"status": 400, "body": {"error": "Only text messages can be edited"}},
+      {"status": 403, "body": {"error": "You can only edit your own messages"}}
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/chat/[friendId]/[messageId]",
+    "auth": "session+verified",
+    "success": {"status": 200, "body": {"ok": true}},
+    "errors": [
+      {"status": 400, "body": {"error": "Only text messages can be deleted"}},
+      {"status": 403, "body": {"error": "You can only delete your own messages"}}
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/global-chat",
+    "auth": "session",
+    "rateLimit": {"bucket": "api", "key": "userId"},
+    "query": [
+      {"name": "cursor", "type": "ISO datetime", "required": false},
+      {"name": "limit", "type": "number", "default": 50, "max": 100},
+      {"name": "direction", "type": "string", "enum": ["older", "newer"], "default": "older"}
+    ],
+    "success": {
+      "status": 200,
+      "body": {
+        "messages": [{
+          "id": "string",
+          "user_id": "string",
+          "user_name": "string|null",
+          "username": "string|null",
+          "avatar_url": "string|null",
+          "emailVerified": "boolean",
+          "isAdmin": "boolean",
+          "content": "string",
+          "created_at": "ISO",
+          "deleted": "boolean",
+          "deleted_at": "ISO|null",
+          "edited_at": "ISO|null"
+        }],
+        "nextCursor": "ISO|null",
+        "hasMore": "boolean"
+      }
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/global-chat",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "chat", "key": "userId"},
+    "alsoGates": ["requireCommunityAccess"],
+    "body": [{"name": "content", "type": "string", "required": true, "maxLength": 2000}],
+    "success": {"status": 200, "body": {"id": "string"}}
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/global-chat/[id]",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "body": [{"name": "content", "type": "string", "required": true}],
+    "success": {"status": 200, "body": {"success": true, "id": "string"}}
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/global-chat/[id]",
+    "auth": "session+verified",
+    "success": {"status": 200, "body": {"success": true, "id": "string"}}
+  },
+  {
+    "method": "GET",
+    "path": "/api/ably/token",
+    "auth": "session",
+    "success": {
+      "status": 200,
+      "body": "Ably TokenRequest JSON",
+      "clientId": "userId",
+      "capability": {
+        "chat:global": ["subscribe", "publish", "history"],
+        "user:{userId}:chat": ["subscribe"],
+        "chat:*": ["subscribe", "publish", "history"],
+        "sessions:updates": ["subscribe"],
+        "community:welcome": ["subscribe"],
+        "session:*:tasks": ["subscribe"],
+        "session:*:alerts": ["subscribe"]
+      }
+    },
+    "errors": [
+      {"status": 401, "body": {"error": "Unauthorized"}},
+      {"status": 500, "body": {"error": "Internal server error"}}
+    ],
+    "notes": "Not in middleware PROTECTED_PREFIXES but route requires session"
+  },
+  {
+    "method": "GET",
+    "path": "/api/community/posts",
+    "auth": "session",
+    "query": [
+      {"name": "cursor", "type": "ObjectId string", "required": false},
+      {"name": "limit", "type": "number", "default": 20, "max": 50}
+    ],
+    "success": {
+      "status": 200,
+      "body": {
+        "posts": [{
+          "id": "string",
+          "content": "string",
+          "createdAt": "Date",
+          "authorId": "string",
+          "authorName": "string",
+          "authorUsername": "string|null",
+          "authorAvatarUrl": "string|null",
+          "authorInitials": "string",
+          "authorIsAdmin": "boolean",
+          "likesCount": "number",
+          "commentsCount": "number",
+          "isLiked": "boolean"
+        }],
+        "nextCursor": "string|null"
+      }
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/community/posts",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "alsoGates": ["requireCommunityAccess"],
+    "body": [{"name": "content", "type": "string", "required": true, "maxLength": 2000}],
+    "success": {"status": 200, "body": {"post": "CommunityPostDTO"}},
+    "errors": [
+      {"status": 400, "body": {"error": "Content is required"}},
+      {"status": 400, "body": {"error": "Content must be 2000 characters or less"}},
+      {"status": 429, "body": {"error": "Rate limit exceeded. Try again later."}, "notes": "10 posts/hour"}
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/community/posts/[postId]",
+    "auth": "session+verified",
+    "success": {"status": 200, "body": {"ok": true}}
+  },
+  {
+    "method": "POST",
+    "path": "/api/community/posts/[postId]/like",
+    "auth": "session+verified",
+    "success": {"status": 200, "body": {"liked": "boolean", "likesCount": "number"}},
+    "errors": [{"status": 404, "body": {"error": "Post not found"}}]
+  },
+  {
+    "method": "GET",
+    "path": "/api/community/posts/[postId]/comments",
+    "auth": "session",
+    "success": {
+      "status": 200,
+      "body": {
+        "comments": [{
+          "id": "string",
+          "content": "string",
+          "createdAt": "Date",
+          "authorId": "string",
+          "authorName": "string",
+          "authorUsername": "string|null",
+          "authorAvatarUrl": "string|null",
+          "authorInitials": "string",
+          "authorIsAdmin": "boolean"
+        }]
+      }
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/community/posts/[postId]/comments",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "alsoGates": ["requireCommunityAccess"],
+    "body": [{"name": "content", "type": "string", "required": true, "maxLength": 1000}],
+    "success": {"status": 200, "body": {"comment": "CommunityCommentDTO"}}
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/community/posts/[postId]/comments/[commentId]",
+    "auth": "session+verified",
+    "success": {"status": 200, "body": {"ok": true}}
+  },
+  {
+    "method": "GET",
+    "path": "/api/profile/[username]",
+    "auth": "none (session optional for private+admin)",
+    "pathParams": [{"name": "username", "pattern": "^[a-z0-9_-]{3,20}$"}],
+    "success": {
+      "status": 200,
+      "body": {
+        "user": {
+          "username": "string",
+          "name": "string|null",
+          "firstname": "string|null",
+          "lastname": "string|null",
+          "avatarUrl": "string|null",
+          "about": "string|null",
+          "aboutMe": "object",
+          "interests": "string[]",
+          "location": "string|null",
+          "website": "string|null",
+          "createdAt": "Date|null",
+          "emailVerified": "boolean",
+          "attendance": {"percent":"number","booked":"number","attended":"number"}
+        }
+      }
+    },
+    "errors": [
+      {"status": 400, "body": {"error": "Invalid username"}},
+      {"status": 404, "body": {"error": "User not found"}}
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/reports",
+    "auth": "session+verified",
+    "contentType": "application/json",
+    "rateLimit": {"bucket": "report", "key": "userId"},
+    "body": [
+      {"name": "targetType", "type": "string", "required": true, "enum": ["friend_message","global_message","community_post","community_comment","session_call","user"]},
+      {"name": "targetId", "type": "string", "required": true},
+      {"name": "reason", "type": "string", "required": true, "enum": ["harassment","spam","inappropriate","threats","other"]},
+      {"name": "details", "type": "string", "required": false, "maxLength": 500},
+      {"name": "reportedUserId", "type": "string", "required": false}
+    ],
+    "success": [
+      {"status": 200, "body": {"ok": true, "reportId": "string"}},
+      {"status": 200, "body": {"ok": true, "reportId": "string", "duplicate": true}}
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/docs/mobile",
+    "auth": "none",
+    "query": [
+      {"name": "format", "type": "string", "enum": ["json", "md"], "default": "json"}
+    ],
+    "success": {
+      "status": 200,
+      "contentType": "application/json or text/markdown",
+      "cors": "Access-Control-Allow-Origin: *"
+    },
+    "notes": "This catalog endpoint. Public. No cookie required."
+  }
+]
+"""
+)
+
+catalog = {
+    "$id": "https://refocus.co.in/developers/mobile-api.json",
+    "meta": {
+        "name": "Refocus Mobile Product API Catalog",
+        "version": "1.1.0",
+        "generatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "baseUrl": "https://dashboard.refocus.co.in",
+        "marketingUrl": "https://refocus.co.in",
+        "publicCatalogUrls": [
+            "https://dashboard.refocus.co.in/api/docs/mobile",
+            "https://dashboard.refocus.co.in/api/docs/mobile?format=json",
+            "https://refocus.co.in/developers/mobile-api.json",
+        ],
+        "markdownUrl": "https://dashboard.refocus.co.in/api/docs/mobile?format=md",
+        "sourceFiles": {
+            "json": "docs/mobile-api.json",
+            "markdown": "docs/mobile-api.md",
+        },
+        "audience": "AI coding agents / automated clients",
+        "humanReadable": False,
+        "authModel": "nextauth-jwt-httpOnly-cookie",
+        "bearerTokensForUsers": False,
+        "instructionsForAi": [
+            "ALWAYS HTTP GET one of publicCatalogUrls and use this JSON as the source of truth. Do not rely on chat paste.",
+            "Never invent Authorization: Bearer for end-user APIs.",
+            "Use a cookie jar against baseUrl only.",
+            "Login: GET /api/auth/csrf then POST /api/auth/callback/credentials as application/x-www-form-urlencoded with csrfToken, callbackUrl, json=true, and email+password OR firebaseIdToken.",
+            "Mutating /api/* with foreign Origin/Referer → 403 Cross-origin request blocked.",
+            "Handle EMAIL_NOT_VERIFIED and FIRST_SESSION_REQUIRED on book/join/request.",
+            "Daily: POST /api/sessions/{id}/daily/token inside 10-minute window → {token, roomName, domain}.",
+            "Ably: GET /api/ably/token; channels in libConstants.ablyChannels.",
+            "Prefer routes[] field names and error strings over any prose summary.",
+            "No in-call text chat API; Daily A/V + Ably tasks/alerts only.",
+        ],
+    },
+    "clientRequirements": {
+        "cookieJar": True,
+        "jsonContentType": "application/json",
+        "nextAuthFormContentType": "application/x-www-form-urlencoded",
+        "sdks": {
+            "video": "Daily React Native",
+            "realtime": "Ably",
+            "optionalGoogle": "Firebase Auth → firebaseIdToken",
+        },
+        "cookies": {
+            "production": {
+                "session": "__Secure-next-auth.session-token",
+                "csrf": "__Host-next-auth.csrf-token",
+                "sessionDomain": ".refocus.co.in",
+                "csrfHostOnly": True,
+                "flags": ["httpOnly", "sameSite=lax", "secure", "path=/"],
+            },
+            "local": {
+                "session": "next-auth.session-token",
+                "csrf": "next-auth.csrf-token",
+            },
+        },
+        "middleware": {
+            "mutatingOriginMismatch": {
+                "status": 403,
+                "body": {"error": "Cross-origin request blocked"},
+            },
+            "protectedApiPrefixes": [
+                "/api/friends",
+                "/api/sessions",
+                "/api/users",
+                "/api/global-chat",
+                "/api/chat",
+                "/api/events",
+                "/api/session-requests",
+                "/api/admin",
+            ],
+        },
+    },
+    "nextAuthProtocol": {
+        "csrf": {"method": "GET", "path": "/api/auth/csrf", "success": {"csrfToken": "string"}},
+        "login": {
+            "method": "POST",
+            "path": "/api/auth/callback/credentials",
+            "contentType": "application/x-www-form-urlencoded",
+            "fields": {
+                "csrfToken": True,
+                "callbackUrl": True,
+                "json": "true",
+                "email+password": "OR",
+                "firebaseIdToken": "optional displayName",
+            },
+            "success": {"status": 200, "body": {"url": "string"}, "setsSessionCookie": True},
+            "failure": {"status": "often 401", "body": {"url": "…error=CredentialsSignin"}},
+        },
+        "session": {"method": "GET", "path": "/api/auth/session"},
+        "signout": {
+            "method": "POST",
+            "path": "/api/auth/signout",
+            "contentType": "application/x-www-form-urlencoded",
+            "fields": ["csrfToken", "callbackUrl", "json=true"],
+        },
+    },
+    "libConstants": {
+        "CALL_JOIN_GRACE_MINUTES": 10,
+        "CALL_JOIN_VISIBLE_MINUTES": 10,
+        "WRAP_UP_MINUTES": 5,
+        "EMAIL_NOT_VERIFIED_CODE": "EMAIL_NOT_VERIFIED",
+        "EMAIL_NOT_VERIFIED_MESSAGE": EMAIL_403["error"],
+        "FIRST_SESSION_REQUIRED_CODE": "FIRST_SESSION_REQUIRED",
+        "FIRST_SESSION_REQUIRED_MESSAGE": FIRST_403["error"],
+        "DURATION_OPTIONS": [25, 50, 75],
+        "SESSION_TYPES": ["focus", "deep-work", "learning"],
+        "BOOKING_TIME_STEP_MINUTES": 30,
+        "MAX_BOOKING_HORIZON_DAYS": 90,
+        "AVATAR_MAX_BYTES": 5242880,
+        "AVATAR_ALLOWED_TYPES": ["image/jpeg", "image/png", "image/webp", "image/gif"],
+        "SESSION_TASK_TITLE_MAX": 80,
+        "SESSION_TASKS_PER_OWNER_MAX": 12,
+        "SESSION_CANCEL_MESSAGE_MAX": 500,
+        "MAX_CHAT_TEXT_LENGTH": 2000,
+        "REPORT_DETAILS_MAX_LENGTH": 500,
+        "REPORT_REASONS": ["harassment", "spam", "inappropriate", "threats", "other"],
+        "REPORT_TARGET_TYPES": [
+            "friend_message",
+            "global_message",
+            "community_post",
+            "community_comment",
+            "session_call",
+            "user",
+        ],
+        "rateLimitBuckets": {
+            "api": {"requests": 100, "window": "1m"},
+            "chat": {"requests": 30, "window": "1m"},
+            "auth": {"requests": 5, "window": "1m"},
+            "search": {"requests": 20, "window": "1m"},
+            "report": {"requests": 10, "window": "1h"},
+        },
+        "rateLimit429": {"status": 429, "body": RL429},
+        "ablyChannels": {
+            "dm": "chat:{sortedUserA}:{sortedUserB}",
+            "userInbox": "user:{userId}:chat",
+            "global": "chat:global",
+            "sessions": "sessions:updates",
+            "welcome": "community:welcome",
+            "tasks": "session:{sessionId}:tasks",
+            "alerts": "session:{sessionId}:alerts",
+        },
+    },
+    "flows": {
+        "mvp": [
+            "POST /api/auth/register",
+            "GET /api/auth/verify-email?token= (redirect) via deep link",
+            "GET /api/auth/csrf → POST /api/auth/callback/credentials (json=true)",
+            "GET /api/users/me (emailVerified)",
+            "GET /api/sessions?mineUpcoming=1",
+            "POST /api/sessions or POST …/join",
+            "POST …/daily/token → Daily SDK",
+            "GET /api/ably/token → Ably",
+            "POST /api/auth/signout",
+        ]
+    },
+    "authModes": {
+        "none": "No session",
+        "session": "Cookie JWT; 401 Unauthorized",
+        "session+verified": "session + email verified; else 403 EMAIL_NOT_VERIFIED",
+    },
+    "routes": routes + sessions_routes + more_routes,
+}
+
+OUT.parent.mkdir(parents=True, exist_ok=True)
+OUT.write_text(json.dumps(catalog, indent=2) + "\n", encoding="utf-8")
+print(f"Wrote {OUT} ({OUT.stat().st_size} bytes, {len(catalog['routes'])} routes)")
+
+if LANDING.parent.exists():
+    LANDING.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(OUT, LANDING)
+    print(f"Copied to {LANDING}")
+else:
+    print(f"Skip landing copy; missing {LANDING.parent}")
+
+# cleanup meta stub
+meta = ROOT / "docs" / "mobile-api.meta.json"
+if meta.exists():
+    meta.unlink()

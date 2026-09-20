@@ -52,6 +52,14 @@ git checkout landing     # marketing site + blog content
 
 Marketing (on `landing`): Astro static site, React islands, SEO blog with OpenAI-assisted posts.
 
+### Mobile / API
+
+Product JSON APIs live on `dashboard.refocus.co.in` (cookie-session NextAuth; no Bearer tokens yet).
+
+- **Machine catalog (for AI / codegen):** `GET /api/docs/mobile` → [`docs/mobile-api.json`](docs/mobile-api.json) (also `https://refocus.co.in/developers/mobile-api.json`)
+- **Prose:** [`docs/mobile-api.md`](docs/mobile-api.md) · public page [refocus.co.in/developers](https://refocus.co.in/developers)
+- Rebuild catalog: `python3 scripts/build-mobile-api-catalog.py`
+
 ---
 
 ## Getting started — dashboard (`test-dash`)
@@ -149,15 +157,15 @@ Optional repo variable: `OPENAI_MODEL` (defaults to `gpt-4o-mini`).
 | --- | --- |
 | Push to `test-dash` | Vercel rebuilds the dashboard |
 | Push to `landing` under `marketing/` | GitHub Action builds Astro and deploys to Cloudflare Pages |
-| Daily blog slots (3×/day, rotating niches) | Generates a post on `landing`, builds, deploys to Cloudflare — **does not** push to `test-dash` |
+| Daily blog slots (2×/day, rotating locale + niche) | Generates a post on `landing`, builds, deploys to Cloudflare — **does not** push to `test-dash` |
 | Manual: Actions → a niche workflow or a daily slot | Same as cron; niche workflows pin the category |
 
-The blog workflow files live on the **default branch** (`test-dash`) because GitHub only schedules from the default branch. The job always **checks out and pushes to `landing`**.
+The blog workflow files that actually schedule live on the **default branch** (`landing`). The job always **checks out and pushes to `landing`**. Hard cap: **2 auto-generated posts per UTC day** across all locales.
 
-Workflow files:
+Workflow files (on `landing`):
 
-- `.github/workflows/blog-slot-*.yml` — 3 daily rotating posts + CF deploy
-- `.github/workflows/blog-*.yml` — per-niche **manual** generate
+- `.github/workflows/blog-slot-0.yml` / `blog-slot-1.yml` — 2 daily rotating posts + CF deploy
+- `.github/workflows/blog-*.yml` — per-niche or per-locale **manual** generate
 - `.github/workflows/deploy-marketing.yml` — on `landing` only; deploys marketing on push
 
 ---
