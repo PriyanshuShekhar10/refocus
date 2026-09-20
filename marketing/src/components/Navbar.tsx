@@ -50,7 +50,6 @@ export default function Navbar() {
             width={182}
             height={52}
             decoding="async"
-            // @ts-expect-error fetchpriority is a valid HTML attribute
             fetchPriority="low"
           />
         </a>

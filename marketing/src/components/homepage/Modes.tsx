@@ -135,7 +135,7 @@ function FriendsVisual() {
           <span className={styles.friendInvite}>Invite →</span>
         </div>
 
-        <div className={`${styles.friendRow} ${styles.friendRowLin}`}>
+        <div className={styles.friendRow}>
           <img
             className={styles.friendAv}
             src={AVATARS.lin}

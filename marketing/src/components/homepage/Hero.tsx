@@ -71,8 +71,7 @@ export function Hero({ image }: { image?: HeroImage }) {
                 height={image.height}
                 loading="eager"
                 decoding="async"
-                // @ts-expect-error fetchpriority is a valid HTML attribute
-                fetchpriority="high"
+                fetchPriority="high"
               />
             </picture>
           ) : (

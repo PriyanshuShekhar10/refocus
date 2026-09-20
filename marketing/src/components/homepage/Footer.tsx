@@ -21,6 +21,7 @@ export function Footer() {
           <a href="/cofocus-alternative">vs Cofocus</a>
           <a href="/about">About</a>
           <a href="/blog">Blog</a>
+          <a href="/developers">Developers</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
           <a href={url("/auth/login")}>Log in</a>

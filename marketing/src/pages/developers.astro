@@ -1,0 +1,365 @@
+---
+import ContentPage from "../layouts/ContentPage.astro";
+
+const site = "https://refocus.co.in";
+const APP = "https://dashboard.refocus.co.in";
+const UPDATED = "2026-09-21";
+const title = "API for mobile apps";
+const description =
+  "Complete Refocus product API reference for React Native — cookie auth, sessions, Daily video, Ably chat, friends, and safety.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    name: "Refocus API for mobile apps",
+    url: `${site}/developers`,
+    description,
+    dateModified: new Date(UPDATED).toISOString(),
+  },
+];
+
+const s = {
+  registerOk: '{ "id": "<userId>" }',
+  csrf: '{ "csrfToken": "…" }',
+  loginOk: '{ "url": "<callbackUrl>" }',
+  emailGate: `{
+  "error": "Verify your email to use this feature. You can browse until then.",
+  "code": "EMAIL_NOT_VERIFIED"
+}`,
+  firstSession: `{
+  "error": "Attend your first session before booking another. Finish the one you already have, then you can schedule more.",
+  "code": "FIRST_SESSION_REQUIRED"
+}`,
+  createSession:
+    '{ "start", "durationMin", "sessionType", "quietOwner?" }',
+  idOnly: '{ "id" }',
+  okTrue: '{ "ok": true }',
+  quiet: '{ "quiet?" }',
+  getOne: `{
+  "id", "owner_id", "start", "end",
+  "participants": [{ "user_id", "joined_at", "quiet?" }],
+  "youQuiet",
+  "partner": { "userId", "name", "username", "avatarUrl" }
+}`,
+  dailyToken: `{
+  "token": "<daily-meeting-token>",
+  "roomName": "…",
+  "domain": "….daily.co"
+}`,
+  friendsPage: '{ friends, nextCursor, total }',
+  toUser: '{ "to_user_id" }',
+  friendAction: '{ "action": "accept" | "decline" }',
+  sessionReq:
+    '{ "to_user_id", "start", "durationMin", "message?" }',
+  sessionRespond:
+    '{ "action": "accept" | "decline", "message?" }',
+  sessionRespondOk: '{ "ok": true, "sessionId": "<id>|null" }',
+  chatText: '{ "type": "text", "content" }',
+  chatSession:
+    '{ "type": "session-request", "start", "durationMin", "message?" }',
+  report: `{
+  "targetType": "friend_message",
+  "targetId": "…",
+  "reason": "harassment",
+  "details?": "…",
+  "reportedUserId?"
+}`,
+  rateLimit: '{ "error": "Too many requests", "retryAfter" }',
+  content: '{ "content" }',
+  chDm: 'chat:{sortedUserA}:{sortedUserB}',
+  chUser: 'user:{userId}:chat',
+  chTasks: 'session:{sessionId}:tasks',
+  chAlerts: 'session:{sessionId}:alerts',
+};
+---
+
+<ContentPage
+  title={title}
+  description={description}
+  canonical="/developers"
+  heading="Refocus API for mobile apps"
+  updated={UPDATED}
+  jsonLd={jsonLd}
+>
+  <p>
+    <strong>AI / automated clients — fetch the catalog (do not paste docs):</strong>
+  </p>
+  <ul>
+    <li>
+      <code>GET {APP}/api/docs/mobile</code> — full JSON (CORS open)
+    </li>
+    <li>
+      <code>GET {APP}/api/docs/mobile?format=md</code> — markdown
+    </li>
+    <li>
+      <a href="/developers/mobile-api.json"
+        ><code>{site}/developers/mobile-api.json</code></a
+      > — same JSON (static)
+    </li>
+  </ul>
+  <p>
+    The JSON includes every mobile-relevant route, body fields, enums, status
+    codes, error strings, cookies, Ably channels, and call-window constants.
+    Prefer it over this HTML page when generating a client.
+  </p>
+  <p>
+    Build a React Native (or other native) client against the Refocus product
+    API. Canonical source:
+    <code>docs/mobile-api.json</code> on the product (<code>test-dash</code>)
+    branch —
+    <a href="https://github.com/PriyanshuShekhar10/refocus/blob/test-dash/docs/mobile-api.json"
+      >GitHub</a
+    >.
+  </p>
+  <p>
+    <strong>No Bearer tokens</strong> for end users. Auth is NextAuth JWT in
+    <strong>httpOnly cookies</strong> — use a cookie jar.
+  </p>
+
+  <h2>Overview</h2>
+  <ul>
+    <li><strong>Base URL:</strong> <code>{APP}</code> (never the marketing apex for <code>/api/*</code>)</li>
+    <li><strong>JSON:</strong> <code>application/json</code></li>
+    <li>
+      <strong>NextAuth login/signout:</strong>
+      <code>application/x-www-form-urlencoded</code>
+    </li>
+  </ul>
+
+  <h3>Minimum path</h3>
+  <ol>
+    <li>Register → verify email → login (cookies)</li>
+    <li><code>GET /api/users/me</code> → require <code>emailVerified</code></li>
+    <li>List / create / join sessions</li>
+    <li>Call window → Daily token → Daily RN SDK</li>
+    <li>Ably token → friend chat</li>
+    <li>Sign out</li>
+  </ol>
+  <p>
+    There is no in-session text-chat API beyond Daily A/V. In-call extras are
+    tasks + cheer alerts over Ably.
+  </p>
+
+  <h2>Authentication</h2>
+  <h3>Cookies (production)</h3>
+  <ul>
+    <li>
+      <code>__Secure-next-auth.session-token</code> — session JWT
+      (<code>Domain=.refocus.co.in</code>)
+    </li>
+    <li>
+      <code>__Host-next-auth.csrf-token</code> — CSRF (host-only on dashboard)
+    </li>
+  </ul>
+  <p>
+    Persist <code>Set-Cookie</code>. Do not forge <code>Origin</code>/<code>Referer</code>
+    (403 cross-origin). No CORS — native HTTP only.
+  </p>
+
+  <h3>Register</h3>
+  <p>
+    <code>POST /api/auth/register</code> —
+    <code>email</code>, <code>password</code> required →
+    <code>{s.registerOk}</code>. Does not set a session.
+  </p>
+
+  <h3>Login (exact)</h3>
+  <ol>
+    <li><code>GET /api/auth/csrf</code> → <code>{s.csrf}</code></li>
+    <li>
+      <code>POST /api/auth/callback/credentials</code> as
+      <code>x-www-form-urlencoded</code> with
+      <code>csrfToken</code>, <code>callbackUrl</code>,
+      <strong><code>json=true</code></strong>, and
+      <code>email</code>+<code>password</code> <em>or</em>
+      <code>firebaseIdToken</code>
+    </li>
+  </ol>
+  <p>
+    Success: <code>{s.loginOk}</code> + session <code>Set-Cookie</code>. Failure
+    often 401 with <code>error=CredentialsSignin</code> in the <code>url</code>.
+    Without <code>json=true</code> you get a 302 — avoid that in RN.
+  </p>
+  <p>
+    Probe: <code>GET /api/auth/session</code>. Sign out:
+    <code>POST /api/auth/signout</code> (same form style + <code>json=true</code>).
+  </p>
+
+  <h3>Email verification</h3>
+  <p>
+    <code>GET /api/auth/verify-email?token=…</code> redirects (not JSON). Handle
+    via deep link / in-app browser, then re-check
+    <code>GET /api/users/me</code>. Resend:
+    <code>POST /api/auth/resend-verification</code>.
+  </p>
+
+  <h2>Booking &amp; access gates</h2>
+  <p><strong>403 email:</strong></p>
+  <pre><code>{s.emailGate}</code></pre>
+  <p>
+    <strong>403 first session</strong> (zero attendance → only one upcoming
+    booking/request):
+  </p>
+  <pre><code>{s.firstSession}</code></pre>
+  <p>
+    Call window: join allowed <strong>10 minutes</strong> before start through
+    <strong>10 minutes</strong> after end (<code>WRAP_UP</code> token padding: 5
+    min).
+  </p>
+
+  <h2>Current user</h2>
+  <ul>
+    <li><code>GET /api/users/me</code> — profile + <code>emailVerified</code> + attendance</li>
+    <li><code>PATCH /api/users/me</code> — profile fields (verified)</li>
+    <li><code>GET /api/users/username?q=</code> — availability</li>
+    <li><code>GET</code>/<code>PATCH /api/users/preferences</code></li>
+    <li>
+      <code>POST /api/users/me/avatar</code> — multipart field
+      <code>avatar</code> (≤5&nbsp;MB)
+    </li>
+  </ul>
+
+  <h2>Sessions</h2>
+  <p>
+    Durations <strong>25 | 50 | 75</strong>. Types
+    <code>focus</code> | <code>deep-work</code> | <code>learning</code>. Starts
+    on 30-minute marks. Horizon 90 days.
+  </p>
+  <ul>
+    <li>
+      <code>GET /api/sessions?from=&amp;to=</code> or
+      <code>?mineUpcoming=1</code> — list includes
+      <code>durationMin</code>, <code>sessionType</code>, <code>status</code>,
+      participants, occupied chips
+    </li>
+    <li>
+      <code>POST /api/sessions</code> —
+      <code>{s.createSession}</code> → <code>{s.idOnly}</code>
+    </li>
+    <li>
+      <code>GET /api/sessions/[id]</code> — sparse:
+      <code>{s.getOne}</code>
+    </li>
+    <li>
+      <code>POST …/join</code> — <code>{s.quiet}</code> → <code>{s.okTrue}</code>
+      (400 if started/ended; 409 if full/overlap)
+    </li>
+    <li><code>POST …/leave</code> — non-owner; optional message</li>
+    <li><code>DELETE …/[id]</code> — owner cancel; optional message</li>
+    <li><code>PATCH …/[id]</code> — <code>name?</code>, <code>color?</code></li>
+  </ul>
+
+  <h3>Daily video</h3>
+  <p>
+    <code>POST /api/sessions/[id]/daily/token</code> inside the call window:
+  </p>
+  <pre><code>{s.dailyToken}</code></pre>
+  <p>
+    Use the Daily React Native SDK with that token and domain. Also:
+    <code>/tasks</code>, <code>/alert</code>, <code>/attendance</code>.
+  </p>
+
+  <h2>Friends &amp; session requests</h2>
+  <ul>
+    <li>
+      <code>GET /api/friends</code> — <code>{s.friendsPage}</code>
+    </li>
+    <li>
+      <code>POST /api/friends/requests</code> — <code>{s.toUser}</code>
+    </li>
+    <li>
+      <code>GET /api/friends/requests?type=incoming|outgoing</code>
+    </li>
+    <li>
+      <code>POST /api/friends/requests/[id]</code> —
+      <code>{s.friendAction}</code>
+    </li>
+    <li>
+      <code>POST /api/session-requests</code> —
+      <code>{s.sessionReq}</code>
+    </li>
+    <li>
+      <code>GET /api/session-requests?type=&amp;status=</code>
+    </li>
+    <li>
+      <code>POST /api/session-requests/[id]</code> —
+      <code>{s.sessionRespond}</code> →
+      <code>{s.sessionRespondOk}</code>
+    </li>
+    <li><code>DELETE /api/session-requests/[id]</code> — cancel pending</li>
+  </ul>
+
+  <h2>Chat &amp; Ably</h2>
+  <p>
+    Friend REST: <code>GET</code>/<code>POST /api/chat/[friendId]</code> —
+    <code>{s.chatText}</code> or <code>{s.chatSession}</code>. Also unread-counts
+    and read markers.
+  </p>
+  <p>
+    Global: <code>GET</code>/<code>POST /api/global-chat</code> —
+    <code>{s.content}</code>.
+  </p>
+  <p>
+    <code>GET /api/ably/token</code> → Ably TokenRequest (send cookies). Channels:
+  </p>
+  <ul>
+    <li>DM: <code>{s.chDm}</code></li>
+    <li>Inbox: <code>{s.chUser}</code></li>
+    <li>Global: <code>chat:global</code></li>
+    <li>Calendar: <code>sessions:updates</code></li>
+    <li>Tasks/alerts: <code>{s.chTasks}</code> / <code>{s.chAlerts}</code></li>
+  </ul>
+
+  <h2>Community</h2>
+  <ul>
+    <li><code>GET /api/community/posts</code></li>
+    <li><code>POST /api/community/posts</code> — <code>{s.content}</code></li>
+    <li>Like + comments under <code>/posts/[postId]/…</code></li>
+  </ul>
+
+  <h2>Public profile</h2>
+  <p>
+    <code>GET /api/profile/[username]</code> — no session for public profiles;
+    404 if private/missing.
+  </p>
+
+  <h2>Safety</h2>
+  <p><code>POST /api/reports</code>:</p>
+  <pre><code>{s.report}</code></pre>
+  <p>
+    Block: <code>POST /api/users/blocks</code> /
+    <code>DELETE /api/users/blocks/[userId]</code>.
+  </p>
+
+  <h2>Errors</h2>
+  <ul>
+    <li><strong>401</strong> — no session</li>
+    <li>
+      <strong>403</strong> — origin, email, first-session, ban, call window
+    </li>
+    <li><strong>404</strong> / <strong>409</strong> — not found / conflict</li>
+    <li>
+      <strong>429</strong> — <code>{s.rateLimit}</code> +
+      <code>Retry-After</code>
+    </li>
+  </ul>
+  <p>Rough limits: auth 5/min · api 100/min · chat 30/min.</p>
+
+  <h2>RN stack checklist</h2>
+  <ul>
+    <li>Cookie-aware HTTP client targeting dashboard host only</li>
+    <li>Daily React Native SDK for video</li>
+    <li>Ably client for chat / session events</li>
+    <li>Optional Firebase Auth if using Google → <code>firebaseIdToken</code></li>
+    <li>Deep links for email verification</li>
+  </ul>
+
+  <h2>Out of scope</h2>
+  <ul>
+    <li>Admin / cron / ops endpoints</li>
+    <li>Server-only secrets</li>
+    <li>Marketing host JSON API</li>
+    <li>Mobile Bearer auth (not implemented yet)</li>
+  </ul>
+</ContentPage>
