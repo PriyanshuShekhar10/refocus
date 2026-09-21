@@ -178,6 +178,7 @@ export const COMMERCIAL_HUBS = [
   { path: "/focusmate-alternative", label: "Refocus vs Focusmate" },
   { path: "/flown-alternative", label: "Refocus vs FLOWN" },
   { path: "/cofocus-alternative", label: "Refocus vs Cofocus" },
+  { path: "/studystream-alternative", label: "Refocus vs StudyStream" },
 ];
 
 /** Detect topics that should reinforce free / alternatives hubs. */

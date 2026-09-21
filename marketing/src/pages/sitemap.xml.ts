@@ -96,6 +96,7 @@ export const GET: APIRoute = async () => {
     { loc: `${site}/focusmate-alternative`, changefreq: "monthly", priority: "0.7" },
     { loc: `${site}/flown-alternative`, changefreq: "monthly", priority: "0.7" },
     { loc: `${site}/cofocus-alternative`, changefreq: "monthly", priority: "0.7" },
+    { loc: `${site}/studystream-alternative`, changefreq: "monthly", priority: "0.7" },
     { loc: `${site}/about`, changefreq: "monthly", priority: "0.6" },
     { loc: `${site}/privacy`, changefreq: "yearly", priority: "0.3" },
     { loc: `${site}/terms`, changefreq: "yearly", priority: "0.3" },

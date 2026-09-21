@@ -19,6 +19,7 @@ export function Footer() {
           <a href="/study-with-me">Study with me</a>
           <a href="/focusmate-alternative">vs Focusmate</a>
           <a href="/cofocus-alternative">vs Cofocus</a>
+          <a href="/studystream-alternative">vs StudyStream</a>
           <a href="/about">About</a>
           <a href="/blog">Blog</a>
           <a href="/developers">Developers</a>

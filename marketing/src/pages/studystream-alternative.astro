@@ -1,0 +1,198 @@
+---
+import LandingPage from "../layouts/LandingPage.astro";
+import { articleJsonLd, faqJsonLd } from "../lib/seo";
+import { APP_URL } from "../lib/config";
+
+const UPDATED = "2026-09-21";
+const canonical = "/studystream-alternative";
+const title = "A StudyStream Alternative: Refocus vs Study Stream";
+const description =
+  "Looking for a StudyStream alternative? Honest Refocus vs Study Stream — study together rooms vs matched focus sessions, study rooms, free tiers, and who each fits.";
+
+const faqs = [
+  {
+    question: "What is StudyStream (Study Stream)?",
+    answer:
+      "StudyStream is a large online study community built around live study rooms and focus rooms where people study together on camera with mics typically off — closer to a digital library than a 1:1 call. It also offers app features like Pomodoro timers, streaks, partner pinning, and study tools. Pricing and free limits can change, so check studystream.live for the latest.",
+  },
+  {
+    question: "Is Refocus a free StudyStream alternative?",
+    answer:
+      "Yes for many people. Refocus is free right now with no credit card and no weekly session cap, and it focuses on matched timed sessions with a partner. StudyStream is known for always-on group study rooms with a free tier that may limit how long you can stay; Premium unlocks more. See /free and /pricing for Refocus details.",
+  },
+  {
+    question: "StudyStream focus room vs Refocus focus room — what's the difference?",
+    answer:
+      "A Study Stream focus room is usually a shared group study room: many people on camera, quiet mics, drop in and out. A Refocus focus room is a matched timed session (25, 50, or 75 minutes) with synced timers — solo, with a friend, or with someone new — so you start and break with a clear partner, not a crowded lobby.",
+  },
+  {
+    question: "Can I study together on Refocus like on StudyStream?",
+    answer:
+      "Yes, but the format is different. StudyStream emphasizes studying together in busy live rooms. Refocus emphasizes studying with one partner at a time for body doubling: share a goal, work quietly, check in at the end. If you want a lounge between sessions, Refocus also has friends, session requests, and a global chat.",
+  },
+  {
+    question: "Refocus vs StudyStream — which should I choose?",
+    answer:
+      "Choose StudyStream if you want a large always-on group study room, social community tools, and the energy of studying with many people on camera. Choose Refocus if you want quieter matched sessions, flexible 25/50/75 lengths with synced timers, a free period without a weekly session cap, and a partner-first focus room rather than a group lobby.",
+  },
+];
+
+const article = articleJsonLd({
+  headline: title,
+  description,
+  path: canonical,
+  dateModified: UPDATED,
+});
+---
+
+<LandingPage
+  title={title}
+  description={description}
+  canonical={canonical}
+  eyebrow="Comparison"
+  heading="A StudyStream alternative: Refocus vs Study Stream"
+  lead="StudyStream made “study together” mainstream with live group study rooms and focus rooms. Refocus takes a quieter path: matched timed sessions with a partner. Here's an honest comparison so you can pick the study room format that actually helps you start."
+  updated={UPDATED}
+  faqs={faqs}
+  ctaTitle="Try a Refocus study session"
+  ctaText="Pick a 25, 50, or 75-minute focus room, get matched with a study partner, and work side by side with synced timers. Free right now — no card, no weekly session cap."
+  ctaHref={`${APP_URL}/auth/sign-up`}
+  ctaLabel="Start a free session"
+  jsonLd={[article, faqJsonLd(faqs)]}
+>
+  <p>
+    <a href="https://www.studystream.live/" rel="nofollow noopener" target="_blank">StudyStream</a>
+    (often searched as <strong>Study Stream</strong>) is built for people who
+    want to <strong>study together</strong> in live online
+    <a href="/study-with-me">study with me</a>-style rooms. You join a shared
+    <strong>study room</strong> or <strong>focus room</strong>, keep cameras on
+    for presence, keep mics quiet, and work alongside a large peer group —
+    closer to a digital library than a private call.
+  </p>
+  <p>
+    That group energy is exactly why some people look for a
+    <strong>StudyStream alternative</strong>. Busy lobbies help some students;
+    others want a single partner, a clear timer, and less social noise. Refocus
+    is that partner-first take on <a href="/body-doubling">body doubling</a> and
+    <a href="/virtual-coworking">virtual coworking</a>.
+  </p>
+
+  <h2>Refocus vs StudyStream at a glance</h2>
+  <div class="blog-table">
+    <table>
+      <thead>
+        <tr>
+          <th>&nbsp;</th>
+          <th>Refocus</th>
+          <th>StudyStream</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Core format</th>
+          <td>Matched timed sessions with a partner (solo, friend, or new match)</td>
+          <td>Live group study rooms / focus rooms — study together with many people</td>
+        </tr>
+        <tr>
+          <th>Session structure</th>
+          <td>25, 50, 75 min with synced timers</td>
+          <td>Drop-in rooms; Pomodoro and personal timers in the product/app</td>
+        </tr>
+        <tr>
+          <th>Focus room feel</th>
+          <td>Quiet partner presence; mics muted by default in focus mode</td>
+          <td>Cameras-on group presence; mics/chat typically off in rooms</td>
+        </tr>
+        <tr>
+          <th>Community layer</th>
+          <td>Friends, session requests, global chat lounge</td>
+          <td>Large student community, pin partners, social/feed-style features</td>
+        </tr>
+        <tr>
+          <th>Extra tools</th>
+          <td>Focused on sessions, matching, and coming back with friends</td>
+          <td>Streaks, tasks, and (in apps) AI study tools — check current product</td>
+        </tr>
+        <tr>
+          <th>Free access</th>
+          <td>Free period: no card, no weekly session cap</td>
+          <td>Free tier with usage limits; Premium for more (check their site)</td>
+        </tr>
+        <tr>
+          <th>Best for</th>
+          <td>Partner accountability and clear session blocks</td>
+          <td>Always-on group study rooms and a big peer community</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Feature and pricing details for StudyStream change over time — verify on
+    <a href="https://www.studystream.live/" rel="nofollow noopener" target="_blank">studystream.live</a>
+    and their app store listings before you decide.
+  </p>
+
+  <h2>Study together: group room vs study partner</h2>
+  <p>
+    Searching “study together” or “study room” usually points at two different
+    needs. StudyStream leans into the first: a shared space where lots of people
+    are already working. Refocus leans into the second: a
+    <a href="/study-partner">study partner</a> for a fixed block, so you know
+    who you’re accountable to and when the session ends.
+  </p>
+  <p>
+    If empty rooms or cold starts are your frustration with other tools,
+    StudyStream’s always-busy group rooms are a real strength. If crowded video
+    grids make it harder to settle, a quieter matched
+    <a href="/focus-room">focus room</a> on Refocus is often a better fit.
+  </p>
+
+  <h2>Study Stream focus room vs Refocus focus room</h2>
+  <p>
+    A <strong>Study Stream focus room</strong> is typically a live shared room —
+    join, camera on for accountability, work at your own pace among peers. A
+    Refocus focus room is a scheduled-length session with synced timers: you and
+    your partner start together, work, and wrap with a check-in. Same body-doubling
+    idea; different room design.
+  </p>
+
+  <h2>Where Refocus is different</h2>
+  <p>
+    Refocus keeps the product narrow on purpose: match, timer, presence, then
+    optional friends and chat between sessions. You get flexible lengths (25, 50,
+    75), low-pressure mics in focus mode, and a free period without a weekly
+    session cap — useful if you study every day and don’t want a hard daily
+    ceiling on a free plan.
+  </p>
+
+  <h2>Where StudyStream is still great</h2>
+  <p>
+    Credit where it’s due: StudyStream’s scale and “never an empty room” energy
+    are hard to beat if motivation comes from seeing a full grid of students.
+    The broader study ecosystem (community features, streaks, app tooling) is
+    also more than a pure matching tool. If that social study-room vibe is what
+    gets you to open the laptop, StudyStream is a strong choice.
+  </p>
+
+  <h2>Who should pick which</h2>
+  <ul>
+    <li>
+      <strong>Pick StudyStream</strong> if you want to study together in busy
+      group study rooms / focus rooms and value a large student community.
+    </li>
+    <li>
+      <strong>Pick Refocus</strong> if you want a StudyStream alternative built
+      around a single partner, clear 25/50/75 sessions, synced timers, and a
+      quieter focus room. See <a href="/free">/free</a> and
+      <a href="/pricing">pricing</a>.
+    </li>
+  </ul>
+  <p>
+    Comparing other tools too? See
+    <a href="/focusmate-alternative">Focusmate</a>,
+    <a href="/flown-alternative">Flown</a>, and
+    <a href="/cofocus-alternative">Cofocus</a>, or start from
+    <a href="/study-with-me">study with me</a> and
+    <a href="/body-doubling">body doubling</a> if you’re new to the category.
+  </p>
+</LandingPage>
