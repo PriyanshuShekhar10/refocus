@@ -209,7 +209,7 @@ const MODES: Mode[] = [
     visual: <FriendsVisual />,
   },
   {
-    title: "Find a study partner",
+    title: "Find someone to focus with",
     body: "Drop into the lounge, see who's around, and find a partner for your next session.",
     visual: <LoungeChatVisual />,
   },

@@ -25,17 +25,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Who am I working with?",
     answer:
-      "You're matched with another member who is also there to focus — a quiet online study partner for that session, not a subject tutor. Everyone in the room shares the same goal: show up, work, and help each other stay accountable.",
+      "You're matched with another member who is also there to focus — a quiet study partner for that session, not a subject tutor. Everyone in the room shares the same goal: show up, work, and help each other stay accountable.",
   },
   {
     question: "Is this a 24/7 focus room or study lobby?",
     answer:
       "No. Refocus runs timed 1:1 sessions, not an always-on café with dozens of avatars. You pick 25, 50, or 75 minutes, get matched, and the session ends when the timer does.",
-  },
-  {
-    question: "How is this different from Focusroom or Cofocus?",
-    answer:
-      "Refocus is a timed one-on-one focus room — you get matched for a short session and leave when the timer ends, rather than sitting in a larger always-on lobby.",
   },
   {
     question: "Do I have to download another video call app?",
@@ -45,7 +40,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Is Refocus free?",
     answer:
-      "Yes — free to use, no card required. See the Free and Pricing pages for what's included.",
+      "Yes. During this free period Refocus has no credit card requirement and no weekly session cap. See /free and /pricing for what's included. If paid plans appear later, what's free will stay clear on the pricing page.",
   },
 ];
 

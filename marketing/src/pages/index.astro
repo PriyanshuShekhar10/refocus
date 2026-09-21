@@ -17,9 +17,9 @@ import { APP_URL } from "../lib/config";
 
 const site = SITE_URL;
 
-const title = "Refocus — Free focus rooms to study or work with a partner";
+const title = "Refocus — Free focus rooms & virtual coworking for deep work";
 const description =
-  "Quiet timed sessions with a real study partner. Study with someone online for free — no card required.";
+  "Free virtual focus rooms for deep work and study: 25, 50, or 75 minutes with a partner. Body doubling, not a group lobby — no card, no session cap during the free period.";
 
 const websiteJsonLd = {
   "@context": "https://schema.org",
@@ -27,7 +27,7 @@ const websiteJsonLd = {
   name: "Refocus",
   url: site,
   description:
-    "Online focus rooms with synced timers, a study partner when you want one, focus mode, friends, and chat.",
+    "Focus rooms and virtual coworking with synced timers, a study partner if you want one, focus mode, friends, and global chat.",
 };
 
 const orgJsonLd = organizationJsonLd();
@@ -40,13 +40,14 @@ const softwareJsonLd = {
   applicationCategory: "ProductivityApplication",
   operatingSystem: "Web",
   description:
-    "A focus room for deep work and study. Pick 25, 50, or 75 minutes, get matched with a partner, and work side by side.",
+    "An online focus room for deep work and study. Free during this period — pick a 25, 50, or 75 minute session, get matched with a partner, and work side by side with synced timers.",
   offers: {
     "@type": "Offer",
     name: "Free",
     price: "0",
     priceCurrency: "USD",
-    description: "Free to use. No credit card required.",
+    description:
+      "No credit card. No weekly session cap during the free period.",
   },
   installUrl: `${APP_URL}/auth/sign-up`,
 };
@@ -87,7 +88,7 @@ const heroImage = {
   description={description}
   canonical="/"
   ogTitle={title}
-  ogDescription="Quiet focus rooms for deep work and study. Timed sessions with a partner — present, not performing."
+  ogDescription="A virtual focus room for deep work and study. 25, 50, or 75 minute sessions with a partner. Focus mode mutes both mics so you're present, not performing."
   jsonLd={[websiteJsonLd, orgJsonLd, softwareJsonLd, faqJsonLd]}
 >
   <link

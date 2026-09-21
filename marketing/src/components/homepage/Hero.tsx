@@ -19,7 +19,7 @@ export function Hero({ image }: { image?: HeroImage }) {
       <div className={styles.wrap}>
         <div className={styles.heroCopy}>
           <Reveal as="p" className={styles.heroEyebrow}>
-            Focus rooms
+            Virtual coworking
           </Reveal>
 
           <Reveal as="h1" className={styles.heroTitle}>
@@ -29,7 +29,7 @@ export function Hero({ image }: { image?: HeroImage }) {
           </Reveal>
 
           <Reveal as="p" className={styles.heroSub}>
-            Refocus pairs you with a study partner for a quiet, focused
+            Refocus pairs you with a real person for a quiet, focused work
             session.
           </Reveal>
 
@@ -65,7 +65,7 @@ export function Hero({ image }: { image?: HeroImage }) {
                 src={image.fallbackSrc}
                 srcSet={image.fallbackSrcset}
                 sizes={image.sizes}
-                alt="Refocus dashboard with an active focus room session"
+                alt="Refocus dashboard with an active focus session"
                 className={styles.previewImg}
                 width={image.width}
                 height={image.height}
@@ -77,7 +77,7 @@ export function Hero({ image }: { image?: HeroImage }) {
           ) : (
             <img
               src="/dashboard.png"
-              alt="Refocus dashboard with an active focus room session"
+              alt="Refocus dashboard with an active focus session"
               className={styles.previewImg}
               width={2940}
               height={1766}
