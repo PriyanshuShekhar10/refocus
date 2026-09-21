@@ -2,8 +2,9 @@
 /**
  * Generate a niche blog post for the Refocus marketing site (OpenAI).
  *
- * Flow: propose topic → clash-check / pivot → write article → optional
- * single illustration. Never hard-fail solely because a theme was covered.
+ * Flow: propose topic → clash-check / pivot → write article (English:
+ * outline then section-by-section) → required illustration. Never
+ * hard-fail solely because a theme was covered.
  *
  * Usage:
  *   node scripts/generate-post.mjs
@@ -38,10 +39,13 @@ const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
 const SITE = "https://refocus.co.in";
 const TOPIC_ATTEMPTS = 3;
 const DRAFT_ATTEMPTS = 3;
+const IMAGE_ATTEMPTS = 3;
 const MIN_WORDS_EN = 600;
 const MIN_WORDS_OTHER = 900;
 const MIN_HEADINGS = 2;
 const TARGET_WORDS_EN = "800–1200";
+const EN_OUTLINE_WORD_MIN = 850;
+const EN_OUTLINE_WORD_MAX = 1100;
 const STYLE_PREFIX =
   "Calm flat editorial illustration, soft neutral palette, no text, no logos, no watermarks, no photoreal close-up faces. ";
 
@@ -592,6 +596,262 @@ async function callOpenAI(
   );
 }
 
+function normalizeOutlineSections(rawSections) {
+  const sections = Array.isArray(rawSections) ? rawSections : [];
+  const normalized = [];
+  for (const s of sections) {
+    if (!s || typeof s !== "object") continue;
+    const heading =
+      s.heading == null || s.heading === ""
+        ? null
+        : String(s.heading).replace(/^#+\s*/, "").trim();
+    const purpose = String(s.purpose || "").trim();
+    let target = Number(s.target_words);
+    if (!Number.isFinite(target) || target < 80) target = heading ? 220 : 120;
+    normalized.push({ heading, purpose, target_words: Math.round(target) });
+  }
+  // Ensure intro (heading null) first, then 3–4 H2s
+  let intro = normalized.find((s) => !s.heading);
+  const headed = normalized.filter((s) => s.heading);
+  if (!intro) {
+    intro = {
+      heading: null,
+      purpose: "Open with a concrete scene (time, place, what they are avoiding).",
+      target_words: 120,
+    };
+  }
+  while (headed.length < 3) {
+    headed.push({
+      heading: `Practical step ${headed.length + 1}`,
+      purpose: "A named tactic with duration, script, or if-then rule.",
+      target_words: 220,
+    });
+  }
+  const capped = headed.slice(0, 4);
+  const out = [intro, ...capped];
+  let sum = out.reduce((a, s) => a + s.target_words, 0);
+  if (sum < EN_OUTLINE_WORD_MIN) {
+    const bump = Math.ceil((EN_OUTLINE_WORD_MIN - sum) / capped.length);
+    for (const s of capped) s.target_words += bump;
+    sum = out.reduce((a, s) => a + s.target_words, 0);
+  }
+  if (sum > EN_OUTLINE_WORD_MAX) {
+    const scale = EN_OUTLINE_WORD_MAX / sum;
+    for (const s of out) {
+      s.target_words = Math.max(80, Math.round(s.target_words * scale));
+    }
+  }
+  return out;
+}
+
+async function outlineEnglishPost(
+  apiKey,
+  model,
+  category,
+  topic,
+  existingTitles,
+  config,
+  angle,
+  repeating,
+  priorIssues = [],
+) {
+  const avoidTitles =
+    existingTitles.length > 0
+      ? `\nAlready published titles — do not echo:\n${existingTitles
+          .slice(-80)
+          .map((t) => `- ${t}`)
+          .join("\n")}`
+      : "";
+  const fix =
+    priorIssues.length > 0
+      ? `\nPrior draft failed: ${priorIssues.join("; ")}. Fix structure/targets accordingly.`
+      : "";
+  const reuse = repeating
+    ? `Theme reuse — new angle required: ${angle}.`
+    : `Concrete scenario: ${angle}.`;
+
+  const plan = await chatJson(
+    apiKey,
+    `You outline long-form English blog posts as JSON only. No article body.
+Niche: ${category.label}. Audience: ${category.audience}.
+Voice: ${category.voice}. Must include later: ${category.mustInclude}. Avoid: ${category.avoid}.
+Return:
+{
+  "title": "specific searchable under 70 chars, no brand",
+  "slug": "kebab-case",
+  "description": "meta under 155 chars",
+  "tags": ["2-5","lowercase"],
+  "sections": [
+    {"heading": null, "purpose": "opening scene brief", "target_words": 120},
+    {"heading": "H2 title", "purpose": "...", "target_words": 220},
+    {"heading": "H2 title", "purpose": "...", "target_words": 220},
+    {"heading": "H2 title", "purpose": "...", "target_words": 200}
+  ]
+}
+Rules: first section heading MUST be null (intro). Then 3 or 4 H2 sections.
+Sum of target_words must be between ${EN_OUTLINE_WORD_MIN} and ${EN_OUTLINE_WORD_MAX}.
+Every H2 purpose must add new tactics/scenes — no restating the intro.`,
+    `${reuse}${avoidTitles}${fix}
+
+Topic: ${topic}
+Working constraints from system quality bar: concrete opening scene; ≥2 named tactics; one failure mode + recovery.
+Internal pillar will be linked later: ${pillarUrl(category, config)}.`,
+    0.7,
+    model,
+  );
+
+  return {
+    title: sanitizeTitle(plan.title || ""),
+    slug: String(plan.slug || "").trim(),
+    description: String(plan.description || "").slice(0, 160),
+    tags: Array.isArray(plan.tags) ? plan.tags : [],
+    sections: normalizeOutlineSections(plan.sections),
+  };
+}
+
+async function writeEnglishSection(
+  apiKey,
+  model,
+  category,
+  topic,
+  config,
+  angle,
+  section,
+  priorSummaries,
+  title,
+) {
+  const isIntro = !section.heading;
+  const prior =
+    priorSummaries.length > 0
+      ? `Already written (do not repeat):\n${priorSummaries
+          .map((s, i) => `${i + 1}. ${s}`)
+          .join("\n")}`
+      : "Nothing written yet.";
+  const system = `You write one Markdown section of a Refocus-adjacent productivity/study article.
+${config.langRule}
+Niche: ${category.label}. Voice: ${category.voice}.
+Return JSON only: {"markdown":"...","summary":"1-2 sentences of what this section covered"}.
+Rules:
+- No H1. ${isIntro ? "No ## headings in this chunk — opening paragraphs only." : `Start with exactly "## ${section.heading}" then the section body.`}
+- Write at least ${section.target_words} words.
+- Concrete and specific; no filler ("In today's fast-paced world", "It's important to note", "In conclusion", "Without further ado" banned).
+- Do not add a "Further reading" section or invent Refocus marketing copy.
+- Soft product mention at most once across the whole article — prefer none in this chunk unless purpose requires it.`;
+
+  const user = `Article title: ${title}
+Topic: ${topic}
+Angle/scene: ${angle}
+Section purpose: ${section.purpose || "(develop the angle)"}
+Target words: ≥${section.target_words}
+${prior}
+
+Write this section only.`;
+
+  const result = await chatJson(apiKey, system, user, 0.75, model);
+  let markdown = String(result.markdown || "").trim();
+  if (!isIntro && section.heading && !/^##\s+/m.test(markdown)) {
+    markdown = `## ${section.heading}\n\n${markdown}`;
+  }
+  if (!isIntro && section.heading) {
+    // Normalize first heading to the planned title
+    markdown = markdown.replace(/^##\s+.+$/m, `## ${section.heading}`);
+  }
+  const summary = String(result.summary || section.purpose || section.heading || "section").trim();
+  return { markdown, summary, words: wordCount(markdown) };
+}
+
+async function draftEnglishSectioned(
+  apiKey,
+  model,
+  category,
+  topic,
+  existingTitles,
+  config,
+  angle,
+  repeating,
+  priorIssues = [],
+) {
+  console.log("English draft: outlining sections…");
+  const outline = await outlineEnglishPost(
+    apiKey,
+    model,
+    category,
+    topic,
+    existingTitles,
+    config,
+    angle,
+    repeating,
+    priorIssues,
+  );
+  const targetSum = outline.sections.reduce((a, s) => a + s.target_words, 0);
+  console.log(
+    `Outline: ${outline.sections.length} sections, target ~${targetSum} words`,
+  );
+  for (const s of outline.sections) {
+    console.log(
+      `  - ${s.heading ? `## ${s.heading}` : "(intro)"} → ${s.target_words} words`,
+    );
+  }
+
+  const chunks = [];
+  const summaries = [];
+  for (let i = 0; i < outline.sections.length; i++) {
+    const section = outline.sections[i];
+    console.log(
+      `Writing section ${i + 1}/${outline.sections.length}: ${section.heading || "intro"}…`,
+    );
+    let { markdown, summary, words } = await writeEnglishSection(
+      apiKey,
+      model,
+      category,
+      topic,
+      config,
+      angle,
+      section,
+      summaries,
+      outline.title,
+    );
+    // If a section is thin, one rewrite with a higher floor
+    if (words < Math.floor(section.target_words * 0.75)) {
+      console.warn(
+        `Section thin (${words} < ${section.target_words}); rewriting…`,
+      );
+      const retry = await writeEnglishSection(
+        apiKey,
+        model,
+        category,
+        topic,
+        config,
+        angle,
+        {
+          ...section,
+          purpose: `${section.purpose} Expand with a concrete example and if-then rule. Prior draft was only ${words} words.`,
+          target_words: section.target_words + 40,
+        },
+        summaries,
+        outline.title,
+      );
+      markdown = retry.markdown;
+      summary = retry.summary;
+      words = retry.words;
+    }
+    console.log(`  → ${words} words`);
+    chunks.push(markdown);
+    summaries.push(
+      `${section.heading || "Intro"}: ${summary}`.slice(0, 220),
+    );
+  }
+
+  const body = chunks.join("\n\n").trim();
+  return {
+    title: outline.title,
+    slug: outline.slug,
+    description: outline.description,
+    tags: outline.tags,
+    body_markdown: body,
+  };
+}
+
 function sanitizeTitle(title) {
   return title
     .replace(/\brefocus\b/gi, "")
@@ -741,77 +1001,106 @@ function injectImageMarkdown(body, afterHeading, alt, src) {
   return `${md}\n\n${body}`;
 }
 
-async function maybeAddIllustration(apiKey, title, body, slug) {
+function fallbackIllustrationPrompt(title, body) {
+  const headings = [...body.matchAll(/^##\s+(.+)$/gm)].map((m) => m[1].trim());
+  const opening = body
+    .replace(/^#.+\n+/gm, "")
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
+    .trim()
+    .slice(0, 280)
+    .replace(/\s+/g, " ");
+  const place = headings[0] || "a quiet study desk at home";
+  return `A quiet physical scene for "${title}": someone at ${place}, laptop or notebook on the table, soft daylight, calm empty chair nearby suggesting a study partner, no faces in close-up, no screens with readable UI. Opening mood: ${opening || "focused solo work."}`;
+}
+
+async function generateImageBytes(apiKey, prompt) {
+  const imgRes = await fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: IMAGE_MODEL,
+      prompt: `${STYLE_PREFIX}${prompt}`,
+      size: "1024x1024",
+      n: 1,
+    }),
+  });
+  if (!imgRes.ok) {
+    const text = await imgRes.text();
+    throw new Error(`image API ${imgRes.status}: ${text.slice(0, 240)}`);
+  }
+  const imgData = await imgRes.json();
+  const b64 = imgData.data?.[0]?.b64_json;
+  const url = imgData.data?.[0]?.url;
+  if (b64) return Buffer.from(b64, "base64");
+  if (url) {
+    const fetched = await fetch(url);
+    if (!fetched.ok) {
+      throw new Error(`failed to download image URL (${fetched.status})`);
+    }
+    return Buffer.from(await fetched.arrayBuffer());
+  }
+  throw new Error("empty image response");
+}
+
+/**
+ * Every post must ship with one illustration. Fails closed (throws) if
+ * generation cannot produce bytes after retries.
+ */
+async function addRequiredIllustration(apiKey, title, body, slug) {
+  const headings = [...body.matchAll(/^##\s+(.+)$/gm)].map((m) => m[1].trim());
+  let prompt = "";
+  let alt = title;
+  let afterHeading = headings[0] || "";
+
   try {
-    const headings = [...body.matchAll(/^##\s+(.+)$/gm)].map((m) => m[1].trim());
     const plan = await chatJson(
       apiKey,
-      `You decide whether a blog post needs ONE minimal editorial illustration.
-Return JSON: {"skip":boolean,"after_heading":"exact ## text or empty","alt":"short alt","prompt":"concrete scene description"}.
-Skip unless there is a concrete physical scene (desk, room, cafe, exam desk, timer on table). Never invent logos, UI, or brand faces.`,
-      `Title: ${title}\nHeadings:\n${headings.map((h) => `- ${h}`).join("\n")}\n\nOpening:\n${body.slice(0, 900)}\n\nPrefer skip:true when unsure. At most one image.`,
+      `You plan ONE minimal editorial illustration for a blog post. Always provide a scene — never skip.
+Return JSON: {"after_heading":"exact ## text or empty","alt":"short alt","prompt":"concrete physical scene description"}.
+Require a concrete physical scene (desk, room, cafe, exam desk, timer on table, quiet library). Never invent logos, UI mockups, brand faces, or watermarks.`,
+      `Title: ${title}\nHeadings:\n${headings.map((h) => `- ${h}`).join("\n")}\n\nOpening:\n${body.slice(0, 900)}\n\nAlways return a usable prompt.`,
       0.4,
     );
-
-    if (plan.skip === true || plan.skip === "true") {
-      console.log("Illustration: skipped (no strong scene fit).");
-      return body;
-    }
-    const prompt = String(plan.prompt || "").trim();
-    const alt = String(plan.alt || title).trim().slice(0, 120);
-    const afterHeading = String(plan.after_heading || "").trim();
-    if (promptLooksWeak(prompt)) {
-      console.warn("Illustration: weak/irrelevant prompt — skipping.");
-      return body;
-    }
-
-    const imgRes = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: IMAGE_MODEL,
-        prompt: `${STYLE_PREFIX}${prompt}`,
-        size: "1024x1024",
-        n: 1,
-      }),
-    });
-    if (!imgRes.ok) {
-      const text = await imgRes.text();
-      console.warn(`Illustration: image API ${imgRes.status} — ${text.slice(0, 200)}`);
-      return body;
-    }
-    const imgData = await imgRes.json();
-    const b64 = imgData.data?.[0]?.b64_json;
-    const url = imgData.data?.[0]?.url;
-    let bytes;
-    if (b64) {
-      bytes = Buffer.from(b64, "base64");
-    } else if (url) {
-      const fetched = await fetch(url);
-      if (!fetched.ok) {
-        console.warn("Illustration: failed to download image URL — skipping.");
-        return body;
-      }
-      bytes = Buffer.from(await fetched.arrayBuffer());
-    } else {
-      console.warn("Illustration: empty image response — skipping.");
-      return body;
-    }
-
-    const outDir = join(MARKETING_DIR, "public", "blog", slug);
-    await mkdir(outDir, { recursive: true });
-    const filePath = join(outDir, "01.png");
-    await writeFile(filePath, bytes);
-    const publicSrc = `/blog/${slug}/01.png`;
-    console.log(`Illustration: wrote ${filePath}`);
-    return injectImageMarkdown(body, afterHeading, alt, publicSrc);
+    prompt = String(plan.prompt || "").trim();
+    alt = String(plan.alt || title).trim().slice(0, 120);
+    afterHeading = String(plan.after_heading || afterHeading).trim();
   } catch (err) {
-    console.warn(`Illustration: ${err.message || err} — keeping text-only.`);
-    return body;
+    console.warn(`Illustration planner failed: ${err.message || err} — using fallback prompt.`);
   }
+
+  if (promptLooksWeak(prompt)) {
+    console.warn("Illustration: weak planner prompt — using fallback scene.");
+    prompt = fallbackIllustrationPrompt(title, body);
+  }
+
+  let lastErr = null;
+  for (let attempt = 1; attempt <= IMAGE_ATTEMPTS; attempt++) {
+    try {
+      const bytes = await generateImageBytes(apiKey, prompt);
+      const outDir = join(MARKETING_DIR, "public", "blog", slug);
+      await mkdir(outDir, { recursive: true });
+      const filePath = join(outDir, "01.png");
+      await writeFile(filePath, bytes);
+      const publicSrc = `/blog/${slug}/01.png`;
+      console.log(`Illustration: wrote ${filePath} (attempt ${attempt})`);
+      return injectImageMarkdown(body, afterHeading, alt, publicSrc);
+    } catch (err) {
+      lastErr = err;
+      console.warn(
+        `Illustration attempt ${attempt}/${IMAGE_ATTEMPTS} failed: ${err.message || err}`,
+      );
+      if (attempt < IMAGE_ATTEMPTS) {
+        prompt = fallbackIllustrationPrompt(title, body);
+      }
+    }
+  }
+
+  throw new Error(
+    `Required illustration failed after ${IMAGE_ATTEMPTS} attempts: ${lastErr?.message || lastErr}`,
+  );
 }
 
 async function main() {
@@ -868,17 +1157,33 @@ async function main() {
       attempt === 1
         ? angle
         : `${angle} — prior draft failed quality: ${lastIssues.join("; ")}. Fix those issues. Pick a clearly different title if needed.`;
-    result = await callOpenAI(
-      apiKey,
-      model,
-      category,
-      topic,
-      existingTitles,
-      existingUrls,
-      config,
-      angleForAttempt,
-      repeating || attempt > 1,
-    );
+
+    if (config.id === "en") {
+      result = await draftEnglishSectioned(
+        apiKey,
+        model,
+        category,
+        topic,
+        existingTitles,
+        config,
+        angleForAttempt,
+        repeating || attempt > 1,
+        lastIssues,
+      );
+    } else {
+      result = await callOpenAI(
+        apiKey,
+        model,
+        category,
+        topic,
+        existingTitles,
+        existingUrls,
+        config,
+        angleForAttempt,
+        repeating || attempt > 1,
+      );
+    }
+
     title = sanitizeTitle(result.title || "");
     body = String(result.body_markdown || "").trim();
     body = ensureOutboundLinks(body, category.id, config);
@@ -922,7 +1227,7 @@ async function main() {
   }
   const slug = await uniqueSlug(blogDir, baseSlug);
 
-  body = await maybeAddIllustration(apiKey, title, body, slug);
+  body = await addRequiredIllustration(apiKey, title, body, slug);
 
   const contents = `${toFrontmatter({
     title,
