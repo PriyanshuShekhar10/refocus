@@ -4,7 +4,7 @@ import Base from "../../../../layouts/Base.astro";
 import Navbar from "../../../../components/Navbar";
 import { getCollection } from "astro:content";
 import { SITE_URL } from "../../../../lib/seo";
-import { CATEGORY_IDS, type CategoryId } from "../../../../lib/categories";
+import { LOCALE_CATEGORY_IDS, type LocaleCategoryId } from "../../../../lib/categories";
 import { getBlogLocale } from "../../../../lib/blog-locales";
 import "../../../../styles/blog.css";
 
@@ -12,7 +12,7 @@ const L = getBlogLocale("fil");
 
 export const getStaticPaths = (async () => {
   const posts = await getCollection("blogFil", ({ data }) => !data.draft);
-  return CATEGORY_IDS.map((category) => {
+  return LOCALE_CATEGORY_IDS.map((category) => {
     const filtered = posts
       .filter((p) => (p.data.category ?? "productivity") === category)
       .sort((a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate));
@@ -21,7 +21,7 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { category, posts } = Astro.props as {
-  category: CategoryId;
+  category: LocaleCategoryId;
   posts: Awaited<ReturnType<typeof getCollection<"blogFil">>>;
 };
 

@@ -5,7 +5,7 @@ import Base from "../../../layouts/Base.astro";
 import Navbar from "../../../components/Navbar";
 import { getCollection } from "astro:content";
 import { SITE_URL } from "../../../lib/seo";
-import { CATEGORY_IDS } from "../../../lib/categories";
+import { LOCALE_CATEGORY_IDS } from "../../../lib/categories";
 import { CATEGORIES_ID, categoryLabelId } from "../../../lib/categories-id";
 import { ID_PAGE_COPY, hreflangAlternates } from "../../../lib/i18n";
 import "../../../styles/blog.css";
@@ -67,7 +67,7 @@ const blogJsonLd = {
 
         <nav class="blog-topics" aria-label="Topik">
           {
-            CATEGORY_IDS.map((id) => (
+            LOCALE_CATEGORY_IDS.map((id) => (
               <a href={`/id/blog/category/${id}`}>{CATEGORIES_ID[id].label}</a>
             ))
           }

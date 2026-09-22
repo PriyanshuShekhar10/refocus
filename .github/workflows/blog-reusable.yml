@@ -1,15 +1,15 @@
 name: Blog niche (reusable)
 
-# Called by daily English slots (2/day), the locale daily rotator, or a per-niche
+# Called by daily English slots (3/day), the locale daily rotator, or a per-niche
 # manual run. Checks out `landing`, generates one post (topic-first dedupe,
-# English quality gate, optional single illustration), commits, builds, and
+# English quality gate; illustrations skipped in CI), commits, builds, and
 # deploys to Cloudflare.
 
 on:
   workflow_call:
     inputs:
       category:
-        description: "productivity | adhd | exams | loneliness | remote"
+        description: "Niche id (locale: original five; English slots rotate community niches)"
         required: false
         type: string
       slot:
@@ -51,16 +51,24 @@ jobs:
         env:
           INPUT_CATEGORY: ${{ inputs.category }}
           INPUT_SLOT: ${{ inputs.slot }}
+          INPUT_LOCALE: ${{ inputs.locale }}
         run: |
           set -euo pipefail
           if [ -n "${INPUT_CATEGORY}" ]; then
             CATEGORY="$INPUT_CATEGORY"
           elif [ -n "${INPUT_SLOT}" ]; then
-            NICHES=(productivity adhd exams loneliness remote)
             DAY=$(( $(date -u +%s) / 86400 ))
-            INDEX=$(( (DAY * 4 + INPUT_SLOT) % 5 ))
+            if [ "${INPUT_LOCALE:-en}" = "en" ]; then
+              # English community niches — 3 posts/day × 10 niches
+              NICHES=(med-school phd engineers parents career-switch writers law nurses founders teachers)
+              INDEX=$(( (DAY * 3 + INPUT_SLOT) % 10 ))
+            else
+              # Locale manual slots still use the original five
+              NICHES=(productivity adhd exams loneliness remote)
+              INDEX=$(( (DAY * 3 + INPUT_SLOT) % 5 ))
+            fi
             CATEGORY="${NICHES[$INDEX]}"
-            echo "Rotation: day=$DAY slot=$INPUT_SLOT → $CATEGORY"
+            echo "Rotation: day=$DAY slot=$INPUT_SLOT locale=${INPUT_LOCALE:-en} → $CATEGORY"
           else
             echo "Provide category or slot" >&2
             exit 1
@@ -74,10 +82,12 @@ jobs:
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
           POST_CATEGORY: ${{ steps.niche.outputs.category }}
           POST_LOCALE: ${{ inputs.locale }}
+          SKIP_IMAGE: "1"
         run: >-
           node scripts/generate-post.mjs
           --category "${{ steps.niche.outputs.category }}"
           --locale "${{ inputs.locale }}"
+          --skip-image
 
       - name: Commit & push to landing
         env:

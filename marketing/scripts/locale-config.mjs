@@ -74,6 +74,56 @@ const LINK_BANK_EN = {
     "https://www.ilo.org/topics/telework — ILO telework",
     "https://en.wikipedia.org/wiki/Remote_work — remote work overview",
   ],
+  "med-school": [
+    "https://en.wikipedia.org/wiki/Spaced_repetition — spaced repetition",
+    "https://www.ankiweb.net/ — Anki",
+    "https://www.ama-assn.org/ — American Medical Association (general)",
+  ],
+  phd: [
+    "https://thesiswhisperer.com/ — The Thesis Whisperer",
+    "https://en.wikipedia.org/wiki/Academic_writing — academic writing",
+    "https://www.apa.org/ — APA (research & wellbeing)",
+  ],
+  engineers: [
+    "https://www.calnewport.com/blog/ — Deep Work / Cal Newport",
+    "https://en.wikipedia.org/wiki/Maker_culture — maker / focus time",
+    "https://sloanreview.mit.edu/ — MIT Sloan (knowledge work)",
+  ],
+  parents: [
+    "https://www.apa.org/topics/stress — APA on stress",
+    "https://www.cdc.gov/emotional-wellbeing/ — emotional wellbeing",
+    "https://en.wikipedia.org/wiki/Work%E2%80%93life_balance — work–life balance",
+  ],
+  "career-switch": [
+    "https://www.khanacademy.org/ — Khan Academy",
+    "https://en.wikipedia.org/wiki/Active_learning — active learning",
+    "https://www.bbc.com/bitesize — BBC Bitesize study skills",
+  ],
+  writers: [
+    "https://en.wikipedia.org/wiki/Free_writing — free writing",
+    "https://jamesclear.com/atomic-habits — Atomic Habits",
+    "https://www.apa.org/topics/stress — APA on stress",
+  ],
+  law: [
+    "https://en.wikipedia.org/wiki/Active_learning — active learning",
+    "https://www.khanacademy.org/ — Khan Academy",
+    "https://en.wikipedia.org/wiki/Casebook_method — casebook / briefing methods",
+  ],
+  nurses: [
+    "https://en.wikipedia.org/wiki/Spaced_repetition — spaced repetition",
+    "https://www.cdc.gov/ — CDC (general health education)",
+    "https://en.wikipedia.org/wiki/Shift_work — shift work",
+  ],
+  founders: [
+    "https://www.buffer.com/state-of-remote-work — remote / distributed work",
+    "https://en.wikipedia.org/wiki/Indie_business — indie / small business",
+    "https://www.calnewport.com/blog/ — Deep Work / Cal Newport",
+  ],
+  teachers: [
+    "https://www.edutopia.org/ — Edutopia",
+    "https://en.wikipedia.org/wiki/Lesson_plan — lesson planning",
+    "https://www.apa.org/topics/stress — APA on stress",
+  ],
 };
 
 const LINK_BANK_ID = {

@@ -9,7 +9,23 @@ const blog = defineCollection({
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
     category: z
-      .enum(["productivity", "adhd", "exams", "loneliness", "remote"])
+      .enum([
+        "productivity",
+        "adhd",
+        "exams",
+        "loneliness",
+        "remote",
+        "med-school",
+        "phd",
+        "engineers",
+        "parents",
+        "career-switch",
+        "writers",
+        "law",
+        "nurses",
+        "founders",
+        "teachers",
+      ])
       .default("productivity"),
     tags: z.array(z.string()).default([]),
     author: z.string().default("Refocus Team"),

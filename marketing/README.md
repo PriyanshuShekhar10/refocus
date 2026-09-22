@@ -68,9 +68,9 @@ Goal: **useful, searchable content that ranks** — not product pitches. Posts s
 - Listing: `/blog` · Post: `/blog/<slug>`
 - Sitemap: `/sitemap.xml` (includes posts)
 
-### Cadence (2 English + 1 rotating locale + 1 German / day)
+### Cadence (3 English + 1 rotating locale + 1 German / day)
 
-Two English slots (quality over volume), one rotating SEA locale post (**id → fil → vi** by UTC day), plus a dedicated German post every day. Niches rotate so coverage stays even. The generator proposes a topic first, clash-checks, and pivots before writing; English drafts are quality-gated (length, specificity, outbound links). At most one optional in-article illustration.
+Three English slots rotate through **ten community niches** (med-school, phd, engineers, parents, career-switch, writers, law, nurses, founders, teachers). Locale and German jobs keep the original five niches (productivity, ADHD, exams, loneliness, remote). SEA locale cycles **id → fil → vi** by UTC day. The generator proposes a topic first, clash-checks, and pivots before writing; English drafts are quality-gated (length, specificity, outbound links). **Illustrations are skipped in GitHub Actions** (`SKIP_IMAGE=1`) to save OpenAI image tokens; local `npm run blog:*` still generates an image unless you pass `--skip-image`.
 
 | Slot | Workflow | Locale | UTC cron | ~IST |
 | --- | --- | --- | --- | --- |
@@ -78,16 +78,27 @@ Two English slots (quality over volume), one rotating SEA locale post (**id → 
 | 1 | `Blog: afternoon slot (English)` | en | `0 12 * * *` | 17:30 |
 | Locale | `Blog: locale daily (id / fil / vi)` | id/fil/vi | `0 14 * * *` | 19:30 |
 | German | `Blog: German daily` | de | `0 16 * * *` | 21:30 |
+| 2 | `Blog: evening slot (English)` | en | `0 18 * * *` | 23:30 |
 
-| Niche | Manual workflow | Local script |
-| --- | --- | --- |
-| Productivity | `Blog: Productivity` | `npm run blog:productivity` |
-| ADHD & mental health | `Blog: ADHD & mental health` | `npm run blog:adhd` |
-| Competitive exams | `Blog: Competitive exams` | `npm run blog:exams` |
-| Loneliness / studying alone | `Blog: Loneliness & studying alone` | `npm run blog:loneliness` |
-| Remote work & freelancing | `Blog: Remote work & freelancing` | `npm run blog:remote` |
+| Niche | Manual workflow | Local script | Scheduled? |
+| --- | --- | --- | --- |
+| Med school & residency | `Blog: Med school & residency` | `npm run blog:med-school` | EN slots |
+| PhD & dissertation | `Blog: PhD & dissertation` | `npm run blog:phd` | EN slots |
+| Software engineers | `Blog: Software engineers` | `npm run blog:engineers` | EN slots |
+| Working parents | `Blog: Working parents` | `npm run blog:parents` | EN slots |
+| Career switchers | `Blog: Career switchers` | `npm run blog:career-switch` | EN slots |
+| Writers & long-form | `Blog: Writers & long-form` | `npm run blog:writers` | EN slots |
+| Law school & articling | `Blog: Law school & articling` | `npm run blog:law` | EN slots |
+| Nursing & shift work | `Blog: Nursing & shift work` | `npm run blog:nurses` | EN slots |
+| Founders & indie makers | `Blog: Founders & indie makers` | `npm run blog:founders` | EN slots |
+| Teachers & educators | `Blog: Teachers & educators` | `npm run blog:teachers` | EN slots |
+| Productivity | `Blog: Productivity` | `npm run blog:productivity` | Locale / DE |
+| ADHD & mental health | `Blog: ADHD & mental health` | `npm run blog:adhd` | Locale / DE |
+| Competitive exams | `Blog: Competitive exams` | `npm run blog:exams` | Locale / DE |
+| Loneliness / studying alone | `Blog: Loneliness & studying alone` | `npm run blog:loneliness` | Locale / DE |
+| Remote work & freelancing | `Blog: Remote work & freelancing` | `npm run blog:remote` | Locale / DE |
 
-**Four posts per day total** (2 EN + 1 rotating locale + 1 DE), staggered so deploys don’t collide. Each job checks out `landing`, commits there (including `public/blog/` images when present), builds, and deploys to Cloudflare — never touches `test-dash` / Vercel. Per-niche, evening English, and per-locale workflows are **manual only**.
+**Five posts per day total** (3 EN + 1 rotating locale + 1 DE), staggered so deploys don’t collide. Each job checks out `landing`, commits there (markdown always; `public/blog/` images only when generated locally), builds, and deploys to Cloudflare — never touches `test-dash` / Vercel. Per-niche and per-locale workflows are **manual only**.
 
 Topic pools + prompts: `scripts/blog-categories.mjs` (+ locale variants). Generator: `scripts/generate-post.mjs`.
 
@@ -98,8 +109,8 @@ Topic pools + prompts: `scripts/blog-categories.mjs` (+ locale variants). Genera
 title: "Your title (no brand name)"
 description: "Meta description under ~155 chars"
 pubDate: 2026-08-08
-category: exams   # productivity | adhd | exams | loneliness | remote
-tags: ["jee", "focus"]
+category: med-school   # see CATEGORY_IDS in scripts/blog-categories.mjs
+tags: ["anki", "focus"]
 author: "Refocus Team"
 draft: false
 ---
@@ -108,16 +119,16 @@ draft: false
 ### Generate with OpenAI
 
 ```bash
-npm run blog:exams
-npm run blog:adhd -- --topic "body doubling for ADHD study sessions"
-npm run blog:new -- --category loneliness
+npm run blog:med-school
+npm run blog:engineers -- --topic "protecting maker time after standups"
+npm run blog:new -- --category parents --skip-image
 ```
 
-Each generated post should include **3–5 outbound links** (NTA, UPSC, CDC/CHADD, APA, etc.). Refocus may appear at most once mid-article, or not at all.
+Each generated post should include **3–5 outbound links** (CDC/CHADD, APA, Khan Academy, etc.). Refocus may appear at most once mid-article, or not at all.
 
 ### Manual run in GitHub
 
-Actions → pick a daily English slot, **Blog: locale daily**, or a niche workflow (e.g. **Blog: Competitive exams**) → Run workflow.
+Actions → pick a daily English slot, **Blog: locale daily**, or a niche workflow (e.g. **Blog: Med school & residency**) → Run workflow.
 
 Required secrets (on the repo): `OPENAI_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 

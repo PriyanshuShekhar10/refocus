@@ -1,6 +1,6 @@
 name: "Blog: Loneliness"
 
-# Manual only — scheduled publishing is blog-publish.yml (Mon/Wed/Fri).
+# Manual only — scheduled English publishing is blog-slot-0/1/2; locale/DE keep original five.
 on:
   workflow_dispatch:
 

@@ -1,6 +1,6 @@
-name: "Blog: Exams"
+name: "Blog: Career switchers"
 
-# Manual only — scheduled English publishing is blog-slot-0/1/2; locale/DE keep original five.
+# Manual only — scheduled English publishing is blog-slot-0/1/2.
 on:
   workflow_dispatch:
 
@@ -8,12 +8,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: blog-niche-exams
+  group: blog-niche-career-switch
   cancel-in-progress: false
 
 jobs:
   generate:
     uses: ./.github/workflows/blog-reusable.yml
     with:
-      category: exams
+      category: career-switch
+      locale: en
     secrets: inherit

@@ -4,14 +4,14 @@ import Base from "../../../../layouts/Base.astro";
 import Navbar from "../../../../components/Navbar";
 import { getCollection } from "astro:content";
 import { SITE_URL } from "../../../../lib/seo";
-import { CATEGORY_IDS, type CategoryId } from "../../../../lib/categories";
+import { LOCALE_CATEGORY_IDS, type LocaleCategoryId } from "../../../../lib/categories";
 import { CATEGORIES_ID, categoryLabelId } from "../../../../lib/categories-id";
 import { hreflangAlternates } from "../../../../lib/i18n";
 import "../../../../styles/blog.css";
 
 export const getStaticPaths = (async () => {
   const posts = await getCollection("blogId", ({ data }) => !data.draft);
-  return CATEGORY_IDS.map((category) => {
+  return LOCALE_CATEGORY_IDS.map((category) => {
     const filtered = posts
       .filter((p) => (p.data.category ?? "productivity") === category)
       .sort((a, b) => +new Date(b.data.pubDate) - +new Date(a.data.pubDate));
@@ -20,7 +20,7 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { category, posts } = Astro.props as {
-  category: CategoryId;
+  category: LocaleCategoryId;
   posts: Awaited<ReturnType<typeof getCollection<"blogId">>>;
 };
 

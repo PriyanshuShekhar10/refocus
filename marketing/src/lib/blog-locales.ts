@@ -1,4 +1,4 @@
-import type { CategoryId } from "./categories";
+import type { LocaleCategoryId } from "./categories";
 
 export type BlogLocaleKey = "id" | "fil" | "vi" | "de";
 
@@ -38,7 +38,7 @@ export type BlogLocaleUi = {
   };
   categoryLabel: (id?: string) => string;
   categoryMeta: (id?: string) => { label: string; description: string; intro: string; pillar: { path: string; label: string } };
-  categories: Record<CategoryId, { label: string; description: string; intro: string; pillar: { path: string; label: string } }>;
+  categories: Record<LocaleCategoryId, { label: string; description: string; intro: string; pillar: { path: string; label: string } }>;
 };
 
 import { CATEGORIES_ID, categoryLabelId, categoryMetaId } from "./categories-id";

@@ -5,7 +5,7 @@ import Base from "../../../layouts/Base.astro";
 import Navbar from "../../../components/Navbar";
 import { getCollection } from "astro:content";
 import { SITE_URL } from "../../../lib/seo";
-import { CATEGORY_IDS } from "../../../lib/categories";
+import { LOCALE_CATEGORY_IDS } from "../../../lib/categories";
 import { getBlogLocale } from "../../../lib/blog-locales";
 import "../../../styles/blog.css";
 
@@ -61,7 +61,7 @@ const fmt = (d: Date) =>
         <h1>{L.blog.heading}</h1>
         <p class="blog-lede">{L.blog.lede}</p>
         <nav class="blog-topics" aria-label="Topics">
-          {CATEGORY_IDS.map((id) => (
+          {LOCALE_CATEGORY_IDS.map((id) => (
             <a href={`${L.blogPath}/category/${id}`}>{L.categories[id].label}</a>
           ))}
         </nav>

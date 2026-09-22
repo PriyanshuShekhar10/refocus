@@ -1,14 +1,14 @@
-import type { CategoryId } from "./categories";
+import type { LocaleCategoryId } from "./categories";
 
 export type CategoryMetaVi = {
-  id: CategoryId;
+  id: LocaleCategoryId;
   label: string;
   description: string;
   intro: string;
   pillar: { path: string; label: string };
 };
 
-export const CATEGORIES_VI: Record<CategoryId, CategoryMetaVi> = {
+export const CATEGORIES_VI: Record<LocaleCategoryId, CategoryMetaVi> = {
   productivity: {
     id: "productivity",
     label: "Năng suất",
@@ -48,11 +48,13 @@ export const CATEGORIES_VI: Record<CategoryId, CategoryMetaVi> = {
 
 export function categoryLabelVi(id?: string): string {
   return (
-    (id && CATEGORIES_VI[id as CategoryId]?.label) ||
+    (id && CATEGORIES_VI[id as LocaleCategoryId]?.label) ||
     CATEGORIES_VI.productivity.label
   );
 }
 
 export function categoryMetaVi(id?: string): CategoryMetaVi {
-  return (id && CATEGORIES_VI[id as CategoryId]) || CATEGORIES_VI.productivity;
+  return (
+    (id && CATEGORIES_VI[id as LocaleCategoryId]) || CATEGORIES_VI.productivity
+  );
 }

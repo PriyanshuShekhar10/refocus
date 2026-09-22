@@ -3,7 +3,7 @@
  * Generate a niche blog post for the Refocus marketing site (OpenAI).
  *
  * Flow: propose topic → clash-check / pivot → write article (English:
- * outline then section-by-section) → required illustration. Never
+ * outline then section-by-section) → optional illustration. Never
  * hard-fail solely because a theme was covered.
  *
  * Usage:
@@ -11,8 +11,11 @@
  *   node scripts/generate-post.mjs --category exams --locale id
  *   node scripts/generate-post.mjs --category exams --locale fil
  *   node scripts/generate-post.mjs --category remote --locale vi
+ *   node scripts/generate-post.mjs --skip-image
+ *   SKIP_IMAGE=1 node scripts/generate-post.mjs --category med-school
  *
- * Locales: en | id | fil | vi
+ * Locales: en | id | fil | vi | de
+ * CI sets SKIP_IMAGE=1 to avoid OpenAI image token spend.
  */
 
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
@@ -107,6 +110,19 @@ function getArg(flag) {
   const i = argv.indexOf(flag);
   if (i !== -1 && argv[i + 1]) return argv[i + 1];
   return "";
+}
+
+function hasFlag(flag) {
+  return process.argv.slice(2).includes(flag);
+}
+
+/** Skip Images API when --skip-image or SKIP_IMAGE=1/true/yes (CI default). */
+function shouldSkipImage() {
+  if (hasFlag("--skip-image")) return true;
+  const env = String(process.env.SKIP_IMAGE || "")
+    .trim()
+    .toLowerCase();
+  return env === "1" || env === "true" || env === "yes";
 }
 
 function resolveCategoryId(config) {
@@ -1227,7 +1243,11 @@ async function main() {
   }
   const slug = await uniqueSlug(blogDir, baseSlug);
 
-  body = await addRequiredIllustration(apiKey, title, body, slug);
+  if (shouldSkipImage()) {
+    console.log("Illustration: skipped (--skip-image / SKIP_IMAGE)");
+  } else {
+    body = await addRequiredIllustration(apiKey, title, body, slug);
+  }
 
   const contents = `${toFrontmatter({
     title,

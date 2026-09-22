@@ -13,7 +13,17 @@
     "blog:adhd": "node scripts/generate-post.mjs --category adhd",
     "blog:exams": "node scripts/generate-post.mjs --category exams",
     "blog:loneliness": "node scripts/generate-post.mjs --category loneliness",
-    "blog:remote": "node scripts/generate-post.mjs --category remote"
+    "blog:remote": "node scripts/generate-post.mjs --category remote",
+    "blog:med-school": "node scripts/generate-post.mjs --category med-school",
+    "blog:phd": "node scripts/generate-post.mjs --category phd",
+    "blog:engineers": "node scripts/generate-post.mjs --category engineers",
+    "blog:parents": "node scripts/generate-post.mjs --category parents",
+    "blog:career-switch": "node scripts/generate-post.mjs --category career-switch",
+    "blog:writers": "node scripts/generate-post.mjs --category writers",
+    "blog:law": "node scripts/generate-post.mjs --category law",
+    "blog:nurses": "node scripts/generate-post.mjs --category nurses",
+    "blog:founders": "node scripts/generate-post.mjs --category founders",
+    "blog:teachers": "node scripts/generate-post.mjs --category teachers"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.0",

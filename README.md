@@ -20,7 +20,7 @@ dashboard.refocus.co.in →  Next.js app (branch: test-dash)         →  Vercel
 
 ### Why two branches?
 
-The blog auto-publishes **2 English posts/day + 1 rotating locale post** (id → fil → vi). Those commits must not touch `test-dash`, or Vercel would redeploy the dashboard on every blog push. Marketing lives only on `landing`; the dashboard branch has **no** `marketing/` folder.
+The blog auto-publishes **3 English posts/day** (ten community niches) **+ 1 rotating locale post** (id → fil → vi) **+ 1 German post**. CI skips image generation to save tokens. Those commits must not touch `test-dash`, or Vercel would redeploy the dashboard on every blog push. Marketing lives only on `landing`; the dashboard branch has **no** `marketing/` folder.
 
 ### Shared auth
 
