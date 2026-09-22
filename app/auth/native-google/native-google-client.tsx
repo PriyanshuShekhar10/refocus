@@ -181,11 +181,15 @@ export function NativeGoogleClient() {
 
     (async () => {
       try {
+        const returning = Boolean(readStoredSessionId());
         if (await completeFromCallback()) {
           return;
         }
         if (cancelled) {
           return;
+        }
+        if (returning) {
+          throw new Error("Google sign-in did not complete. Please try again.");
         }
         setStatus("Redirecting to Google…");
         await startGoogleRedirect();
