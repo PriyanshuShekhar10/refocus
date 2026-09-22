@@ -1,32 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getRedirectResult, signInWithRedirect } from "firebase/auth";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  getRedirectResult,
+  signInWithPopup,
+  signInWithRedirect,
+  type User,
+} from "firebase/auth";
 import { Loader2 } from "lucide-react";
 import {
   getFirebaseAuth,
   googleAuthProvider,
   isFirebaseClientConfigured,
 } from "@/lib/firebase/client";
-import { designStyles } from "@/components/design";
+import { DButton, designStyles } from "@/components/design";
 
-const RETURN_KEY = "refocus.native-google.return_to";
-const STARTED_KEY = "refocus.native-google.redirected";
+const NATIVE_RETURN_TO = "refocus://google-auth";
 
-function isSafeNativeReturnTo(value: string | null | undefined): string | null {
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    if (url.protocol !== "refocus:") return null;
-    if (url.username || url.password) return null;
-    return value;
-  } catch {
-    return null;
-  }
-}
-
-function bounce(returnTo: string, params: Record<string, string>) {
-  const url = new URL(returnTo);
+function bounce(params: Record<string, string>) {
+  const url = new URL(NATIVE_RETURN_TO);
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);
   }
@@ -53,81 +45,94 @@ function formatFirebaseAuthError(err: unknown): string {
   return err instanceof Error ? err.message : "Google sign-in failed. Please try again.";
 }
 
-type NativeGoogleClientProps = {
-  returnToParam: string | null;
-};
+async function bounceUser(user: User) {
+  const firebaseIdToken = await user.getIdToken();
+  const displayName = user.displayName?.trim();
+  bounce({
+    firebaseIdToken,
+    ...(displayName ? { displayName } : {}),
+  });
+}
 
-export function NativeGoogleClient({ returnToParam }: NativeGoogleClientProps) {
+export function NativeGoogleClient() {
   const [status, setStatus] = useState("Continuing with Google…");
   const [error, setError] = useState<string | null>(null);
+  const [showRetry, setShowRetry] = useState(false);
+  const started = useRef(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const finishIfSignedIn = useCallback(async (): Promise<boolean> => {
+    if (!isFirebaseClientConfigured()) {
+      bounce({ error: "Google sign-in is not configured." });
+      return true;
+    }
+    const auth = getFirebaseAuth();
+    await auth.authStateReady();
+    const redirectResult = await getRedirectResult(auth);
+    const user = redirectResult?.user ?? auth.currentUser;
+    if (!user) {
+      return false;
+    }
+    setStatus("Returning to Refocus…");
+    await bounceUser(user);
+    return true;
+  }, []);
 
-    async function run() {
-      const returnTo =
-        isSafeNativeReturnTo(returnToParam) ||
-        isSafeNativeReturnTo(
-          typeof window !== "undefined" ? sessionStorage.getItem(RETURN_KEY) : null,
-        );
-
-      if (returnTo) {
-        sessionStorage.setItem(RETURN_KEY, returnTo);
-      }
-
-      if (!returnTo) {
-        setError("Open Google sign-in from the Refocus app.");
-        return;
-      }
-
-      if (!isFirebaseClientConfigured()) {
-        bounce(returnTo, { error: "Google sign-in is not configured." });
-        return;
-      }
-
-      try {
-        const auth = getFirebaseAuth();
-        const redirectResult = await getRedirectResult(auth);
-        if (cancelled) return;
-
-        const user = redirectResult?.user;
-        if (user) {
-          sessionStorage.removeItem(STARTED_KEY);
-          sessionStorage.removeItem(RETURN_KEY);
-          const firebaseIdToken = await user.getIdToken();
-          const displayName = user.displayName?.trim();
-          bounce(returnTo, {
-            firebaseIdToken,
-            ...(displayName ? { displayName } : {}),
-          });
-          return;
-        }
-
-        if (sessionStorage.getItem(STARTED_KEY) === "1") {
-          sessionStorage.removeItem(STARTED_KEY);
-          bounce(returnTo, {
-            error: "Google sign-in did not complete. Please try again.",
-          });
-          return;
-        }
-
-        sessionStorage.setItem(STARTED_KEY, "1");
+  const startGoogle = useCallback(async () => {
+    setError(null);
+    setShowRetry(false);
+    setStatus("Continuing with Google…");
+    const auth = getFirebaseAuth();
+    try {
+      const credential = await signInWithPopup(auth, googleAuthProvider);
+      await bounceUser(credential.user);
+    } catch (popupErr: unknown) {
+      const code =
+        popupErr && typeof popupErr === "object" && "code" in popupErr
+          ? String((popupErr as { code: string }).code)
+          : "";
+      if (
+        code === "auth/popup-blocked" ||
+        code === "auth/popup-closed-by-user" ||
+        code === "auth/cancelled-popup-request" ||
+        code === "auth/operation-not-supported-in-this-environment"
+      ) {
         setStatus("Redirecting to Google…");
         await signInWithRedirect(auth, googleAuthProvider);
-      } catch (err) {
-        if (cancelled) return;
-        sessionStorage.removeItem(STARTED_KEY);
-        const message = formatFirebaseAuthError(err);
-        setError(message);
-        bounce(returnTo, { error: message });
+        return;
       }
+      throw popupErr;
     }
+  }, []);
 
-    void run();
+  useEffect(() => {
+    if (started.current) {
+      return;
+    }
+    started.current = true;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        if (await finishIfSignedIn()) {
+          return;
+        }
+        if (cancelled) {
+          return;
+        }
+        await startGoogle();
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+        setError(formatFirebaseAuthError(err));
+        setShowRetry(true);
+      }
+    })();
+
     return () => {
       cancelled = true;
     };
-  }, [returnToParam]);
+  }, [finishIfSignedIn, startGoogle]);
 
   return (
     <div
@@ -171,6 +176,20 @@ export function NativeGoogleClient({ returnToParam }: NativeGoogleClientProps) {
           </p>
         </>
       )}
+      {showRetry ? (
+        <DButton
+          type="button"
+          variant="primary"
+          size="lg"
+          onClick={() => {
+            void startGoogle().catch((err) => {
+              setError(formatFirebaseAuthError(err));
+            });
+          }}
+        >
+          Continue with Google
+        </DButton>
+      ) : null}
     </div>
   );
 }
