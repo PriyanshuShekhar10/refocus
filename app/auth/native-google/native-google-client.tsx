@@ -1,19 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  getRedirectResult,
+  signInWithPopup,
+  signInWithRedirect,
+  type User,
+} from "firebase/auth";
 import { Loader2 } from "lucide-react";
-import { isFirebaseClientConfigured } from "@/lib/firebase/client";
 import { DButton, designStyles } from "@/components/design";
+import {
+  getFirebaseAuth,
+  googleAuthProvider,
+  isFirebaseClientConfigured,
+} from "@/lib/firebase/client";
 
 const NATIVE_RETURN_TO = "refocus://google-auth";
-const SID_KEY = "refocus.native-google.sessionId";
-const API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "";
+const STARTED_KEY = "refocus.native-google.started";
 
-type IdpResponse = {
-  idToken?: string;
-  displayName?: string;
-  error?: { message?: string };
-};
+// Survives React Strict Mode remounts in the same page load; resets on a real navigation.
+let bootstrapped = false;
 
 function bounce(params: Record<string, string>) {
   const url = new URL(NATIVE_RETURN_TO);
@@ -23,184 +29,130 @@ function bounce(params: Record<string, string>) {
   window.location.href = url.toString();
 }
 
-function continueUri() {
-  return `${window.location.origin}${window.location.pathname}`;
+function formatFirebaseAuthError(err: unknown): string {
+  if (err && typeof err === "object" && "code" in err) {
+    const code = String((err as { code: string }).code);
+    if (code === "auth/unauthorized-domain") {
+      return "This domain is not authorized for Firebase sign-in.";
+    }
+    if (code === "auth/operation-not-allowed") {
+      return "Google sign-in is not enabled.";
+    }
+    if (
+      "message" in err &&
+      typeof (err as { message?: string }).message === "string"
+    ) {
+      return (err as { message: string }).message;
+    }
+    return code;
+  }
+  return err instanceof Error ? err.message : "Google sign-in failed. Please try again.";
 }
 
-function readStoredSessionId() {
+function markStarted() {
   try {
-    return (
-      sessionStorage.getItem(SID_KEY) ||
-      localStorage.getItem(SID_KEY) ||
-      document.cookie
-        .split("; ")
-        .find((row) => row.startsWith(`${SID_KEY}=`))
-        ?.split("=")[1] ||
-      ""
-    );
+    sessionStorage.setItem(STARTED_KEY, "1");
   } catch {
-    return "";
+    // sessionStorage can be blocked in an ephemeral auth session.
   }
 }
 
-function storeSessionId(sessionId: string) {
+function consumeStarted() {
   try {
-    sessionStorage.setItem(SID_KEY, sessionId);
-    localStorage.setItem(SID_KEY, sessionId);
-    document.cookie = `${SID_KEY}=${sessionId}; path=/; max-age=600; samesite=lax`;
+    const started = sessionStorage.getItem(STARTED_KEY) === "1";
+    sessionStorage.removeItem(STARTED_KEY);
+    return started;
   } catch {
-    // Storage can be blocked in an ephemeral auth session.
-  }
-}
-
-function clearSessionId() {
-  try {
-    sessionStorage.removeItem(SID_KEY);
-    localStorage.removeItem(SID_KEY);
-    document.cookie = `${SID_KEY}=; path=/; max-age=0`;
-  } catch {
-    // ignore
-  }
-}
-
-function callbackParams() {
-  const query = new URLSearchParams(window.location.search);
-  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  return {
-    error: query.get("error") || hash.get("error"),
-    errorDescription: query.get("error_description") || hash.get("error_description"),
-    code: query.get("code"),
-    idToken: hash.get("id_token"),
-    accessToken: hash.get("access_token"),
-  };
-}
-
-async function signInWithIdp(input: {
-  requestUri: string;
-  postBody?: string;
-  sessionId?: string;
-}) {
-  const res = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        requestUri: input.requestUri,
-        returnSecureToken: true,
-        returnIdpCredential: true,
-        ...(input.postBody ? { postBody: input.postBody } : {}),
-        ...(input.sessionId ? { sessionId: input.sessionId } : {}),
-      }),
-    },
-  );
-  const data = (await res.json()) as IdpResponse;
-  if (!res.ok || !data.idToken) {
-    throw new Error(data.error?.message || "Google sign-in failed. Please try again.");
-  }
-  return {
-    firebaseIdToken: data.idToken,
-    displayName: data.displayName?.trim() || null,
-  };
-}
-
-async function completeFromCallback(): Promise<boolean> {
-  const { error, errorDescription, code, idToken, accessToken } = callbackParams();
-  if (error) {
-    bounce({ error: errorDescription || error });
-    return true;
-  }
-  if (!code && !idToken && !accessToken) {
     return false;
   }
-
-  const sessionId = readStoredSessionId();
-  const requestUri = window.location.href;
-  const postBody = idToken
-    ? `id_token=${encodeURIComponent(idToken)}&providerId=google.com`
-    : accessToken
-      ? `access_token=${encodeURIComponent(accessToken)}&providerId=google.com`
-      : undefined;
-
-  const exchanged = await signInWithIdp({
-    requestUri,
-    postBody,
-    sessionId,
-  });
-  clearSessionId();
-  bounce({
-    firebaseIdToken: exchanged.firebaseIdToken,
-    ...(exchanged.displayName ? { displayName: exchanged.displayName } : {}),
-  });
-  return true;
 }
 
-async function startGoogleRedirect() {
-  if (!API_KEY || !isFirebaseClientConfigured()) {
+async function bounceUser(user: User) {
+  const firebaseIdToken = await user.getIdToken();
+  bounce({
+    firebaseIdToken,
+    ...(user.displayName ? { displayName: user.displayName } : {}),
+  });
+}
+
+async function startGoogle(preferPopup: boolean) {
+  if (!isFirebaseClientConfigured()) {
     bounce({ error: "Google sign-in is not configured." });
     return;
   }
-  const sessionId = crypto.randomUUID().replace(/-/g, "");
-  storeSessionId(sessionId);
-  const res = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        continueUri: continueUri(),
-        providerId: "google.com",
-        sessionId,
-        authFlowType: "CODE_FLOW",
-        oauthScope: "openid email profile",
-      }),
-    },
-  );
-  const data = (await res.json()) as {
-    authUri?: string;
-    error?: { message?: string };
-  };
-  if (!res.ok || !data.authUri) {
-    throw new Error(data.error?.message || "Could not start Google sign-in.");
+  markStarted();
+  const auth = getFirebaseAuth();
+  if (preferPopup) {
+    try {
+      const credential = await signInWithPopup(auth, googleAuthProvider);
+      await bounceUser(credential.user);
+      return;
+    } catch (popupErr: unknown) {
+      const code =
+        popupErr && typeof popupErr === "object" && "code" in popupErr
+          ? String((popupErr as { code: string }).code)
+          : "";
+      if (
+        code !== "auth/popup-blocked" &&
+        code !== "auth/popup-closed-by-user" &&
+        code !== "auth/cancelled-popup-request"
+      ) {
+        throw popupErr;
+      }
+    }
   }
-  window.location.assign(data.authUri);
+  // Google's redirect_uri is Firebase's registered handler, not this page.
+  await signInWithRedirect(auth, googleAuthProvider);
 }
 
 export function NativeGoogleClient() {
   const [status, setStatus] = useState("Continuing with Google…");
   const [error, setError] = useState<string | null>(null);
   const [showRetry, setShowRetry] = useState(false);
-  const started = useRef(false);
 
   useEffect(() => {
-    if (started.current) {
+    if (bootstrapped) {
       return;
     }
-    started.current = true;
+    bootstrapped = true;
     let cancelled = false;
 
     (async () => {
-      try {
-        const returning = Boolean(readStoredSessionId());
-        if (await completeFromCallback()) {
-          return;
-        }
-        if (cancelled) {
-          return;
-        }
-        if (returning) {
-          throw new Error("Google sign-in did not complete. Please try again.");
-        }
-        setStatus("Redirecting to Google…");
-        await startGoogleRedirect();
-      } catch (err) {
-        if (cancelled) {
-          return;
-        }
-        setError(err instanceof Error ? err.message : "Google sign-in failed.");
-        setShowRetry(true);
+      if (!isFirebaseClientConfigured()) {
+        bounce({ error: "Google sign-in is not configured." });
+        return;
       }
-    })();
+
+      const auth = getFirebaseAuth();
+      await auth.authStateReady();
+      const result = await getRedirectResult(auth);
+      const user = result?.user ?? auth.currentUser;
+      if (user) {
+        consumeStarted();
+        await bounceUser(user);
+        return;
+      }
+
+      if (consumeStarted()) {
+        if (!cancelled) {
+          setError("Google sign-in did not complete. Please try again.");
+          setShowRetry(true);
+        }
+        return;
+      }
+
+      if (cancelled) {
+        return;
+      }
+      setStatus("Redirecting to Google…");
+      await startGoogle(false);
+    })().catch((err) => {
+      if (cancelled) {
+        return;
+      }
+      setError(formatFirebaseAuthError(err));
+      setShowRetry(true);
+    });
 
     return () => {
       cancelled = true;
@@ -258,8 +210,8 @@ export function NativeGoogleClient() {
             setError(null);
             setShowRetry(false);
             setStatus("Redirecting to Google…");
-            void startGoogleRedirect().catch((err) => {
-              setError(err instanceof Error ? err.message : "Google sign-in failed.");
+            void startGoogle(true).catch((err) => {
+              setError(formatFirebaseAuthError(err));
               setShowRetry(true);
             });
           }}
