@@ -18,15 +18,14 @@ import {
 const NATIVE_RETURN_TO = "refocus://google-auth";
 const STARTED_KEY = "refocus.native-google.started";
 
-// Survives React Strict Mode remounts in the same page load; resets on a real navigation.
 let bootstrapped = false;
 
-function bounce(params: Record<string, string>) {
+function bounceUrl(params: Record<string, string>) {
   const url = new URL(NATIVE_RETURN_TO);
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);
   }
-  window.location.href = url.toString();
+  return url.toString();
 }
 
 function formatFirebaseAuthError(err: unknown): string {
@@ -52,40 +51,80 @@ function formatFirebaseAuthError(err: unknown): string {
 function markStarted() {
   try {
     sessionStorage.setItem(STARTED_KEY, "1");
+    localStorage.setItem(STARTED_KEY, "1");
   } catch {
-    // sessionStorage can be blocked in an ephemeral auth session.
+    // Storage can be blocked in an ephemeral auth session.
   }
 }
 
 function consumeStarted() {
   try {
-    const started = sessionStorage.getItem(STARTED_KEY) === "1";
+    const started =
+      sessionStorage.getItem(STARTED_KEY) === "1" ||
+      localStorage.getItem(STARTED_KEY) === "1";
     sessionStorage.removeItem(STARTED_KEY);
+    localStorage.removeItem(STARTED_KEY);
     return started;
   } catch {
     return false;
   }
 }
 
-async function bounceUser(user: User) {
+function cameBackFromGoogle() {
+  const ref = document.referrer || "";
+  return /google\.com|gstatic\.com|firebaseapp\.com|googleusercontent\.com/i.test(
+    ref,
+  );
+}
+
+async function waitForRedirectUser() {
+  const auth = getFirebaseAuth();
+  await auth.authStateReady();
+  const result = await getRedirectResult(auth);
+  return result?.user ?? auth.currentUser ?? null;
+}
+
+async function hrefForUser(user: User) {
   const firebaseIdToken = await user.getIdToken();
-  bounce({
+  return bounceUrl({
     firebaseIdToken,
     ...(user.displayName ? { displayName: user.displayName } : {}),
   });
 }
 
-async function startGoogle(preferPopup: boolean) {
-  if (!isFirebaseClientConfigured()) {
-    bounce({ error: "Google sign-in is not configured." });
-    return;
+function openRefocus(href: string) {
+  window.location.href = href;
+}
+
+export function NativeGoogleClient() {
+  const [status, setStatus] = useState("Checking Google sign-in…");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(true);
+  const [returnHref, setReturnHref] = useState<string | null>(null);
+
+  async function completeUser(user: User) {
+    consumeStarted();
+    const href = await hrefForUser(user);
+    setReturnHref(href);
+    setStatus("Opening Refocus…");
+    setBusy(false);
+    setError(null);
+    openRefocus(href);
   }
-  markStarted();
-  const auth = getFirebaseAuth();
-  if (preferPopup) {
+
+  async function startGoogle() {
+    if (!isFirebaseClientConfigured()) {
+      openRefocus(bounceUrl({ error: "Google sign-in is not configured." }));
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setStatus("Continuing with Google…");
+    markStarted();
+    const auth = getFirebaseAuth();
     try {
       const credential = await signInWithPopup(auth, googleAuthProvider);
-      await bounceUser(credential.user);
+      await completeUser(credential.user);
       return;
     } catch (popupErr: unknown) {
       const code =
@@ -100,15 +139,8 @@ async function startGoogle(preferPopup: boolean) {
         throw popupErr;
       }
     }
+    await signInWithRedirect(auth, googleAuthProvider);
   }
-  // Google's redirect_uri is Firebase's registered handler, not this page.
-  await signInWithRedirect(auth, googleAuthProvider);
-}
-
-export function NativeGoogleClient() {
-  const [status, setStatus] = useState("Continuing with Google…");
-  const [error, setError] = useState<string | null>(null);
-  const [showRetry, setShowRetry] = useState(false);
 
   useEffect(() => {
     if (bootstrapped) {
@@ -119,45 +151,62 @@ export function NativeGoogleClient() {
 
     (async () => {
       if (!isFirebaseClientConfigured()) {
-        bounce({ error: "Google sign-in is not configured." });
+        openRefocus(bounceUrl({ error: "Google sign-in is not configured." }));
         return;
       }
 
-      const auth = getFirebaseAuth();
-      await auth.authStateReady();
-      const result = await getRedirectResult(auth);
-      const user = result?.user ?? auth.currentUser;
-      if (user) {
-        consumeStarted();
-        await bounceUser(user);
-        return;
-      }
-
-      if (consumeStarted()) {
-        if (!cancelled) {
-          setError("Google sign-in did not complete. Please try again.");
-          setShowRetry(true);
-        }
-        return;
-      }
-
+      const user = await waitForRedirectUser();
       if (cancelled) {
         return;
       }
-      setStatus("Redirecting to Google…");
-      await startGoogle(false);
+      if (user) {
+        await completeUser(user);
+        return;
+      }
+
+      if (consumeStarted() || cameBackFromGoogle()) {
+        setError("Google sign-in did not complete. Please try again.");
+        setBusy(false);
+        return;
+      }
+
+      setBusy(false);
+      setStatus("Continue with Google to return to Refocus.");
     })().catch((err) => {
       if (cancelled) {
         return;
       }
       setError(formatFirebaseAuthError(err));
-      setShowRetry(true);
+      setBusy(false);
     });
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  if (returnHref) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          gap: 16,
+          minHeight: 180,
+          justifyContent: "center",
+        }}
+      >
+        <p className={designStyles.pageSub} style={{ marginTop: 0, fontSize: 14 }}>
+          Signed in with Google. Return to the Refocus app to finish.
+        </p>
+        <DButton as="a" href={returnHref} variant="primary" size="lg">
+          Open Refocus
+        </DButton>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -183,7 +232,7 @@ export function NativeGoogleClient() {
             {error}
           </p>
         </>
-      ) : (
+      ) : busy ? (
         <>
           <Loader2
             size={28}
@@ -200,19 +249,20 @@ export function NativeGoogleClient() {
             {status}
           </p>
         </>
+      ) : (
+        <p className={designStyles.pageSub} style={{ marginTop: 0, fontSize: 14 }}>
+          {status}
+        </p>
       )}
-      {showRetry ? (
+      {!busy ? (
         <DButton
           type="button"
           variant="primary"
           size="lg"
           onClick={() => {
-            setError(null);
-            setShowRetry(false);
-            setStatus("Redirecting to Google…");
-            void startGoogle(true).catch((err) => {
+            void startGoogle().catch((err) => {
               setError(formatFirebaseAuthError(err));
-              setShowRetry(true);
+              setBusy(false);
             });
           }}
         >
