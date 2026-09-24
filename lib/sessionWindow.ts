@@ -34,6 +34,60 @@ export function isCallJoinable(
   return isWithinCallWindow(startTime, endTime, now, CALL_JOIN_VISIBLE_MINUTES);
 }
 
+type JoinableSessionLike = {
+  start: Date | string;
+  end?: Date | string | null;
+};
+
+const FALLBACK_DURATION_MS = 60 * 60 * 1000;
+
+function sessionBounds(session: JoinableSessionLike): { start: number; end: number } {
+  const start = new Date(session.start).getTime();
+  const end = session.end ? new Date(session.end).getTime() : start + FALLBACK_DURATION_MS;
+  return { start, end };
+}
+
+/**
+ * Which session the sidebar Join button should open.
+ *
+ * The join window is 10 minutes before start through 10 minutes after end,
+ * so back-to-back sessions with a gap of 10 minutes or less are both
+ * joinable at once. Prefer the session that is on the clock right now, then
+ * the next one that has not started. A session that has already ended stays
+ * selectable only when nothing upcoming is in its join window yet.
+ */
+export function pickJoinableSession<T extends JoinableSessionLike>(
+  sessions: readonly T[],
+  now = new Date(),
+): T | null {
+  const current = now.getTime();
+  const joinable = sessions.filter((session) => {
+    const { start, end } = sessionBounds(session);
+    if (Number.isNaN(start) || Number.isNaN(end)) return false;
+    return isCallJoinable(start, end, now);
+  });
+  if (joinable.length === 0) return null;
+
+  const inProgress = joinable.filter((session) => {
+    const { start, end } = sessionBounds(session);
+    return start <= current && current <= end;
+  });
+  if (inProgress.length > 0) {
+    return [...inProgress].sort(
+      (a, b) => sessionBounds(a).start - sessionBounds(b).start,
+    )[0];
+  }
+
+  const upcoming = joinable.filter((session) => sessionBounds(session).start > current);
+  if (upcoming.length > 0) {
+    return [...upcoming].sort(
+      (a, b) => sessionBounds(a).start - sessionBounds(b).start,
+    )[0];
+  }
+
+  return [...joinable].sort((a, b) => sessionBounds(b).end - sessionBounds(a).end)[0];
+}
+
 /** Minutes after official end that partners can stay on the call to say goodbye. */
 export const WRAP_UP_MINUTES = 5;
 

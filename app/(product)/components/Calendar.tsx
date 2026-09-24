@@ -38,7 +38,7 @@ import { CalendarDayHeader } from "./Calendar/CalendarDayHeader";
 import { CalendarEventCard } from "./Calendar/CalendarEventCard";
 import { CalendarRightSidebar } from "./Calendar/CalendarRightSidebar";
 import { HourOccupancyChip } from "./Calendar/HourOccupancyChip";
-import { isCallJoinable, hasSessionStarted } from "@/lib/sessionWindow";
+import { pickJoinableSession, hasSessionStarted } from "@/lib/sessionWindow";
 import {
   aggregateHourOccupancy,
   hoursWithMyPastMatchedSessions,
@@ -903,18 +903,10 @@ export default function Calendar({
           return isOwner || isParticipant;
         }).length}
         onGoToday={goToday}
-        joinableSession={(() => {
-          const joinable = events
-            .filter((ev) => {
-              const isBooked = (ev.participants?.length ?? 0) >= 2;
-              if (!isBooked) return false;
-              const start = new Date(ev.start);
-              const end = ev.end ? new Date(ev.end) : new Date(start.getTime() + 60 * 60 * 1000);
-              return isCallJoinable(start, end);
-            })
-            .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())[0];
-          return joinable || null;
-        })()}
+        joinableSession={pickJoinableSession(
+          events.filter((ev) => (ev.participants?.length ?? 0) >= 2),
+          now,
+        )}
         profilePreview={profilePreview}
         onClearProfilePreview={() => setProfilePreview(null)}
       />
