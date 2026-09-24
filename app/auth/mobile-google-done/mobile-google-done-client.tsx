@@ -43,7 +43,7 @@ export function MobileGoogleDoneClient() {
       }
 
       try {
-        const res = await fetch("/api/auth/mobile-google/stash", {
+        const res = await fetch("/api/mobile-google/stash", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ googleIdToken }),
