@@ -64,7 +64,7 @@ export function pickJoinableSession<T extends JoinableSessionLike>(
   const joinable = sessions.filter((session) => {
     const { start, end } = sessionBounds(session);
     if (Number.isNaN(start) || Number.isNaN(end)) return false;
-    return isCallJoinable(start, end, now);
+    return isCallJoinable(new Date(start), new Date(end), now);
   });
   if (joinable.length === 0) return null;
 
