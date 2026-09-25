@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { logAdminAction } from "@/lib/adminAudit";
 import {
-  getStoredDailyActiveId,
+  getDailyAdminState,
   listDailyAccounts,
   listDailyAccountsPublic,
   setDailyActiveId,
+  setDailySelectionMode,
 } from "@/lib/dailyAccounts";
 
 export async function GET() {
@@ -13,13 +14,14 @@ export async function GET() {
   if (!guard.ok) return guard.response;
 
   const accounts = listDailyAccountsPublic();
-  const storedId = await getStoredDailyActiveId();
-  const activeId =
-    storedId && accounts.some((a) => a.id === storedId)
-      ? storedId
-      : (accounts[0]?.id ?? null);
+  const { selectionMode, activeId, nextId } = await getDailyAdminState();
 
-  return NextResponse.json({ accounts, activeId });
+  return NextResponse.json({
+    accounts,
+    selectionMode,
+    activeId,
+    nextId,
+  });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -27,8 +29,35 @@ export async function PATCH(req: NextRequest) {
   if (!guard.ok) return guard.response;
 
   const body = await req.json().catch(() => ({}));
+  const selectionMode =
+    body?.selectionMode === "rotate" || body?.selectionMode === "pin"
+      ? (body.selectionMode as "rotate" | "pin")
+      : undefined;
   const activeId =
     typeof body?.activeId === "string" ? body.activeId.trim() : "";
+
+  if (selectionMode === "rotate") {
+    const { previousMode } = await setDailySelectionMode(
+      "rotate",
+      guard.admin.userId,
+    );
+    if (previousMode !== "rotate") {
+      await logAdminAction({
+        actorId: guard.admin.userId,
+        actorEmail: guard.admin.email,
+        action: "daily.rotate_accounts",
+        details: { fromMode: previousMode, toMode: "rotate" },
+      });
+    }
+    const state = await getDailyAdminState();
+    return NextResponse.json({
+      ok: true,
+      accounts: listDailyAccountsPublic(),
+      selectionMode: state.selectionMode,
+      activeId: state.activeId,
+      nextId: state.nextId,
+    });
+  }
 
   if (!activeId) {
     return NextResponse.json({ error: "activeId is required" }, { status: 400 });
@@ -67,9 +96,12 @@ export async function PATCH(req: NextRequest) {
       });
     }
 
+    const state = await getDailyAdminState();
     return NextResponse.json({
       ok: true,
       activeId: account.id,
+      selectionMode: state.selectionMode,
+      nextId: state.nextId,
       accounts: listDailyAccountsPublic(),
     });
   } catch (e) {

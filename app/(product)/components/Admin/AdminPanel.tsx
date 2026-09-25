@@ -303,6 +303,7 @@ const ACTION_LABELS: Record<string, string> = {
   "test_call.create": "Created Daily test call",
   "session.club": "Clubbed sessions",
   "daily.switch_account": "Switched Daily.co account",
+  "daily.rotate_accounts": "Set Daily.co accounts to rotate",
   "update.publish": "Published product update",
   "update.delete": "Deleted product update",
 };
@@ -811,6 +812,10 @@ export default function AdminPanel() {
   const [reportFilter, setReportFilter] = useState<"pending" | "all">("pending");
   const [dailyAccounts, setDailyAccounts] = useState<DailyAccountRow[]>([]);
   const [dailyActiveId, setDailyActiveId] = useState<string | null>(null);
+  const [dailySelectionMode, setDailySelectionMode] = useState<
+    "rotate" | "pin"
+  >("rotate");
+  const [dailyNextId, setDailyNextId] = useState<string | null>(null);
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1060,6 +1065,8 @@ export default function AdminPanel() {
     if (!res.ok) throw new Error(data.error || "Failed to load Daily config");
     setDailyAccounts(data.accounts || []);
     setDailyActiveId(data.activeId ?? null);
+    setDailySelectionMode(data.selectionMode === "pin" ? "pin" : "rotate");
+    setDailyNextId(data.nextId ?? null);
   }, []);
 
   const refresh = useCallback(async () => {
@@ -1167,11 +1174,48 @@ export default function AdminPanel() {
     );
   };
 
+  const applyDailyConfig = (data: {
+    accounts?: DailyAccountRow[];
+    activeId?: string | null;
+    selectionMode?: "rotate" | "pin";
+    nextId?: string | null;
+  }) => {
+    setDailyAccounts(data.accounts || []);
+    setDailyActiveId(data.activeId ?? null);
+    setDailySelectionMode(data.selectionMode === "pin" ? "pin" : "rotate");
+    setDailyNextId(data.nextId ?? null);
+  };
+
+  const setDailyRotate = async () => {
+    if (dailySelectionMode === "rotate") return;
+    setActionId("daily-rotate");
+    try {
+      const res = await fetch("/api/admin/daily", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectionMode: "rotate" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Action failed");
+      applyDailyConfig(data);
+      await loadAuditLog().catch(() => {});
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setActionId(null);
+    }
+  };
+
   const switchDailyAccount = async (account: DailyAccountRow) => {
-    if (account.id === dailyActiveId) return;
+    if (
+      dailySelectionMode === "pin" &&
+      account.id === dailyActiveId
+    ) {
+      return;
+    }
     if (
       !confirm(
-        `Switch active Daily.co account to ${account.domain}?\n\nRooms are per Daily account — in-progress calls on the previous account may break until recreated.`,
+        `Pin Daily.co rooms to ${account.domain}?\n\nExisting sessions stay on the account that created them. New rooms will use this account until you switch back to rotate.`,
       )
     ) {
       return;
@@ -1185,8 +1229,7 @@ export default function AdminPanel() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Action failed");
-      setDailyAccounts(data.accounts || []);
-      setDailyActiveId(data.activeId ?? account.id);
+      applyDailyConfig(data);
       await loadAuditLog().catch(() => {});
     } catch (e) {
       alert((e as Error).message);
@@ -2513,11 +2556,8 @@ export default function AdminPanel() {
                 <code className="text-xs">DAILY_DOMAIN</code>, then{" "}
                 <code className="text-xs">_2</code>,{" "}
                 <code className="text-xs">_3</code>
-                …). Switch which account creates rooms and meeting tokens.
-              </p>
-              <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                Switching mid-session can break in-progress calls until rooms are
-                recreated on the new account.
+                …). New rooms rotate across accounts so usage stays even. Each
+                session stays on the account that created its room.
               </p>
 
               {dailyAccounts.length === 0 ? (
@@ -2527,46 +2567,94 @@ export default function AdminPanel() {
                   <code className="text-xs">DAILY_DOMAIN</code> to the server env.
                 </p>
               ) : (
-                <ul className="mt-4 divide-y divide-gray-100 dark:divide-gray-800 rounded-lg border border-gray-200 dark:border-gray-800">
-                  {dailyAccounts.map((account) => {
-                    const isActive = account.id === dailyActiveId;
-                    return (
-                      <li
-                        key={account.id}
-                        className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            Account {account.id}
-                            {isActive ? (
-                              <span className="ml-2 text-xs font-normal text-[#5D1C6A]">
-                                Active
-                              </span>
-                            ) : null}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            {account.domain}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Key {account.keyHint}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          disabled={isActive || actionId === account.id}
-                          onClick={() => switchDailyAccount(account)}
-                          className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                <>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void setDailyRotate()}
+                      disabled={actionId === "daily-rotate"}
+                      className={`rounded-full px-3 py-1 text-sm ${
+                        dailySelectionMode === "rotate"
+                          ? "bg-[#5D1C6A] text-white"
+                          : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                      }`}
+                    >
+                      Rotate equally
+                    </button>
+                    <button
+                      type="button"
+                      disabled={dailyAccounts.length === 0}
+                      onClick={() => {
+                        const current =
+                          dailyAccounts.find((a) => a.id === dailyActiveId) ??
+                          dailyAccounts[0];
+                        if (current) void switchDailyAccount(current);
+                      }}
+                      className={`rounded-full px-3 py-1 text-sm ${
+                        dailySelectionMode === "pin"
+                          ? "bg-[#5D1C6A] text-white"
+                          : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                      }`}
+                    >
+                      Pin to one account
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    {dailySelectionMode === "rotate"
+                      ? `Next new room uses account ${dailyNextId ?? dailyAccounts[0]?.id}.`
+                      : `New rooms stay on account ${dailyActiveId ?? dailyAccounts[0]?.id}.`}
+                  </p>
+                  <ul className="mt-4 divide-y divide-gray-100 dark:divide-gray-800 rounded-lg border border-gray-200 dark:border-gray-800">
+                    {dailyAccounts.map((account) => {
+                      const isPinned =
+                        dailySelectionMode === "pin" &&
+                        account.id === dailyActiveId;
+                      const isNext =
+                        dailySelectionMode === "rotate" &&
+                        account.id === dailyNextId;
+                      return (
+                        <li
+                          key={account.id}
+                          className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
                         >
-                          {isActive
-                            ? "In use"
-                            : actionId === account.id
-                              ? "Switching…"
-                              : "Use this"}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                              Account {account.id}
+                              {isPinned ? (
+                                <span className="ml-2 text-xs font-normal text-[#5D1C6A]">
+                                  Pinned
+                                </span>
+                              ) : null}
+                              {isNext ? (
+                                <span className="ml-2 text-xs font-normal text-[#5D1C6A]">
+                                  Next
+                                </span>
+                              ) : null}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                              {account.domain}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Key {account.keyHint}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={isPinned || actionId === account.id}
+                            onClick={() => switchDailyAccount(account)}
+                            className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                          >
+                            {isPinned
+                              ? "In use"
+                              : actionId === account.id
+                                ? "Pinning…"
+                                : "Pin this"}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
               )}
             </div>
           </div>

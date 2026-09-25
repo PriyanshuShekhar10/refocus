@@ -20,6 +20,7 @@ export type AdminAuditAction =
   | "test_call.create"
   | "session.club"
   | "daily.switch_account"
+  | "daily.rotate_accounts"
   | "update.publish"
   | "update.delete";
 

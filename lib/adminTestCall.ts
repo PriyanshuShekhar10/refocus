@@ -65,7 +65,7 @@ export async function createAdminTestCall(params: {
   const sessionId = String(insert.insertedId);
   const sessionEndExp =
     Math.floor(endTime.getTime() / 1000) + 30 * 60;
-  const { roomName, domain } = await createOrGetDailyRoom(
+  const { roomName, domain, account } = await createOrGetDailyRoom(
     sessionId,
     sessionEndExp,
   );
@@ -75,6 +75,7 @@ export async function createAdminTestCall(params: {
   const token = await createDailyMeetingToken(roomName, params.adminUserId, {
     userName: params.adminName?.trim() || "Admin",
     exp: tokenExp,
+    account,
   });
 
   return {

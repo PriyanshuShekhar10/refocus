@@ -63,13 +63,14 @@ export async function POST(
 
   try {
     const sessionEndExp = Math.floor(new Date(s.end_time).getTime() / 1000) + 30 * 60;
-    const { roomName, domain } = await createOrGetDailyRoom(sessionId, sessionEndExp);
+    const { roomName, domain, account } = await createOrGetDailyRoom(sessionId, sessionEndExp);
     const tokenExp =
       Math.floor(new Date(s.end_time).getTime() / 1000) +
       Math.max(CALL_JOIN_GRACE_MINUTES, WRAP_UP_MINUTES) * 60;
     const token = await createDailyMeetingToken(roomName, userId, {
       userName: user?.name,
       exp: tokenExp,
+      account,
     });
 
     // Mark the participant as having joined the call. Only set call_joined_at
