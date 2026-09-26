@@ -241,14 +241,23 @@ export function CalendarEventCard({
     if (hasSessionStarted(event.start)) {
       return null;
     }
-    const stackTotal = Math.max(1, Math.min(compactStackTotal, 3));
-    const stackIndex = Math.max(0, Math.min(compactStackIndex, stackTotal - 1));
+    // Cap visible side-by-side lanes; never clamp a higher index into a lower
+    // lane (that stacks cards on top of each other). Hide overflow instead.
+    const MAX_COMPACT_LANES = 3;
+    if (compactStackIndex >= MAX_COMPACT_LANES) {
+      return null;
+    }
+    const stackTotal = Math.max(
+      1,
+      Math.min(Math.max(compactStackTotal, compactStackIndex + 1), MAX_COMPACT_LANES),
+    );
+    const stackIndex = compactStackIndex;
     const laneWidthPx =
-      stackTotal === 1 ? 44 : stackTotal === 2 ? 72 : 90;
+      stackTotal === 1 ? 44 : stackTotal === 2 ? 84 : 126;
     const gapPx = 4;
     const compactWidthPx = Math.max(
-      24,
-      Math.floor((laneWidthPx - gapPx * (stackTotal - 1)) / stackTotal)
+      28,
+      Math.floor((laneWidthPx - gapPx * (stackTotal - 1)) / stackTotal),
     );
     const compactLeftPx = 2 + stackIndex * (compactWidthPx + gapPx);
 
@@ -264,6 +273,7 @@ export function CalendarEventCard({
           width: compactWidthPx,
           backgroundColor: compactColor.bg,
           borderColor: compactColor.border,
+          zIndex: showCompactPartnerCard ? 120 : 20 + stackIndex,
         }}
         title={`${timeLabel} • ${event.durationMin} min • Click to book`}
         onMouseEnter={openCompactPartnerCard}
@@ -273,6 +283,7 @@ export function CalendarEventCard({
           onBook(evt);
         }}
       >
+        <div className="flex min-h-0 w-full flex-col items-center justify-center gap-0.5 overflow-hidden px-0.5">
         <Avatar className="h-4 w-4 border border-white dark:border-gray-700 shrink-0">
           {compactPartner?.avatar_url ? (
             <AvatarImage src={compactPartner.avatar_url} alt={compactPartner.name} />
@@ -281,9 +292,10 @@ export function CalendarEventCard({
             {compactPartnerInitials}
           </AvatarFallback>
         </Avatar>
-        <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 tabular-nums">
+        <span className="max-w-full truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 tabular-nums">
           {timeLabel}
         </span>
+        </div>
 
         {compactPartner && (
           <div

@@ -771,12 +771,21 @@ export default function Calendar({
                       { index: number; columns: number }
                     >();
                     const activeCompact: Array<{
-                      id: string;
+                      key: string;
                       endMs: number;
                       index: number;
                     }> = [];
+                    const compactPackKey = (ev: (typeof eligibleCompactEvents)[number]) =>
+                      ev.isContinuation ? `${ev.id}-cont` : ev.id;
 
-                    for (const compactEv of eligibleCompactEvents) {
+                    const sortedCompact = [...eligibleCompactEvents].sort(
+                      (a, b) =>
+                        a.startMs - b.startMs ||
+                        a.endMs - b.endMs ||
+                        compactPackKey(a).localeCompare(compactPackKey(b)),
+                    );
+
+                    for (const compactEv of sortedCompact) {
                       for (let i = activeCompact.length - 1; i >= 0; i -= 1) {
                         if (activeCompact[i].endMs <= compactEv.startMs) {
                           activeCompact.splice(i, 1);
@@ -787,8 +796,9 @@ export default function Calendar({
                       let nextIndex = 0;
                       while (usedIndexes.has(nextIndex)) nextIndex += 1;
 
+                      const key = compactPackKey(compactEv);
                       activeCompact.push({
-                        id: compactEv.id,
+                        key,
                         endMs: compactEv.endMs,
                         index: nextIndex,
                       });
@@ -797,10 +807,15 @@ export default function Calendar({
                         Math.max(...activeCompact.map((item) => item.index)) + 1;
 
                       for (const item of activeCompact) {
-                        const existing = compactStackMeta.get(item.id);
-                        compactStackMeta.set(item.id, {
+                        const existing = compactStackMeta.get(item.key);
+                        compactStackMeta.set(item.key, {
                           index: item.index,
-                          columns: Math.max(existing?.columns ?? 1, columns),
+                          // Never store columns < index+1 (avoids later lane clamps)
+                          columns: Math.max(
+                            existing?.columns ?? 1,
+                            columns,
+                            item.index + 1,
+                          ),
                         });
                       }
                     }
@@ -855,7 +870,9 @@ export default function Calendar({
                       );
                     if (ineligibleBecauseOverlapsMine) return null;
 
-                    const compactMeta = compactStackMeta.get(ev.id);
+                    const compactMeta = compactStackMeta.get(
+                      ev.isContinuation ? `${ev.id}-cont` : ev.id,
+                    );
 
                     return (
                       <CalendarEventCard
