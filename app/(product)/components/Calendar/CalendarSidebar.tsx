@@ -1,20 +1,26 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useId, useRef } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import BookSessionButton from "../BookSessionButton";
-import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
+import {
+  DEFAULT_DURATION,
+  DURATION_OPTIONS,
+  type DurationMin,
+} from "@/constants/calendar";
 import type { CalendarEvent, FetchedSession } from "@/types/calendar";
 import { formatLocalTime } from "@/lib/localTime";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import * as sessionsApi from "@/lib/api/sessionsApi";
 import { swrKeys } from "@/lib/swr/keys";
-import { useIsEngagementCrew } from "@/hooks/useIsEngagementCrew";
 
 const UPCOMING_PREVIEW_COUNT = 2;
 const CALENDAR_SLOT_TIP_KEY = "refocus.hideCalendarSlotTip";
 const CALENDAR_SLOT_CREATED_EVENT = "refocus:calendar-slot-created";
+const BOOKABLE_DURATION: DurationMin = DEFAULT_DURATION;
+const DURATION_UNAVAILABLE_HINT =
+  "50-minute sessions only for now. We're keeping everyone on the same schedule to make matching easier. More durations are coming.";
 
 function toYmd(d: Date) {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
@@ -88,6 +94,99 @@ function mapFetchedToEvent(s: FetchedSession): CalendarEvent {
   };
 }
 
+function DurationOption({
+  duration,
+  selected,
+  unavailable,
+  alignTip = "center",
+  onSelect,
+}: {
+  duration: DurationMin;
+  selected: boolean;
+  unavailable: boolean;
+  alignTip?: "left" | "center" | "right";
+  onSelect: (duration: DurationMin) => void;
+}) {
+  const tipId = useId();
+  const [tipOpen, setTipOpen] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearCloseTimer = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  };
+
+  const openTip = () => {
+    if (!unavailable) return;
+    clearCloseTimer();
+    setTipOpen(true);
+  };
+
+  const scheduleCloseTip = () => {
+    clearCloseTimer();
+    closeTimer.current = setTimeout(() => setTipOpen(false), 120);
+  };
+
+  useEffect(() => () => clearCloseTimer(), []);
+
+  const tipPosition =
+    alignTip === "left"
+      ? "left-0"
+      : alignTip === "right"
+        ? "right-0 left-auto"
+        : "left-1/2 -translate-x-1/2";
+
+  return (
+    <div className="relative flex-1">
+      <button
+        type="button"
+        onClick={() => {
+          if (unavailable) {
+            setTipOpen((open) => !open);
+            return;
+          }
+          onSelect(duration);
+        }}
+        onMouseEnter={openTip}
+        onMouseLeave={scheduleCloseTip}
+        onFocus={openTip}
+        onBlur={scheduleCloseTip}
+        aria-pressed={unavailable ? undefined : selected}
+        aria-disabled={unavailable || undefined}
+        aria-label={
+          unavailable
+            ? `${duration} minutes, currently unavailable`
+            : `${duration} minutes`
+        }
+        aria-describedby={unavailable && tipOpen ? tipId : undefined}
+        className={`w-full rounded-md px-2 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/40 ${
+          unavailable
+            ? "cursor-not-allowed text-gray-400 opacity-45 dark:text-gray-500 dark:opacity-40"
+            : selected
+              ? "bg-[#5D1C6A] text-white shadow-sm dark:bg-[#7A2D88]"
+              : "text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
+        }`}
+      >
+        {duration} min
+      </button>
+
+      {unavailable && tipOpen ? (
+        <div
+          id={tipId}
+          role="tooltip"
+          onMouseEnter={openTip}
+          onMouseLeave={scheduleCloseTip}
+          className={`absolute bottom-[calc(100%+6px)] z-30 w-max max-w-[13.5rem] rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-left text-[11px] leading-snug text-gray-700 shadow-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 ${tipPosition}`}
+        >
+          {DURATION_UNAVAILABLE_HINT}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 interface CalendarSidebarProps {
   createDuration: DurationMin;
   onCreateDurationChange: (duration: DurationMin) => void;
@@ -105,14 +204,14 @@ export function CalendarSidebar({
   currentUserId: currentUserIdProp,
   onDetailsSession,
 }: CalendarSidebarProps) {
-  const { isCrew } = useIsEngagementCrew();
   const [showSlotTip, setShowSlotTip] = useState(true);
 
+  // Only 50-minute sessions are bookable for now.
   useEffect(() => {
-    if (isCrew && createDuration === 25) {
-      onCreateDurationChange(50);
+    if (createDuration !== BOOKABLE_DURATION) {
+      onCreateDurationChange(BOOKABLE_DURATION);
     }
-  }, [isCrew, createDuration, onCreateDurationChange]);
+  }, [createDuration, onCreateDurationChange]);
 
   useEffect(() => {
     try {
@@ -149,7 +248,7 @@ export function CalendarSidebar({
   }, [upcomingData]);
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white px-7 py-7 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+    <aside className="flex h-full w-72 shrink-0 flex-col overflow-x-hidden overflow-y-auto rounded-xl border border-gray-200 bg-white px-7 py-7 shadow-sm dark:border-gray-700 dark:bg-gray-900">
       {/* New session: configure duration, then book */}
       <section>
         <h2 className="text-[18px] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
@@ -161,41 +260,26 @@ export function CalendarSidebar({
             Duration
           </p>
           <div
-            className="mt-2 flex gap-1 rounded-lg bg-gray-100/80 p-1 dark:bg-gray-800/80"
+            className="relative z-10 mt-2 flex gap-1 overflow-visible rounded-lg bg-gray-100/80 p-1 dark:bg-gray-800/80"
             role="group"
             aria-label="Session duration"
           >
-            {DURATION_OPTIONS.map((d) => {
-              const blocked = isCrew && d === 25;
-              const selected = createDuration === d;
-              return (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => !blocked && onCreateDurationChange(d)}
-                  disabled={blocked}
-                  aria-pressed={selected}
-                  title={
-                    blocked ? "25-minute sessions are unavailable" : undefined
-                  }
-                  className={`flex-1 rounded-md px-2 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/40 ${
-                    blocked
-                      ? "cursor-not-allowed text-gray-400 opacity-40 dark:text-gray-600"
-                      : selected
-                        ? "bg-[#5D1C6A] text-white shadow-sm dark:bg-[#7A2D88]"
-                        : "text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
-                  }`}
-                >
-                  {d} min
-                </button>
-              );
-            })}
+            {DURATION_OPTIONS.map((d) => (
+              <DurationOption
+                key={d}
+                duration={d}
+                selected={createDuration === d}
+                unavailable={d !== BOOKABLE_DURATION}
+                alignTip={d === 25 ? "left" : d === 75 ? "right" : "center"}
+                onSelect={onCreateDurationChange}
+              />
+            ))}
           </div>
         </div>
 
         <BookSessionButton
-          label={`Book a ${createDuration} min session`}
-          defaultDuration={createDuration}
+          label={`Book a ${BOOKABLE_DURATION} min session`}
+          defaultDuration={BOOKABLE_DURATION}
           className="mt-5 h-12 w-full rounded-lg bg-[#5D1C6A] px-4 py-0 text-sm font-semibold text-white hover:bg-[#CA5995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-[#7A2D88] dark:hover:bg-[#CA5995] dark:focus-visible:ring-offset-gray-900"
         />
 

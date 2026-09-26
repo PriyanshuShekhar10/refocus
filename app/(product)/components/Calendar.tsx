@@ -24,7 +24,6 @@ import {
   type DurationMin,
 } from "@/constants/calendar";
 import { useCalendarSessions } from "@/hooks/useCalendarSessions";
-import { useIsEngagementCrew } from "@/hooks/useIsEngagementCrew";
 import { useCalendarGrid } from "@/hooks/useCalendarGrid";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 import { buildEventsByDay } from "@/lib/calendarDayEvents";
@@ -253,12 +252,11 @@ export default function Calendar({
     createInitialState,
   );
 
-  const { isCrew } = useIsEngagementCrew();
   useEffect(() => {
-    if (isCrew && ui.createDuration === 25) {
-      dispatch({ type: "SET_CREATE_DURATION", duration: 50 });
+    if (ui.createDuration !== DEFAULT_DURATION) {
+      dispatch({ type: "SET_CREATE_DURATION", duration: DEFAULT_DURATION });
     }
-  }, [isCrew, ui.createDuration]);
+  }, [ui.createDuration]);
 
   // Re-anchor "today" when the display timezone preference changes.
   useEffect(() => {
