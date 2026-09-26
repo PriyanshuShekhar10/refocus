@@ -1,7 +1,7 @@
 name: "Blog: morning slot (English)"
 
-# First of three English posts/day. Niche rotates across ten community
-# categories (med-school … teachers).
+# One English post per day. Niche rotates across ten community categories
+# (med-school … teachers). Afternoon/evening slots are manual-only.
 on:
   schedule:
     - cron: "0 6 * * *"

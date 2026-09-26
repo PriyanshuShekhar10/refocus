@@ -1,9 +1,9 @@
 name: Blog niche (reusable)
 
-# Called by daily English slots (3/day), the locale daily rotator, or a per-niche
-# manual run. Checks out `landing`, generates one post (topic-first dedupe,
-# English quality gate; illustrations skipped in CI), commits, builds, and
-# deploys to Cloudflare.
+# Called by the daily English slot (1/day), the locale daily rotator, or a
+# per-niche manual run. Checks out `landing`, generates one post (topic-first
+# dedupe, strict quality gate; illustrations skipped in CI), commits only when
+# a post clears the gate, then builds and deploys to Cloudflare.
 
 on:
   workflow_call:
@@ -59,9 +59,14 @@ jobs:
           elif [ -n "${INPUT_SLOT}" ]; then
             DAY=$(( $(date -u +%s) / 86400 ))
             if [ "${INPUT_LOCALE:-en}" = "en" ]; then
-              # English community niches — 3 posts/day × 10 niches
+              # English community niches — 1 scheduled post/day × 10 niches
               NICHES=(med-school phd engineers parents career-switch writers law nurses founders teachers)
-              INDEX=$(( (DAY * 3 + INPUT_SLOT) % 10 ))
+              if [ "$INPUT_SLOT" = "0" ]; then
+                INDEX=$(( DAY % 10 ))
+              else
+                # Manual afternoon/evening: still rotate, offset from morning
+                INDEX=$(( (DAY + INPUT_SLOT) % 10 ))
+              fi
             else
               # Locale manual slots still use the original five
               NICHES=(productivity adhd exams loneliness remote)
@@ -83,13 +88,16 @@ jobs:
           POST_CATEGORY: ${{ steps.niche.outputs.category }}
           POST_LOCALE: ${{ inputs.locale }}
           SKIP_IMAGE: "1"
+          STRICT_QUALITY: "1"
         run: >-
           node scripts/generate-post.mjs
           --category "${{ steps.niche.outputs.category }}"
           --locale "${{ inputs.locale }}"
           --skip-image
+          --strict
 
       - name: Commit & push to landing
+        id: commit
         env:
           LOCALE: ${{ inputs.locale }}
           CATEGORY: ${{ steps.niche.outputs.category }}
@@ -132,11 +140,14 @@ jobs:
               git pull --rebase origin landing
               sleep 5
             done
+            echo "published=true" >> "$GITHUB_OUTPUT"
           else
             echo "No new post to commit."
+            echo "published=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build site
+        if: steps.commit.outputs.published == 'true'
         working-directory: marketing
         env:
           PUBLIC_GA_MEASUREMENT_ID: ${{ vars.PUBLIC_GA_MEASUREMENT_ID }}
@@ -145,6 +156,7 @@ jobs:
         run: npm run build
 
       - name: Deploy to Cloudflare Pages
+        if: steps.commit.outputs.published == 'true'
         working-directory: marketing
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -68,37 +68,37 @@ Goal: **useful, searchable content that ranks** — not product pitches. Posts s
 - Listing: `/blog` · Post: `/blog/<slug>`
 - Sitemap: `/sitemap.xml` (includes posts)
 
-### Cadence (3 English + 1 rotating locale + 1 German / day)
+### Cadence (1 English + 1 rotating locale + 1 German / day)
 
-Three English slots rotate through **ten community niches** (med-school, phd, engineers, parents, career-switch, writers, law, nurses, founders, teachers). Locale and German jobs keep the original five niches (productivity, ADHD, exams, loneliness, remote). SEA locale cycles **id → fil → vi** by UTC day. The generator proposes a topic first, clash-checks, and pivots before writing; English drafts are quality-gated (length, specificity, outbound links). **Illustrations are skipped in GitHub Actions** (`SKIP_IMAGE=1`) to save OpenAI image tokens; local `npm run blog:*` still generates an image unless you pass `--skip-image`.
+One scheduled English slot rotates through **ten community niches** (med-school, phd, engineers, parents, career-switch, writers, law, nurses, founders, teachers) via `DAY % 10`. Afternoon/evening English slots are **manual only**. Locale and German jobs keep the original five niches (productivity, ADHD, exams, loneliness, remote). SEA locale cycles **id → fil → vi** by UTC day. The generator proposes a topic first, clash-checks, and pivots before writing; drafts are quality-gated (length ≥900 words, headings, in-body outbound links — Further reading alone does not count). Soft-accept is disabled in CI (`STRICT_QUALITY=1`). **Illustrations are skipped in GitHub Actions** (`SKIP_IMAGE=1`) to save OpenAI image tokens; local `npm run blog:*` still generates an image unless you pass `--skip-image`.
 
 | Slot | Workflow | Locale | UTC cron | ~IST |
 | --- | --- | --- | --- | --- |
 | 0 | `Blog: morning slot (English)` | en | `0 6 * * *` | 11:30 |
-| 1 | `Blog: afternoon slot (English)` | en | `0 12 * * *` | 17:30 |
 | Locale | `Blog: locale daily (id / fil / vi)` | id/fil/vi | `0 14 * * *` | 19:30 |
 | German | `Blog: German daily` | de | `0 16 * * *` | 21:30 |
-| 2 | `Blog: evening slot (English)` | en | `0 18 * * *` | 23:30 |
+
+Afternoon / evening English workflows exist for **manual** runs only (no schedule).
 
 | Niche | Manual workflow | Local script | Scheduled? |
 | --- | --- | --- | --- |
-| Med school & residency | `Blog: Med school & residency` | `npm run blog:med-school` | EN slots |
-| PhD & dissertation | `Blog: PhD & dissertation` | `npm run blog:phd` | EN slots |
-| Software engineers | `Blog: Software engineers` | `npm run blog:engineers` | EN slots |
-| Working parents | `Blog: Working parents` | `npm run blog:parents` | EN slots |
-| Career switchers | `Blog: Career switchers` | `npm run blog:career-switch` | EN slots |
-| Writers & long-form | `Blog: Writers & long-form` | `npm run blog:writers` | EN slots |
-| Law school & articling | `Blog: Law school & articling` | `npm run blog:law` | EN slots |
-| Nursing & shift work | `Blog: Nursing & shift work` | `npm run blog:nurses` | EN slots |
-| Founders & indie makers | `Blog: Founders & indie makers` | `npm run blog:founders` | EN slots |
-| Teachers & educators | `Blog: Teachers & educators` | `npm run blog:teachers` | EN slots |
+| Med school & residency | `Blog: Med school & residency` | `npm run blog:med-school` | EN morning |
+| PhD & dissertation | `Blog: PhD & dissertation` | `npm run blog:phd` | EN morning |
+| Software engineers | `Blog: Software engineers` | `npm run blog:engineers` | EN morning |
+| Working parents | `Blog: Working parents` | `npm run blog:parents` | EN morning |
+| Career switchers | `Blog: Career switchers` | `npm run blog:career-switch` | EN morning |
+| Writers & long-form | `Blog: Writers & long-form` | `npm run blog:writers` | EN morning |
+| Law school & articling | `Blog: Law school & articling` | `npm run blog:law` | EN morning |
+| Nursing & shift work | `Blog: Nursing & shift work` | `npm run blog:nurses` | EN morning |
+| Founders & indie makers | `Blog: Founders & indie makers` | `npm run blog:founders` | EN morning |
+| Teachers & educators | `Blog: Teachers & educators` | `npm run blog:teachers` | EN morning |
 | Productivity | `Blog: Productivity` | `npm run blog:productivity` | Locale / DE |
 | ADHD & mental health | `Blog: ADHD & mental health` | `npm run blog:adhd` | Locale / DE |
 | Competitive exams | `Blog: Competitive exams` | `npm run blog:exams` | Locale / DE |
 | Loneliness / studying alone | `Blog: Loneliness & studying alone` | `npm run blog:loneliness` | Locale / DE |
 | Remote work & freelancing | `Blog: Remote work & freelancing` | `npm run blog:remote` | Locale / DE |
 
-**Five posts per day total** (3 EN + 1 rotating locale + 1 DE), staggered so deploys don’t collide. Each job checks out `landing`, commits there (markdown always; `public/blog/` images only when generated locally), builds, and deploys to Cloudflare — never touches `test-dash` / Vercel. Per-niche and per-locale workflows are **manual only**.
+**Three posts per day total** (1 EN + 1 rotating locale + 1 DE), staggered so deploys don’t collide. Each job checks out `landing`, commits there only when a post clears the quality gate (markdown always; `public/blog/` images only when generated locally), then builds and deploys to Cloudflare — never touches `test-dash` / Vercel. Empty runs skip Cloudflare deploy. Per-niche and per-locale workflows are **manual only**.
 
 Topic pools + prompts: `scripts/blog-categories.mjs` (+ locale variants). Generator: `scripts/generate-post.mjs`.
 
@@ -132,7 +132,7 @@ Actions → pick a daily English slot, **Blog: locale daily**, or a niche workfl
 
 Required secrets (on the repo): `OPENAI_API_KEY`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 
-**Note:** Scheduled workflows run from the **default branch** (`landing`). They always check out `landing` for content.
+**Note:** Scheduled workflows run from the **default branch** (`test-dash`). They always check out `landing` for content.
 ## Deploy
 
 - **On push** to `landing` (paths under `marketing/`): workflow `Deploy marketing site`

@@ -1,10 +1,8 @@
 name: "Blog: evening slot (English)"
 
-# Third English post/day (morning + afternoon + evening).
-# Niche rotates across the ten community categories.
+# Manual only — scheduled English publishing is one post/day via blog-slot-0.
+# Niche rotates across the ten community categories when a slot is supplied.
 on:
-  schedule:
-    - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:

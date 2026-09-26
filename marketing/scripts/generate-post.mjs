@@ -13,9 +13,10 @@
  *   node scripts/generate-post.mjs --category remote --locale vi
  *   node scripts/generate-post.mjs --skip-image
  *   SKIP_IMAGE=1 node scripts/generate-post.mjs --category med-school
+ *   STRICT_QUALITY=1 node scripts/generate-post.mjs --category med-school --skip-image
  *
  * Locales: en | id | fil | vi | de
- * CI sets SKIP_IMAGE=1 to avoid OpenAI image token spend.
+ * CI sets SKIP_IMAGE=1 and STRICT_QUALITY=1 (fail hard; no soft-accept).
  */
 
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
@@ -43,12 +44,13 @@ const SITE = "https://refocus.co.in";
 const TOPIC_ATTEMPTS = 3;
 const DRAFT_ATTEMPTS = 3;
 const IMAGE_ATTEMPTS = 3;
-const MIN_WORDS_EN = 600;
+const MIN_WORDS_EN = 900;
 const MIN_WORDS_OTHER = 900;
-const MIN_HEADINGS = 2;
-const TARGET_WORDS_EN = "800–1200";
-const EN_OUTLINE_WORD_MIN = 850;
-const EN_OUTLINE_WORD_MAX = 1100;
+const MIN_HEADINGS_EN = 3;
+const MIN_HEADINGS_OTHER = 2;
+const TARGET_WORDS_EN = "900–1200";
+const EN_OUTLINE_WORD_MIN = 900;
+const EN_OUTLINE_WORD_MAX = 1200;
 const STYLE_PREFIX =
   "Calm flat editorial illustration, soft neutral palette, no text, no logos, no watermarks, no photoreal close-up faces. ";
 
@@ -114,6 +116,14 @@ function getArg(flag) {
 
 function hasFlag(flag) {
   return process.argv.slice(2).includes(flag);
+}
+
+/** Fail hard (no soft-accept) when --strict, STRICT_QUALITY=1, or GITHUB_ACTIONS. */
+function shouldStrictQuality() {
+  if (hasFlag("--strict")) return true;
+  const v = (process.env.STRICT_QUALITY || "").trim().toLowerCase();
+  if (v === "1" || v === "true" || v === "yes") return true;
+  return process.env.GITHUB_ACTIONS === "true";
 }
 
 /** Skip Images API when --skip-image or SKIP_IMAGE=1/true/yes (CI default). */
@@ -881,6 +891,14 @@ function countOutboundLinks(body) {
   return matches.filter((m) => !/refocus\.co\.in/i.test(m)).length;
 }
 
+/** Outbound https links that appear outside an injected "## Further reading" section. */
+function countBodyOutboundLinks(body) {
+  const stripped = String(body || "")
+    .replace(/^##\s+Further reading\b[\s\S]*$/im, "")
+    .trim();
+  return countOutboundLinks(stripped);
+}
+
 function wordCount(markdown) {
   return String(markdown || "")
     .replace(/```[\s\S]*?```/g, " ")
@@ -896,15 +914,20 @@ function qualityIssues(title, body, config) {
   const issues = [];
   const words = wordCount(body);
   const minWords = config.id === "en" ? MIN_WORDS_EN : MIN_WORDS_OTHER;
+  const minHeadings =
+    config.id === "en" ? MIN_HEADINGS_EN : MIN_HEADINGS_OTHER;
   const headings = (body.match(/^##\s+/gm) || []).length;
-  const outbound = countOutboundLinks(body);
+  const outbound = countBodyOutboundLinks(body);
 
   if (!title) issues.push("missing title");
   if (body.length < 200) issues.push("body too short");
   if (words < minWords) issues.push(`only ${words} words (need ≥${minWords})`);
-  if (headings < MIN_HEADINGS)
-    issues.push(`only ${headings} ## headings (need ≥${MIN_HEADINGS})`);
-  if (outbound < 3) issues.push(`only ${outbound} outbound links (need ≥3)`);
+  if (headings < minHeadings)
+    issues.push(`only ${headings} ## headings (need ≥${minHeadings})`);
+  if (outbound < 3)
+    issues.push(
+      `only ${outbound} in-body outbound links (need ≥3 outside Further reading)`,
+    );
   if (FILLER_RE.test(body) || FILLER_RE.test(title)) {
     issues.push("contains filler / listicle phrasing");
   }
@@ -1219,8 +1242,13 @@ async function main() {
       `Quality gate failed (attempt ${attempt}/${DRAFT_ATTEMPTS}): ${issues.join("; ")}`,
     );
     if (attempt === DRAFT_ATTEMPTS) {
-      // English must meet the bar; other locales may soft-accept last draft if not empty.
-      if (config.id === "en" || !title || body.length < 200) {
+      // Never soft-accept in CI / STRICT_QUALITY; English always hard-fails.
+      if (
+        shouldStrictQuality() ||
+        config.id === "en" ||
+        !title ||
+        body.length < 200
+      ) {
         throw new Error(
           `Draft failed quality gate after ${DRAFT_ATTEMPTS} attempts: ${issues.join("; ")}`,
         );
@@ -1231,8 +1259,8 @@ async function main() {
 
   const description = String(result.description || "").slice(0, 160);
 
-  const outbound = countOutboundLinks(body);
-  console.log(`Outbound links (non-Refocus): ${outbound}`);
+  const outbound = countBodyOutboundLinks(body);
+  console.log(`Outbound links (non-Refocus, in-body): ${outbound}`);
   console.log(`Pillar link: ${pillarUrl(category, config)}`);
 
   let baseSlug = slugify(result.slug || proposal.slug_hint || title);
