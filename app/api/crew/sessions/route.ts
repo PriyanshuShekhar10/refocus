@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCrewMemberSessions } from "@/lib/crewSessions";
+import { requireCrewViewer } from "@/lib/crewAccess";
 
 export async function GET(req: NextRequest) {
+  const gate = await requireCrewViewer();
+  if (!gate.ok) return gate.response;
+
   const email = req.nextUrl.searchParams.get("email")?.trim() ?? "";
   if (!email || !email.includes("@")) {
     return NextResponse.json({ error: "email required" }, { status: 400 });

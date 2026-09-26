@@ -98,14 +98,14 @@ export default function AdminCrew({ active }: { active: boolean }) {
           Engagement crew
         </h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Add emails for hired engagers. Share the public board link only with
-          people who should see the numbers — it is not linked from the app.
+          Add emails for hired engagers. The board is visible only to crew
+          members and admins. It is not linked from the app.
         </p>
       </div>
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-          Public board link
+          Board link
         </p>
         {publicUrl ? (
           <div className="flex flex-wrap items-center gap-2">

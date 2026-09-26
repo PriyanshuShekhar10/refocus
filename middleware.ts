@@ -21,6 +21,7 @@ const PROTECTED_PREFIXES = [
   "/profile",
   "/notes",
   "/sessions",
+  "/crew",
   "/chat",
   "/global-chat",
   "/api/friends",
@@ -31,6 +32,7 @@ const PROTECTED_PREFIXES = [
   "/api/events",
   "/api/session-requests",
   "/api/admin",
+  "/api/crew",
 ];
 
 function pathIsProtected(pathname: string): boolean {
@@ -107,6 +109,7 @@ export const config = {
     "/profile/:path*",
     "/notes/:path*",
     "/sessions/:path*",
+    "/crew/:path*",
     "/chat/:path*",
     "/global-chat/:path*",
     // All API paths so the CSRF guard applies broadly; the handler itself

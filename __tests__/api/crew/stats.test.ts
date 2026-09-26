@@ -2,9 +2,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mockRequest, parseResponse } from "../../helpers";
 
 const getCrewStats = vi.hoisted(() => vi.fn());
+const requireCrewViewer = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/crewStats", () => ({
   getCrewStats,
+}));
+
+vi.mock("@/lib/crewAccess", () => ({
+  requireCrewViewer,
 }));
 
 import { GET } from "@/app/api/crew/stats/route";
@@ -12,6 +17,7 @@ import { GET } from "@/app/api/crew/stats/route";
 describe("/api/crew/stats", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    requireCrewViewer.mockResolvedValue({ ok: true, userId: "crew-user" });
     getCrewStats.mockResolvedValue({
       days: 14,
       timezone: "Asia/Kolkata",
@@ -22,7 +28,21 @@ describe("/api/crew/stats", () => {
     });
   });
 
-  it("returns stats publicly without a token", async () => {
+  it("rejects signed-out viewers", async () => {
+    requireCrewViewer.mockResolvedValue({
+      ok: false,
+      response: new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }),
+    });
+    const req = mockRequest("/api/crew/stats?days=30", { method: "GET" });
+    const { status } = await parseResponse(await GET(req));
+    expect(status).toBe(401);
+    expect(getCrewStats).not.toHaveBeenCalled();
+  });
+
+  it("returns stats for a crew viewer", async () => {
     const req = mockRequest("/api/crew/stats?days=30", { method: "GET" });
     const { status, json } = await parseResponse(await GET(req));
     expect(status).toBe(200);

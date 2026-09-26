@@ -3,9 +3,14 @@ import { ObjectId } from "mongodb";
 import { mockCollection, mockDb, mockRequest, parseResponse } from "../../helpers";
 
 const resolveEngagementCrewMembers = vi.hoisted(() => vi.fn());
+const requireCrewViewer = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/engagementCrew", () => ({
   resolveEngagementCrewMembers,
+}));
+
+vi.mock("@/lib/crewAccess", () => ({
+  requireCrewViewer,
 }));
 
 const sessionsCol = mockCollection();
@@ -24,6 +29,7 @@ describe("/api/crew/sessions", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    requireCrewViewer.mockResolvedValue({ ok: true, userId: "crew-user" });
     resolveEngagementCrewMembers.mockResolvedValue([
       {
         email: "hire@example.com",
@@ -66,6 +72,22 @@ describe("/api/crew/sessions", () => {
         },
       ]),
     });
+  });
+
+  it("rejects signed-out viewers", async () => {
+    requireCrewViewer.mockResolvedValue({
+      ok: false,
+      response: new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }),
+    });
+    const req = mockRequest("/api/crew/sessions?email=hire@example.com", {
+      method: "GET",
+    });
+    const { status } = await parseResponse(await GET(req));
+    expect(status).toBe(401);
+    expect(resolveEngagementCrewMembers).not.toHaveBeenCalled();
   });
 
   it("requires email", async () => {
