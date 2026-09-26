@@ -1,7 +1,7 @@
-name: "Blog: morning slot"
+name: "Blog: morning slot (English)"
 
-# First of three daily posts. Niche rotates across productivity / ADHD /
-# exams / loneliness / remote so each gets equal coverage over 5 days.
+# One English post per day. Niche rotates across ten community categories
+# (med-school … teachers). Afternoon/evening slots are manual-only.
 on:
   schedule:
     - cron: "0 6 * * *"
@@ -19,4 +19,5 @@ jobs:
     uses: ./.github/workflows/blog-reusable.yml
     with:
       slot: "0"
+      locale: en
     secrets: inherit

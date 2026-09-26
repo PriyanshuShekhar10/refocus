@@ -1,9 +1,8 @@
-name: "Blog: afternoon slot"
+name: "Blog: afternoon slot (English)"
 
-# Second of three daily posts. Niche rotates across the five categories.
+# Manual only — scheduled English publishing is one post/day via blog-slot-0.
+# Niche rotates across ten community categories when a slot is supplied.
 on:
-  schedule:
-    - cron: "0 12 * * *"
   workflow_dispatch:
 
 permissions:
@@ -18,4 +17,5 @@ jobs:
     uses: ./.github/workflows/blog-reusable.yml
     with:
       slot: "1"
+      locale: en
     secrets: inherit
