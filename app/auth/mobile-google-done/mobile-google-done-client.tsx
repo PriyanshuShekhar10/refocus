@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { designStyles } from "@/components/design";
+import { DButton, designStyles } from "@/components/design";
 
 const RETURN_TO = "refocus://google-auth";
 
@@ -19,9 +19,37 @@ function paramsFromHash() {
   return new URLSearchParams(`${query}&${hash}`);
 }
 
+function bounceUrl(params: Record<string, string>) {
+  const url = new URL(RETURN_TO);
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  return url.toString();
+}
+
+/**
+ * Prefer the custom scheme; also try an Android Intent URL so Chrome/Custom Tabs
+ * reopen the app when plain refocus:// is ignored.
+ */
+function openRefocus(href: string) {
+  window.location.href = href;
+
+  try {
+    const parsed = new URL(href);
+    if (parsed.protocol !== "refocus:") return;
+    const intent = `intent://${parsed.host}${parsed.pathname}${parsed.search}#Intent;scheme=refocus;package=com.refocus.app;end`;
+    window.setTimeout(() => {
+      window.location.href = intent;
+    }, 400);
+  } catch {
+    // Ignore Intent fallback failures.
+  }
+}
+
 export function MobileGoogleDoneClient() {
   const [status, setStatus] = useState("Finishing Google sign-in…");
   const [error, setError] = useState<string | null>(null);
+  const [returnHref, setReturnHref] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,7 +59,10 @@ export function MobileGoogleDoneClient() {
       const oauthError = params.get("error")?.trim();
       if (oauthError) {
         const description = params.get("error_description")?.trim();
-        window.location.href = `${RETURN_TO}?error=${encodeURIComponent(description || oauthError)}`;
+        const href = bounceUrl({ error: description || oauthError });
+        if (cancelled) return;
+        setReturnHref(href);
+        openRefocus(href);
         return;
       }
 
@@ -55,8 +86,10 @@ export function MobileGoogleDoneClient() {
         if (cancelled) {
           return;
         }
+        const href = bounceUrl({ code: data.code });
+        setReturnHref(href);
         setStatus("Returning to Refocus…");
-        window.location.href = `${RETURN_TO}?code=${encodeURIComponent(data.code)}`;
+        openRefocus(href);
       } catch (err) {
         if (cancelled) {
           return;
@@ -65,7 +98,9 @@ export function MobileGoogleDoneClient() {
           err instanceof Error ? err.message : "Could not finish Google sign-in.";
         setError(message);
         setStatus("Couldn’t finish sign-in");
-        window.location.href = `${RETURN_TO}?error=${encodeURIComponent(message)}`;
+        const href = bounceUrl({ error: message });
+        setReturnHref(href);
+        openRefocus(href);
       }
     })();
 
@@ -73,6 +108,31 @@ export function MobileGoogleDoneClient() {
       cancelled = true;
     };
   }, []);
+
+  if (returnHref && !error) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 16,
+          padding: 24,
+          textAlign: "center",
+          background: "#FFF1D3",
+        }}
+      >
+        <p className={designStyles.pageSub} style={{ margin: 0, fontSize: 14 }}>
+          Signed in with Google. Return to the Refocus app to finish.
+        </p>
+        <DButton as="a" href={returnHref} variant="primary" size="lg">
+          Open Refocus
+        </DButton>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -89,9 +149,16 @@ export function MobileGoogleDoneClient() {
       }}
     >
       {error ? (
-        <p className={designStyles.pageSub} style={{ margin: 0, fontSize: 14 }}>
-          {error}
-        </p>
+        <>
+          <p className={designStyles.pageSub} style={{ margin: 0, fontSize: 14 }}>
+            {error}
+          </p>
+          {returnHref ? (
+            <DButton as="a" href={returnHref} variant="primary" size="lg">
+              Back to Refocus
+            </DButton>
+          ) : null}
+        </>
       ) : (
         <>
           <Loader2
