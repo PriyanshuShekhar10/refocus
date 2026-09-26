@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -7,6 +7,7 @@ import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 import { areUsersBlocked } from "@/lib/blocking";
+import { notifyFriendRequestPush } from "@/lib/push/notify";
 
 type FriendRequestDoc = {
   _id: ObjectId;
@@ -101,6 +102,18 @@ export async function POST(req: NextRequest) {
     },
     { upsert: true }
   );
+
+  if (result.upsertedCount > 0) {
+    after(() =>
+      notifyFriendRequestPush({
+        toUserId: to_user_id,
+        fromUserId: currentUserId,
+        requestKey: `${currentUserId}:${to_user_id}`,
+      }).catch((err) => {
+        console.error("[push] friend_request failed:", err);
+      }),
+    );
+  }
 
   return NextResponse.json({
     ok: true,

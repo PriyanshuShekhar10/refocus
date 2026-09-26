@@ -6,6 +6,7 @@ import {
   BOOKING_TIME_STEP_MINUTES,
   isBookingStartAligned,
 } from "@/constants/calendar";
+import { notifySessionRequestPush } from "@/lib/push/notify";
 
 export const DURATION_OPTIONS = [25, 50, 75] as const;
 export type DurationMin = (typeof DURATION_OPTIONS)[number];
@@ -126,6 +127,16 @@ export async function createSessionRequest(params: {
   await broadcastEvent(userChannel(friendId), {
     type: "unread:inc",
     payload: { friendId: currentUserId, delta: 1 },
+  });
+
+  void notifySessionRequestPush({
+    toUserId: friendId,
+    fromUserId: currentUserId,
+    start: s,
+    durationMin,
+    requestId: String(sr.insertedId),
+  }).catch((err) => {
+    console.error("[push] session_request after create failed:", err);
   });
 
   return { id: String(insert.insertedId), sessionRequestId: String(sr.insertedId) };

@@ -53,6 +53,9 @@ type Prefs = {
   emailFriendRequests: boolean;
   emailWeeklyDigest: boolean;
   emailCommunityMentions: boolean;
+  pushSessionReminders: boolean;
+  pushFriendRequests: boolean;
+  pushChatMessages: boolean;
   timezone: string;
 };
 
@@ -67,6 +70,9 @@ const DEFAULT_PREFS: Prefs = {
   emailFriendRequests: false,
   emailWeeklyDigest: false,
   emailCommunityMentions: true,
+  pushSessionReminders: true,
+  pushFriendRequests: true,
+  pushChatMessages: true,
   timezone: "auto",
 };
 
@@ -415,7 +421,7 @@ function NotificationsSection() {
     <SectionCard
       icon={<Bell size={16} />}
       title="Notifications"
-      subtitle="Email alerts for sessions and Community activity."
+      subtitle="Email and push alerts for sessions, requests, and chat."
     >
       <RowGroup>
         <Row
@@ -485,6 +491,36 @@ function NotificationsSection() {
           <Toggle
             checked={prefs.emailWeeklyDigest}
             onChange={(v) => setPref("emailWeeklyDigest", v)}
+            disabled={saving}
+          />
+        </Row>
+        <Row
+          label="Push: session reminders"
+          hint="Phone alert about 10 minutes before a booked session, and when your partner joins."
+        >
+          <Toggle
+            checked={prefs.pushSessionReminders}
+            onChange={(v) => setPref("pushSessionReminders", v)}
+            disabled={saving}
+          />
+        </Row>
+        <Row
+          label="Push: friend & session requests"
+          hint="Phone alert when someone sends a friend or focus request, or accepts yours."
+        >
+          <Toggle
+            checked={prefs.pushFriendRequests}
+            onChange={(v) => setPref("pushFriendRequests", v)}
+            disabled={saving}
+          />
+        </Row>
+        <Row
+          label="Push: chat messages"
+          hint="Phone alert when a friend sends you a text message."
+        >
+          <Toggle
+            checked={prefs.pushChatMessages}
+            onChange={(v) => setPref("pushChatMessages", v)}
             disabled={saving}
           />
         </Row>

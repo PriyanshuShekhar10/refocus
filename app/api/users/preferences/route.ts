@@ -25,11 +25,15 @@ type Prefs = {
   publicProfile: boolean;
   allowFriendRequests: boolean;
   showInGlobalChat: boolean;
+  showFullLastNames: boolean;
   emailSessionReminders: boolean;
   sessionReminderTiming: SessionReminderTiming;
   emailFriendRequests: boolean;
   emailWeeklyDigest: boolean;
   emailCommunityMentions: boolean;
+  pushSessionReminders: boolean;
+  pushFriendRequests: boolean;
+  pushChatMessages: boolean;
   /** "auto" = device timezone; otherwise an IANA timezone id */
   timezone: string;
   /** Custom dashboard background image URL, or null for default grid */
@@ -42,11 +46,15 @@ const DEFAULTS: Prefs = {
   publicProfile: true,
   allowFriendRequests: true,
   showInGlobalChat: true,
+  showFullLastNames: false,
   emailSessionReminders: true,
   sessionReminderTiming: DEFAULT_SESSION_REMINDER_TIMING,
   emailFriendRequests: false,
   emailWeeklyDigest: false,
   emailCommunityMentions: true,
+  pushSessionReminders: true,
+  pushFriendRequests: true,
+  pushChatMessages: true,
   timezone: "auto",
   dashboardWallpaperUrl: null,
 };
@@ -96,10 +104,14 @@ export async function PATCH(req: NextRequest) {
     "publicProfile",
     "allowFriendRequests",
     "showInGlobalChat",
+    "showFullLastNames",
     "emailSessionReminders",
     "emailFriendRequests",
     "emailWeeklyDigest",
     "emailCommunityMentions",
+    "pushSessionReminders",
+    "pushFriendRequests",
+    "pushChatMessages",
   ];
   for (const k of boolKeys) {
     if (typeof body[k] === "boolean") {

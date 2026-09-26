@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -12,6 +12,7 @@ import { requireNotCommunityBanned } from "@/lib/communityModeration";
 import { areUsersBlocked } from "@/lib/blocking";
 import { createSessionRequest } from "@/lib/sessionRequests";
 import { assertCanBookAnotherSession } from "@/lib/sessionAttendanceGate";
+import { notifyChatMessagePush } from "@/lib/push/notify";
 
 
 type MessageDoc = {
@@ -185,6 +186,17 @@ export async function POST(
         payload: { friendId: currentUserId, delta: 1 },
       }),
     ]);
+
+    after(() =>
+      notifyChatMessagePush({
+        toUserId: friendId,
+        fromUserId: currentUserId,
+        content: trimmedContent,
+        messageId: String(insert.insertedId),
+      }).catch((err) => {
+        console.error("[push] chat_message failed:", err);
+      }),
+    );
 
     return NextResponse.json({ id: String(insert.insertedId) });
   }

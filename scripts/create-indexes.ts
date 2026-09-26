@@ -199,6 +199,40 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
     ],
   },
   {
+    collection: "push_devices",
+    indexes: [
+      {
+        name: "push_devices_token_uniq",
+        keys: { token: 1 },
+        options: { unique: true },
+      },
+      {
+        name: "push_devices_user",
+        keys: { userId: 1 },
+      },
+    ],
+  },
+  {
+    collection: "push_deliveries",
+    indexes: [
+      {
+        name: "push_deliveries_dedupe",
+        keys: { userId: 1, kind: 1, dedupeKey: 1 },
+        options: { unique: true },
+      },
+    ],
+  },
+  {
+    collection: "push_presence",
+    indexes: [
+      {
+        name: "push_presence_user_uniq",
+        keys: { userId: 1 },
+        options: { unique: true },
+      },
+    ],
+  },
+  {
     collection: "session_no_show_events",
     indexes: [
       {

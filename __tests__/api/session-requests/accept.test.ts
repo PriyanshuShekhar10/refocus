@@ -118,8 +118,14 @@ describe("POST /api/session-requests/:id (accept/decline)", () => {
   });
 
   it("rolls back to declined when the requester has a conflict at accept time", async () => {
-    // First overlap check (requester) finds a conflict.
-    sessionsCol.findOne.mockResolvedValueOnce({ _id: new ObjectId() });
+    // assertCanBookAnotherSession hits sessions.findOne first (attendance).
+    // The overlap check is the second findOne — return a conflict there.
+    sessionsCol.findOne
+      .mockResolvedValueOnce({
+        _id: new ObjectId(),
+        session_participants: [{ user_id: RECIPIENT, call_joined_at: new Date() }],
+      })
+      .mockResolvedValueOnce({ _id: new ObjectId() });
     const req = mockRequest(`/api/session-requests/${REQUEST_ID}`, {
       body: { action: "accept" },
     });

@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/push-join-reminders",
+      "schedule": "*/10 * * * *"
+    },
+    {
       "path": "/api/cron/morning-session-reminders",
       "schedule": "30 1 * * *"
     },

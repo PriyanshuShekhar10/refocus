@@ -13,6 +13,7 @@ import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { areUsersBlocked } from "@/lib/blocking";
 import { notifySessionMatched } from "@/lib/notifySessionMatched";
 import { assertCanBookAnotherSession } from "@/lib/sessionAttendanceGate";
+import { notifySessionRequestAcceptedPush } from "@/lib/push/notify";
 
 // POST /api/session-requests/:id { action: 'accept'|'decline', message?: string }
 // On accept: create a session and add both users as participants
@@ -216,6 +217,18 @@ export async function POST(
         ],
       }).catch((err) => {
         console.error("[email] notifySessionMatched failed:", err);
+      }),
+    );
+
+    after(() =>
+      notifySessionRequestAcceptedPush({
+        toUserId: reqDoc.from_user_id,
+        fromUserId: reqDoc.to_user_id,
+        start,
+        durationMin: duration,
+        sessionId: String(insert.insertedId),
+      }).catch((err) => {
+        console.error("[push] session_request_accepted failed:", err);
       }),
     );
   }

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -12,6 +12,7 @@ import {
   isWithinCallWindow,
   toObjectId,
 } from "@/lib/sessionAccess";
+import { notifyPartnerJoinedPush } from "@/lib/push/notify";
 
 type SessionDoc = {
   owner_id: string;
@@ -77,8 +78,9 @@ export async function POST(
     // the first time so repeated token requests (refresh, rejoin) don't
     // overwrite the original attendance timestamp. Best-effort — a failure
     // here should not block call access.
+    let firstCallJoin = false;
     try {
-      await db.collection("sessions").updateOne(
+      const attend = await db.collection("sessions").updateOne(
         {
           _id: sessionObjectId,
           session_participants: {
@@ -92,8 +94,32 @@ export async function POST(
           $set: { "session_participants.$.call_joined_at": new Date() },
         },
       );
+      firstCallJoin = attend.modifiedCount > 0;
     } catch (err) {
       console.warn("[DailyToken] Failed to record call attendance", err);
+    }
+
+    if (firstCallJoin) {
+      const partnerIds = new Set<string>();
+      if (s.owner_id && String(s.owner_id) !== String(userId)) {
+        partnerIds.add(String(s.owner_id));
+      }
+      for (const p of s.session_participants ?? []) {
+        if (String(p.user_id) !== String(userId)) {
+          partnerIds.add(String(p.user_id));
+        }
+      }
+      for (const partnerId of partnerIds) {
+        after(() =>
+          notifyPartnerJoinedPush({
+            toUserId: partnerId,
+            fromUserId: userId,
+            sessionId,
+          }).catch((err) => {
+            console.error("[push] partner_joined failed:", err);
+          }),
+        );
+      }
     }
 
     return NextResponse.json({ token, roomName, domain });
