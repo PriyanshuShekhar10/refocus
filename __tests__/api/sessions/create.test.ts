@@ -212,4 +212,95 @@ describe("POST /api/sessions", () => {
     expect(status).toBe(200);
     expect(sessionsCol.insertOne).toHaveBeenCalled();
   });
+
+  it("autoMatch joins an existing open solo at the same start+duration", async () => {
+    const start = alignedFutureIso();
+    const startDate = new Date(start);
+    const openId = new ObjectId();
+    const findChain = sessionsCol.find();
+    findChain.sort().limit().toArray.mockResolvedValueOnce([
+      {
+        _id: openId,
+        owner_id: "other-user",
+        start_time: startDate,
+        end_time: new Date(startDate.getTime() + 25 * 60_000),
+        duration_min: 25,
+        session_type: "focus",
+        participant_count: 1,
+        session_participants: [{ user_id: "other-user", joined_at: new Date() }],
+      },
+    ]);
+    sessionsCol.findOneAndUpdate.mockResolvedValueOnce({
+      _id: openId,
+      owner_id: "other-user",
+      start_time: startDate,
+      end_time: new Date(startDate.getTime() + 25 * 60_000),
+      duration_min: 25,
+      session_type: "focus",
+      status: "booked",
+      participant_count: 2,
+      session_participants: [
+        { user_id: "other-user", joined_at: new Date() },
+        { user_id: USER_ID, joined_at: new Date(), quiet: false },
+      ],
+    });
+
+    const req = mockRequest("/api/sessions", {
+      body: {
+        start,
+        durationMin: 25,
+        sessionType: "focus",
+        autoMatch: true,
+      },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(200);
+    expect(json).toMatchObject({ id: String(openId), matched: true });
+    expect(sessionsCol.findOneAndUpdate).toHaveBeenCalled();
+    expect(sessionsCol.insertOne).not.toHaveBeenCalled();
+  });
+
+  it("autoMatch creates when no open solo matches", async () => {
+    const start = alignedFutureIso();
+    const req = mockRequest("/api/sessions", {
+      body: {
+        start,
+        durationMin: 25,
+        sessionType: "focus",
+        autoMatch: true,
+      },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(200);
+    expect(json.matched).toBe(false);
+    expect(typeof json.id).toBe("string");
+    expect(sessionsCol.insertOne).toHaveBeenCalled();
+  });
+
+  it("without autoMatch always creates a new session", async () => {
+    const start = alignedFutureIso();
+    const startDate = new Date(start);
+    const openId = new ObjectId();
+    const findChain = sessionsCol.find();
+    findChain.sort().limit().toArray.mockResolvedValueOnce([
+      {
+        _id: openId,
+        owner_id: "other-user",
+        start_time: startDate,
+        end_time: new Date(startDate.getTime() + 25 * 60_000),
+        duration_min: 25,
+        participant_count: 1,
+        session_participants: [{ user_id: "other-user", joined_at: new Date() }],
+      },
+    ]);
+
+    const req = mockRequest("/api/sessions", {
+      body: { start, durationMin: 25, sessionType: "focus" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(200);
+    expect(json.matched).toBe(false);
+    expect(sessionsCol.findOneAndUpdate).not.toHaveBeenCalled();
+    expect(sessionsCol.insertOne).toHaveBeenCalled();
+  });
 });

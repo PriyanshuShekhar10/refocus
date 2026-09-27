@@ -15,7 +15,6 @@ import {
   BOOKING_TIME_STEP_MINUTES,
   DEFAULT_DURATION,
   DEFAULT_DURATION_FILTER,
-  isValidDuration,
   type DurationMin,
 } from "@/constants/calendar";
 import { formatLocalDate, formatLocalTimeRange } from "@/lib/localTime";
@@ -29,7 +28,6 @@ import {
 } from "@/lib/zonedTime";
 import { useUserTimezone } from "@/components/user-timezone-provider";
 import { useCalendarSessions } from "@/hooks/useCalendarSessions";
-import { useIsEngagementCrew } from "@/hooks/useIsEngagementCrew";
 import { useCommunityModeration } from "@/hooks/useCommunityModeration";
 import { buildEventsByDay } from "@/lib/calendarDayEvents";
 import { Toast } from "../Calendar/Modals/Toast";
@@ -246,7 +244,6 @@ export default function MobileCalendar() {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const datePickerRef = useRef<HTMLInputElement>(null);
   const [ui, dispatch] = useReducer(uiReducer, undefined, createInitialState);
-  const { isCrew } = useIsEngagementCrew();
   const [now, setNow] = useState(new Date());
   const [bookTime, setBookTime] = useState("09:00");
   const [highlightId, setHighlightId] = useState<string | null>(null);
@@ -254,10 +251,10 @@ export default function MobileCalendar() {
   const { canBookSessions, bannedMessage } = useCommunityModeration();
 
   useEffect(() => {
-    if (isCrew && ui.createDuration === 25) {
-      dispatch({ type: "SET_CREATE_DURATION", duration: 50 });
+    if (ui.createDuration !== DEFAULT_DURATION) {
+      dispatch({ type: "SET_CREATE_DURATION", duration: DEFAULT_DURATION });
     }
-  }, [isCrew, ui.createDuration]);
+  }, [ui.createDuration]);
 
   useEffect(() => {
     dispatch({ type: "GO_TODAY", timeZone });
@@ -266,30 +263,6 @@ export default function MobileCalendar() {
   useEffect(() => {
     setBookTime(getDefaultBookTime(ui.startDate, timeZone));
   }, [ui.startDate, timeZone]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/users/preferences");
-        if (!res.ok) return;
-        const data = await res.json().catch(() => ({}));
-        const preferred = data?.preferences?.defaultSessionLength;
-        if (
-          !cancelled &&
-          typeof preferred === "number" &&
-          isValidDuration(preferred)
-        ) {
-          dispatch({ type: "SET_CREATE_DURATION", duration: preferred });
-        }
-      } catch {
-        // Keep local fallback defaults.
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (ui.toast) {
@@ -498,7 +471,7 @@ export default function MobileCalendar() {
     }
 
     const startMs = start.getTime();
-    const newEndMs = addMinutes(start, ui.createDuration).getTime();
+    const newEndMs = addMinutes(start, DEFAULT_DURATION).getTime();
     const overlaps = events.some((ev) => {
       const mine =
         (ev.owner_id && currentUserId && ev.owner_id === currentUserId) ||
@@ -527,7 +500,7 @@ export default function MobileCalendar() {
     dispatch({
       type: "OPEN_CREATE_CONFIRM",
       start,
-      preferred: ui.createDuration,
+      preferred: DEFAULT_DURATION,
       whenLabel,
     });
   }, [
@@ -535,7 +508,6 @@ export default function MobileCalendar() {
     bannedMessage,
     bookTime,
     ui.startDate,
-    ui.createDuration,
     timeZone,
     events,
     currentUserId,
@@ -707,7 +679,6 @@ export default function MobileCalendar() {
         onDurationChange={(d) =>
           dispatch({ type: "SET_CREATE_DURATION", duration: d })
         }
-        block25={isCrew}
         timeStepMinutes={BOOK_TIME_STEP_MINUTES}
         onBook={handleBookFromPicker}
         onPickDate={openDatePicker}

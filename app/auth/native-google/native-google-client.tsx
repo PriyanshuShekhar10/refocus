@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import {
   getRedirectResult,
-  signInWithPopup,
   signInWithRedirect,
   type User,
 } from "firebase/auth";
@@ -86,9 +85,29 @@ async function waitForRedirectUser() {
 
 async function hrefForUser(user: User) {
   const firebaseIdToken = await user.getIdToken();
+  const displayName = user.displayName?.trim() || null;
+
+  // Prefer a short handoff code — Android Intent URLs truncate long JWTs.
+  try {
+    const res = await fetch("/api/mobile-google/stash", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firebaseIdToken,
+        ...(displayName ? { displayName } : {}),
+      }),
+    });
+    const data = (await res.json()) as { code?: string; error?: string };
+    if (res.ok && data.code) {
+      return bounceUrl({ code: data.code });
+    }
+  } catch {
+    // Fall through to direct token bounce (works on iOS; may fail on Android).
+  }
+
   return bounceUrl({
     firebaseIdToken,
-    ...(user.displayName ? { displayName: user.displayName } : {}),
+    ...(displayName ? { displayName } : {}),
   });
 }
 
@@ -97,7 +116,7 @@ function openRefocus(href: string) {
 }
 
 export function NativeGoogleClient() {
-  const [status, setStatus] = useState("Checking Google sign-in…");
+  const [status, setStatus] = useState("Continuing with Google…");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
   const [returnHref, setReturnHref] = useState<string | null>(null);
@@ -119,27 +138,10 @@ export function NativeGoogleClient() {
     }
     setBusy(true);
     setError(null);
-    setStatus("Continuing with Google…");
+    setStatus("Redirecting to Google…");
     markStarted();
-    const auth = getFirebaseAuth();
-    try {
-      const credential = await signInWithPopup(auth, googleAuthProvider);
-      await completeUser(credential.user);
-      return;
-    } catch (popupErr: unknown) {
-      const code =
-        popupErr && typeof popupErr === "object" && "code" in popupErr
-          ? String((popupErr as { code: string }).code)
-          : "";
-      if (
-        code !== "auth/popup-blocked" &&
-        code !== "auth/popup-closed-by-user" &&
-        code !== "auth/cancelled-popup-request"
-      ) {
-        throw popupErr;
-      }
-    }
-    await signInWithRedirect(auth, googleAuthProvider);
+    // Prefer redirect: popups do not work inside the app's in-app browser sheet.
+    await signInWithRedirect(getFirebaseAuth(), googleAuthProvider);
   }
 
   useEffect(() => {
@@ -170,8 +172,15 @@ export function NativeGoogleClient() {
         return;
       }
 
-      setBusy(false);
-      setStatus("Continue with Google to return to Refocus.");
+      try {
+        await startGoogle();
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+        setError(formatFirebaseAuthError(err));
+        setBusy(false);
+      }
     })().catch((err) => {
       if (cancelled) {
         return;

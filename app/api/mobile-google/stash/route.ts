@@ -8,22 +8,28 @@ const TTL_MS = 5 * 60 * 1000;
 
 type HandoffDoc = {
   code: string;
-  googleIdToken: string;
+  googleIdToken: string | null;
+  firebaseIdToken: string | null;
   displayName: string | null;
   createdAt: Date;
   expiresAt: Date;
 };
 
 export async function POST(req: Request) {
-  let body: { googleIdToken?: string; displayName?: string | null };
+  let body: {
+    googleIdToken?: string;
+    firebaseIdToken?: string;
+    displayName?: string | null;
+  };
   try {
     body = (await req.json()) as typeof body;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const googleIdToken = body.googleIdToken?.trim();
-  if (!googleIdToken) {
+  const googleIdToken = body.googleIdToken?.trim() || null;
+  const firebaseIdToken = body.firebaseIdToken?.trim() || null;
+  if (!googleIdToken && !firebaseIdToken) {
     return NextResponse.json({ error: "Missing Google token" }, { status: 400 });
   }
 
@@ -32,6 +38,7 @@ export async function POST(req: Request) {
   const doc: HandoffDoc = {
     code,
     googleIdToken,
+    firebaseIdToken,
     displayName: body.displayName?.trim() || null,
     createdAt: now,
     expiresAt: new Date(now.getTime() + TTL_MS),

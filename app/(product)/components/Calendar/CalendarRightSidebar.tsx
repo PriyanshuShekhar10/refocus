@@ -630,12 +630,8 @@ export function CalendarRightSidebar({
         </div>
       )}
 
-      <SidebarUpdatesBox />
-
-      <div className="min-h-0 flex-1" aria-hidden="true" />
-
       {joinableSession ? (
-        <div className="shrink-0 space-y-2 rounded-lg border border-[#CA5995]/35 bg-[#5D1C6A]/5 p-2.5 dark:border-[#CA5995]/30 dark:bg-[#CA5995]/10">
+        <div className="mt-2 shrink-0 space-y-2 rounded-lg border border-[#CA5995]/35 bg-[#5D1C6A]/5 p-2.5 dark:border-[#CA5995]/30 dark:bg-[#CA5995]/10">
           <div className="flex items-center gap-1.5">
             <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#CA5995]" />
             <h3 className="text-xs font-semibold text-[#5D1C6A] dark:text-[#CA5995]">
@@ -702,7 +698,13 @@ export function CalendarRightSidebar({
             </button>
           </div>
         </div>
-      ) : (
+      ) : null}
+
+      <SidebarUpdatesBox />
+
+      <div className="min-h-0 flex-1" aria-hidden="true" />
+
+      {!joinableSession ? (
         <div className="shrink-0 space-y-1.5 border-t border-gray-100/80 pt-2 dark:border-gray-800/70">
           <button
             type="button"
@@ -787,7 +789,7 @@ export function CalendarRightSidebar({
           </button>
           </div>
         </div>
-      )}
+      ) : null}
 
       <DeviceTestModal
         open={deviceTestOpen}

@@ -18,6 +18,11 @@ import {
 import { normalizeCancelMessage } from "@/lib/sessionCancelMessage";
 import { notifySessionCancelled } from "@/lib/notifySessionCancelled";
 import { logSessionDeleted } from "@/lib/sessionLifecycleEvents";
+import {
+  readStoredPublicAttendance,
+  schedulePublicAttendanceRefresh,
+  type StoredPublicAttendanceFields,
+} from "@/lib/sessionAttendanceQuery";
 
 // Shared session document type for this file
 type SessionDoc = {
@@ -76,6 +81,7 @@ export async function GET(
     name: string | null;
     username: string | null;
     avatarUrl: string | null;
+    attendance: ReturnType<typeof readStoredPublicAttendance>["attendance"];
   } | null = null;
 
   if (partnerParticipant && ObjectId.isValid(partnerParticipant.user_id)) {
@@ -89,6 +95,8 @@ export async function GET(
           username: 1,
           avatar_url: 1,
           image: 1,
+          publicAttendance: 1,
+          publicAttendanceAt: 1,
         },
       },
     );
@@ -97,6 +105,12 @@ export async function GET(
         [partnerUser.firstname, partnerUser.lastname].filter(Boolean).join(" ") ||
         (partnerUser.name as string | null) ||
         null;
+      const stored = readStoredPublicAttendance(
+        partnerUser as StoredPublicAttendanceFields,
+      );
+      if (!stored.fresh) {
+        schedulePublicAttendanceRefresh([partnerParticipant.user_id]);
+      }
       partner = {
         userId: partnerParticipant.user_id,
         name,
@@ -104,6 +118,7 @@ export async function GET(
         avatarUrl: resolveAvatarUrl(
           partnerUser as { avatar_url?: string | null; image?: string | null },
         ),
+        attendance: stored.attendance,
       };
     }
   }

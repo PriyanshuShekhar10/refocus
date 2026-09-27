@@ -74,10 +74,12 @@ describe("POST /api/auth/forgot-password", () => {
     });
   });
 
-  it("returns ok without email when user has no password", async () => {
+  it("sends a reset email when the account has no password yet", async () => {
+    const userId = new ObjectId();
     usersCol.findOne.mockResolvedValue({
-      _id: new ObjectId(),
+      _id: userId,
       email: "oauth@example.com",
+      firstname: "Ada",
       hashedPassword: null,
     });
 
@@ -87,6 +89,10 @@ describe("POST /api/auth/forgot-password", () => {
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(200);
     expect(json.ok).toBe(true);
-    expect(sendPasswordResetEmail).not.toHaveBeenCalled();
+    expect(sendPasswordResetEmail).toHaveBeenCalledWith({
+      userId: String(userId),
+      email: "oauth@example.com",
+      firstName: "Ada",
+    });
   });
 });

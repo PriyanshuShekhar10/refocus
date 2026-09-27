@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
 import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/ratelimit";
 import { sendPasswordResetEmail } from "@/lib/email/sendPasswordResetEmail";
+import { findUserByEmailIdentity } from "@/lib/bannedEmails";
 
 /** Always return success so we do not reveal whether an email is registered. */
 export async function POST(req: NextRequest) {
@@ -18,13 +18,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
 
-  const db = await getDb();
-  const user = await db.collection("users").findOne(
-    { email },
-    { projection: { _id: 1, email: 1, firstname: 1, hashedPassword: 1 } },
-  );
+  const user = (await findUserByEmailIdentity(email)) as {
+    _id: unknown;
+    email?: string | null;
+    firstname?: string | null;
+  } | null;
 
-  if (user?.hashedPassword) {
+  // Google-only accounts have no password yet. Still send the link so they
+  // can set one and sign in with email afterwards.
+  if (user?.email) {
     await sendPasswordResetEmail({
       userId: String(user._id),
       email: user.email,

@@ -5,6 +5,11 @@ import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
 import { SESSION_REPORT_MAX_AGE_DAYS } from "@/lib/reportConstants";
+import {
+  readStoredPublicAttendance,
+  schedulePublicAttendanceRefresh,
+  type StoredPublicAttendanceFields,
+} from "@/lib/sessionAttendanceQuery";
 
 type ParticipantDoc = {
   user_id: string;
@@ -91,6 +96,8 @@ export async function GET(req: NextRequest) {
       username: 1,
       avatar_url: 1,
       image: 1,
+      publicAttendance: 1,
+      publicAttendanceAt: 1,
     })
     .toArray();
 
@@ -100,21 +107,33 @@ export async function GET(req: NextRequest) {
       name: string | null;
       username: string | null;
       avatarUrl: string | null;
+      attendance: ReturnType<typeof readStoredPublicAttendance>["attendance"];
+      attendanceFresh: boolean;
     }
   > = {};
+  const staleAttendanceIds: string[] = [];
   for (const u of users) {
     const id = String(u._id);
     const name =
       [u.firstname, u.lastname].filter(Boolean).join(" ") ||
       (u.name as string | null) ||
       null;
+    const stored = readStoredPublicAttendance(u as StoredPublicAttendanceFields);
+    if (!stored.fresh) {
+      staleAttendanceIds.push(id);
+    }
     userById[id] = {
       name,
       username: (u.username as string | null) ?? null,
       avatarUrl: resolveAvatarUrl(
         u as { avatar_url?: string | null; image?: string | null },
       ),
+      attendance: stored.attendance,
+      attendanceFresh: stored.fresh,
     };
+  }
+  if (staleAttendanceIds.length > 0) {
+    schedulePublicAttendanceRefresh(staleAttendanceIds);
   }
 
   const pendingRequests = await db
@@ -180,6 +199,7 @@ export async function GET(req: NextRequest) {
       friendRequestPending: pendingByPartner[pid] ?? "none",
       isBlockedByMe: blockedSet.has(pid),
       reportable,
+      attendance: profile?.attendance ?? null,
     };
   });
 

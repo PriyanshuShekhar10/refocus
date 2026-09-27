@@ -1,8 +1,12 @@
 "use client";
 
-import type { DurationMin } from "@/constants/calendar";
+import { DEFAULT_DURATION, type DurationMin } from "@/constants/calendar";
 import { formatLocalDate } from "@/lib/localTime";
 import { useMobileAgendaColors } from "./mobileAgendaColors";
+
+const BOOKABLE_DURATION: DurationMin = DEFAULT_DURATION;
+const DURATION_UNAVAILABLE_HINT =
+  "50-minute sessions only for now. We're keeping everyone on the same schedule to make matching easier. More durations are coming.";
 
 interface MobileBookSheetProps {
   open: boolean;
@@ -12,7 +16,6 @@ interface MobileBookSheetProps {
   onBookTimeChange: (value: string) => void;
   createDuration: DurationMin;
   onDurationChange: (d: DurationMin) => void;
-  block25: boolean;
   timeStepMinutes: number;
   onBook: () => void;
   onPickDate?: () => void;
@@ -26,7 +29,6 @@ export function MobileBookSheet({
   onBookTimeChange,
   createDuration,
   onDurationChange,
-  block25,
   timeStepMinutes,
   onBook,
   onPickDate,
@@ -120,20 +122,18 @@ export function MobileBookSheet({
             </p>
             <div className="grid grid-cols-3 gap-2">
               {([25, 50, 75] as DurationMin[]).map((d) => {
-                const blocked = block25 && d === 25;
-                const selected = createDuration === d;
+                const unavailable = d !== BOOKABLE_DURATION;
+                const selected = createDuration === d && !unavailable;
                 return (
                   <button
                     key={d}
                     type="button"
-                    disabled={blocked}
-                    onClick={() => !blocked && onDurationChange(d)}
-                    title={
-                      blocked ? "25-minute sessions are unavailable" : undefined
-                    }
+                    disabled={unavailable}
+                    onClick={() => onDurationChange(d)}
+                    aria-disabled={unavailable || undefined}
                     className="min-h-11 rounded-xl text-center text-sm transition-all disabled:cursor-not-allowed disabled:opacity-40"
                     style={
-                      blocked
+                      unavailable
                         ? {
                             backgroundColor: agenda.card,
                             color: agenda.textMuted,
@@ -156,6 +156,9 @@ export function MobileBookSheet({
                 );
               })}
             </div>
+            <p className="text-xs leading-snug" style={{ color: agenda.textMuted }}>
+              {DURATION_UNAVAILABLE_HINT}
+            </p>
           </div>
 
           <button
@@ -164,7 +167,7 @@ export function MobileBookSheet({
             className="min-h-12 w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#5F2066]"
             style={{ backgroundColor: agenda.plumCta }}
           >
-            Book a {createDuration} min session
+            Book a {BOOKABLE_DURATION} min session
           </button>
         </div>
       </div>

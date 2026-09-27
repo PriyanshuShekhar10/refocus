@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -19,6 +19,8 @@ import {
   readStoredPublicAttendance,
   schedulePublicAttendanceRefresh,
 } from "@/lib/sessionAttendanceQuery";
+import { hasSessionStarted } from "@/lib/sessionWindow";
+import { notifySessionMatched } from "@/lib/notifySessionMatched";
 
 // GET /api/sessions?from=ISO&to=ISO
 // GET /api/sessions?mineUpcoming=1  — caller's future/in-progress sessions only
@@ -43,6 +45,8 @@ type DbSession = {
   name?: string | null;
   color?: string | null;
   participant_count?: number;
+  created_at?: Date;
+  updated_at?: Date;
   session_participants?: Array<{
     user_id: string;
     joined_at: Date | string;
@@ -430,11 +434,12 @@ export async function POST(req: NextRequest) {
   if (!rl.success) return rateLimitedResponse(rl);
 
   const body = await req.json().catch(() => ({}));
-  const { start, durationMin, sessionType, quietOwner } = body as {
+  const { start, durationMin, sessionType, quietOwner, autoMatch } = body as {
     start?: string;
     durationMin?: number;
     sessionType?: string;
     quietOwner?: boolean;
+    autoMatch?: boolean;
   };
   if (!start || typeof durationMin !== "number" || !sessionType) {
     return NextResponse.json(
@@ -519,8 +524,102 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const quiet = Boolean(quietOwner);
+  const col = db.collection<DbSession>("sessions");
+
+  // Mobile opt-in: join an existing open solo at the same start+duration if possible.
+  if (autoMatch === true) {
+    const blockedIds = await getBlockedUserIds(userId);
+    const candidates = await col
+      .find({
+        start_time: s,
+        duration_min: durationMin as DurationMin,
+        owner_id: { $ne: userId },
+        "session_participants.user_id": { $ne: userId },
+        $or: [
+          { participant_count: { $lt: 2 } },
+          {
+            participant_count: { $exists: false },
+            $or: [
+              { session_participants: { $exists: false } },
+              { "session_participants.1": { $exists: false } },
+            ],
+          },
+        ],
+      })
+      .sort({ created_at: 1 })
+      .limit(10)
+      .toArray();
+
+    for (const candidate of candidates) {
+      if (blockedIds.has(String(candidate.owner_id))) {
+        continue;
+      }
+      if (hasSessionStarted(candidate.start_time, now)) {
+        continue;
+      }
+      const endTime = new Date(candidate.end_time);
+      if (endTime.getTime() <= now.getTime()) {
+        continue;
+      }
+
+      const claimed = await col.findOneAndUpdate(
+        {
+          _id: candidate._id,
+          start_time: { $gt: now },
+          "session_participants.user_id": { $ne: userId },
+          $or: [
+            { participant_count: { $lt: 2 } },
+            {
+              participant_count: { $exists: false },
+              $or: [
+                { session_participants: { $exists: false } },
+                { "session_participants.1": { $exists: false } },
+              ],
+            },
+          ],
+        },
+        {
+          $push: {
+            session_participants: {
+              user_id: userId,
+              joined_at: new Date(),
+              quiet,
+            },
+          } as never,
+          $set: {
+            status: "booked",
+            participant_count: 2,
+            updated_at: new Date(),
+          },
+        },
+        { returnDocument: "after" },
+      );
+
+      if (!claimed) {
+        continue;
+      }
+
+      const booked = {
+        ...claimed,
+        duration_min: claimed.duration_min ?? (durationMin as DurationMin),
+        session_type: claimed.session_type ?? (sessionType as SessionType),
+      };
+      await publishSessionDocUpserted(db, booked);
+      after(() =>
+        notifySessionMatched(db, booked).catch((err) => {
+          console.error("[email] notifySessionMatched failed:", err);
+        }),
+      );
+      return NextResponse.json({
+        id: String(claimed._id),
+        matched: true,
+      });
+    }
+  }
+
   const joinedAt = new Date();
-  const insert = await db.collection("sessions").insertOne({
+  const insert = await col.insertOne({
     owner_id: userId,
     start_time: s,
     end_time: e,
@@ -529,15 +628,15 @@ export async function POST(req: NextRequest) {
     status: "available",
     participant_count: 1,
     session_participants: [
-      { user_id: userId, joined_at: joinedAt, quiet: Boolean(quietOwner) },
+      { user_id: userId, joined_at: joinedAt, quiet },
     ],
     created_at: new Date(),
     updated_at: new Date(),
-  });
+  } as unknown as DbSession);
 
   // Optimistic concurrency control to resolve race conditions
   if (await hasSessionOverlap(db, userId, s, e, String(insert.insertedId))) {
-    await db.collection("sessions").deleteOne({ _id: insert.insertedId });
+    await col.deleteOne({ _id: insert.insertedId });
     return NextResponse.json(
       { error: "You already have a session during this time" },
       { status: 409 },
@@ -554,8 +653,8 @@ export async function POST(req: NextRequest) {
     status: "available",
     participant_count: 1,
     session_participants: [
-      { user_id: userId, joined_at: joinedAt, quiet: Boolean(quietOwner) },
+      { user_id: userId, joined_at: joinedAt, quiet },
     ],
   });
-  return NextResponse.json({ id: String(insert.insertedId) });
+  return NextResponse.json({ id: String(insert.insertedId), matched: false });
 }

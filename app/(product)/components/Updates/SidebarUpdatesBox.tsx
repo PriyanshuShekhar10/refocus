@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Ref,
+} from "react";
 import useSWR from "swr";
 import {
   AnimatePresence,
@@ -41,6 +49,10 @@ const FRAGMENT_COLORS = [
 
 const STACK_PEEK = 10;
 const MAX_VISIBLE = 3;
+/** Fallback until the front card is measured — keeps layout stable on first paint. */
+const FRONT_CARD_MIN_HEIGHT = 88;
+/** Cap so a long update never eats the whole sidebar / covers Join. */
+const FRONT_CARD_MAX_HEIGHT = 148;
 
 type Fragment = {
   id: number;
@@ -131,6 +143,7 @@ function NotificationCard({
   fragments,
   prefersReducedMotion,
   onDismiss,
+  cardRef,
 }: {
   update: UpdateItem;
   stackIndex: number;
@@ -140,12 +153,14 @@ function NotificationCard({
   fragments: Fragment[];
   prefersReducedMotion: boolean;
   onDismiss: () => void;
+  cardRef?: Ref<HTMLDivElement>;
 }) {
   const layer = STACK_LAYERS[stackIndex] ?? STACK_LAYERS[STACK_LAYERS.length - 1];
   const showDisintegration = isFront && disintegrating && !prefersReducedMotion;
 
   return (
     <motion.div
+      ref={cardRef}
       layout={isFront ? "position" : false}
       initial={
         prefersReducedMotion
@@ -175,6 +190,7 @@ function NotificationCard({
         zIndex: MAX_VISIBLE - stackIndex,
         left: layer.insetX,
         right: layer.insetX,
+        ...(isFront ? { maxHeight: FRONT_CARD_MAX_HEIGHT } : {}),
       }}
       className={`absolute inset-x-0 top-0 overflow-hidden rounded-[18px] border border-black/[0.06] bg-white/92 px-3 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_8px_24px_-6px_rgba(0,0,0,0.18),0_2px_6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1c1c1e]/92 dark:shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_8px_24px_-6px_rgba(0,0,0,0.55),0_2px_6px_rgba(0,0,0,0.35)] ${
         showDisintegration ? "overflow-visible" : ""
@@ -256,7 +272,9 @@ function NotificationCard({
 
             <p
               className={`mt-1.5 text-[12px] leading-snug text-gray-700 dark:text-gray-200 ${
-                isFront ? "whitespace-pre-wrap" : "line-clamp-1"
+                isFront
+                  ? "whitespace-pre-wrap line-clamp-4"
+                  : "line-clamp-1"
               }`}
             >
               {update.body}
@@ -285,6 +303,8 @@ export default function SidebarUpdatesBox() {
   const [busy, setBusy] = useState(false);
   const [disintegrating, setDisintegrating] = useState(false);
   const [exitUpdate, setExitUpdate] = useState<UpdateItem | null>(null);
+  const frontCardRef = useRef<HTMLDivElement | null>(null);
+  const [frontHeight, setFrontHeight] = useState(FRONT_CARD_MIN_HEIGHT);
 
   const frontUpdate = exitUpdate ?? queue[0] ?? null;
   const stackBehind = queue
@@ -299,6 +319,28 @@ export default function SidebarUpdatesBox() {
     () => (frontUpdate ? buildFragments(frontUpdate.id) : []),
     [frontUpdate],
   );
+
+  const measureFront = useCallback(() => {
+    const el = frontCardRef.current;
+    if (!el) return;
+    const next = Math.min(
+      FRONT_CARD_MAX_HEIGHT,
+      Math.max(FRONT_CARD_MIN_HEIGHT, Math.ceil(el.getBoundingClientRect().height)),
+    );
+    setFrontHeight((prev) => (prev === next ? prev : next));
+  }, []);
+
+  useLayoutEffect(() => {
+    measureFront();
+  }, [measureFront, frontUpdate?.id, frontUpdate?.body, visibleStack.length]);
+
+  useEffect(() => {
+    const el = frontCardRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => measureFront());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [measureFront, frontUpdate?.id]);
 
   const dismiss = useCallback(async () => {
     if (!frontUpdate || busy) return;
@@ -348,7 +390,7 @@ export default function SidebarUpdatesBox() {
   if (visibleStack.length === 0) return null;
 
   const stackHeight =
-    88 + Math.max(0, visibleStack.length - 1) * STACK_PEEK;
+    frontHeight + Math.max(0, visibleStack.length - 1) * STACK_PEEK;
 
   return (
     <div className="relative mt-2 shrink-0">
@@ -380,6 +422,7 @@ export default function SidebarUpdatesBox() {
                   fragments={fragments}
                   prefersReducedMotion={prefersReducedMotion}
                   onDismiss={() => void dismiss()}
+                  cardRef={isFront ? frontCardRef : undefined}
                 />
               );
             })}

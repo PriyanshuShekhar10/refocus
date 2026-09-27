@@ -11,7 +11,8 @@ const REQUEST_URI =
 
 type HandoffDoc = {
   code: string;
-  googleIdToken: string;
+  googleIdToken: string | null;
+  firebaseIdToken: string | null;
   displayName: string | null;
   expiresAt: Date;
 };
@@ -34,9 +35,6 @@ export async function POST(req: Request) {
   if (!code) {
     return NextResponse.json({ error: "Missing code" }, { status: 400 });
   }
-  if (!FIREBASE_API_KEY) {
-    return NextResponse.json({ error: "Firebase is not configured" }, { status: 500 });
-  }
 
   const db = await getDb();
   const handoff = await db.collection<HandoffDoc>(COLLECTION).findOneAndDelete({
@@ -49,6 +47,21 @@ export async function POST(req: Request) {
       { error: "Sign-in code expired. Please try again." },
       { status: 410 },
     );
+  }
+
+  // Native Google flow already exchanged with Firebase — return the stashed app token.
+  if (handoff.firebaseIdToken?.trim()) {
+    return NextResponse.json({
+      firebaseIdToken: handoff.firebaseIdToken.trim(),
+      displayName: handoff.displayName,
+    });
+  }
+
+  if (!handoff.googleIdToken?.trim()) {
+    return NextResponse.json({ error: "Sign-in code is incomplete." }, { status: 410 });
+  }
+  if (!FIREBASE_API_KEY) {
+    return NextResponse.json({ error: "Firebase is not configured" }, { status: 500 });
   }
 
   const res = await fetch(
