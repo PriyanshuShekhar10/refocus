@@ -67,6 +67,16 @@ export async function POST(
   const existing = await col.findOne({ _id: new ObjectId(sessionId) });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  if (
+    (existing as { review_solo?: boolean }).review_solo &&
+    String(existing.owner_id) !== String(userId)
+  ) {
+    return NextResponse.json(
+      { error: "This session is not open to join" },
+      { status: 403 },
+    );
+  }
+
   // Already a participant? Treat as idempotent success without further checks.
   const alreadyIn = (existing.session_participants ?? []).some(
     (p) => String(p.user_id) === String(userId),

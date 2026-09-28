@@ -21,6 +21,7 @@ import {
 } from "@/lib/sessionAttendanceQuery";
 import { hasSessionStarted } from "@/lib/sessionWindow";
 import { notifySessionMatched } from "@/lib/notifySessionMatched";
+import { ensureReviewSoloSession } from "@/lib/reviewDemo";
 
 // GET /api/sessions?from=ISO&to=ISO
 // GET /api/sessions?mineUpcoming=1  — caller's future/in-progress sessions only
@@ -67,6 +68,7 @@ export async function GET(req: NextRequest) {
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   scheduleRecordAccessIp(req, userId);
+  await ensureReviewSoloSession(userId);
 
   const { searchParams } = new URL(req.url);
   const mineUpcoming = searchParams.get("mineUpcoming") === "1";
@@ -125,6 +127,7 @@ export async function GET(req: NextRequest) {
       bookableFrom < toDate
         ? col
             .find({
+              review_solo: { $ne: true },
               start_time: { $gt: now, $gte: fromDate, $lt: toDate },
               // Prefer participant_count; include legacy docs missing the field
               // that still have fewer than 2 participants.
@@ -532,6 +535,7 @@ export async function POST(req: NextRequest) {
     const blockedIds = await getBlockedUserIds(userId);
     const candidates = await col
       .find({
+        review_solo: { $ne: true },
         start_time: s,
         duration_min: durationMin as DurationMin,
         owner_id: { $ne: userId },
