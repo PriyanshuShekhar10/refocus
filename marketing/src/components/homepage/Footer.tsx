@@ -23,7 +23,7 @@ export function Footer() {
           <a href="/about">About</a>
           <a href="/blog">Blog</a>
           <a href="/contact">Contact</a>
-          <a href="/support">Support</a>
+          <a href="/support">Help and Support</a>
           <a href="/developers">Developers</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>

@@ -3,9 +3,9 @@ import ContentPage from "../layouts/ContentPage.astro";
 import { APP_URL } from "../lib/config";
 import { ORG_EMAIL, SITE_URL } from "../lib/seo";
 
-const title = "Support";
+const title = "Help and Support";
 const description =
-  "Get help with Refocus sign-in, password resets, sessions, and account deletion. Email hello@refocus.co.in.";
+  "Help and support for Refocus: sign-in, password resets, sessions, and account deletion. Email hello@refocus.co.in.";
 const mailto = `mailto:${ORG_EMAIL}`;
 const loginUrl = `${APP_URL}/auth/login`;
 const forgotUrl = `${APP_URL}/auth/forgot-password`;
@@ -14,7 +14,7 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Refocus support",
+    name: "Refocus Help and Support",
     url: `${SITE_URL}/support`,
     description,
   },
@@ -25,7 +25,7 @@ const jsonLd = [
   title={title}
   description={description}
   canonical="/support"
-  heading="Support"
+  heading="Help and Support"
   jsonLd={jsonLd}
 >
   <p class="contact-lead">
