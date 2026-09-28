@@ -1,11 +1,13 @@
 ---
 import ContentPage from "../layouts/ContentPage.astro";
+import { ORG_EMAIL } from "../lib/seo";
 
 const site = "https://refocus.co.in";
-const UPDATED = "2026-08-08";
+const UPDATED = "2026-09-28";
+const mailto = `mailto:${ORG_EMAIL}`;
 const title = "Privacy Policy";
 const description =
-  "How Refocus collects, uses, and protects your data — accounts, sessions, cookies, analytics, and third-party services.";
+  "How Refocus collects, uses, and shares data in the iOS app, website, and focus sessions — and how to delete your account.";
 
 const jsonLd = [
   {
@@ -29,99 +31,172 @@ const jsonLd = [
 >
   <p>
     This Privacy Policy explains how Refocus ("we", "us") collects, uses, and
-    protects information when you use our website (<a href="https://refocus.co.in">refocus.co.in</a>)
-    and product (<a href="https://dashboard.refocus.co.in">dashboard.refocus.co.in</a>).
-    By using Refocus you agree to this policy.
+    shares information when you use the Refocus iOS app, the website
+    (<a href="https://refocus.co.in">refocus.co.in</a>), and the product
+    (<a href="https://dashboard.refocus.co.in">dashboard.refocus.co.in</a>).
+  </p>
+
+  <p class="contact-lead">
+    Questions, or a request about your data? Email
+    <a href={mailto}>{ORG_EMAIL}</a>.
+    You can also use <a href="/contact">Contact</a> or
+    <a href="/support">Support</a>.
   </p>
 
   <h2>Information we collect</h2>
+  <p>What we collect depends on how you use Refocus:</p>
   <ul>
     <li>
-      <strong>Account information:</strong> name, email address, and a securely
-      hashed password (or a Google sign-in identifier if you use Google).
+      <strong>Account information:</strong> name, email address, username, and
+      a user ID. If you create a password, we store it as a secure hash. If you
+      use Google or Sign in with Apple, we receive the identifier those
+      services share, plus the name and email you allow (Apple may provide a
+      private relay address instead of your real email).
     </li>
     <li>
-      <strong>Profile &amp; usage:</strong> username, profile photo (if you
-      upload one), focus sessions, session history, and check-in notes.
+      <strong>Profile photo:</strong> only if you choose one. On iPhone, that
+      uses the photo library permission.
     </li>
     <li>
-      <strong>Content you create:</strong> messages you send to friends and
-      session requests.
+      <strong>Content you create:</strong> messages, community posts, session
+      requests, and check-in notes.
     </li>
     <li>
-      <strong>Technical data:</strong> device/browser information, approximate
-      location derived from IP, and cookies or similar identifiers.
+      <strong>Sessions:</strong> bookings, start and end times, who joined, and
+      whether you completed a session. This is product activity tied to your
+      account.
+    </li>
+    <li>
+      <strong>Camera and microphone:</strong> only while you are in a live
+      focus session, so your partner can see and hear you. We do not turn them
+      on outside a session. Live video and audio are carried by Daily.co.
+    </li>
+    <li>
+      <strong>Push notifications:</strong> if you allow them, we store a device
+      push token so we can send session and account alerts you opted into.
+    </li>
+    <li>
+      <strong>Device and technical data:</strong> device type, operating system,
+      app version, and approximate location derived from your IP address, used
+      to run and secure the service.
+    </li>
+    <li>
+      <strong>Product analytics:</strong> screens you open and actions you take
+      in the app and on the website, linked to your account, through PostHog.
+      The website also uses cookies and Google Analytics.
     </li>
   </ul>
 
   <h2>How we use your information</h2>
   <ul>
-    <li>To create and operate your account and match you into focus sessions.</li>
-    <li>To provide chat, friends, and video-session features.</li>
-    <li>To send account and verification emails.</li>
-    <li>To understand usage and improve the product (analytics).</li>
-    <li>To keep the service secure and prevent abuse.</li>
+    <li>To create your account and sign you in.</li>
+    <li>To match you into focus sessions and run chat, friends, and community.</li>
+    <li>To place live video sessions and send the notifications you allow.</li>
+    <li>To send account and verification email.</li>
+    <li>To understand how the product is used and to fix problems.</li>
+    <li>To keep the service secure, moderate abuse, and enforce our <a href="/terms">Terms</a>.</li>
+  </ul>
+
+  <h2>Tracking and advertising</h2>
+  <p>
+    We do not sell your personal information. We do not use your data to track
+    you across other companies' apps or websites for advertising, and the iOS
+    app does not use Apple's advertising identifier.
+  </p>
+
+  <h2>Who can see your information</h2>
+  <ul>
+    <li>
+      <strong>People you choose:</strong> session partners, friends, and
+      community audiences can see the profile and content you share with them.
+    </li>
+    <li>
+      <strong>Service providers,</strong> who process data for us to run
+      Refocus:
+      <a href="https://www.mongodb.com/legal/privacy-policy" rel="nofollow noopener" target="_blank">MongoDB Atlas</a>
+      (database),
+      <a href="https://firebase.google.com/support/privacy" rel="nofollow noopener" target="_blank">Google Firebase</a>
+      and Google Sign-In,
+      Apple (Sign in with Apple),
+      <a href="https://www.daily.co/legal/privacy/" rel="nofollow noopener" target="_blank">Daily.co</a>
+      (live video),
+      <a href="https://resend.com/legal/privacy-policy" rel="nofollow noopener" target="_blank">Resend</a>
+      (email),
+      <a href="https://ably.com/privacy" rel="nofollow noopener" target="_blank">Ably</a>
+      (realtime messaging),
+      <a href="https://vercel.com/legal/privacy-policy" rel="nofollow noopener" target="_blank">Vercel</a>
+      and
+      <a href="https://www.cloudflare.com/privacypolicy/" rel="nofollow noopener" target="_blank">Cloudflare</a>
+      (hosting),
+      <a href="https://posthog.com/privacy" rel="nofollow noopener" target="_blank">PostHog</a>
+      (product analytics), and
+      <a href="https://policies.google.com/privacy" rel="nofollow noopener" target="_blank">Google Analytics</a>
+      (website analytics).
+    </li>
+    <li>
+      <strong>Legal and safety:</strong> if the law requires it, or to protect
+      users and the service.
+    </li>
   </ul>
 
   <h2>Cookies</h2>
   <p>
-    We use cookies for authentication and analytics. Because our marketing site
-    (<code>refocus.co.in</code>) and app (<code>dashboard.refocus.co.in</code>)
-    share sign-in, an authentication cookie is scoped to
-    <code>.refocus.co.in</code> so your session works across both. Analytics
-    cookies help us measure traffic and improve content. You can control cookies
-    in your browser settings; blocking some may affect functionality.
+    The website uses cookies for authentication and analytics. Because
+    <code>refocus.co.in</code> and <code>dashboard.refocus.co.in</code> share
+    sign-in, an authentication cookie is scoped to <code>.refocus.co.in</code>.
+    You can control cookies in your browser. Blocking some of them can affect
+    sign-in.
   </p>
 
-  <h2>Third-party services</h2>
-  <p>We rely on trusted providers to run Refocus. These may process limited data on our behalf:</p>
+  <h2>Account deletion and retention</h2>
+  <p>You can delete your account yourself:</p>
   <ul>
-    <li><a href="https://www.mongodb.com/legal/privacy-policy" rel="nofollow noopener" target="_blank">MongoDB Atlas</a> — database hosting</li>
-    <li><a href="https://firebase.google.com/support/privacy" rel="nofollow noopener" target="_blank">Google Firebase</a> — Google sign-in</li>
-    <li><a href="https://www.daily.co/legal/privacy/" rel="nofollow noopener" target="_blank">Daily.co</a> — video sessions</li>
-    <li><a href="https://resend.com/legal/privacy-policy" rel="nofollow noopener" target="_blank">Resend</a> — transactional email</li>
-    <li><a href="https://ably.com/privacy" rel="nofollow noopener" target="_blank">Ably</a> — realtime messaging</li>
-    <li><a href="https://vercel.com/legal/privacy-policy" rel="nofollow noopener" target="_blank">Vercel</a> and <a href="https://www.cloudflare.com/privacypolicy/" rel="nofollow noopener" target="_blank">Cloudflare</a> — hosting</li>
-    <li><a href="https://posthog.com/privacy" rel="nofollow noopener" target="_blank">PostHog</a> and <a href="https://policies.google.com/privacy" rel="nofollow noopener" target="_blank">Google Analytics</a> — product/website analytics</li>
+    <li>In the iOS app: Settings → Danger zone → Delete account.</li>
+    <li>On the website: Settings → Delete account.</li>
   </ul>
-
-  <h2>Data retention</h2>
   <p>
-    We keep your information for as long as your account is active or as needed
-    to provide the service. You can request deletion of your account and
-    associated data at any time (see below).
+    Deletion removes your profile from the product, including friendships and
+    your place in sessions. We may keep a limited record — such as the email on
+    the account and safety logs — to prevent abuse and meet legal duties. Copies
+    can also remain in backups for a limited time.
+  </p>
+  <p>
+    If you cannot open the app, email
+    <a href={mailto}>{ORG_EMAIL}</a> from the address on the account and ask us
+    to delete it.
   </p>
 
   <h2>Your rights</h2>
   <p>
-    You may access, correct, export, or delete your personal data. Depending on
-    your location (for example under the EU GDPR or India's DPDP Act), you may
-    have additional rights. To exercise any of these, email
-    <a href="mailto:hello@refocus.co.in">hello@refocus.co.in</a>.
+    You may access, correct, or delete your personal data, and you can export
+    it by asking us. Depending on where you live (for example under the EU GDPR
+    or India's DPDP Act), you may have additional rights. Email
+    <a href={mailto}>{ORG_EMAIL}</a> to use them.
   </p>
 
   <h2>Children</h2>
   <p>
-    Refocus is not intended for children under 13 (or the minimum age required
-    in your country). We do not knowingly collect data from children.
+    Refocus is not directed at children under 13, and we do not knowingly
+    collect their personal information. If you believe a child has given us
+    information, email <a href={mailto}>{ORG_EMAIL}</a> and we will delete it.
+  </p>
+
+  <h2>International processing</h2>
+  <p>
+    We and our providers may process information in countries other than yours,
+    including the United States and India. We use this data only as described
+    in this policy.
   </p>
 
   <h2>Changes</h2>
   <p>
-    We may update this policy from time to time. Material changes will be
-    reflected by the "Last updated" date above.
+    We may update this policy. The "Last updated" date above will change, and
+    when a change is material we will also tell you in the app or by email.
   </p>
 
   <h2>Contact</h2>
   <p>
-    Questions about privacy? Email
-    <a href="mailto:hello@refocus.co.in">hello@refocus.co.in</a>.
-  </p>
-
-  <p>
-    <em>
-      This policy is provided for transparency and is not legal advice. For
-      specific compliance needs, consult a qualified professional.
-    </em>
+    Privacy questions: <a href={mailto}>{ORG_EMAIL}</a>, or the
+    <a href="/contact">contact page</a>.
   </p>
 </ContentPage>

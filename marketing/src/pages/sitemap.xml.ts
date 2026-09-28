@@ -98,6 +98,8 @@ export const GET: APIRoute = async () => {
     { loc: `${site}/cofocus-alternative`, changefreq: "monthly", priority: "0.7" },
     { loc: `${site}/studystream-alternative`, changefreq: "monthly", priority: "0.7" },
     { loc: `${site}/about`, changefreq: "monthly", priority: "0.6" },
+    { loc: `${site}/contact`, changefreq: "yearly", priority: "0.4" },
+    { loc: `${site}/support`, changefreq: "yearly", priority: "0.4" },
     { loc: `${site}/privacy`, changefreq: "yearly", priority: "0.3" },
     { loc: `${site}/terms`, changefreq: "yearly", priority: "0.3" },
     // Indonesian (id) money pages + blog index.

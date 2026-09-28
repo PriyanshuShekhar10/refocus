@@ -1,0 +1,67 @@
+---
+import ContentPage from "../layouts/ContentPage.astro";
+import { APP_URL } from "../lib/config";
+import { ORG_EMAIL, SITE_URL } from "../lib/seo";
+
+const title = "Support";
+const description =
+  "Get help with Refocus sign-in, password resets, sessions, and account deletion. Email hello@refocus.co.in.";
+const mailto = `mailto:${ORG_EMAIL}`;
+const loginUrl = `${APP_URL}/auth/login`;
+const forgotUrl = `${APP_URL}/auth/forgot-password`;
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Refocus support",
+    url: `${SITE_URL}/support`,
+    description,
+  },
+];
+---
+
+<ContentPage
+  title={title}
+  description={description}
+  canonical="/support"
+  heading="Support"
+  jsonLd={jsonLd}
+>
+  <p class="contact-lead">
+    <a href={mailto}>{ORG_EMAIL}</a>
+  </p>
+  <p>
+    Email that address and include the email on your Refocus account. For
+    anything that is not covered below, the
+    <a href="/contact">contact page</a> uses the same inbox.
+  </p>
+
+  <h2>Sign in</h2>
+  <ul>
+    <li>
+      Google: choose Continue with Google on the
+      <a href={loginUrl}>login page</a>.
+    </li>
+    <li>Email and password: use the same login page.</li>
+    <li>
+      You signed up with Google and want a password: open
+      <a href={forgotUrl}>Forgot password</a>. We email a link that sets a
+      password on that same account.
+    </li>
+  </ul>
+
+  <h2>Sessions</h2>
+  <p>
+    Book from your dashboard after you sign in. If a session did not start, or
+    you need a booking changed, email us the date and time.
+  </p>
+
+  <h2>Delete your account</h2>
+  <p>
+    In the iOS app, open Settings → Danger zone → Delete account. On the
+    website, use Settings → Delete account. If you cannot sign in, email
+    <a href={mailto}>{ORG_EMAIL}</a> from the address on the account. What we
+    keep is described in the <a href="/privacy">privacy policy</a>.
+  </p>
+</ContentPage>

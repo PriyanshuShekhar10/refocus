@@ -1,11 +1,13 @@
 ---
 import ContentPage from "../layouts/ContentPage.astro";
+import { ORG_EMAIL } from "../lib/seo";
 
 const site = "https://refocus.co.in";
-const UPDATED = "2026-08-08";
+const UPDATED = "2026-09-28";
+const mailto = `mailto:${ORG_EMAIL}`;
 const title = "Terms & Conditions";
 const description =
-  "The terms that govern your use of Refocus — accounts, acceptable use, content, and liability.";
+  "The terms for using Refocus on the web and on iPhone, including accounts, community rules, and the Apple App Store license.";
 
 const jsonLd = [
   {
@@ -28,85 +30,164 @@ const jsonLd = [
   jsonLd={jsonLd}
 >
   <p>
-    These Terms &amp; Conditions ("Terms") govern your use of Refocus, including
-    <a href="https://refocus.co.in">refocus.co.in</a> and
-    <a href="https://dashboard.refocus.co.in">dashboard.refocus.co.in</a> (the
-    "Service"). By creating an account or using the Service, you agree to these
-    Terms. If you do not agree, please do not use Refocus.
+    These Terms &amp; Conditions ("Terms") are an agreement between you and
+    Refocus. They cover the Refocus iOS app, the website
+    (<a href="https://refocus.co.in">refocus.co.in</a>), and the product
+    (<a href="https://dashboard.refocus.co.in">dashboard.refocus.co.in</a>)
+    (together, the "Service"). By creating an account or using the Service, you
+    agree to these Terms and to the <a href="/privacy">Privacy Policy</a>. If
+    you do not agree, do not use Refocus.
+  </p>
+
+  <p class="contact-lead">
+    Questions about these Terms? Email
+    <a href={mailto}>{ORG_EMAIL}</a>.
+  </p>
+
+  <h2>The service</h2>
+  <p>
+    Refocus is a focus room: you book a session, get paired with someone else
+    who is there to work, and can join a live video call. The Service is free.
+    There are no purchases or subscriptions in the app. If that changes, we
+    will show the price and terms before you pay.
   </p>
 
   <h2>Accounts</h2>
   <ul>
-    <li>You must provide accurate information and keep your credentials secure.</li>
-    <li>You are responsible for activity that happens under your account.</li>
-    <li>You must be old enough to form a binding contract in your country.</li>
-  </ul>
-
-  <h2>Acceptable use</h2>
-  <p>When using Refocus — especially in shared sessions and chat — you agree not to:</p>
-  <ul>
-    <li>Harass, threaten, or abuse other users.</li>
-    <li>Share illegal, hateful, or explicit content.</li>
-    <li>Attempt to disrupt, reverse-engineer, or overload the Service.</li>
-    <li>Use the Service to violate any applicable law or the rights of others.</li>
+    <li>You must be at least 13 years old.</li>
+    <li>If you are under the age of majority where you live, a parent or guardian must agree to these Terms for you.</li>
+    <li>You must give accurate account information and keep your sign-in secure.</li>
+    <li>You are responsible for activity on your account.</li>
+    <li>You can sign in with email, Google, or Sign in with Apple.</li>
   </ul>
   <p>
-    We may suspend or terminate accounts that violate these Terms or put other
-    users at risk.
+    You can delete your account in the iOS app under Settings → Danger zone →
+    Delete account, or in Settings on the website. You can also email
+    <a href={mailto}>{ORG_EMAIL}</a> from the address on the account. Deletion
+    is described in the <a href="/privacy">Privacy Policy</a>.
+  </p>
+
+  <h2>Acceptable use</h2>
+  <p>
+    Sessions, chat, and community posts are shared with other people. You agree
+    not to:
+  </p>
+  <ul>
+    <li>Harass, threaten, or abuse anyone.</li>
+    <li>Post illegal, hateful, or sexually explicit content.</li>
+    <li>Impersonate another person or collect their information without consent.</li>
+    <li>Disrupt, reverse-engineer, or overload the Service.</li>
+    <li>Break the law or someone else's rights.</li>
+  </ul>
+  <p>
+    There is no tolerance for objectionable content or abusive users. You can
+    block and report people in the product. We may remove content and suspend
+    or terminate accounts that break these Terms. To report something you
+    cannot flag in the product, email <a href={mailto}>{ORG_EMAIL}</a>.
   </p>
 
   <h2>Your content</h2>
   <p>
-    You retain ownership of content you create (such as messages and check-in
-    notes). You grant us a limited license to store and process that content
-    solely to operate and provide the Service. See our
-    <a href="/privacy">Privacy Policy</a> for how we handle data.
+    You keep ownership of what you post, including messages and check-in notes.
+    You give Refocus a limited license to host, display, and process that
+    content only to operate the Service — for example, to show a message to the
+    person you sent it to, or a check-in to your session partner.
   </p>
+
+  <h2>iPhone and iPad</h2>
+  <p>
+    If you download Refocus from the Apple App Store, this section also applies.
+    If it conflicts with the rest of these Terms, this section controls for
+    that download.
+  </p>
+  <ul>
+    <li>
+      These Terms are between you and Refocus only, not with Apple. Apple is
+      not responsible for the app or its content.
+    </li>
+    <li>
+      The app is licensed, not sold. The license is non-exclusive and
+      non-transferable. You may use it on Apple-branded devices that you own or
+      control, as allowed by the Usage Rules in the Apple Media Services Terms
+      and Conditions.
+    </li>
+    <li>
+      Refocus is solely responsible for maintenance and support. Contact
+      <a href={mailto}>{ORG_EMAIL}</a>.
+    </li>
+    <li>
+      If the app fails to conform to an applicable warranty, you may notify
+      Apple, and Apple may refund the purchase price, if any. To the maximum
+      extent permitted by law, Apple has no other warranty obligation for the
+      app. Any other claim, loss, liability, damage, cost, or expense
+      attributable to a failure to conform to a warranty is Refocus's
+      responsibility.
+    </li>
+    <li>
+      Refocus, not Apple, is responsible for claims relating to the app,
+      including product-liability claims, claims that the app fails to conform
+      to a legal or regulatory requirement, and claims under consumer
+      protection or similar law.
+    </li>
+    <li>
+      Refocus, not Apple, is responsible for the investigation, defense,
+      settlement, and discharge of any third-party claim that the app, or your
+      possession and use of it, infringes that third party's intellectual
+      property rights.
+    </li>
+    <li>
+      You represent that you are not located in a country subject to a U.S.
+      Government embargo, and that you are not listed on any U.S. Government
+      list of prohibited or restricted parties.
+    </li>
+    <li>
+      You must also comply with applicable third-party terms when using the
+      app, including your wireless-data agreement.
+    </li>
+    <li>
+      Apple and Apple's subsidiaries are third-party beneficiaries of these
+      Terms. After you accept them, Apple has the right to enforce them against
+      you.
+    </li>
+  </ul>
 
   <h2>Service availability</h2>
   <p>
-    Refocus is provided on an "as is" and "as available" basis. Features may
-    change, and we may experience downtime. We do not guarantee uninterrupted or
-    error-free operation.
+    Refocus is provided as is and as available. Features can change, and the
+    Service can be interrupted. We do not promise that it will be uninterrupted
+    or error-free.
   </p>
 
   <h2>Third-party services</h2>
   <p>
-    Refocus integrates services such as video, email, and analytics providers.
-    Your use of those features may also be subject to their terms. See the
-    <a href="/privacy">Privacy Policy</a> for the current list.
+    Live video, sign-in, email, and analytics are provided by other companies.
+    Their terms can apply when you use those features. The
+    <a href="/privacy">Privacy Policy</a> lists them.
   </p>
 
   <h2>Limitation of liability</h2>
   <p>
-    To the maximum extent permitted by law, Refocus and its team are not liable
-    for indirect, incidental, or consequential damages, or for any loss of data
-    or profits arising from your use of the Service.
+    To the maximum extent permitted by law, Refocus is not liable for indirect,
+    incidental, or consequential damages, or for loss of data or profits,
+    arising from your use of the Service.
   </p>
 
   <h2>Termination</h2>
   <p>
     You may stop using Refocus and delete your account at any time. We may
-    suspend or terminate access if you breach these Terms or misuse the Service.
+    suspend or end access if you break these Terms or misuse the Service.
   </p>
 
-  <h2>Changes to these Terms</h2>
+  <h2>Changes</h2>
   <p>
-    We may update these Terms occasionally. Continued use after changes means
-    you accept the updated Terms. The "Last updated" date above reflects the
-    latest version.
+    We may update these Terms. The "Last updated" date above is the current
+    version. If you keep using Refocus after an update, you accept the new
+    Terms.
   </p>
 
   <h2>Contact</h2>
   <p>
-    Questions about these Terms? Email
-    <a href="mailto:hello@refocus.co.in">hello@refocus.co.in</a>.
-  </p>
-
-  <p>
-    <em>
-      These Terms are provided for transparency and are not legal advice. For
-      specific compliance needs, consult a qualified professional.
-    </em>
+    <a href={mailto}>{ORG_EMAIL}</a>, or the
+    <a href="/contact">contact page</a>.
   </p>
 </ContentPage>

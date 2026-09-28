@@ -383,6 +383,16 @@
   font-weight: 600;
   color: var(--ink);
 }
+.blog-prose .contact-lead {
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f7f6f2;
+  color: var(--ink);
+}
+.blog-prose .contact-lead a {
+  font-weight: 600;
+}
 
 /* ───────── comparison tables (alternative pages) ───────── */
 .blog-prose .blog-table {
