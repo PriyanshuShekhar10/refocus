@@ -13,6 +13,10 @@ import {
   FIRST_SESSION_REQUIRED_MESSAGE,
 } from "@/lib/sessionAttendanceMessages";
 
+const BOOKABLE_DURATION: DurationMin = DEFAULT_DURATION;
+const DURATION_UNAVAILABLE_HINT =
+  "50-minute sessions only for now. We're keeping everyone on the same schedule to make matching easier. More durations are coming.";
+
 export type CreatedSession = {
   id: string;
   start: string;
@@ -78,7 +82,11 @@ export default function BookSessionButton({
         if (!res.ok) return;
         const data = await res.json().catch(() => ({}));
         const preferred = data?.preferences?.defaultSessionLength;
-        if (!cancelled && typeof preferred === "number" && isValidDuration(preferred)) {
+        if (
+          !cancelled &&
+          preferred === BOOKABLE_DURATION &&
+          isValidDuration(preferred)
+        ) {
           setDuration(preferred);
         }
       } catch {
@@ -186,12 +194,12 @@ export default function BookSessionButton({
       setError("Cannot create a session in the past.");
       return;
     }
-    if (getSlotConflict(srDate, srHour, srMinute, duration)) {
+    if (getSlotConflict(srDate, srHour, srMinute, BOOKABLE_DURATION)) {
       setError("You already have a session during this time.");
       return;
     }
     const isoStart = startTime.toISOString();
-    const durationMin = duration;
+    const durationMin = BOOKABLE_DURATION;
     const isoEnd = new Date(
       startTime.getTime() + durationMin * 60_000
     ).toISOString();
@@ -244,7 +252,7 @@ export default function BookSessionButton({
   const hasConflict =
     srDate &&
     srHour !== null &&
-    getSlotConflict(srDate, srHour, srMinute, duration);
+    getSlotConflict(srDate, srHour, srMinute, BOOKABLE_DURATION);
 
   return (
     <>
@@ -411,31 +419,34 @@ export default function BookSessionButton({
                   </label>
                   <div className="flex gap-1">
                     {([25, 50, 75] as const).map((d) => {
-                      const durationConflict = getSlotConflict(
-                        srDate,
-                        srHour,
-                        srMinute,
-                        d
-                      );
+                      const unavailable = d !== BOOKABLE_DURATION;
+                      const durationConflict =
+                        !unavailable &&
+                        getSlotConflict(srDate, srHour, srMinute, d);
                       return (
                         <button
                           key={d}
                           type="button"
                           onClick={() =>
-                            !durationConflict && setDuration(d)
+                            !unavailable && !durationConflict && setDuration(d)
                           }
-                          disabled={durationConflict}
+                          disabled={unavailable || durationConflict}
+                          aria-disabled={unavailable || durationConflict || undefined}
                           title={
-                            durationConflict
-                              ? `${d} min would overlap with your session`
-                              : undefined
+                            unavailable
+                              ? DURATION_UNAVAILABLE_HINT
+                              : durationConflict
+                                ? `${d} min would overlap with your session`
+                                : undefined
                           }
                           className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                            durationConflict
-                              ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
-                              : duration === d
-                                ? "bg-[#5D1C6A] text-white"
-                                : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                            unavailable
+                              ? "cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400 opacity-45 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
+                              : durationConflict
+                                ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
+                                : duration === d
+                                  ? "bg-[#5D1C6A] text-white"
+                                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                           }`}
                         >
                           {d} min
@@ -443,6 +454,9 @@ export default function BookSessionButton({
                       );
                     })}
                   </div>
+                  <p className="mt-1.5 text-[11px] leading-snug text-gray-400 dark:text-gray-500">
+                    {DURATION_UNAVAILABLE_HINT}
+                  </p>
                 </div>
               )}
 
@@ -510,7 +524,7 @@ export default function BookSessionButton({
                           minute: "2-digit",
                         });
                       })()}{" "}
-                      · {duration} min
+                      · {BOOKABLE_DURATION} min
                     </div>
                   )}
                   {error && (
