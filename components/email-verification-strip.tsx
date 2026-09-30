@@ -49,8 +49,8 @@ export function EmailVerificationStrip() {
       role="status"
       className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e5e7eb] bg-[#e1e8f0]/90 px-4 py-2 dark:border-gray-700 dark:bg-slate-800/90"
     >
-      <div className="flex min-w-0 items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
-        <Mail size={14} className="shrink-0 text-gray-500 dark:text-gray-400" aria-hidden />
+      <div className="flex min-w-0 items-center gap-2 text-xs text-rf-ink-soft">
+        <Mail size={14} className="shrink-0 text-rf-ink-mute" aria-hidden />
         <span className="truncate font-medium">
           {sent
             ? "Verification email sent — check your inbox."

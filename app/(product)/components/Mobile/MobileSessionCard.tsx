@@ -169,19 +169,18 @@ function getCardStyle(
     borderStyle: "solid",
   };
 
+  const shadows: string[] = [];
+  if (state === "available") shadows.push(`inset 3px 0 0 ${agenda.plum}`);
+  if (state === "joined") shadows.push(`inset 3px 0 0 ${agenda.sage}`);
   if (highlighted) {
-    style.boxShadow = `0 0 0 2px ${agenda.ringOffset}, 0 0 0 4px color-mix(in srgb, ${agenda.sage} 70%, transparent)`;
+    shadows.push(
+      `0 0 0 2px ${agenda.ringOffset}`,
+      `0 0 0 4px color-mix(in srgb, ${agenda.sage} 70%, transparent)`,
+    );
   }
+  if (shadows.length) style.boxShadow = shadows.join(", ");
 
   switch (state) {
-    case "available":
-      style.borderLeftWidth = 2;
-      style.borderLeftColor = agenda.plum;
-      break;
-    case "joined":
-      style.borderLeftWidth = 2;
-      style.borderLeftColor = agenda.sage;
-      break;
     case "past":
       style.backgroundColor = agenda.page;
       style.opacity = 0.65;
@@ -251,14 +250,14 @@ export function MobileSessionCard({
         {state === "available" && (
           <>
             <span
-              className="text-sm font-medium"
+              className="text-[13.5px] font-medium"
               style={{ color: agenda.plumMuted }}
             >
               • Available
             </span>
             <span
-              className="text-sm font-semibold"
-              style={{ color: agenda.plumBright }}
+              className="text-[13.5px] font-semibold"
+              style={{ color: agenda.plum }}
             >
               Join →
             </span>
@@ -266,7 +265,7 @@ export function MobileSessionCard({
         )}
         {state === "joined" && (
           <span
-            className="text-sm font-semibold"
+            className="text-[13.5px] font-medium"
             style={{ color: agenda.sage }}
           >
             ✓ Joined

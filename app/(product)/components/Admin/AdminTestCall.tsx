@@ -80,19 +80,19 @@ export default function AdminTestCall({ active }: { active: boolean }) {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-sm font-semibold text-rf-ink">
           Daily.co test call
         </h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-sm text-rf-ink-mute">
           Spin up a real session room to verify camera, mic, and Daily.co
           integration without booking through the calendar.
         </p>
       </div>
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-4">
+      <div className="rounded-xl border border-rf-line bg-rf-card p-4 space-y-4">
         <div className="flex flex-wrap items-end gap-3">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            <span className="text-xs font-medium uppercase tracking-wide text-rf-ink-mute">
               Duration
             </span>
             <select
@@ -101,7 +101,7 @@ export default function AdminTestCall({ active }: { active: boolean }) {
                 setDurationMin(Number(e.target.value) as DurationMin)
               }
               disabled={creating}
-              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm"
+              className="rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
             >
               {DURATION_OPTIONS.map((minutes) => (
                 <option key={minutes} value={minutes}>
@@ -114,7 +114,7 @@ export default function AdminTestCall({ active }: { active: boolean }) {
             type="button"
             onClick={() => void createTestCall()}
             disabled={creating}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-60"
           >
             {creating ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -149,44 +149,44 @@ export default function AdminTestCall({ active }: { active: boolean }) {
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+      <div className="rounded-xl border border-rf-line bg-rf-card p-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          <p className="text-xs font-medium uppercase tracking-wide text-rf-ink-mute">
             Active test calls
           </p>
           <button
             type="button"
             onClick={() => void load()}
             disabled={loading}
-            className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            className="text-xs text-rf-ink-mute hover:text-rf-ink"
           >
             Refresh
           </button>
         </div>
         {loading && sessions.length === 0 ? (
-          <p className="mt-3 text-sm text-gray-500">Loading…</p>
+          <p className="mt-3 text-sm text-rf-ink-mute">Loading…</p>
         ) : sessions.length === 0 ? (
-          <p className="mt-3 text-sm text-gray-500">
+          <p className="mt-3 text-sm text-rf-ink-mute">
             No active test calls. Create one above to join a room.
           </p>
         ) : (
-          <ul className="mt-3 divide-y divide-gray-100 dark:divide-gray-800">
+          <ul className="mt-3 divide-y divide-rf-line-soft">
             {sessions.map((session) => (
               <li
                 key={session.sessionId}
                 className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  <p className="text-sm font-medium text-rf-ink">
                     {session.durationMin} min · {formatWhen(session.startTime)}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-rf-ink-mute">
                     Ends {formatWhen(session.endTime)}
                   </p>
                 </div>
                 <Link
                   href={session.callPagePath}
-                  className="inline-flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="inline-flex items-center gap-1 rounded-lg border border-rf-line px-3 py-1.5 text-sm hover:bg-rf-line-soft"
                 >
                   Join
                   <ExternalLink className="h-3.5 w-3.5" aria-hidden />

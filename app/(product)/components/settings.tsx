@@ -387,7 +387,7 @@ function FocusPreferences() {
             value={prefs.timezone || "auto"}
             disabled={saving}
             onChange={(e) => setTimezone(e.target.value)}
-            className="max-w-[min(100%,280px)] rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="max-w-[min(100%,280px)] rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm text-rf-ink"
           >
             <option value="auto">Device timezone ({deviceTz.replace(/_/g, " ")})</option>
             {zones.map((z) => (

@@ -18,7 +18,7 @@ export default function SectionHead({
         {title}
         {count !== undefined ? (
           <span
-            className="ml-2 text-sm font-normal"
+            className="ml-1.5 text-sm font-normal"
             style={{ color: "var(--ink-mute)" }}
           >
             {count}
@@ -27,7 +27,7 @@ export default function SectionHead({
       </h2>
       {tools.length > 0 ? (
         <div
-          className="flex gap-1 rounded-lg p-1"
+          className="flex gap-1 rounded-full p-[3px]"
           style={{ background: "var(--line-soft)" }}
         >
           {tools.map((t) => (
@@ -35,7 +35,7 @@ export default function SectionHead({
               key={t.label}
               type="button"
               onClick={t.onClick}
-              className="rounded-md px-3 py-1 text-xs font-medium transition-colors"
+              className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
               style={
                 t.active
                   ? {

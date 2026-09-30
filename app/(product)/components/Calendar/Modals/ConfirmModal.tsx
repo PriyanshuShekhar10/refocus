@@ -59,22 +59,22 @@ export function ConfirmModal({
 
   const confirmClasses =
     confirmVariant === "success"
-      ? "rounded-md bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] disabled:opacity-50"
+      ? "rounded-md bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50"
       : "rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50";
   return (
     <ModalWrapper onClose={onCancel}>
-      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <div className="w-full max-w-md rounded-lg bg-rf-card p-6 shadow-xl border border-rf-line text-rf-ink">
+        <h2 className="text-lg font-semibold text-rf-ink">
           {title}
         </h2>
         {description && (
-          <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">
+          <div className="mt-3 text-sm text-rf-ink-soft">
             {description}
           </div>
         )}
         {messageField ? (
           <label className="mt-4 block">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-rf-ink-soft">
               {messageField.label}
             </span>
             <textarea
@@ -83,13 +83,13 @@ export function ConfirmModal({
               rows={3}
               placeholder={messageField.placeholder ?? "I’ll be out this afternoon…"}
               onChange={(e) => setMessage(e.target.value)}
-              className="mt-1.5 w-full resize-none rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-gray-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-600 dark:focus-visible:ring-white/30"
+              className="mt-1.5 w-full resize-none rounded-md border border-rf-line bg-rf-card px-3 py-2 text-sm text-rf-ink outline-none placeholder:text-rf-ink-mute focus-visible:ring-1 focus-visible:ring-gray-400 dark:focus-visible:ring-white/30"
             />
           </label>
         ) : null}
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded-md border border-rf-line bg-rf-card text-rf-ink px-4 py-2 text-sm hover:bg-rf-line-soft"
             onClick={onCancel}
             disabled={busy}
           >

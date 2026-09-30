@@ -25,4 +25,5 @@ export const swrKeys = {
     `/api/sessions?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
   /** Caller's future/in-progress sessions (calendar Upcoming sidebar). */
   sessionsMineUpcoming: "/api/sessions?mineUpcoming=1",
+  sessionsMine: "/api/sessions/mine",
 } as const;

@@ -137,7 +137,7 @@ export default function MediaPermissionHelp({ error, onTryAgain, onDismiss }: Pr
           <button
             type="button"
             onClick={onTryAgain}
-            className="rounded-lg bg-[#5D1C6A] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#CA5995]"
+            className="rounded-lg bg-rf-primary px-3 py-2 text-sm font-semibold text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
           >
             Try again
           </button>

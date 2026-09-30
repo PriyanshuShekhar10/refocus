@@ -157,18 +157,18 @@ export default function BacklogBoard() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <header className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-semibold text-rf-ink">
               Backlog Board
             </h1>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-1 text-sm text-rf-ink-soft">
               Track priorities and move issues as you start and finish work.
             </p>
           </div>
           <PageRefreshButton onRefresh={loadIssues} />
         </header>
 
-        <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        <section className="rounded-xl border border-rf-line bg-rf-card p-4 shadow-sm">
+          <h2 className="text-sm font-semibold text-rf-ink">
             Add an issue
           </h2>
           <form onSubmit={handleCreateIssue} className="mt-3 grid gap-3 md:grid-cols-12">
@@ -183,7 +183,7 @@ export default function BacklogBoard() {
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Issue title"
                 maxLength={120}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-[#CA5995] focus:ring-2 focus:ring-[#CA5995]/30 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                className="w-full rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm text-rf-ink outline-none transition focus:border-rf-rose focus:ring-2 focus:ring-rf-rose/30"
                 required
               />
             </div>
@@ -199,7 +199,7 @@ export default function BacklogBoard() {
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="Description (optional)"
                 maxLength={500}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-[#CA5995] focus:ring-2 focus:ring-[#CA5995]/30 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                className="w-full rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm text-rf-ink outline-none transition focus:border-rf-rose focus:ring-2 focus:ring-rf-rose/30"
               />
             </div>
 
@@ -211,7 +211,7 @@ export default function BacklogBoard() {
                 id="issue-priority"
                 value={priority}
                 onChange={(event) => setPriority(event.target.value as IssuePriority)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-[#CA5995] focus:ring-2 focus:ring-[#CA5995]/30 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                className="w-full rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm text-rf-ink outline-none transition focus:border-rf-rose focus:ring-2 focus:ring-rf-rose/30"
               >
                 <option value="low">Low priority</option>
                 <option value="medium">Medium priority</option>
@@ -222,7 +222,7 @@ export default function BacklogBoard() {
             <button
               type="submit"
               disabled={submitting || !title.trim()}
-              className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#CA5995] disabled:cursor-not-allowed disabled:opacity-60 md:col-span-1"
+              className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-semibold text-rf-on-primary transition hover:bg-rf-primary-hover disabled:cursor-not-allowed disabled:opacity-60 md:col-span-1"
             >
               {submitting ? "Adding..." : "Add"}
             </button>
@@ -236,7 +236,7 @@ export default function BacklogBoard() {
         )}
 
         {loading ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+          <div className="rounded-xl border border-rf-line bg-rf-card p-10 text-center text-sm text-rf-ink-mute">
             Loading backlog issues...
           </div>
         ) : (
@@ -246,30 +246,30 @@ export default function BacklogBoard() {
               return (
                 <div
                   key={column.key}
-                  className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+                  className="rounded-xl border border-rf-line bg-rf-card p-4 shadow-sm"
                 >
                   <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    <h3 className="text-sm font-semibold text-rf-ink">
                       {column.title}
                     </h3>
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                    <span className="rounded-full bg-rf-line-soft px-2 py-0.5 text-xs font-medium text-rf-ink-soft">
                       {columnIssues.length}
                     </span>
                   </div>
 
                   <div className="space-y-3">
                     {columnIssues.length === 0 ? (
-                      <p className="rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                      <p className="rounded-lg border border-dashed border-rf-line p-4 text-sm text-rf-ink-mute">
                         {column.emptyText}
                       </p>
                     ) : (
                       columnIssues.map((issue) => (
                         <article
                           key={issue.id}
-                          className="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+                          className="rounded-lg border border-rf-line p-3"
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            <h4 className="text-sm font-semibold text-rf-ink">
                               {issue.title}
                             </h4>
                             <span
@@ -280,12 +280,12 @@ export default function BacklogBoard() {
                           </div>
 
                           {issue.description ? (
-                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                            <p className="mt-2 text-sm text-rf-ink-soft">
                               {issue.description}
                             </p>
                           ) : null}
 
-                          <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                          <p className="mt-2 text-xs text-rf-ink-mute">
                             Updated {new Date(issue.updatedAt).toLocaleString()}
                           </p>
 
@@ -294,7 +294,7 @@ export default function BacklogBoard() {
                               <button
                                 type="button"
                                 onClick={() => updateIssueStatus(issue.id, "in_progress")}
-                                className="rounded-md border border-[#5D1C6A]/30 px-2.5 py-1 text-xs font-semibold text-[#5D1C6A] transition hover:bg-[#5D1C6A] hover:text-white dark:border-[#CA5995]/50 dark:text-[#FFB090]"
+                                className="rounded-md border border-rf-primary/30 px-2.5 py-1 text-xs font-semibold text-rf-plum-ink transition hover:bg-rf-primary-hover hover:text-rf-on-primary"
                               >
                                 Start working
                               </button>
@@ -305,7 +305,7 @@ export default function BacklogBoard() {
                                 <button
                                   type="button"
                                   onClick={() => updateIssueStatus(issue.id, "todo")}
-                                  className="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+                                  className="rounded-md border border-rf-line px-2.5 py-1 text-xs font-semibold text-rf-ink-soft transition hover:bg-rf-line-soft"
                                 >
                                   Move to todo
                                 </button>
@@ -323,7 +323,7 @@ export default function BacklogBoard() {
                               <button
                                 type="button"
                                 onClick={() => updateIssueStatus(issue.id, "in_progress")}
-                                className="rounded-md border border-[#5D1C6A]/30 px-2.5 py-1 text-xs font-semibold text-[#5D1C6A] transition hover:bg-[#5D1C6A] hover:text-white dark:border-[#CA5995]/50 dark:text-[#FFB090]"
+                                className="rounded-md border border-rf-primary/30 px-2.5 py-1 text-xs font-semibold text-rf-plum-ink transition hover:bg-rf-primary-hover hover:text-rf-on-primary"
                               >
                                 Reopen
                               </button>

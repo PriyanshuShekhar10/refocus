@@ -243,24 +243,22 @@ function DashboardContent() {
   const showWallpaper = !!wallpaperUrl;
   const mainBgClass = showWallpaper
     ? "bg-dashboard-wallpaper"
-    : activeTab === "dashboard"
-      ? "bg-dotted-grid"
-      : "";
+    : "rf-dots";
 
   const mainPadding =
     activeTab === "dashboard"
       ? isMobile
         ? "h-full"
-        : "h-full p-6"
+        : "h-full p-4"
       : activeTab === "friends" || activeTab === "community"
         ? "h-full overflow-y-auto no-scrollbar"
         : isMobile
-          ? "h-full overflow-y-auto p-4 pb-20"
-          : "h-full overflow-y-auto p-6";
+          ? "h-full overflow-y-auto px-3 pb-20 pt-4"
+          : "h-full overflow-y-auto px-[clamp(16px,3vw,40px)] pb-24 pt-8";
 
   return (
     <UserTimezoneProvider>
-    <div className="flex h-screen overflow-hidden">
+    <div className="rf-app flex h-screen overflow-hidden bg-rf-bg text-[14px] leading-normal">
       <div className="hidden lg:block">
         <SideBar
           activeTab={activeTab}
@@ -285,17 +283,17 @@ function DashboardContent() {
             </TabPanel>
             <TabPanel tab="sessions" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
-                <SessionHistory compact={isMobile} />
+                <div className="mx-auto max-w-[980px]"><SessionHistory /></div>
               </div>
             </TabPanel>
             <TabPanel tab="profile" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
-                <Profile />
+                <div className="mx-auto max-w-[980px]"><Profile /></div>
               </div>
             </TabPanel>
             <TabPanel tab="settings" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
-                <Settings />
+                <div className="mx-auto max-w-[980px]"><Settings /></div>
               </div>
             </TabPanel>
             <TabPanel tab="friends" activeTab={activeTab} className="h-full">
@@ -374,25 +372,25 @@ function DashboardContent() {
             role="dialog"
             aria-modal="true"
             aria-label="Dashboard onboarding tour"
-            className="w-full max-w-xl rounded-2xl border border-white/20 bg-white p-5 shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+            className="w-full max-w-xl rounded-2xl border border-rf-line bg-rf-card p-5 shadow-2xl"
           >
             <div className="flex items-center justify-between gap-4">
-              <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+              <p className="text-[11.5px] font-semibold tracking-[0.02em] text-rf-ink-mute">
                 Step {tourStepIndex + 1} of {tourSteps.length}
               </p>
               <button
                 type="button"
                 onClick={closeTour}
-                className="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-sm font-medium text-rf-ink-mute hover:text-rf-ink"
               >
                 Skip tour
               </button>
             </div>
 
-            <h2 className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-rf-ink">
               {tourSteps[tourStepIndex].title}
             </h2>
-            <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+            <p className="mt-2 text-sm leading-6 text-rf-ink-soft">
               {tourSteps[tourStepIndex].description}
             </p>
 
@@ -402,8 +400,8 @@ function DashboardContent() {
                   key={step.title}
                   className={`h-1.5 rounded-full transition-all ${
                     tourSteps[tourStepIndex].title === step.title
-                      ? "w-8 bg-[#CA5995]"
-                      : "w-3 bg-gray-300 dark:bg-gray-600"
+                      ? "w-8 bg-rf-primary"
+                      : "w-3 bg-rf-line"
                   }`}
                 />
               ))}
@@ -414,14 +412,14 @@ function DashboardContent() {
                 type="button"
                 onClick={goBack}
                 disabled={tourStepIndex === 0}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-200"
+                className="rounded-[10px] border border-rf-line px-4 py-2 text-sm font-medium text-rf-ink hover:bg-rf-line-soft disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={goNext}
-                className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#CA5995]"
+                className="rounded-[10px] bg-rf-primary px-4 py-2 text-sm font-semibold text-rf-on-primary hover:bg-rf-primary-hover"
               >
                 {tourStepIndex === tourSteps.length - 1 ? "Finish" : "Next"}
               </button>

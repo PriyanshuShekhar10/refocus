@@ -653,8 +653,8 @@ export default function FriendChat({
         <div>
           {isEditing ? (
             <div className="flex flex-col gap-2 min-w-[220px]">
-              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium text-white/70">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#FFB090]" />
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium text-rf-on-primary/70">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-rf-peach" />
                 Editing message
               </div>
               <textarea
@@ -672,11 +672,11 @@ export default function FriendChat({
                   }
                 }}
                 rows={Math.min(6, Math.max(2, editingText.split("\n").length))}
-                className="w-full resize-none rounded-xl bg-white/15 px-3 py-2 text-sm text-white placeholder:text-white/60 ring-1 ring-inset ring-white/15 focus:outline-none focus:ring-white/40 focus:bg-white/20 transition-colors"
+                className="w-full resize-none rounded-xl bg-rf-on-primary/15 px-3 py-2 text-sm text-rf-on-primary placeholder:text-rf-on-primary/60 ring-1 ring-inset ring-rf-on-primary/15 focus:outline-none focus:ring-rf-on-primary/40 focus:bg-rf-on-primary/20 transition-colors"
                 placeholder="Edit your message…"
               />
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] text-white/60 hidden sm:inline">
+                <span className="text-[10px] text-rf-on-primary/60 hidden sm:inline">
                   Enter to save · Esc to cancel
                 </span>
                 <div className="ml-auto flex items-center gap-1.5">
@@ -687,7 +687,7 @@ export default function FriendChat({
                       setEditingText("");
                     }}
                     disabled={pendingMessageOps.has(m.id)}
-                    className="rounded-full px-3 py-1 text-[11px] font-medium text-white/80 hover:text-white hover:bg-white/10 disabled:opacity-60 transition-colors"
+                    className="rounded-full px-3 py-1 text-[11px] font-medium text-rf-on-primary/80 hover:text-rf-on-primary hover:bg-rf-on-primary/10 disabled:opacity-60 transition-colors"
                   >
                     Cancel
                   </button>
@@ -699,7 +699,7 @@ export default function FriendChat({
                       !editingText.trim() ||
                       editingText.trim() === (m.content ?? "").trim()
                     }
-                    className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-[#5D1C6A] hover:bg-[#FFF1D3] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="rounded-full bg-rf-on-primary px-3 py-1 text-[11px] font-semibold text-rf-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {pendingMessageOps.has(m.id) ? "Saving…" : "Save"}
                   </button>
@@ -726,11 +726,11 @@ export default function FriendChat({
           <div
             className={`rounded-md border inline-flex items-center gap-2 px-2 py-1 text-xs font-medium ${
               p?.status === "accepted"
-                ? "bg-[#FFF1D3] text-[#5D1C6A] border-[#FFB090]"
+                ? "bg-rf-cream-bg text-rf-plum-ink border-rf-peach"
                 : p?.status === "declined"
                   ? "bg-red-100 text-red-700 border-red-200"
                   : p?.status === "cancelled"
-                    ? "bg-gray-100 text-gray-700 border-gray-200"
+                    ? "bg-rf-line-soft text-rf-ink-soft border-rf-line"
                     : "bg-amber-50 text-amber-700 border-amber-200"
             }`}
           >
@@ -742,7 +742,7 @@ export default function FriendChat({
               <span className="ml-2 italic">“{p.message}”</span>
             ) : null}
             {p?.goal ? (
-              <div className="mt-1 text-xs text-[#5D1C6A] dark:text-[#FFB090] bg-[#FFF1D3] dark:bg-[#5D1C6A]/30 px-2 py-1 rounded">
+              <div className="mt-1 text-xs text-rf-plum-ink bg-rf-cream-bg px-2 py-1 rounded">
                 <strong>Goal:</strong> {p.goal}
               </div>
             ) : null}
@@ -768,7 +768,7 @@ export default function FriendChat({
                       if (!p?.sessionRequestId) return;
                       actOnSessionRequest(p.sessionRequestId, "accept");
                     }}
-                    className="rounded-md bg-[#5D1C6A] px-3 py-1 text-xs font-medium text-white hover:bg-[#CA5995]"
+                    className="rounded-md bg-rf-primary px-3 py-1 text-xs font-medium text-rf-on-primary hover:bg-rf-primary-hover"
                   >
                     Accept
                   </button>
@@ -788,21 +788,21 @@ export default function FriendChat({
                     if (!p?.sessionRequestId) return;
                     deleteSessionRequest(p.sessionRequestId);
                   }}
-                  className="rounded-md bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-300"
+                  className="rounded-md bg-rf-line px-3 py-1 text-xs font-medium text-rf-ink-soft hover:bg-rf-line"
                 >
                   Delete request
                 </button>
               )}
             </div>
           ) : (
-            <div className="mt-2 text-xs text-gray-500 capitalize">
+            <div className="mt-2 text-xs text-rf-ink-mute capitalize">
               Status: {p?.status}
             </div>
           )}
         </div>
       );
     }
-    return <div className="text-xs text-gray-500">Unsupported message</div>;
+    return <div className="text-xs text-rf-ink-mute">Unsupported message</div>;
   };
 
   const isModal = layout === "modal";
@@ -822,8 +822,8 @@ export default function FriendChat({
         <AvatarFallback
           className={`${textClass} font-semibold ${
             isOwn
-              ? "bg-[#5D1C6A] text-white"
-              : "bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/70 dark:text-[#FFB090]"
+              ? "bg-rf-primary text-rf-on-primary"
+              : "bg-rf-cream-bg text-rf-plum-ink"
           }`}
         >
           {initial}
@@ -834,7 +834,7 @@ export default function FriendChat({
 
   const header = (
     <div
-      className={`flex items-center justify-between border-b border-gray-200/70 dark:border-gray-800 bg-white/95 dark:bg-gray-900/80 backdrop-blur-sm ${
+      className={`flex items-center justify-between border-b border-rf-line/70 bg-rf-card/95 backdrop-blur-sm ${
         isModal ? "px-5 py-4" : "px-3 h-10"
       }`}
     >
@@ -846,7 +846,7 @@ export default function FriendChat({
             <AvatarImage src={friendAvatarUrl} alt={friendLabel} />
           ) : null}
           <AvatarFallback
-            className={`font-semibold bg-[#FFF1D3] dark:bg-[#5D1C6A]/70 text-[#5D1C6A] dark:text-[#FFB090] ${
+            className={`font-semibold bg-rf-cream-bg text-rf-plum-ink ${
               isModal ? "text-sm" : "text-[10px]"
             }`}
           >
@@ -855,7 +855,7 @@ export default function FriendChat({
         </Avatar>
         <div className="min-w-0">
           <div
-            className={`inline-flex max-w-full min-w-0 items-center gap-1.5 font-semibold text-gray-900 dark:text-gray-100 truncate ${
+            className={`inline-flex max-w-full min-w-0 items-center gap-1.5 font-semibold text-rf-ink truncate ${
               isModal ? "text-base max-w-[260px]" : "text-sm max-w-[200px]"
             }`}
           >
@@ -863,7 +863,7 @@ export default function FriendChat({
             {friendIsAdmin ? <AdminTag size="xs" /> : null}
           </div>
           {isModal && (
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="text-xs text-rf-ink-mute">
               Direct message
             </div>
           )}
@@ -874,7 +874,7 @@ export default function FriendChat({
           <button
             onClick={onMinimizeToggle}
             aria-label={minimized ? "Maximize chat" : "Minimize chat"}
-            className={`inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+            className={`inline-flex items-center justify-center rounded-md text-rf-ink-mute hover:text-rf-ink hover:bg-rf-line-soft transition-colors ${
               isModal ? "h-8 w-8" : "h-6 w-6"
             }`}
           >
@@ -884,7 +884,7 @@ export default function FriendChat({
         <button
           onClick={onClose}
           aria-label="Close chat"
-          className={`inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+          className={`inline-flex items-center justify-center rounded-md text-rf-ink-mute hover:text-rf-ink hover:bg-rf-line-soft transition-colors ${
             isModal ? "h-8 w-8" : "h-6 w-6"
           }`}
         >
@@ -909,7 +909,7 @@ export default function FriendChat({
         onScroll={handleListScroll}
       >
         {loading && messages.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center text-xs text-gray-500">
+          <div className="flex flex-1 items-center justify-center text-xs text-rf-ink-mute">
             Loading…
           </div>
         ) : messages.length === 0 ? (
@@ -920,7 +920,7 @@ export default function FriendChat({
               >
                 <AvatarImage src={friendAvatarUrl} alt={friendLabel} />
                 <AvatarFallback
-                  className={`font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090] ${
+                  className={`font-semibold bg-rf-cream-bg text-rf-plum-ink ${
                     isModal ? "text-lg" : "text-sm"
                   }`}
                 >
@@ -929,26 +929,26 @@ export default function FriendChat({
               </Avatar>
             ) : (
               <div
-                className={`flex items-center justify-center rounded-full bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 ${
+                className={`flex items-center justify-center rounded-full bg-rf-cream-bg ${
                   isModal ? "h-14 w-14 mb-4" : "h-10 w-10 mb-3"
                 }`}
               >
                 <FiMessageCircle
-                  className={`text-[#5D1C6A] dark:text-[#FFB090] ${
+                  className={`text-rf-plum-ink ${
                     isModal ? "w-6 h-6" : "w-5 h-5"
                   }`}
                 />
               </div>
             )}
             <p
-              className={`font-semibold text-gray-900 dark:text-gray-100 ${
+              className={`font-semibold text-rf-ink ${
                 isModal ? "text-base" : "text-sm"
               }`}
             >
               Say hi to {friendLabel.split(/[@\s]/)[0] || "your friend"}
             </p>
             <p
-              className={`mt-1 max-w-[260px] text-gray-500 dark:text-gray-400 ${
+              className={`mt-1 max-w-[260px] text-rf-ink-mute ${
                 isModal ? "text-sm" : "text-xs"
               }`}
             >
@@ -969,7 +969,7 @@ export default function FriendChat({
                       key={`sep-${dateKey}-${m.id}`}
                       className="flex items-center justify-center py-2"
                     >
-                      <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-3 py-0.5 text-[10px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      <span className="rounded-full bg-rf-line-soft px-3 py-0.5 text-[10px] font-medium uppercase tracking-wider text-rf-ink-mute">
                         {formatDateSeparator(created)}
                       </span>
                     </div>,
@@ -1007,7 +1007,7 @@ export default function FriendChat({
                               prev === m.id ? null : m.id,
                             )
                           }
-                          className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200 transition-opacity opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 ${
+                          className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-rf-ink-mute hover:bg-rf-line-soft hover:text-rf-ink transition-opacity opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 ${
                             isMenuOpen
                               ? "opacity-100"
                               : ""
@@ -1017,7 +1017,7 @@ export default function FriendChat({
                         </button>
                         {isMenuOpen && (
                           <div
-                            className={`absolute top-1/2 z-10 min-w-[112px] -translate-y-1/2 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900 ${
+                            className={`absolute top-1/2 z-10 min-w-[112px] -translate-y-1/2 rounded-lg border border-rf-line bg-rf-card py-1 shadow-lg ${
                               isOwn ? "right-full mr-1" : "left-full ml-1"
                             }`}
                           >
@@ -1030,7 +1030,7 @@ export default function FriendChat({
                                 beginEditMessage(m);
                               }}
                               disabled={pendingMessageOps.has(m.id)}
-                              className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
+                              className="block w-full px-3 py-1.5 text-left text-xs text-rf-ink-soft hover:bg-rf-line-soft disabled:opacity-60"
                             >
                               Edit
                             </button>
@@ -1054,7 +1054,7 @@ export default function FriendChat({
                                 setMenuOpenMessageId(null);
                                 setReportMessage(m);
                               }}
-                              className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                              className="block w-full px-3 py-1.5 text-left text-xs text-rf-ink-soft hover:bg-rf-line-soft"
                             >
                               Report
                             </button>
@@ -1068,8 +1068,8 @@ export default function FriendChat({
                         isEditingThisMessage ? "w-[88%] sm:w-[420px]" : "max-w-[78%]"
                       } ${
                         isOwn
-                          ? "bg-[#5D1C6A] text-white rounded-br-md dark:bg-[#5D1C6A] dark:text-[#FFF1D3]"
-                          : "bg-white border border-gray-200 text-gray-900 rounded-bl-md dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                          ? "bg-rf-primary text-rf-on-primary rounded-br-md"
+                          : "bg-rf-bubble text-rf-ink rounded-bl-md"
                       }`}
                     >
                       {renderMessage(m)}
@@ -1078,7 +1078,7 @@ export default function FriendChat({
                           className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
                             isOwn
                               ? "text-[#FFF1D3]/70"
-                              : "text-gray-500 dark:text-gray-400"
+                              : "text-rf-ink-mute"
                           }`}
                         >
                           {formatTime(m.created_at)}
@@ -1098,7 +1098,7 @@ export default function FriendChat({
       </div>
       {srOpen && (
         <div
-          className={`shrink-0 border-t border-gray-200/70 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 overflow-y-auto overflow-x-hidden space-y-3 ${
+          className={`shrink-0 border-t border-rf-line/70 bg-rf-bg overflow-y-auto overflow-x-hidden space-y-3 ${
             layout === "docked"
               ? "max-h-[200px] p-2"
               : "max-h-[55%] px-5 py-4"
@@ -1106,7 +1106,7 @@ export default function FriendChat({
         >
             {/* Date Selection */}
             <div className={layout === "docked" ? "space-y-1" : ""}>
-              <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 block">
+              <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide mb-1.5 block">
                 Pick a day
               </label>
               <div className="flex gap-1 overflow-x-auto pb-1">
@@ -1122,8 +1122,8 @@ export default function FriendChat({
                     }}
                     className={`shrink-0 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                       srDate?.toDateString() === opt.date.toDateString()
-                        ? "bg-[#5D1C6A] text-white"
-                        : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                        ? "bg-rf-primary text-rf-on-primary"
+                        : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                     }`}
                   >
                     {opt.label}
@@ -1136,11 +1136,11 @@ export default function FriendChat({
             {srDate && (
               <div className={layout === "docked" ? "space-y-1" : ""}>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide">
                     Pick a time
                   </label>
                   {loadingBusy && (
-                    <span className="text-[10px] text-gray-400">Checking...</span>
+                    <span className="text-[10px] text-rf-ink-mute">Checking...</span>
                   )}
                 </div>
                 {/* Legend - hide in docked to save space */}
@@ -1148,11 +1148,11 @@ export default function FriendChat({
                   <div className="flex gap-3 mb-2 text-[10px]">
                     <span className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-red-400"></span>
-                      <span className="text-gray-500 dark:text-gray-400">You&apos;re busy</span>
+                      <span className="text-rf-ink-mute">You&apos;re busy</span>
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-orange-400"></span>
-                      <span className="text-gray-500 dark:text-gray-400">Friend busy</span>
+                      <span className="text-rf-ink-mute">Friend busy</span>
                     </span>
                   </div>
                 )}
@@ -1183,14 +1183,14 @@ export default function FriendChat({
                             : "px-1.5 py-1.5 text-[11px]"
                         } ${
                           isPast
-                            ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                            ? "bg-rf-line-soft text-rf-ink-mute cursor-not-allowed"
                             : conflict.hasConflict
                               ? conflict.isMine
                                 ? "bg-red-100 dark:bg-red-900/30 text-red-400 dark:text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
                                 : "bg-orange-100 dark:bg-orange-900/30 text-orange-400 dark:text-orange-400 cursor-not-allowed border border-orange-200 dark:border-orange-800"
                               : srHour === slot.hour
-                                ? "bg-[#5D1C6A] text-white"
-                                : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                                ? "bg-rf-primary text-rf-on-primary"
+                                : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                         }`}
                       >
                         {slot.label}
@@ -1201,7 +1201,7 @@ export default function FriendChat({
                 {/* Fine-tune minutes */}
                 {srHour !== null && (
                   <div className={`flex items-center gap-2 ${layout === "docked" ? "mt-1" : "mt-2"}`}>
-                    <span className={`text-gray-500 dark:text-gray-400 ${layout === "docked" ? "text-[10px]" : "text-xs"}`}>Minutes:</span>
+                    <span className={`text-rf-ink-mute ${layout === "docked" ? "text-[10px]" : "text-xs"}`}>Minutes:</span>
                     <div className="flex gap-1">
                       {BOOKING_MINUTE_OPTIONS.map((m) => {
                         const minuteConflict = getSlotConflict(srDate, srHour, m, srDuration);
@@ -1225,8 +1225,8 @@ export default function FriendChat({
                                   ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed"
                                   : "bg-orange-100 dark:bg-orange-900/30 text-orange-400 cursor-not-allowed"
                                 : srMinute === m
-                                  ? "bg-[#5D1C6A] text-white"
-                                  : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                                  ? "bg-rf-primary text-rf-on-primary"
+                                  : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                             }`}
                         >
                           :{m.toString().padStart(2, "0")}
@@ -1242,7 +1242,7 @@ export default function FriendChat({
             {/* Duration Selection */}
             {srDate && srHour !== null && (
               <div className={layout === "docked" ? "space-y-1" : ""}>
-                <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 block">
+                <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide mb-1.5 block">
                   Duration
                 </label>
                 <div className="flex gap-1">
@@ -1264,8 +1264,8 @@ export default function FriendChat({
                               ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
                               : "bg-orange-100 dark:bg-orange-900/30 text-orange-400 cursor-not-allowed border border-orange-200 dark:border-orange-800"
                             : srDuration === d
-                              ? "bg-[#5D1C6A] text-white"
-                              : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                              ? "bg-rf-primary text-rf-on-primary"
+                              : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                         }`}
                       >
                         {d} min
@@ -1280,14 +1280,14 @@ export default function FriendChat({
             {srDate && srHour !== null && (
               <div className={layout === "docked" ? "space-y-1" : "mt-2"}>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide">
                     Session Goal
                   </label>
                   <button
                     type="button"
                     onClick={refineGoal}
                     disabled={isRefining || !srGoal.trim()}
-                    className="text-[10px] font-medium text-[#5D1C6A] dark:text-[#FFB090] hover:text-[#CA5995] dark:hover:text-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    className="text-[10px] font-medium text-rf-plum-ink hover:text-rf-plum-ink disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                   >
                     {isRefining ? (
                       <>
@@ -1300,7 +1300,7 @@ export default function FriendChat({
                 </div>
                 <textarea
                   placeholder="What specifically do you want to accomplish?"
-                  className="w-full rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-xs placeholder:text-gray-400 min-h-[38px] resize-y"
+                  className="w-full rounded-md border border-rf-line bg-rf-card text-rf-ink px-3 py-2 text-xs placeholder:text-rf-ink-mute min-h-[38px] resize-y"
                   value={srGoal}
                   onChange={(e) => setSrGoal(e.target.value)}
                 />
@@ -1330,13 +1330,13 @@ export default function FriendChat({
                         type="text"
                         placeholder="Add a message (optional)"
                         maxLength={500}
-                        className="w-full rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-xs placeholder:text-gray-400"
+                        className="w-full rounded-md border border-rf-line bg-rf-card text-rf-ink px-3 py-2 text-xs placeholder:text-rf-ink-mute"
                         value={srMessage}
                         onChange={(e) => setSrMessage(e.target.value)}
                       />
                       <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-600 dark:text-gray-300">
-                          <span className="text-[#5D1C6A] dark:text-[#CA5995]">✓ Both available</span>
+                        <div className="text-xs text-rf-ink-soft">
+                          <span className="text-rf-plum-ink">✓ Both available</span>
                           {" · "}
                           {(() => {
                             const d = new Date(srDate);
@@ -1353,7 +1353,7 @@ export default function FriendChat({
                         </div>
                         <button
                           onClick={sendSessionRequest}
-                          className="rounded-md bg-[#5D1C6A] hover:bg-[#CA5995] px-4 py-2 text-xs font-medium text-white transition-colors"
+                          className="rounded-md bg-rf-primary hover:bg-rf-primary-hover px-4 py-2 text-xs font-medium text-rf-on-primary transition-colors"
                         >
                           Send Request
                         </button>
@@ -1372,7 +1372,7 @@ export default function FriendChat({
                 setSrHour(null);
                 setSrMinute(0);
               }}
-              className="w-full text-center text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 py-1"
+              className="w-full text-center text-xs text-rf-ink-mute hover:text-rf-ink py-1"
             >
               Cancel
             </button>
@@ -1394,7 +1394,7 @@ export default function FriendChat({
     return (
       <>
       <div
-        className={`flex w-[320px] h-[380px] min-w-[300px] min-h-[320px] flex-col overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 animate-[slide-up_180ms_ease-out] ${
+        className={`flex w-[320px] h-[380px] min-w-[300px] min-h-[320px] flex-col overflow-hidden rounded-xl bg-rf-card shadow-2xl border border-rf-line animate-[slide-up_180ms_ease-out] ${
           minimized ? "h-10" : ""
         }`}
         style={{ transformOrigin: "bottom left" }}
@@ -1420,7 +1420,7 @@ export default function FriendChat({
   if (layout === "fullscreen") {
     return (
       <>
-        <div className="flex h-full w-full flex-col overflow-hidden bg-white dark:bg-gray-900">
+        <div className="flex h-full w-full flex-col overflow-hidden bg-rf-card">
           {header}
           {body}
         </div>
@@ -1443,7 +1443,7 @@ export default function FriendChat({
     <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div
-        className="flex w-full max-w-lg h-[600px] max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl ring-1 ring-gray-200/70 dark:ring-gray-800 animate-[scale-in_180ms_ease-out]"
+        className="flex w-full max-w-lg h-[600px] max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-rf-card shadow-2xl ring-1 ring-rf-line animate-[scale-in_180ms_ease-out]"
         style={{ transformOrigin: "center" }}
       >
         {header}

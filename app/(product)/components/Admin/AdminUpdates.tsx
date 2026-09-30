@@ -126,37 +126,37 @@ export default function AdminUpdates({ active }: { active: boolean }) {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-sm font-semibold text-rf-ink">
           Product updates
         </h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-sm text-rf-ink-mute">
           Send a short in-app note to everyone. It appears in the right sidebar
           between the profile card and footer; users can dismiss it with a
           satisfying pop.
         </p>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 space-y-3">
-        <label className="block text-xs font-medium uppercase tracking-wide text-gray-500">
+      <div className="rounded-xl border border-rf-line bg-rf-card p-4 space-y-3">
+        <label className="block text-xs font-medium uppercase tracking-wide text-rf-ink-mute">
           Title (optional)
         </label>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value.slice(0, PRODUCT_UPDATE_TITLE_MAX))}
           placeholder="e.g. New Community mentions"
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
+          className="w-full rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
           disabled={publishing || enhancing}
         />
 
         <div className="flex items-center justify-between gap-2">
-          <label className="block text-xs font-medium uppercase tracking-wide text-gray-500">
+          <label className="block text-xs font-medium uppercase tracking-wide text-rf-ink-mute">
             Message
           </label>
           <button
             type="button"
             onClick={() => void enhance()}
             disabled={enhancing || publishing || (!title.trim() && !body.trim())}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-[#5D1C6A] transition-colors hover:text-[#CA5995] disabled:cursor-not-allowed disabled:opacity-50 dark:text-[#CA5995] dark:hover:text-[#FFB090]"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-rf-plum-ink transition-colors hover:text-rf-plum-ink disabled:cursor-not-allowed disabled:opacity-50"
           >
             {enhancing ? (
               <>
@@ -176,18 +176,18 @@ export default function AdminUpdates({ active }: { active: boolean }) {
           onChange={(e) => setBody(e.target.value.slice(0, PRODUCT_UPDATE_BODY_MAX))}
           rows={4}
           placeholder="Share a quick product update, fix, or tip…"
-          className="w-full resize-y rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950"
+          className="w-full resize-y rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
           disabled={publishing || enhancing}
         />
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-rf-ink-mute">
             {body.length}/{PRODUCT_UPDATE_BODY_MAX}
           </span>
           <button
             type="button"
             onClick={() => void publish()}
             disabled={publishing || enhancing || !body.trim()}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-60"
           >
             {publishing ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -205,26 +205,26 @@ export default function AdminUpdates({ active }: { active: boolean }) {
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+      <div className="rounded-xl border border-rf-line bg-rf-card p-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-rf-ink-mute">
           Published updates
         </p>
         {loading && updates.length === 0 ? (
-          <p className="mt-3 text-sm text-gray-500">Loading…</p>
+          <p className="mt-3 text-sm text-rf-ink-mute">Loading…</p>
         ) : updates.length === 0 ? (
-          <p className="mt-3 text-sm text-gray-500">No updates yet.</p>
+          <p className="mt-3 text-sm text-rf-ink-mute">No updates yet.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-gray-100 dark:divide-gray-800">
+          <ul className="mt-3 divide-y divide-rf-line-soft">
             {updates.map((update) => (
               <li key={update.id} className="flex gap-3 py-3 first:pt-0 last:pb-0">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  <p className="text-sm font-medium text-rf-ink">
                     {update.title || "What's new"}
                   </p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-300">
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-rf-ink-soft">
                     {update.body}
                   </p>
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-rf-ink-mute">
                     {formatWhen(update.createdAt)}
                   </p>
                 </div>
@@ -232,7 +232,7 @@ export default function AdminUpdates({ active }: { active: boolean }) {
                   type="button"
                   onClick={() => void remove(update.id)}
                   disabled={deletingId === update.id}
-                  className="shrink-0 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="shrink-0 rounded-lg border border-rf-line px-2.5 py-1.5 text-xs text-rf-ink-soft hover:bg-rf-line-soft disabled:opacity-50"
                 >
                   {deletingId === update.id ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />

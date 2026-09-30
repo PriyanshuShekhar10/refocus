@@ -2,7 +2,6 @@
 
 import { Calendar, MessageCircle, UserMinus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { AdminTag } from "@/components/admin-tag";
 
 export type FriendData = {
@@ -59,84 +58,101 @@ export default function FriendRow({
       ? friend.email
       : null;
 
+  const initials =
+    displayName
+      .split(/\s+/)
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || initial;
+  const tint = TINTS[hashId(friend.user_id) % TINTS.length];
+  const meta = [handleLine, sinceText].filter(Boolean).join(" · ");
+  const pill =
+    "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[12.5px] font-medium transition-colors disabled:opacity-60";
+
   return (
     <div
-      className="flex flex-col gap-3 border-b py-4 last:border-b-0 sm:flex-row sm:items-center"
+      className="-mx-2 flex flex-wrap items-center gap-3 rounded-[10px] border-b px-2 py-3.5 transition-colors last:border-b-0 hover:bg-[var(--bg)]"
       style={{ borderColor: "var(--line-soft)" }}
     >
       <button
         type="button"
         onClick={() => onOpenProfile?.(friend)}
         disabled={!onOpenProfile}
-        className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-default"
+        className="flex min-w-0 flex-[1_1_170px] items-center gap-3 text-left disabled:cursor-default"
       >
         <Avatar className="h-10 w-10 shrink-0">
           {friend.avatarUrl ? (
             <AvatarImage src={friend.avatarUrl} alt={displayName} />
           ) : null}
-          <AvatarFallback className="bg-muted text-sm font-medium">
-            {initial}
+          <AvatarFallback className="text-sm font-medium text-rf-ink" style={{ background: tint }}>
+            {initials}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium" style={{ color: "var(--ink)" }}>
+            <span className="text-[14.5px] font-medium" style={{ color: "var(--ink)" }}>
               {displayName}
             </span>
             {friend.isAdmin ? <AdminTag /> : null}
             {unread > 0 ? (
-              <span className="rounded-full bg-[#5D1C6A] px-2 py-0.5 text-[10px] font-semibold text-white">
+              <span className="rounded-full bg-rf-primary px-[7px] py-px font-rf-mono text-[10px] font-semibold text-rf-on-primary">
                 {unread}
               </span>
             ) : null}
           </div>
-          {sinceText ? (
-            <p className="text-xs" style={{ color: "var(--ink-mute)" }}>
-              {sinceText}
-            </p>
-          ) : null}
-          {handleLine ? (
+          {meta ? (
             <p className="truncate text-xs" style={{ color: "var(--ink-mute)" }}>
-              {handleLine}
+              {meta}
             </p>
           ) : null}
         </div>
       </button>
-      <div className="flex flex-wrap gap-2 sm:shrink-0">
-        <Button
+      <div className="flex items-center gap-1.5">
+        <button
           type="button"
-          variant="outline"
-          size="sm"
           onClick={() => onOpenChat(friend)}
-          className="gap-1.5"
+          className={`${pill} border-rf-line bg-rf-card text-rf-ink hover:border-rf-ink-soft`}
         >
           <MessageCircle className="h-3.5 w-3.5" />
           Chat
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          size="sm"
           onClick={() => onBookSession(friend)}
-          className="gap-1.5 bg-[#5D1C6A] hover:bg-[#CA5995]"
+          className={`${pill} border-rf-primary bg-rf-primary text-rf-on-primary hover:border-rf-primary-hover hover:bg-rf-primary-hover`}
         >
           <Calendar className="h-3.5 w-3.5" />
           Book session
-        </Button>
+        </button>
         {onUnfriend ? (
-          <Button
+          <button
             type="button"
-            variant="outline"
-            size="sm"
             onClick={() => onUnfriend(friend)}
             disabled={unfriending}
-            className="gap-1.5 text-red-600 hover:text-red-700 dark:text-red-400"
+            title="Unfriend"
             aria-label={`Unfriend ${displayName}`}
+            className="grid h-8 w-8 place-items-center rounded-full text-rf-ink-mute transition-colors hover:bg-rf-warn-soft hover:text-rf-warn disabled:opacity-60"
           >
             <UserMinus className="h-3.5 w-3.5" />
-            {unfriending ? "Removing…" : "Unfriend"}
-          </Button>
+          </button>
         ) : null}
       </div>
     </div>
   );
+}
+
+const TINTS = [
+  "var(--rf-tint-blush)",
+  "var(--rf-tint-sage)",
+  "var(--rf-tint-lavender)",
+  "var(--rf-tint-butter)",
+  "var(--rf-tint-sky)",
+  "var(--rf-tint-clay)",
+];
+
+function hashId(id: string) {
+  let h = 0;
+  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
 }

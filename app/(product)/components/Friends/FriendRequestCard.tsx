@@ -1,7 +1,6 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 
 export type FriendRequestData = {
   id: string;
@@ -50,65 +49,54 @@ export default function FriendRequestCard({
   const display = counterpartEmail || counterpartId;
   const initial = (display[0] ?? "?").toUpperCase();
 
+  const pill =
+    "h-7 whitespace-nowrap rounded-full border px-2.5 text-xs font-medium transition-colors";
+
   return (
     <div
-      className="mb-3 rounded-xl border p-4"
-      style={{
-        borderColor: "var(--line)",
-        background: "var(--line-soft)",
-      }}
+      className="mb-2.5 flex flex-wrap items-center gap-2.5 rounded-xl border px-3.5 py-3 last:mb-0"
+      style={{ borderColor: "var(--line)" }}
     >
-      <div className="flex items-start gap-3">
-        <Avatar className="h-9 w-9 shrink-0">
-          {counterpartAvatar ? (
-            <AvatarImage src={counterpartAvatar} alt={display} />
-          ) : null}
-          <AvatarFallback className="bg-muted text-xs">{initial}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm" style={{ color: "var(--ink)" }}>
-            {direction === "incoming" ? (
-              <>
-                <span className="font-medium">{display}</span> sent you a friend
-                request
-              </>
-            ) : (
-              <>
-                You sent a request to{" "}
-                <span className="font-medium">{display}</span>
-              </>
-            )}
-          </p>
-          <p className="mt-1 text-xs" style={{ color: "var(--ink-mute)" }}>
-            {timeAgo(request.created_at)}
-          </p>
-        </div>
+      <Avatar className="h-[34px] w-[34px] shrink-0">
+        {counterpartAvatar ? (
+          <AvatarImage src={counterpartAvatar} alt={display} />
+        ) : null}
+        <AvatarFallback className="bg-rf-tint-sky text-xs font-medium text-rf-ink">
+          {initial}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex-[1_1_130px] text-[13.5px] leading-[1.4]">
+        <p className="break-words" style={{ color: "var(--ink)" }}>
+          {direction === "incoming"
+            ? `${display} sent you a friend request`
+            : `You sent a request to ${display}`}
+        </p>
+        <p className="text-xs" style={{ color: "var(--ink-mute)" }}>
+          {timeAgo(request.created_at)}
+        </p>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+      {direction === "incoming" ? (
+        <div className="flex gap-1.5">
+          <button
+            type="button"
+            onClick={() => onDecline?.(request.id)}
+            className={`${pill} border-rf-line bg-rf-card text-rf-ink hover:bg-rf-line-soft`}
+          >
+            Decline
+          </button>
+          <button
+            type="button"
+            onClick={() => onAccept?.(request.id)}
+            className={`${pill} border-rf-primary bg-rf-primary px-3 text-rf-on-primary hover:bg-rf-primary-hover`}
+          >
+            Accept
+          </button>
+        </div>
+      ) : (
+        <span className="rounded-full bg-rf-amber-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-rf-amber-ink">
           Pending
         </span>
-        {direction === "incoming" ? (
-          <div className="ml-auto flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onDecline?.(request.id)}
-            >
-              Decline
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => onAccept?.(request.id)}
-              className="bg-[#5D1C6A] hover:bg-[#CA5995]"
-            >
-              Accept
-            </Button>
-          </div>
-        ) : null}
-      </div>
+      )}
     </div>
   );
 }

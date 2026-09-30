@@ -151,24 +151,24 @@ export default function DeviceTestModal({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="device-test-title"
-        className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900"
+        className="w-full max-w-md overflow-hidden rounded-2xl border border-rf-line bg-rf-card shadow-xl"
       >
-        <div className="flex items-start justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+        <div className="flex items-start justify-between border-b border-rf-line px-5 py-4">
           <div>
             <h2
               id="device-test-title"
-              className="text-lg font-semibold text-gray-900 dark:text-white"
+              className="text-lg font-semibold text-rf-ink"
             >
               Test audio and video
             </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-rf-ink-mute">
               Check your camera and mic before joining a session.
             </p>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+            className="rounded-md p-1 text-rf-ink-mute transition-colors hover:bg-rf-line-soft hover:text-rf-ink"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -205,13 +205,13 @@ export default function DeviceTestModal({ open, onClose }: Props) {
             </div>
           ) : (
             <div>
-              <div className="mb-1 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+              <div className="mb-1 flex items-center justify-between text-xs text-rf-ink-mute">
                 <span>Microphone level</span>
                 <span>{micOn ? "Listening" : "Muted"}</span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+              <div className="h-2 overflow-hidden rounded-full bg-rf-line-soft">
                 <div
-                  className="h-full rounded-full bg-[#5D1C6A] transition-[width] duration-75 dark:bg-[#CA5995]"
+                  className="h-full rounded-full bg-rf-primary transition-[width] duration-75"
                   style={{ width: `${micOn ? micLevel : 0}%` }}
                 />
               </div>
@@ -225,7 +225,7 @@ export default function DeviceTestModal({ open, onClose }: Props) {
               disabled={!!error && !streamRef.current}
               className={`flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                 micOn
-                  ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  ? "border-slate-200 bg-rf-card text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                   : "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-300"
               }`}
             >
@@ -242,7 +242,7 @@ export default function DeviceTestModal({ open, onClose }: Props) {
               disabled={!!error && !streamRef.current}
               className={`flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                 camOn
-                  ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  ? "border-slate-200 bg-rf-card text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                   : "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-300"
               }`}
             >
@@ -256,12 +256,12 @@ export default function DeviceTestModal({ open, onClose }: Props) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-gray-200 px-5 py-4 dark:border-gray-800">
+        <div className="flex justify-end gap-2 border-t border-rf-line px-5 py-4">
           {error ? (
             <button
               type="button"
               onClick={() => void startStream()}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="rounded-lg border border-rf-line px-4 py-2 text-sm font-medium text-rf-ink-soft hover:bg-rf-line-soft"
             >
               Try again
             </button>
@@ -269,7 +269,7 @@ export default function DeviceTestModal({ open, onClose }: Props) {
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]"
+            className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-semibold text-rf-on-primary hover:bg-rf-primary-hover"
           >
             Done
           </button>

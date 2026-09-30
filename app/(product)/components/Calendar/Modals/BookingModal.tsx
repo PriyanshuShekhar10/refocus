@@ -40,20 +40,20 @@ export function BookingModal({
 
   return (
     <ModalWrapper onClose={onClose}>
-      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900 p-6 shadow-2xl border border-gray-200 dark:border-gray-800">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+      <div className="w-full max-w-md rounded-lg bg-rf-card p-6 shadow-2xl border border-rf-line">
+        <h2 className="text-xl font-bold text-rf-ink">
           Confirm Booking
         </h2>
-        <p className="mt-2 text-gray-700 dark:text-gray-300">
+        <p className="mt-2 text-rf-ink-soft">
           You are booking a{" "}
-          <strong className="text-[#5D1C6A] dark:text-[#FFB090]">
+          <strong className="text-rf-plum-ink">
             {event.durationMin}-minute {event.sessionType}
           </strong>{" "}
           session for:
         </p>
-        <div className="mt-4 rounded-md bg-gray-100 dark:bg-gray-900/60 p-3 text-center font-medium text-gray-900 dark:text-gray-100">
+        <div className="mt-4 rounded-md bg-rf-line-soft p-3 text-center font-medium text-rf-ink">
           <p>{dateLabel}</p>
-          <p className="mt-1 text-[#5D1C6A] dark:text-[#FFB090]">{timeRange}</p>
+          <p className="mt-1 text-rf-plum-ink">{timeRange}</p>
         </div>
 
         {/* TODO: Add other booking options like partner selection, goal text box */}
@@ -67,7 +67,7 @@ export function BookingModal({
           />
           <label
             htmlFor="quiet-toggle"
-            className="text-sm text-gray-700 dark:text-gray-200"
+            className="text-sm text-rf-ink-soft"
           >
             Quiet session (start muted)
           </label>
@@ -76,13 +76,13 @@ export function BookingModal({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded-md border border-rf-line bg-rf-card text-rf-ink px-4 py-2 text-sm hover:bg-rf-line-soft"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
-            className="rounded-md bg-[#5D1C6A] dark:bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] dark:hover:bg-[#CA5995]"
+            className="rounded-md bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover"
           >
             Confirm
           </button>

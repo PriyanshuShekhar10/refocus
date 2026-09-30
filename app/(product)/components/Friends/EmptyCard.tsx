@@ -8,17 +8,14 @@ interface EmptyCardProps {
 export default function EmptyCard({ label, sub }: EmptyCardProps) {
   return (
     <div
-      className="rounded-xl border border-dashed px-4 py-8 text-center"
-      style={{
-        borderColor: "var(--line)",
-        background: "var(--line-soft)",
-      }}
+      className="rounded-xl border border-dashed p-5 text-center"
+      style={{ borderColor: "var(--line)" }}
     >
-      <p className="text-sm font-medium" style={{ color: "var(--ink)" }}>
+      <p className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
         {label}
       </p>
       {sub ? (
-        <p className="mt-1 text-sm" style={{ color: "var(--ink-mute)" }}>
+        <p className="mt-1 text-xs" style={{ color: "var(--ink-mute)" }}>
           {sub}
         </p>
       ) : null}

@@ -14,20 +14,20 @@ export function AttendanceHighlight({
 
   if (variant === "app") {
     return (
-      <div className="grid w-full grid-cols-2 overflow-hidden rounded-lg border border-[#CA5995]/20 bg-[#CA5995]/[0.07] dark:border-[#CA5995]/30 dark:bg-[#CA5995]/10">
+      <div className="grid w-full grid-cols-2 overflow-hidden rounded-lg border border-rf-rose/20 bg-[#CA5995]/[0.07] dark:bg-[#CA5995]/10">
         <div className="px-2.5 py-1.5">
-          <p className="text-[15px] font-semibold tabular-nums leading-none text-[#5D1C6A] dark:text-[#FFB090]">
+          <p className="text-[15px] font-semibold tabular-nums leading-none text-rf-plum-ink">
             {attendance.percent}%
           </p>
-          <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-rf-ink-mute">
             attendance
           </p>
         </div>
-        <div className="border-l border-[#CA5995]/20 px-2.5 py-1.5 dark:border-[#CA5995]/30">
-          <p className="text-[15px] font-semibold tabular-nums leading-none text-gray-900 dark:text-gray-100">
+        <div className="border-l border-rf-rose/20 px-2.5 py-1.5">
+          <p className="text-[15px] font-semibold tabular-nums leading-none text-rf-ink">
             {attendance.attended}
           </p>
-          <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-rf-ink-mute">
             {sessionNoun}
           </p>
         </div>

@@ -236,25 +236,25 @@ export default function BookSessionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl bg-white dark:bg-gray-900 shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl bg-rf-card shadow-xl border border-rf-line overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-rf-line">
           <div className="flex items-center gap-3 min-w-0">
             <Avatar className="h-9 w-9 shrink-0">
               {friendAvatarUrl ? (
                 <AvatarImage src={friendAvatarUrl} alt={friendLabel} />
               ) : null}
-              <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090]">
+              <AvatarFallback className="text-sm font-semibold bg-rf-cream-bg text-rf-plum-ink">
                 {friendLabel?.[0]?.toUpperCase?.() || "F"}
               </AvatarFallback>
             </Avatar>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+            <h2 className="text-lg font-semibold text-rf-ink truncate">
               Book session with {friendLabel}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg text-rf-ink-mute hover:text-rf-ink hover:bg-rf-line-soft transition-colors"
             aria-label="Close"
           >
             <FiX className="w-5 h-5" />
@@ -262,13 +262,13 @@ export default function BookSessionModal({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-rf-ink-mute">
             Pick a time when both of you are free. They&apos;ll get a request in chat.
           </p>
 
           {/* Date */}
           <div>
-            <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 block">
+            <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide mb-1.5 block">
               Pick a day
             </label>
             <div className="flex gap-1 overflow-x-auto pb-1">
@@ -284,8 +284,8 @@ export default function BookSessionModal({
                   }}
                   className={`shrink-0 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     srDate?.toDateString() === opt.date.toDateString()
-                      ? "bg-[#5D1C6A] text-white"
-                      : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                      ? "bg-rf-primary text-rf-on-primary"
+                      : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                   }`}
                 >
                   {opt.label}
@@ -298,21 +298,21 @@ export default function BookSessionModal({
           {srDate && (
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide">
                   Pick a time
                 </label>
                 {loadingBusy && (
-                  <span className="text-[10px] text-gray-400">Checking availability…</span>
+                  <span className="text-[10px] text-rf-ink-mute">Checking availability…</span>
                 )}
               </div>
               <div className="flex gap-3 mb-2 text-[10px]">
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-red-400" />
-                  <span className="text-gray-500 dark:text-gray-400">You&apos;re busy</span>
+                  <span className="text-rf-ink-mute">You&apos;re busy</span>
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-orange-400" />
-                  <span className="text-gray-500 dark:text-gray-400">Friend busy</span>
+                  <span className="text-rf-ink-mute">Friend busy</span>
                 </span>
               </div>
               <div className="grid grid-cols-6 gap-1">
@@ -337,14 +337,14 @@ export default function BookSessionModal({
                       }
                       className={`rounded px-1.5 py-1.5 text-[11px] font-medium transition-colors ${
                         isPast
-                          ? "bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed"
+                          ? "bg-rf-line-soft text-rf-ink-mute cursor-not-allowed"
                           : conflict.hasConflict
                             ? conflict.isMine
                               ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
                               : "bg-orange-100 dark:bg-orange-900/30 text-orange-400 cursor-not-allowed border border-orange-200 dark:border-orange-800"
                             : srHour === slot.hour
-                              ? "bg-[#5D1C6A] text-white"
-                              : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                              ? "bg-rf-primary text-rf-on-primary"
+                              : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                       }`}
                     >
                       {slot.label}
@@ -354,7 +354,7 @@ export default function BookSessionModal({
               </div>
               {srHour !== null && (
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Minutes:</span>
+                  <span className="text-xs text-rf-ink-mute">Minutes:</span>
                   <div className="flex gap-1">
                     {BOOKING_MINUTE_OPTIONS.map((m) => {
                       const mc = getSlotConflict(srDate, srHour, m, srDuration);
@@ -370,8 +370,8 @@ export default function BookSessionModal({
                                 ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed"
                                 : "bg-orange-100 dark:bg-orange-900/30 text-orange-400 cursor-not-allowed"
                               : srMinute === m
-                                ? "bg-[#5D1C6A] text-white"
-                                : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                                ? "bg-rf-primary text-rf-on-primary"
+                                : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                           }`}
                         >
                           :{m.toString().padStart(2, "0")}
@@ -387,7 +387,7 @@ export default function BookSessionModal({
           {/* Duration */}
           {srDate && srHour !== null && (
             <div>
-              <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 block">
+              <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide mb-1.5 block">
                 Duration
               </label>
               <div className="flex gap-1">
@@ -405,8 +405,8 @@ export default function BookSessionModal({
                             ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
                             : "bg-orange-100 dark:bg-orange-900/30 text-orange-400 cursor-not-allowed border border-orange-200 dark:border-orange-800"
                           : srDuration === d
-                            ? "bg-[#5D1C6A] text-white"
-                            : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                            ? "bg-rf-primary text-rf-on-primary"
+                            : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                       }`}
                     >
                       {d} min
@@ -420,14 +420,14 @@ export default function BookSessionModal({
           {srDate && srHour !== null && (
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide">
                   Session Goal
                 </label>
                 <button
                   type="button"
                   onClick={refineGoal}
                   disabled={isRefining || !srGoal.trim()}
-                  className="text-[10px] font-medium text-[#5D1C6A] dark:text-[#FFB090] hover:text-[#CA5995] dark:hover:text-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  className="text-[10px] font-medium text-rf-plum-ink hover:text-rf-plum-ink disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                 >
                   {isRefining ? (
                     <>
@@ -440,7 +440,7 @@ export default function BookSessionModal({
               </div>
               <textarea
                 placeholder="What specifically do you want to accomplish?"
-                className="w-full rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm placeholder:text-gray-400 min-h-[38px] resize-y"
+                className="w-full rounded-md border border-rf-line bg-rf-card text-rf-ink px-3 py-2 text-sm placeholder:text-rf-ink-mute min-h-[38px] resize-y"
                 value={srGoal}
                 onChange={(e) => setSrGoal(e.target.value)}
               />
@@ -470,12 +470,12 @@ export default function BookSessionModal({
                     type="text"
                     placeholder="Add a message (optional)"
                     maxLength={500}
-                    className="w-full rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm placeholder:text-gray-400"
+                    className="w-full rounded-md border border-rf-line bg-rf-card text-rf-ink px-3 py-2 text-sm placeholder:text-rf-ink-mute"
                     value={srMessage}
                     onChange={(e) => setSrMessage(e.target.value)}
                   />
-                  <div className="text-xs text-gray-600 dark:text-gray-300">
-                    <span className="text-[#5D1C6A] dark:text-[#CA5995]">✓ Both available</span>
+                  <div className="text-xs text-rf-ink-soft">
+                    <span className="text-rf-plum-ink">✓ Both available</span>
                     {" · "}
                     {(() => {
                       const d = new Date(srDate);
@@ -501,11 +501,11 @@ export default function BookSessionModal({
           )}
         </div>
 
-        <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50/50 dark:bg-gray-800/30">
+        <div className="px-4 py-3 border-t border-rf-line flex justify-end gap-3 bg-rf-bg/50">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="rounded-lg border border-rf-line bg-rf-card px-4 py-2 text-sm font-medium text-rf-ink-soft hover:bg-rf-line-soft transition-colors"
           >
             Cancel
           </button>
@@ -513,7 +513,7 @@ export default function BookSessionModal({
             type="button"
             onClick={sendRequest}
             disabled={!canSend || sending}
-            className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {sending ? "Sending…" : "Send session request"}
           </button>

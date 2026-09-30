@@ -50,13 +50,13 @@ type DurationSelectorProps = SingleSelectProps | MultiSelectProps;
 const VARIANT_STYLES = {
   primary: {
     selected:
-      "border-[#CA5995] bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/30 dark:text-[#FFB090]",
-    unselected: "border-gray-200 dark:border-gray-700",
+      "border-rf-rose bg-rf-cream-bg text-rf-plum-ink",
+    unselected: "border-rf-line",
   },
   success: {
     selected:
-      "border-[#CA5995] bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/20 dark:text-[#FFB090]",
-    unselected: "border-gray-200 dark:border-gray-700",
+      "border-rf-rose bg-rf-cream-bg text-rf-plum-ink",
+    unselected: "border-rf-line",
   },
 } as const;
 
@@ -123,7 +123,7 @@ export function DurationSelector(props: DurationSelectorProps) {
   return (
     <div className={className}>
       {label && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-xs text-rf-ink-mute">{label}</p>
       )}
       <div
         className="mt-2 grid gap-2"

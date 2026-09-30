@@ -284,22 +284,22 @@ export function CalendarEventCard({
         }}
       >
         <div className="flex min-h-0 w-full flex-col items-center justify-center gap-0.5 overflow-hidden px-0.5">
-        <Avatar className="h-4 w-4 border border-white dark:border-gray-700 shrink-0">
+        <Avatar className="h-4 w-4 border border-rf-card shrink-0">
           {compactPartner?.avatar_url ? (
             <AvatarImage src={compactPartner.avatar_url} alt={compactPartner.name} />
           ) : null}
-          <AvatarFallback className="text-[8px] font-medium bg-[#FFF1D3] text-[#5D1C6A]">
+          <AvatarFallback className="text-[8px] font-medium bg-rf-cream-bg text-rf-plum-ink">
             {compactPartnerInitials}
           </AvatarFallback>
         </Avatar>
-        <span className="max-w-full truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 tabular-nums">
+        <span className="max-w-full truncate text-[10px] font-medium text-rf-ink-mute tabular-nums">
           {timeLabel}
         </span>
         </div>
 
         {compactPartner && (
           <div
-            className={`pointer-events-auto absolute left-[calc(100%+10px)] top-1/2 z-[130] w-64 -translate-y-1/2 rounded-xl border border-[#FFB090]/80 dark:border-[#CA5995]/60 bg-white/95 dark:bg-gray-900/95 p-3 shadow-2xl backdrop-blur-sm transition-all duration-150 ${
+            className={`pointer-events-auto absolute left-[calc(100%+10px)] top-1/2 z-[130] w-64 -translate-y-1/2 rounded-xl border border-rf-peach/80 bg-rf-card/95 p-3 shadow-2xl backdrop-blur-sm transition-all duration-150 ${
               showCompactPartnerCard
                 ? "opacity-100 translate-x-0 visible"
                 : "opacity-0 -translate-x-1 invisible"
@@ -310,25 +310,25 @@ export function CalendarEventCard({
             onClick={(evt) => evt.stopPropagation()}
           >
             <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8 border border-[#FFB090]/70 dark:border-[#CA5995]/70">
+              <Avatar className="h-8 w-8 border border-rf-peach/70">
                 {compactPartner.avatar_url ? (
                   <AvatarImage
                     src={compactPartner.avatar_url}
                     alt={compactPartner.name}
                   />
                 ) : null}
-                <AvatarFallback className="text-[10px] font-semibold bg-[#FFF1D3] dark:bg-slate-800 text-[#5D1C6A] dark:text-[#FFB090]">
+                <AvatarFallback className="text-[10px] font-semibold bg-rf-cream-bg text-rf-plum-ink">
                   {compactPartnerInitials}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <p className="truncate text-xs font-semibold text-gray-900 dark:text-gray-100">
+                <p className="truncate text-xs font-semibold text-rf-ink">
                   <VerifiedName
                     name={compactPartner.name}
                     verified={compactPartner.emailVerified}
                   />
                 </p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                <p className="text-[10px] text-rf-ink-mute">
                   Potential focus partner
                 </p>
               </div>
@@ -338,14 +338,14 @@ export function CalendarEventCard({
                 <AttendanceHighlight attendance={hoverAttendance} variant="app" />
               </div>
             ) : null}
-            <p className="mt-2 line-clamp-3 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">
+            <p className="mt-2 line-clamp-3 text-[11px] leading-relaxed text-rf-ink-soft">
               {compactPartner.about?.trim() ||
                 "Focused member. Open profile to learn more."}
             </p>
             {compactPartner.username ? (
               <button
                 type="button"
-                className="pointer-events-auto mt-2 inline-flex w-full justify-center rounded-lg bg-[#5D1C6A] px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-[#CA5995]"
+                className="pointer-events-auto mt-2 inline-flex w-full justify-center rounded-lg bg-rf-primary px-2.5 py-1.5 text-[11px] font-medium text-rf-on-primary hover:bg-rf-primary-hover"
                 onMouseDown={(evt) => evt.stopPropagation()}
                 onClick={(evt) => {
                   evt.stopPropagation();
@@ -370,7 +370,7 @@ export function CalendarEventCard({
               <button
                 type="button"
                 disabled
-                className="mt-2 inline-flex w-full cursor-not-allowed justify-center rounded-lg bg-gray-300 dark:bg-gray-700 px-2.5 py-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300"
+                className="mt-2 inline-flex w-full cursor-not-allowed justify-center rounded-lg bg-rf-line px-2.5 py-1.5 text-[11px] font-medium text-rf-ink-soft"
                 onMouseDown={(evt) => evt.stopPropagation()}
                 onClick={(evt) => evt.stopPropagation()}
               >
@@ -411,15 +411,15 @@ export function CalendarEventCard({
         }}
         className={`relative group rounded-lg p-2 flex flex-col justify-between overflow-hidden border ${
           isPast
-            ? "border-dashed border-gray-300/90 bg-gray-50/90 opacity-80 shadow-none dark:border-gray-600 dark:bg-gray-900/70 dark:opacity-75"
+            ? "border-dashed border-rf-line/90 bg-rf-bg/90 opacity-80 shadow-none dark:opacity-75"
             : hasCustomColor
               ? "border-transparent shadow-sm"
               : isBooked
-                ? "border-gray-200/80 dark:border-gray-500/50 bg-gray-200 dark:bg-gray-600 shadow-sm"
-                : "border-[#FFB090]/90 dark:border-[#CA5995]/45 bg-[#FFF1D3] dark:bg-slate-800/90 hover:border-[#CA5995] dark:hover:border-[#CA5995]/80 cursor-pointer shadow-sm"
+                ? "border-rf-line/80 bg-rf-line shadow-sm"
+                : "border-rf-peach/90 bg-rf-cream-bg hover:border-rf-rose cursor-pointer shadow-sm"
         } ${
           isJoinableNow
-            ? "border-[#CA5995] ring-2 ring-[#CA5995]/45 shadow-md"
+            ? "border-rf-rose ring-2 ring-rf-rose/45 shadow-md"
             : ""
         } ${!isPast && hasCustomColor ? "border-black/10 dark:border-white/10" : ""} ${
           isPast ? "cursor-pointer" : ""
@@ -462,7 +462,7 @@ export function CalendarEventCard({
           </button>
         ) : canBookSlot ? (
           <button
-            className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#5D1C6A] text-white hover:bg-[#CA5995] transition-colors"
+            className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rf-primary text-rf-on-primary hover:bg-rf-primary-hover transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onBook(e);
@@ -498,8 +498,8 @@ export function CalendarEventCard({
           <p
             className={`font-semibold text-sm leading-tight ${
               isPast
-                ? "text-gray-500 dark:text-gray-400"
-                : "text-gray-900 dark:text-gray-100"
+                ? "text-rf-ink-mute"
+                : "text-rf-ink"
             }`}
           >
             {formatLocalTime(s, {
@@ -513,10 +513,10 @@ export function CalendarEventCard({
               isShortCard ? "text-[10px]" : "text-xs"
             } ${
               isPast
-                ? "text-gray-500 dark:text-gray-400"
+                ? "text-rf-ink-mute"
                 : isBooked
-                  ? "text-gray-900 dark:text-white"
-                  : "text-gray-800 dark:text-white"
+                  ? "text-rf-ink"
+                  : "text-rf-ink"
             }`}
           >
             {(() => {
@@ -536,10 +536,10 @@ export function CalendarEventCard({
             <span
               className={`text-xs font-medium ${
                 isPast
-                  ? "text-gray-400 dark:text-gray-500"
+                  ? "text-rf-ink-mute"
                   : isBooked
-                    ? "text-gray-800 dark:text-[#FFB090]"
-                    : "text-[#5D1C6A] dark:text-[#CA5995]"
+                    ? "text-rf-ink"
+                    : "text-rf-plum-ink"
               }`}
             >
               {isPast
@@ -568,7 +568,7 @@ export function CalendarEventCard({
                   return (
                     <Avatar
                       key={participant.user_id || idx}
-                      className="h-4 w-4 border border-white dark:border-gray-700"
+                      className="h-4 w-4 border border-rf-card"
                     >
                       {participant.avatar_url ? (
                         <AvatarImage
@@ -576,15 +576,15 @@ export function CalendarEventCard({
                           alt={displayName}
                         />
                       ) : null}
-                      <AvatarFallback className="bg-[#FFF1D3] text-[8px] font-medium text-[#5D1C6A]">
+                      <AvatarFallback className="bg-rf-cream-bg text-[8px] font-medium text-rf-plum-ink">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                   );
                 })}
                 {event.participants.length > 2 && (
-                  <div className="flex h-4 w-4 items-center justify-center rounded-full border border-white bg-gray-200">
-                    <span className="text-[6px] font-medium text-gray-600">
+                  <div className="flex h-4 w-4 items-center justify-center rounded-full border border-white bg-rf-line">
+                    <span className="text-[6px] font-medium text-rf-ink-soft">
                       +{event.participants.length - 2}
                     </span>
                   </div>
@@ -595,7 +595,7 @@ export function CalendarEventCard({
         )}
 
         {!isShortCard && isBooked && otherQuiet && !isPast && (
-          <span className="mt-1 inline-flex w-fit items-center rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-100">
+          <span className="mt-1 inline-flex w-fit items-center rounded bg-rf-line px-1.5 py-0.5 text-[10px] font-medium text-rf-ink-soft">
             Quiet
           </span>
         )}

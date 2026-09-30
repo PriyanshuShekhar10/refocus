@@ -68,7 +68,7 @@ export default function Matchmaking() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-rf-ink-mute" />
       </div>
     );
   }
@@ -79,7 +79,7 @@ export default function Matchmaking() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-2">
             <h2 className="text-2xl font-bold tracking-tight">AI Recommended Partners</h2>
-            <p className="text-gray-500">
+            <p className="text-rf-ink-mute">
               We found these users based on your goals, working style, and interests.
             </p>
           </div>
@@ -99,7 +99,7 @@ export default function Matchmaking() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-2">
             <h2 className="text-2xl font-bold tracking-tight">AI Recommended Partners</h2>
-            <p className="text-gray-500">
+            <p className="text-rf-ink-mute">
               We found these users based on your goals, working style, and interests.
             </p>
           </div>
@@ -108,7 +108,7 @@ export default function Matchmaking() {
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
           <Zap className="h-10 w-10 text-yellow-500" />
           <h3 className="text-lg font-semibold">No AI Matches Yet</h3>
-          <p className="max-w-md text-sm text-gray-500">
+          <p className="max-w-md text-sm text-rf-ink-mute">
             Try updating your profile bio and interests to get better recommendations. 
             The AI needs to know you to match you!
           </p>
@@ -122,7 +122,7 @@ export default function Matchmaking() {
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
           <h2 className="text-2xl font-bold tracking-tight">AI Recommended Partners</h2>
-          <p className="text-gray-500">
+          <p className="text-rf-ink-mute">
             We found these users based on your goals, working style, and interests.
           </p>
         </div>
@@ -131,11 +131,11 @@ export default function Matchmaking() {
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {matches.map((user) => (
-          <Card key={user._id} className="flex flex-col overflow-hidden border-[#FFB090]/70 dark:border-[#5D1C6A]/70 transition-all hover:shadow-md">
+          <Card key={user._id} className="flex flex-col overflow-hidden border-rf-peach/70 transition-all hover:shadow-md">
             <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
-              <Avatar className="h-12 w-12 border-2 border-[#FFB090]/70 dark:border-[#5D1C6A]/70">
+              <Avatar className="h-12 w-12 border-2 border-rf-peach/70">
                 <AvatarImage src={user.image || undefined} />
-                <AvatarFallback className="bg-[#FFF1D3] text-[#5D1C6A] font-bold">
+                <AvatarFallback className="bg-rf-cream-bg text-rf-plum-ink font-bold">
                   {getInitials(user.name || user.firstname)}
                 </AvatarFallback>
               </Avatar>
@@ -143,7 +143,7 @@ export default function Matchmaking() {
                 <CardTitle className="text-base">
                   {user.name || `${user.firstname} ${user.lastname}`}
                 </CardTitle>
-                <div className="flex items-center gap-1 text-xs text-[#CA5995] font-medium">
+                <div className="flex items-center gap-1 text-xs text-rf-plum-ink font-medium">
                    <Zap size={12} className="fill-[#CA5995]" />
                    {Math.round(user.score * 100)}% Match
                 </div>
@@ -151,7 +151,7 @@ export default function Matchmaking() {
             </CardHeader>
             <CardContent className="flex-1 space-y-4 pt-2">
               {user.about && (
-                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 italic">
+                <p className="text-sm text-rf-ink-soft line-clamp-3 italic">
                   &ldquo;{user.about}&rdquo;
                 </p>
               )}
@@ -163,18 +163,18 @@ export default function Matchmaking() {
                   </Badge>
                 ))}
                 {user.interests && user.interests.length > 4 && (
-                    <span className="text-[10px] text-gray-400 self-center">+{user.interests.length - 4} more</span>
+                    <span className="text-[10px] text-rf-ink-mute self-center">+{user.interests.length - 4} more</span>
                 )}
               </div>
             </CardContent>
             <CardFooter className="pt-2">
               {sentRequests.has(user._id) ? (
-                 <Button className="w-full bg-[#FFF1D3] text-[#5D1C6A] hover:bg-[#FFB090]/45 border border-[#FFB090]" variant="outline" disabled>
+                 <Button className="w-full bg-rf-cream-bg text-rf-plum-ink hover:bg-rf-peach/45 border border-rf-peach" variant="outline" disabled>
                     Request Sent
                  </Button>
               ) : (
                 <Button 
-                    className="w-full gap-2 bg-[#5D1C6A] hover:bg-[#CA5995] text-white"
+                    className="w-full gap-2 bg-rf-primary hover:bg-rf-primary-hover text-rf-on-primary"
                     onClick={() => sendFriendRequest(user._id)}
                     disabled={!canInteract}
                     title={!canInteract ? verifyMessage : undefined}

@@ -138,16 +138,16 @@ export function SessionDetailsModal({
 
   return (
     <ModalWrapper onClose={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-white shadow-2xl dark:bg-gray-900 dark:text-gray-100 overflow-hidden">
+      <div className="w-full max-w-md rounded-xl bg-rf-card shadow-2xl dark:text-gray-100 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-rf-line">
+          <h2 className="text-lg font-semibold text-rf-ink">
             Session details
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg text-rf-ink-mute hover:text-rf-ink hover:bg-rf-line-soft transition-colors"
             aria-label="Close"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,23 +159,23 @@ export function SessionDetailsModal({
         <div className="px-5 py-4 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* When & Type — read-only summary */}
           <section className="space-y-2">
-            <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 px-3 py-2.5">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            <div className="rounded-lg bg-rf-bg px-3 py-2.5">
+              <p className="text-xs font-medium text-rf-ink-mute uppercase tracking-wide">
                 When
               </p>
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">
+              <p className="text-sm font-medium text-rf-ink mt-0.5">
                 {dateLabel}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-sm text-rf-ink-soft">
                 {timeRange}
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">
+              <span className="font-medium text-rf-ink capitalize">
                 {event.sessionType}
               </span>
-              <span className="text-gray-400 dark:text-gray-500">·</span>
-              <span className="text-gray-600 dark:text-gray-400">
+              <span className="text-rf-ink-mute">·</span>
+              <span className="text-rf-ink-soft">
                 {event.durationMin} min
               </span>
             </div>
@@ -183,16 +183,16 @@ export function SessionDetailsModal({
 
           {/* Editable: personal session label */}
           {self && (
-            <section className="pt-1 border-t border-gray-100 dark:border-gray-800">
-              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+            <section className="pt-1 border-t border-rf-line-soft">
+              <label className="block text-xs font-medium text-rf-ink-mute uppercase tracking-wide mb-1.5">
                 Session name
               </label>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              <p className="text-xs text-rf-ink-mute mb-2">
                 Only you see this on your calendar
               </p>
               <input
                 type="text"
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#CA5995] dark:focus:ring-[#CA5995] focus:border-transparent"
+                className="w-full rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm text-rf-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rf-rose focus:border-transparent"
                 placeholder="e.g. Morning focus"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -201,11 +201,11 @@ export function SessionDetailsModal({
           )}
 
           {/* Color — everyone can set for their own view */}
-          <section className="pt-1 border-t border-gray-100 dark:border-gray-800">
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+          <section className="pt-1 border-t border-rf-line-soft">
+            <label className="block text-xs font-medium text-rf-ink-mute uppercase tracking-wide mb-1.5">
               Color
             </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            <p className="text-xs text-rf-ink-mute mb-2">
               Your view only — light and dark variants follow your theme
             </p>
             <div className="flex flex-wrap gap-2 items-center">
@@ -214,8 +214,8 @@ export function SessionDetailsModal({
                 onClick={() => handleColorChange("")}
                 className={`h-10 w-10 rounded-lg border-2 transition-all shrink-0 flex items-center justify-center text-sm font-medium ${
                   !color
-                    ? "border-[#CA5995] dark:border-[#CA5995] ring-2 ring-[#CA5995]/30 dark:ring-[#CA5995]/30 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-                    : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                    ? "border-rf-rose ring-2 ring-rf-rose/30 bg-rf-line-soft text-rf-ink-soft"
+                    : "border-rf-line hover:border-gray-400 dark:hover:border-gray-500 bg-rf-line-soft text-rf-ink-mute"
                 }`}
                 title="Default"
               >
@@ -231,8 +231,8 @@ export function SessionDetailsModal({
                     onClick={() => handleColorChange(preset.light)}
                     className={`h-10 w-10 rounded-lg border-2 transition-all shrink-0 ${
                       isSelected
-                        ? "border-[#CA5995] dark:border-[#CA5995] ring-2 ring-[#CA5995]/30 dark:ring-[#CA5995]/30"
-                        : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                        ? "border-rf-rose ring-2 ring-rf-rose/30"
+                        : "border-rf-line hover:border-gray-400 dark:hover:border-gray-500"
                     }`}
                     style={{ backgroundColor: displayColor }}
                     title={`Color ${index + 1}`}
@@ -244,29 +244,29 @@ export function SessionDetailsModal({
 
           {/* Partner (when booked) */}
           {otherName && (
-            <section className="pt-1 border-t border-gray-100 dark:border-gray-800">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+            <section className="pt-1 border-t border-rf-line-soft">
+              <p className="text-xs font-medium text-rf-ink-mute uppercase tracking-wide mb-2">
                 Partner
               </p>
-              <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 px-3 py-2.5 flex items-center gap-3">
+              <div className="rounded-lg bg-rf-bg px-3 py-2.5 flex items-center gap-3">
                 <Avatar className="h-10 w-10 shrink-0">
                   {other?.avatar_url ? (
                     <AvatarImage src={other.avatar_url} alt={otherName} />
                   ) : null}
-                  <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
+                  <AvatarFallback className="text-sm font-semibold bg-rf-cream-bg text-rf-plum-ink">
                     {(otherName[0] || "?").toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <p className="text-sm font-medium text-rf-ink">
                   {otherName}
                 </p>
                 {other?.email && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  <p className="text-xs text-rf-ink-mute mt-0.5">
                     {other.email}
                   </p>
                 )}
-                <div className="flex gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex gap-3 mt-2 text-xs text-rf-ink-mute">
                   <span>You: quiet {selfQuiet ? "on" : "off"}</span>
                   <span>Partner: quiet {partnerQuiet ? "on" : "off"}</span>
                 </div>
@@ -277,14 +277,14 @@ export function SessionDetailsModal({
 
           {/* Join */}
           {isBooked && (
-            <section className="pt-1 border-t border-gray-100 dark:border-gray-800">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+            <section className="pt-1 border-t border-rf-line-soft">
+              <p className="text-xs font-medium text-rf-ink-mute uppercase tracking-wide mb-2">
                 Live call
               </p>
               {canJoin ? (
                 <a
                   href={`/sessions/${event.id}`}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#5D1C6A] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#CA5995] transition-colors"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-rf-primary px-4 py-2.5 text-sm font-semibold text-rf-on-primary hover:bg-rf-primary-hover transition-colors"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -300,7 +300,7 @@ export function SessionDetailsModal({
                 <button
                   type="button"
                   disabled
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gray-100 dark:bg-gray-800 px-4 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-rf-line-soft px-4 py-2.5 text-sm font-medium text-rf-ink-mute cursor-not-allowed"
                   title="Join opens 5 minutes before the session starts"
                 >
                   Join opens 5 min before start
@@ -311,8 +311,8 @@ export function SessionDetailsModal({
         </div>
 
         {/* Footer actions */}
-        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm text-[#5D1C6A] dark:text-[#CA5995] min-h-[1.25rem]">
+        <div className="px-5 py-4 border-t border-rf-line bg-rf-bg/50 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm text-rf-plum-ink min-h-[1.25rem]">
             {friendReqStatus}
           </div>
           <div className="flex flex-wrap gap-2 justify-end">
@@ -320,7 +320,7 @@ export function SessionDetailsModal({
               <button
                 type="button"
                 onClick={sendFriendRequest}
-                className="rounded-lg border border-[#FFB090] dark:border-[#CA5995]/70 bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 px-3 py-2 text-sm font-medium text-[#5D1C6A] dark:text-[#FFB090] hover:bg-[#FFB090]/35 dark:hover:bg-[#5D1C6A]/60 transition-colors"
+                className="rounded-lg border border-rf-peach bg-rf-cream-bg px-3 py-2 text-sm font-medium text-rf-plum-ink hover:bg-rf-peach/35 transition-colors"
               >
                 Add friend
               </button>
@@ -339,7 +339,7 @@ export function SessionDetailsModal({
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-lg bg-[#5D1C6A] dark:bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] dark:hover:bg-[#CA5995] disabled:opacity-50 transition-colors"
+                className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50 transition-colors"
               >
                 {saving ? "Saving…" : "Save"}
               </button>
@@ -347,7 +347,7 @@ export function SessionDetailsModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="rounded-lg border border-rf-line px-4 py-2 text-sm font-medium text-rf-ink-soft hover:bg-rf-line-soft transition-colors"
             >
               Close
             </button>

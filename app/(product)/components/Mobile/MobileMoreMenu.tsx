@@ -94,17 +94,17 @@ export function MobileMoreMenu({
         onClick={onClose}
       />
       <div
-        className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-2xl border-t border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+        className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-[18px] border-t border-rf-line bg-rf-side-bg shadow-[0_-10px_40px_rgba(0,0,0,.2)]"
         style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
         role="dialog"
         aria-modal="true"
         aria-label="More options"
       >
         <div className="flex justify-center py-3">
-          <div className="h-1 w-10 rounded-full bg-gray-300 dark:bg-gray-600" />
+          <div className="h-1 w-10 rounded-full bg-rf-line" />
         </div>
         <div className="px-4 pb-2">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-rf-ink">
             More
           </h2>
         </div>
@@ -120,12 +120,12 @@ export function MobileMoreMenu({
                   onClick={() => handleSelect(item.tab)}
                   className={`flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors ${
                     isActive
-                      ? "bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/30 dark:text-[#CA5995]"
-                      : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+                      ? "bg-rf-cream-bg text-rf-plum-ink"
+                      : "text-rf-ink hover:bg-rf-line-soft"
                   }`}
                 >
                   {item.icon}
-                  <span className="font-medium">{item.label}</span>
+                  <span className="text-[15px] font-medium">{item.label}</span>
                 </button>
               </li>
             );
@@ -134,12 +134,12 @@ export function MobileMoreMenu({
             <button
               type="button"
               onClick={() => setTheme(nextTheme)}
-              className="flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+              className="flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left text-rf-ink transition-colors hover:bg-rf-line-soft"
               aria-label={`Appearance, currently ${isDark ? "Dark" : "Light"}. Toggle theme.`}
             >
               {isDark ? <HiSun size={20} /> : <HiMoon size={20} />}
-              <span className="flex-1 font-medium">Appearance</span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="flex-1 text-[15px] font-medium">Appearance</span>
+              <span className="text-sm text-rf-ink-mute">
                 {isDark ? "Dark" : "Light"}
               </span>
             </button>
@@ -151,20 +151,20 @@ export function MobileMoreMenu({
                 shareRefocus();
                 onClose();
               }}
-              className="flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+              className="flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left text-rf-ink transition-colors hover:bg-rf-line-soft"
             >
               <FiShare2 size={18} />
-              <span className="font-medium">Share Refocus</span>
+              <span className="text-[15px] font-medium">Share Refocus</span>
             </button>
           </li>
           <li>
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+              className="flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left text-rf-danger transition-colors hover:bg-rf-danger-soft"
             >
               <FiLogOut size={18} />
-              <span className="font-medium">Sign out</span>
+              <span className="text-[15px] font-medium">Sign out</span>
             </button>
           </li>
         </ul>

@@ -20,6 +20,7 @@ import {
   Send,
   Flag,
   Ban,
+  MessageCircle,
 } from "lucide-react";
 import CommunityModerationMenu from "./CommunityModerationMenu";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
@@ -317,7 +318,7 @@ export default function PostCard({
 
   return (
     <>
-      <div className="group px-1 py-3 transition-colors hover:bg-muted/30">
+      <div className="group py-[18px]">
         <div className="flex items-start gap-3">
           {post.authorUsername && onPreviewProfile ? (
             <button
@@ -333,23 +334,23 @@ export default function PostCard({
             >
               <AuthorAvatar
                 author={post}
-                className="h-9 w-9 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer"
-                fallbackClassName="text-xs bg-muted"
+                className="h-10 w-10 hover:ring-2 hover:ring-rf-rose transition-shadow cursor-pointer"
+                fallbackClassName="bg-rf-tint-sky text-sm font-medium text-rf-ink"
               />
             </button>
           ) : post.authorUsername ? (
             <Link href={`/u/${post.authorUsername}`} onClick={(e) => e.stopPropagation()}>
               <AuthorAvatar
                 author={post}
-                className="h-9 w-9 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer"
-                fallbackClassName="text-xs bg-muted"
+                className="h-10 w-10 hover:ring-2 hover:ring-rf-rose transition-shadow cursor-pointer"
+                fallbackClassName="bg-rf-tint-sky text-sm font-medium text-rf-ink"
               />
             </Link>
           ) : (
             <AuthorAvatar
               author={post}
-              className="h-9 w-9"
-              fallbackClassName="text-xs bg-muted"
+              className="h-10 w-10"
+              fallbackClassName="bg-rf-tint-sky text-sm font-medium text-rf-ink"
             />
           )}
           <div className="min-w-0 flex-1">
@@ -366,7 +367,7 @@ export default function PostCard({
                         avatarUrl: post.authorAvatarUrl ?? null,
                       });
                     }}
-                    className="min-w-0 text-sm font-medium hover:text-[#5D1C6A] hover:underline dark:hover:text-[#CA5995]"
+                    className="min-w-0 text-sm font-medium hover:text-rf-plum-ink hover:underline"
                   >
                     <AuthorName name={post.authorName} isAdmin={post.authorIsAdmin} />
                   </button>
@@ -374,14 +375,14 @@ export default function PostCard({
                   <Link
                     href={`/u/${post.authorUsername}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="min-w-0 hover:text-[#5D1C6A] hover:underline dark:hover:text-[#CA5995]"
+                    className="min-w-0 hover:text-rf-plum-ink hover:underline"
                   >
                     <AuthorName name={post.authorName} isAdmin={post.authorIsAdmin} />
                   </Link>
                 ) : (
                   <AuthorName name={post.authorName} isAdmin={post.authorIsAdmin} />
                 )}
-                <span className="shrink-0 text-xs text-muted-foreground">
+                <span className="shrink-0 text-xs text-rf-ink-mute">
                   · {formatTime(post.createdAt)}
                 </span>
               </div>
@@ -478,7 +479,7 @@ export default function PostCard({
             {!isPinned ? (
               <div
                 onClick={openComments}
-                className="mt-1.5 w-full cursor-pointer text-left text-sm whitespace-pre-wrap break-words"
+                className="mt-1 w-full cursor-pointer text-left text-sm leading-[1.55] whitespace-pre-wrap break-words text-rf-ink"
               >
                 <MentionText
                   content={post.content}
@@ -488,20 +489,21 @@ export default function PostCard({
                 />
               </div>
             ) : (
-              <p className="mt-1.5 text-sm whitespace-pre-wrap break-words">
+              <p className="mt-1 text-sm leading-[1.55] whitespace-pre-wrap break-words text-rf-ink">
                 <MentionText content={post.content} />
               </p>
             )}
 
             {!isPinned ? (
-              <div className="mt-2 flex items-center gap-3">
+              <div className="-ml-2 mt-2.5 flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={handleLike}
-                  className={`flex items-center gap-1 text-xs transition-colors ${
+                  aria-pressed={localIsLiked}
+                  className={`inline-flex h-[30px] items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[13px] transition-colors ${
                     localIsLiked
-                      ? "text-red-500"
-                      : "text-muted-foreground hover:text-red-500"
+                      ? "bg-rf-danger-soft text-rf-danger"
+                      : "text-rf-ink-soft hover:bg-rf-line-soft"
                   }`}
                 >
                   <Heart
@@ -515,21 +517,26 @@ export default function PostCard({
                     e.stopPropagation();
                     toggleComments();
                   }}
-                  className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                  aria-expanded={showComments}
+                  aria-label={`${localCommentsCount} comments`}
+                  className={`inline-flex h-[30px] items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[13px] text-rf-ink-soft transition-colors hover:bg-rf-line-soft ${
+                    showComments ? "bg-rf-line-soft" : ""
+                  }`}
                 >
-                  <span>comment {localCommentsCount}</span>
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  <span>{localCommentsCount}</span>
                 </button>
               </div>
             ) : null}
 
             {!isPinned && showComments ? (
-              <div className="mt-3 space-y-2.5" onClick={(e) => e.stopPropagation()}>
+              <div className="mt-3 flex flex-col gap-3 rounded-xl bg-rf-bg p-3" onClick={(e) => e.stopPropagation()}>
                 {loadingComments ? (
-                  <p className="text-xs text-muted-foreground">Loading comments...</p>
+                  <p className="text-xs text-rf-ink-mute">Loading comments...</p>
                 ) : comments.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No comments yet</p>
+                  <p className="text-xs text-rf-ink-mute">No comments yet</p>
                 ) : (
-                  <div className="space-y-2.5">
+                  <div className="flex flex-col gap-3">
                     {comments.map((comment) => {
                       const commentIsOwn = comment.authorId === currentUserId;
                       const showCommentAdminMenu =
@@ -553,23 +560,23 @@ export default function PostCard({
                             >
                               <AuthorAvatar
                                 author={comment}
-                                className="h-6 w-6 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer"
-                                fallbackClassName="text-[10px] bg-muted"
+                                className="h-7 w-7 hover:ring-2 hover:ring-rf-rose transition-shadow cursor-pointer"
+                                fallbackClassName="bg-rf-tint-sage text-[11px] font-medium text-rf-ink"
                               />
                             </button>
                           ) : comment.authorUsername ? (
                             <Link href={`/u/${comment.authorUsername}`}>
                               <AuthorAvatar
                                 author={comment}
-                                className="h-6 w-6 hover:ring-2 hover:ring-[#CA5995] transition-shadow cursor-pointer"
-                                fallbackClassName="text-[10px] bg-muted"
+                                className="h-7 w-7 hover:ring-2 hover:ring-rf-rose transition-shadow cursor-pointer"
+                                fallbackClassName="bg-rf-tint-sage text-[11px] font-medium text-rf-ink"
                               />
                             </Link>
                           ) : (
                             <AuthorAvatar
                               author={comment}
-                              className="h-6 w-6"
-                              fallbackClassName="text-[10px] bg-muted"
+                              className="h-7 w-7"
+                              fallbackClassName="bg-rf-tint-sage text-[11px] font-medium text-rf-ink"
                             />
                           )}
                           <div className="min-w-0 flex-1">
@@ -585,33 +592,33 @@ export default function PostCard({
                                         avatarUrl: comment.authorAvatarUrl ?? null,
                                       })
                                     }
-                                    className="text-xs hover:text-[#5D1C6A] hover:underline dark:hover:text-[#CA5995]"
+                                    className="text-xs hover:text-rf-plum-ink hover:underline"
                                   >
                                     <AuthorName
                                       name={comment.authorName}
                                       isAdmin={comment.authorIsAdmin}
-                                      className="text-xs font-medium"
+                                      className="text-[12.5px] font-semibold"
                                     />
                                   </button>
                                 ) : comment.authorUsername ? (
                                   <Link
                                     href={`/u/${comment.authorUsername}`}
-                                    className="hover:text-[#5D1C6A] hover:underline dark:hover:text-[#CA5995]"
+                                    className="hover:text-rf-plum-ink hover:underline"
                                   >
                                     <AuthorName
                                       name={comment.authorName}
                                       isAdmin={comment.authorIsAdmin}
-                                      className="text-xs font-medium"
+                                      className="text-[12.5px] font-semibold"
                                     />
                                   </Link>
                                 ) : (
                                   <AuthorName
                                     name={comment.authorName}
                                     isAdmin={comment.authorIsAdmin}
-                                    className="text-xs font-medium"
+                                    className="text-[12.5px] font-semibold"
                                   />
                                 )}
-                                <span className="text-[10px] text-muted-foreground">
+                                <span className="text-[10.5px] text-rf-ink-mute">
                                   · {formatTime(comment.createdAt)}
                                 </span>
                               </div>
@@ -688,7 +695,7 @@ export default function PostCard({
                                 )}
                               </div>
                             </div>
-                            <p className="mt-0.5 text-sm text-muted-foreground">
+                            <p className="text-[13.5px] leading-[1.45] text-rf-ink-soft">
                               <MentionText
                                 content={comment.content}
                                 onMentionClick={
@@ -705,24 +712,24 @@ export default function PostCard({
                   </div>
                 )}
 
-                <div className="mt-2 flex gap-2">
+                <div className="flex gap-1.5">
                   <MentionComposer
                     value={commentText}
                     onChange={setCommentText}
                     onKeyDown={handleKeyDown}
                     placeholder="Write a comment… @name to tag"
-                    className="h-8 text-sm"
+                    className="h-[34px] rounded-full border-rf-line bg-rf-card px-3 text-[13px]"
                     disabled={submittingComment}
                   />
-                  <Button
-                    size="sm"
-                    variant="ghost"
+                  <button
+                    type="button"
                     onClick={() => void handleComment()}
                     disabled={!commentText.trim() || submittingComment}
-                    className="h-8 px-2"
+                    aria-label="Send comment"
+                    className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-full bg-rf-primary text-rf-on-primary transition-opacity hover:bg-rf-primary-hover disabled:opacity-50"
                   >
-                    <Send className="h-4 w-4" />
-                  </Button>
+                    <Send className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </div>
             ) : null}

@@ -233,7 +233,7 @@ export function RecentSessionPartners() {
                   {partner.avatarUrl ? (
                     <AvatarImage src={partner.avatarUrl} alt={displayName} />
                   ) : null}
-                  <AvatarFallback className="text-xs bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090]">
+                  <AvatarFallback className="text-xs bg-rf-cream-bg text-rf-plum-ink">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -379,17 +379,17 @@ export function RecentSessionPartners() {
       {confirmBlock ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
           <div
-            className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-xl dark:border-gray-800 dark:bg-gray-900"
+            className="w-full max-w-sm rounded-xl border border-rf-line bg-rf-card p-5 shadow-xl"
             role="dialog"
             aria-labelledby="block-dialog-title"
           >
             <h3
               id="block-dialog-title"
-              className="text-base font-semibold text-gray-900 dark:text-gray-100"
+              className="text-base font-semibold text-rf-ink"
             >
               Block {confirmBlock.name || confirmBlock.username || "this user"}?
             </h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-sm text-rf-ink-soft">
               They won&apos;t appear in your calendar matching or AI match
               results. You can unblock them later from your profile.
             </p>
@@ -398,7 +398,7 @@ export function RecentSessionPartners() {
                 type="button"
                 onClick={() => setConfirmBlock(null)}
                 disabled={blockBusy === confirmBlock.userId}
-                className="rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                className="rounded-lg px-3 py-1.5 text-sm text-rf-ink-soft hover:bg-rf-line-soft"
               >
                 Cancel
               </button>

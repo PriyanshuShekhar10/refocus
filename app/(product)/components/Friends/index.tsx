@@ -273,19 +273,23 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
           margin: "0 auto",
         }}
       >
-        <PageHeader query={query} onQueryChange={setQuery} />
-
-        <StatStrip
-          stats={[
-            { label: "Friends", value: friendsCount },
-            { label: "Pending in", value: pendingInCount },
-            { label: "Pending out", value: pendingOutCount },
-          ]}
+        <PageHeader
+          query={query}
+          onQueryChange={setQuery}
+          footer={
+            <StatStrip
+              stats={[
+                { label: "Friends", value: friendsCount },
+                { label: "Pending in", value: pendingInCount, flag: pendingInCount > 0 },
+                { label: "Pending out", value: pendingOutCount },
+              ]}
+            />
+          }
         />
 
         {error ? (
           <div
-            className={`${card} mb-6`}
+            className={`${card} mb-5`}
             style={{
               padding: "12px 16px",
               borderColor: "color-mix(in oklab, var(--danger) 35%, var(--line))",
@@ -298,8 +302,8 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
           </div>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]">
-          <section className={card}>
+        <div className="flex flex-wrap items-start gap-5">
+          <section className={`${card} min-w-0 flex-[1.6_1_460px]`}>
             <SectionHead
               title="Your circle"
               count={friendsCount}
@@ -363,63 +367,20 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
             )}
           </section>
 
-          <aside className="flex flex-col gap-6">
-            <div className={card}>
+          <aside className="flex min-w-0 flex-[1_1_300px] flex-col gap-5">
+            <div className={card} style={{ padding: 20 }}>
               <h3
-                className="mb-3 text-xs font-semibold uppercase tracking-wide"
-                style={{ color: "var(--ink-mute)" }}
-              >
-                Friend requests
-                {incoming.length > 0 ? (
-                  <span className="ml-2 rounded-full bg-[#5D1C6A]/10 px-2 py-0.5 text-[10px] font-medium normal-case text-[#5D1C6A] dark:text-[#CA5995]">
-                    {incoming.length} in
-                  </span>
-                ) : null}
-                {outgoing.length > 0 ? (
-                  <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium normal-case text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
-                    {outgoing.length} out
-                  </span>
-                ) : null}
-              </h3>
-              {incoming.length === 0 && outgoing.length === 0 ? (
-                <EmptyCard
-                  label="No friend requests"
-                  sub="Incoming and outgoing will show up here."
-                />
-              ) : (
-                <>
-                  {incoming.map((r, i) => (
-                    <Reveal key={r.id} index={i}>
-                      <FriendRequestCard
-                        request={r}
-                        direction="incoming"
-                        onAccept={(id) => respondFriendRequest(id, "accept")}
-                        onDecline={(id) => respondFriendRequest(id, "decline")}
-                      />
-                    </Reveal>
-                  ))}
-                  {outgoing.map((r, i) => (
-                    <Reveal key={r.id} index={incoming.length + i}>
-                      <FriendRequestCard request={r} direction="outgoing" />
-                    </Reveal>
-                  ))}
-                </>
-              )}
-            </div>
-
-            <div className={card}>
-              <h3
-                className="mb-3 text-xs font-semibold uppercase tracking-wide"
+                className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.04em]"
                 style={{ color: "var(--ink-mute)" }}
               >
                 Session requests
                 {sessIncoming.length > 0 ? (
-                  <span className="ml-2 rounded-full bg-[#5D1C6A]/10 px-2 py-0.5 text-[10px] font-medium normal-case text-[#5D1C6A] dark:text-[#CA5995]">
+                  <span className="rounded-full bg-rf-plum-soft px-2 py-px text-[10px] font-medium normal-case tracking-normal text-rf-plum-ink">
                     {sessIncoming.length} in
                   </span>
                 ) : null}
                 {sessOutgoing.length > 0 ? (
-                  <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium normal-case text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                  <span className="rounded-full bg-rf-amber-bg px-2 py-px text-[10px] font-medium normal-case tracking-normal text-rf-amber-ink">
                     {sessOutgoing.length} out
                   </span>
                 ) : null}
@@ -457,13 +418,56 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
                 </>
               )}
             </div>
+            <div className={card} style={{ padding: 20 }}>
+              <h3
+                className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.04em]"
+                style={{ color: "var(--ink-mute)" }}
+              >
+                Friend requests
+                {incoming.length > 0 ? (
+                  <span className="rounded-full bg-rf-plum-soft px-2 py-px text-[10px] font-medium normal-case tracking-normal text-rf-plum-ink">
+                    {incoming.length} in
+                  </span>
+                ) : null}
+                {outgoing.length > 0 ? (
+                  <span className="rounded-full bg-rf-amber-bg px-2 py-px text-[10px] font-medium normal-case tracking-normal text-rf-amber-ink">
+                    {outgoing.length} out
+                  </span>
+                ) : null}
+              </h3>
+              {incoming.length === 0 && outgoing.length === 0 ? (
+                <EmptyCard
+                  label="No friend requests"
+                  sub="Incoming and outgoing will show up here."
+                />
+              ) : (
+                <>
+                  {incoming.map((r, i) => (
+                    <Reveal key={r.id} index={i}>
+                      <FriendRequestCard
+                        request={r}
+                        direction="incoming"
+                        onAccept={(id) => respondFriendRequest(id, "accept")}
+                        onDecline={(id) => respondFriendRequest(id, "decline")}
+                      />
+                    </Reveal>
+                  ))}
+                  {outgoing.map((r, i) => (
+                    <Reveal key={r.id} index={incoming.length + i}>
+                      <FriendRequestCard request={r} direction="outgoing" />
+                    </Reveal>
+                  ))}
+                </>
+              )}
+            </div>
+
           </aside>
         </div>
       </div>
 
       {openChatFriendId && (
         isMobile ? (
-          <div className="fixed inset-0 z-[55] flex flex-col bg-white pb-16 dark:bg-gray-900 lg:static lg:pb-0">
+          <div className="fixed inset-0 z-[55] flex flex-col bg-rf-card pb-16 lg:static lg:pb-0">
             <FriendChat
               friendId={openChatFriendId}
               friendLabel={openChatFriendLabel}

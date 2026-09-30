@@ -31,7 +31,6 @@ import { BookingModal } from "./Calendar/Modals/BookingModal";
 import { Toast } from "./Calendar/Modals/Toast";
 import { ConfirmModal, partnerNoteField } from "./Calendar/Modals/ConfirmModal";
 import { SessionDetailsModal } from "./Calendar/Modals/SessionDetailsModal";
-import { CalendarSidebar } from "./Calendar/CalendarSidebar";
 import { CalendarHeader } from "./Calendar/CalendarHeader";
 import { CalendarDayHeader } from "./Calendar/CalendarDayHeader";
 import { CalendarEventCard } from "./Calendar/CalendarEventCard";
@@ -409,11 +408,6 @@ export default function Calendar({
     (days: ViewDays) => dispatch({ type: "SET_VISIBLE_DAYS", days }),
     [],
   );
-  const handleSetCreateDuration = useCallback(
-    (duration: DurationMin) =>
-      dispatch({ type: "SET_CREATE_DURATION", duration }),
-    [],
-  );
 
   // Booking flow
   const handleBookSlot = useCallback((event: CalendarEvent) => {
@@ -548,27 +542,9 @@ export default function Calendar({
 
   return (
     <div className={`flex h-full w-full gap-4 ${className}`}>
-      <CalendarSidebar
-        createDuration={ui.createDuration}
-        onCreateDurationChange={handleSetCreateDuration}
-        currentUserId={currentUserId}
-        onJoinSession={(ev) => {
-          if (hasSessionStarted(ev.start)) {
-            dispatch({
-              type: "SHOW_TOAST",
-              message: "This session has already started",
-            });
-            return;
-          }
-          dispatch({ type: "OPEN_BOOKING_MODAL", event: ev });
-        }}
-        onDetailsSession={(ev) => dispatch({ type: "OPEN_DETAILS_MODAL", event: ev })}
-        onLeaveSession={(ev) => dispatch({ type: "OPEN_LEAVE_CONFIRM", event: ev })}
-        onDeleteSession={(ev) => dispatch({ type: "OPEN_DELETE_CONFIRM", event: ev })}
-      />
 
       {/* Right: Calendar Area */}
-      <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+      <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-rf-line bg-rf-card">
         <CalendarHeader
           startDate={ui.startDate}
           locale={locale}
@@ -576,6 +552,10 @@ export default function Calendar({
           onGoToday={goToday}
           visibleDays={ui.visibleDays}
           onVisibleDaysChange={setVisibleDays}
+          durationFilter={ui.durationFilter}
+          onToggleDuration={(duration) =>
+            dispatch({ type: "TOGGLE_DURATION_FILTER", duration })
+          }
         />
         <CalendarDayHeader
           days={days}
@@ -595,7 +575,7 @@ export default function Calendar({
           onScroll={handleGridScroll}
         >
           {/* Time Gutter */}
-          <div className="w-16 shrink-0 border-r border-gray-100/70 bg-gray-50/40 dark:border-gray-800/60 dark:bg-gray-800/40">
+          <div className="w-16 shrink-0 border-r border-rf-line-soft bg-rf-line-soft/40">
             {Array.from({ length: gridHourCount }).map((_, i) => {
               const hour = startHour + i;
               const isOverflow = hour >= endHour;
@@ -612,19 +592,17 @@ export default function Calendar({
                       ? "top-1.5"
                       : "top-0 -translate-y-1/2"
                   } ${
-                    isOverflow
-                      ? "text-gray-300 dark:text-gray-600"
-                      : "text-gray-400 dark:text-gray-500"
+                    isOverflow ? "text-rf-line" : "text-rf-ink-mute"
                   }`}
                 >
                   {formatHour(labelHour)}
                 </span>
                 {!isOverflow ? (
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 dark:text-gray-500">
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-rf-ink-mute">
                     :30
                   </span>
                 ) : (
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-300 dark:text-gray-600">
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-rf-line">
                     next
                   </span>
                 )}
@@ -641,7 +619,7 @@ export default function Calendar({
             {days.map((d, dayIdx) => (
               <div
                 key={ymdInTimeZone(d, timeZone)}
-                className="relative border-r border-gray-100 dark:border-gray-800"
+                className="relative border-r border-rf-line-soft"
               >
                 {/* Horizontal Lines */}
                 {Array.from({ length: gridHourCount }).map((_, i) => {
@@ -668,8 +646,8 @@ export default function Calendar({
                     key={i}
                     className={`relative border-t ${
                       isOverflow
-                        ? "border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/40 dark:bg-gray-800/30"
-                        : "border-gray-100 dark:border-gray-800"
+                        ? "border-dashed border-rf-line bg-rf-line-soft/40"
+                        : "border-rf-line-soft"
                     }`}
                     style={{ height: hourBlockHeight }}
                   >
@@ -690,7 +668,7 @@ export default function Calendar({
                         className="pointer-events-none absolute inset-x-0"
                         style={{ top: yy }}
                       >
-                        <div className="border-t border-dashed border-gray-100 dark:border-gray-800" />
+                        <div className="border-t border-dashed border-rf-line-soft" />
                       </div>
                     ))}
                   </div>
@@ -723,11 +701,11 @@ export default function Calendar({
                       }}
                       aria-hidden="true"
                     >
-                      <div className="flex h-full flex-col overflow-hidden rounded-lg border border-[#CA5995]/40 bg-[#5D1C6A]/10 px-2 py-1.5 dark:border-[#CA5995]/35 dark:bg-[#CA5995]/15">
-                        <span className="truncate text-[11px] font-medium leading-tight text-[#5D1C6A] dark:text-[#E8B4D4]">
+                      <div className="flex h-full flex-col overflow-hidden rounded-lg border border-rf-rose/40 bg-rf-plum-ink/10 px-2 py-1.5">
+                        <span className="truncate text-[11px] font-medium leading-tight text-rf-plum-ink">
                           {hoverState.label} – {hoverState.endLabel}
                         </span>
-                        <span className="mt-0.5 truncate text-[10px] leading-tight text-[#5D1C6A]/75 dark:text-[#CA5995]/90">
+                        <span className="mt-0.5 truncate text-[10px] leading-tight text-rf-plum-ink/75">
                           {hoverState.durationMin} min · Book
                         </span>
                       </div>
@@ -924,6 +902,8 @@ export default function Calendar({
         )}
         profilePreview={profilePreview}
         onClearProfilePreview={() => setProfilePreview(null)}
+        showUpNext
+        onOpenSession={(ev) => dispatch({ type: "OPEN_DETAILS_MODAL", event: ev })}
       />
 
       {/* Modals – only one can be open at a time (enforced by state machine) */}
@@ -976,10 +956,10 @@ export default function Calendar({
                 </strong>
                 ?
               </div>
-              <label className="flex items-center gap-3 text-sm text-gray-700">
+              <label className="flex cursor-pointer items-center gap-3 text-sm text-rf-ink-soft">
                 <input
                   type="checkbox"
-                  className="h-4 w-4"
+                  className="h-4 w-4 accent-rf-primary"
                   checked={ui.modal.quiet}
                   onChange={(e) =>
                     dispatch({ type: "SET_CREATE_QUIET", quiet: e.target.checked })

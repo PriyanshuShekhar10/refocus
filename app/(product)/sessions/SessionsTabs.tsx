@@ -45,7 +45,7 @@ export function SessionsTabs({ upcoming, past, currentUserId }: SessionsTabsProp
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900">
+      <div className="mb-5 flex w-fit items-center gap-1 rounded-full border border-rf-line bg-rf-card p-1">
         <TabButton
           active={tab === "upcoming"}
           onClick={() => setTab("upcoming")}
@@ -89,18 +89,16 @@ function TabButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+      className={`inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-full px-4 text-[13px] font-medium transition-colors ${
         active
-          ? "bg-[#5D1C6A] text-white shadow-sm"
-          : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+          ? "bg-rf-primary text-rf-on-primary"
+          : "text-rf-ink-soft hover:bg-rf-line-soft"
       }`}
     >
       <span>{label}</span>
       <span
-        className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs font-semibold ${
-          active
-            ? "bg-white/20 text-white"
-            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+        className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-1.5 font-rf-mono text-[11px] ${
+          active ? "bg-white/20 dark:bg-black/15" : "bg-rf-line-soft"
         }`}
       >
         {count}

@@ -146,8 +146,7 @@ export function MobileSessionSheet({
               <button
                 type="button"
                 onClick={onJoin}
-                className="min-h-12 w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#5F2066]"
-                style={{ backgroundColor: agenda.plumCta }}
+                className="min-h-12 w-full rounded-xl py-3.5 text-sm font-semibold bg-rf-primary text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
               >
                 Join session
               </button>
@@ -171,7 +170,7 @@ export function MobileSessionSheet({
               <button
                 type="button"
                 onClick={onLeave}
-                className="min-h-12 w-full rounded-xl bg-red-600/90 py-3.5 text-sm font-semibold text-white hover:bg-red-600"
+                className="min-h-12 w-full rounded-xl bg-rf-danger py-3.5 text-sm font-semibold text-white hover:opacity-90"
               >
                 Leave session
               </button>
@@ -182,8 +181,7 @@ export function MobileSessionSheet({
             <button
               type="button"
               onClick={onManage}
-              className="min-h-12 w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#5F2066]"
-              style={{ backgroundColor: agenda.plumCta }}
+              className="min-h-12 w-full rounded-xl py-3.5 text-sm font-semibold bg-rf-primary text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
             >
               Manage session
             </button>

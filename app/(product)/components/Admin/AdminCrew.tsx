@@ -94,34 +94,34 @@ export default function AdminCrew({ active }: { active: boolean }) {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-sm font-semibold text-rf-ink">
           Engagement crew
         </h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-sm text-rf-ink-mute">
           Add emails for hired engagers. The board is visible only to crew
           members and admins. It is not linked from the app.
         </p>
       </div>
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+      <div className="rounded-xl border border-rf-line bg-rf-card p-4 space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-rf-ink-mute">
           Board link
         </p>
         {publicUrl ? (
           <div className="flex flex-wrap items-center gap-2">
-            <code className="flex-1 break-all rounded-lg bg-gray-50 dark:bg-gray-950 px-3 py-2 text-xs text-gray-700 dark:text-gray-300">
+            <code className="flex-1 break-all rounded-lg bg-rf-bg px-3 py-2 text-xs text-rf-ink-soft">
               {publicUrl}
             </code>
             <button
               type="button"
               onClick={() => void copyLink()}
-              className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="rounded-lg border border-rf-line px-3 py-2 text-sm hover:bg-rf-line-soft"
             >
               {copied ? "Copied" : "Copy"}
             </button>
           </div>
         ) : (
-          <p className="text-sm text-gray-500">Loading link…</p>
+          <p className="text-sm text-rf-ink-mute">Loading link…</p>
         )}
       </div>
 
@@ -131,13 +131,13 @@ export default function AdminCrew({ active }: { active: boolean }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="email@example.com"
-          className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+          className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
           disabled={busy}
         />
         <button
           type="submit"
           disabled={busy || !email.trim()}
-          className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] disabled:opacity-50"
+          className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50"
         >
           Add
         </button>
@@ -148,23 +148,23 @@ export default function AdminCrew({ active }: { active: boolean }) {
       ) : null}
 
       {loading ? (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <p className="text-sm text-rf-ink-mute">Loading…</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+        <div className="overflow-x-auto rounded-xl border border-rf-line">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+            <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
               <tr>
                 <th className="px-4 py-3">Person</th>
                 <th className="px-4 py-3">Account</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+            <tbody className="divide-y divide-rf-line-soft bg-rf-card">
               {members.length === 0 ? (
                 <tr>
                   <td
                     colSpan={3}
-                    className="px-4 py-6 text-center text-gray-500"
+                    className="px-4 py-6 text-center text-rf-ink-mute"
                   >
                     No crew members yet
                   </td>
@@ -173,12 +173,12 @@ export default function AdminCrew({ active }: { active: boolean }) {
                 members.map((m) => (
                   <tr key={m.canonicalEmail}>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="font-medium text-rf-ink">
                         {m.name || "—"}
                       </div>
-                      <div className="text-xs text-gray-500">{m.email}</div>
+                      <div className="text-xs text-rf-ink-mute">{m.email}</div>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">
+                    <td className="px-4 py-3 text-xs text-rf-ink-mute">
                       {m.userId ? "Registered" : "Not registered yet"}
                     </td>
                     <td className="px-4 py-3 text-right">

@@ -318,15 +318,15 @@ function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+    <div className="rounded-xl border border-rf-line bg-rf-card p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-rf-ink-mute">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
+      <p className="mt-1 text-2xl font-semibold text-rf-ink">
         {value}
       </p>
       {hint ? (
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{hint}</p>
+        <p className="mt-1 text-xs text-rf-ink-mute">{hint}</p>
       ) : null}
     </div>
   );
@@ -398,9 +398,9 @@ function completionClass(kind: string): string {
     case "in-progress":
       return "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-300";
     case "matched":
-      return "bg-[#5D1C6A]/10 text-[#5D1C6A]";
+      return "bg-rf-plum-ink/10 text-rf-plum-ink";
     default:
-      return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300";
+      return "bg-rf-line-soft text-rf-ink-soft";
   }
 }
 
@@ -459,9 +459,9 @@ function SessionsExpandTable({
   const colSpan = showActions ? 5 : 4;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+    <div className="overflow-x-auto rounded-xl border border-rf-line">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+        <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
           <tr>
             <th className="px-4 py-3">When</th>
             <th className="px-4 py-3">Between</th>
@@ -470,16 +470,16 @@ function SessionsExpandTable({
             {showActions ? <th className="px-4 py-3">Actions</th> : null}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+        <tbody className="divide-y divide-rf-line-soft bg-rf-card">
           {loading ? (
             <tr>
-              <td colSpan={colSpan} className="px-4 py-8 text-center text-gray-500">
+              <td colSpan={colSpan} className="px-4 py-8 text-center text-rf-ink-mute">
                 Loading sessions…
               </td>
             </tr>
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={colSpan} className="px-4 py-8 text-center text-gray-500">
+              <td colSpan={colSpan} className="px-4 py-8 text-center text-rf-ink-mute">
                 {empty}
               </td>
             </tr>
@@ -492,25 +492,25 @@ function SessionsExpandTable({
               return (
                 <tr key={s.id}>
                   <td className="px-4 py-3 align-top">
-                    <p className="text-gray-900 dark:text-white">
+                    <p className="text-rf-ink">
                       {formatSessionWhen(s.startTime)}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-rf-ink-mute">
                       until {formatSessionWhen(s.endTime)}
                       {s.durationMin ? ` · ${s.durationMin} min` : ""}
                     </p>
                   </td>
                   <td className="px-4 py-3 align-top">
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="font-medium text-rf-ink">
                       {s.between}
                     </p>
-                    <ul className="mt-1 space-y-0.5 text-xs text-gray-500">
+                    <ul className="mt-1 space-y-0.5 text-xs text-rf-ink-mute">
                       {s.participants.map((p) => (
                         <li key={p.id}>
                           {p.username ? (
                             <Link
                               href={`/u/${p.username}`}
-                              className="text-[#5D1C6A] hover:underline"
+                              className="text-rf-plum-ink hover:underline"
                               target="_blank"
                             >
                               @{p.username}
@@ -520,7 +520,7 @@ function SessionsExpandTable({
                           )}
                           {p.email ? ` · ${p.email}` : ""}
                           {past ? (
-                            <span className="ml-1 text-gray-400">
+                            <span className="ml-1 text-rf-ink-mute">
                               {p.completed
                                 ? "· finished"
                                 : p.attended
@@ -532,7 +532,7 @@ function SessionsExpandTable({
                       ))}
                     </ul>
                   </td>
-                  <td className="px-4 py-3 align-top capitalize text-gray-700 dark:text-gray-300">
+                  <td className="px-4 py-3 align-top capitalize text-rf-ink-soft">
                     {String(s.sessionType).replace(/-/g, " ")}
                   </td>
                   <td className="px-4 py-3 align-top">
@@ -542,7 +542,7 @@ function SessionsExpandTable({
                       {completionLabel(s.completion)}
                     </span>
                     {past && s.participants.length >= 2 ? (
-                      <p className="mt-1 text-[11px] text-gray-400">
+                      <p className="mt-1 text-[11px] text-rf-ink-mute">
                         {s.completedCount}/{s.participants.length} finished
                       </p>
                     ) : null}
@@ -550,13 +550,13 @@ function SessionsExpandTable({
                   {showActions ? (
                     <td className="px-4 py-3 align-top">
                       {peers.length === 0 ? (
-                        <span className="text-xs text-gray-400">—</span>
+                        <span className="text-xs text-rf-ink-mute">—</span>
                       ) : peers.length === 1 ? (
                         <button
                           type="button"
                           disabled={busy}
                           onClick={() => onClub?.(s.id, peers[0].id)}
-                          className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                          className="rounded-md border border-rf-line px-2 py-1 text-xs font-medium text-rf-ink hover:bg-rf-line-soft disabled:opacity-50"
                         >
                           {busy
                             ? "Clubbing…"
@@ -568,7 +568,7 @@ function SessionsExpandTable({
                             <button
                               type="button"
                               disabled={busy}
-                              className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                              className="rounded-md border border-rf-line px-2 py-1 text-xs font-medium text-rf-ink hover:bg-rf-line-soft disabled:opacity-50"
                             >
                               {busy ? "Clubbing…" : "Club with…"}
                             </button>
@@ -595,7 +595,7 @@ function SessionsExpandTable({
         </tbody>
       </table>
       {!loading && total > rows.length ? (
-        <p className="border-t border-gray-100 px-4 py-2 text-xs text-gray-500 dark:border-gray-800">
+        <p className="border-t border-rf-line-soft px-4 py-2 text-xs text-rf-ink-mute">
           Showing {rows.length} of {total}
         </p>
       ) : null}
@@ -606,7 +606,7 @@ function SessionsExpandTable({
 function PersonLine({ person }: { person: AdminPerson }) {
   return (
     <span>
-      <span className="font-medium text-gray-900 dark:text-white">
+      <span className="font-medium text-rf-ink">
         {person.label}
       </span>
       {person.username ? (
@@ -614,7 +614,7 @@ function PersonLine({ person }: { person: AdminPerson }) {
           {" "}
           <Link
             href={`/u/${person.username}`}
-            className="text-[#5D1C6A] hover:underline"
+            className="text-rf-plum-ink hover:underline"
             target="_blank"
           >
             @{person.username}
@@ -622,7 +622,7 @@ function PersonLine({ person }: { person: AdminPerson }) {
         </>
       ) : null}
       {person.email ? (
-        <span className="text-gray-500"> · {person.email}</span>
+        <span className="text-rf-ink-mute"> · {person.email}</span>
       ) : null}
     </span>
   );
@@ -709,21 +709,21 @@ function OpsNotifySettings() {
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+    <div className="rounded-xl border border-rf-line bg-rf-card p-4">
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 rounded-lg bg-[#5D1C6A]/10 p-2 text-[#5D1C6A]">
+        <div className="mt-0.5 rounded-lg bg-rf-plum-ink/10 p-2 text-rf-plum-ink">
           <Mail className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+          <p className="text-sm font-semibold text-rf-ink">
             Founder emails
           </p>
-          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-0.5 text-xs text-rf-ink-mute">
             Sent to {email}. Turn any off anytime.
           </p>
         </div>
       </div>
-      <div className="mt-4 divide-y divide-gray-100 dark:divide-gray-800">
+      <div className="mt-4 divide-y divide-rf-line-soft">
         <OpsNotifyRow
           label="New signups"
           hint="Email and Google accounts."
@@ -766,10 +766,10 @@ function OpsNotifyRow({
   return (
     <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
       <div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white">
+        <p className="text-sm font-medium text-rf-ink">
           {label}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{hint}</p>
+        <p className="text-xs text-rf-ink-mute">{hint}</p>
       </div>
       <button
         type="button"
@@ -779,11 +779,11 @@ function OpsNotifyRow({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
-          checked ? "bg-[#5D1C6A]" : "bg-gray-300 dark:bg-gray-700"
+          checked ? "bg-rf-primary" : "bg-rf-line"
         }`}
       >
         <span
-          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-rf-card shadow transition-transform ${
             checked ? "translate-x-5" : "translate-x-0"
           }`}
         />
@@ -1243,10 +1243,10 @@ export default function AdminPanel() {
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h1 className="text-xl font-semibold text-rf-ink">
               Admin
             </h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-rf-ink-mute">
               Manage users, roles, and bans. Content moderation lives in
               Community.
             </p>
@@ -1262,8 +1262,8 @@ export default function AdminPanel() {
               onClick={() => setSection(id)}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                 section === id
-                  ? "bg-[#5D1C6A] text-white"
-                  : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  ? "bg-rf-primary text-rf-on-primary"
+                  : "bg-rf-card border border-rf-line text-rf-ink-soft hover:bg-rf-line-soft"
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -1324,7 +1324,7 @@ export default function AdminPanel() {
                   value={stats.sessions.upcoming}
                   hint={`${stats.sessions.total} total · click to ${sessionsExpanded ? "hide" : "expand"}`}
                 />
-                <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-400">
+                <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-rf-ink-mute">
                   <ChevronDown
                     className={`h-3.5 w-3.5 transition-transform ${sessionsExpanded ? "rotate-180" : ""}`}
                   />
@@ -1346,7 +1346,7 @@ export default function AdminPanel() {
                       : "Click to see who finished"
                   }
                 />
-                <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-400">
+                <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-rf-ink-mute">
                   <ChevronDown
                     className={`h-3.5 w-3.5 transition-transform ${doneExpanded ? "rotate-180" : ""}`}
                   />
@@ -1376,7 +1376,7 @@ export default function AdminPanel() {
                   value={stats.moderation.pendingFriendRequests}
                   hint={`Click to ${friendRequestsExpanded ? "hide" : "see from → to"}`}
                 />
-                <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-gray-400">
+                <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-rf-ink-mute">
                   <ChevronDown
                     className={`h-3.5 w-3.5 transition-transform ${friendRequestsExpanded ? "rotate-180" : ""}`}
                   />
@@ -1433,21 +1433,21 @@ export default function AdminPanel() {
             ) : null}
 
             {friendRequestsExpanded ? (
-              <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+              <div className="overflow-x-auto rounded-xl border border-rf-line">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                  <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
                     <tr>
                       <th className="px-4 py-3">When</th>
                       <th className="px-4 py-3">From</th>
                       <th className="px-4 py-3">To</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                  <tbody className="divide-y divide-rf-line-soft bg-rf-card">
                     {friendRequestsLoading ? (
                       <tr>
                         <td
                           colSpan={3}
-                          className="px-4 py-8 text-center text-gray-500"
+                          className="px-4 py-8 text-center text-rf-ink-mute"
                         >
                           Loading friend requests…
                         </td>
@@ -1456,7 +1456,7 @@ export default function AdminPanel() {
                       <tr>
                         <td
                           colSpan={3}
-                          className="px-4 py-8 text-center text-gray-500"
+                          className="px-4 py-8 text-center text-rf-ink-mute"
                         >
                           No pending friend requests.
                         </td>
@@ -1464,7 +1464,7 @@ export default function AdminPanel() {
                     ) : (
                       pendingFriendRequests.map((r) => (
                         <tr key={r.id}>
-                          <td className="px-4 py-3 align-top text-gray-500">
+                          <td className="px-4 py-3 align-top text-rf-ink-mute">
                             {r.createdAt
                               ? new Date(r.createdAt).toLocaleString()
                               : "—"}
@@ -1482,7 +1482,7 @@ export default function AdminPanel() {
                 </table>
                 {!friendRequestsLoading &&
                 pendingFriendRequestsTotal > pendingFriendRequests.length ? (
-                  <p className="border-t border-gray-100 px-4 py-2 text-xs text-gray-500 dark:border-gray-800">
+                  <p className="border-t border-rf-line-soft px-4 py-2 text-xs text-rf-ink-mute">
                     Showing {pendingFriendRequests.length} of{" "}
                     {pendingFriendRequestsTotal}
                   </p>
@@ -1512,19 +1512,19 @@ export default function AdminPanel() {
                 value={userQuery}
                 onChange={(e) => setUserQuery(e.target.value)}
                 placeholder="Search email, username, name, or IP…"
-                className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+                className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
               />
               <button
                 type="submit"
-                className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995]"
+                className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover"
               >
                 Search
               </button>
             </form>
-            <p className="text-xs text-gray-500">{userTotal} users</p>
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <p className="text-xs text-rf-ink-mute">{userTotal} users</p>
+            <div className="overflow-x-auto rounded-xl border border-rf-line">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">User</th>
                     <th className="px-4 py-3">Username</th>
@@ -1534,7 +1534,7 @@ export default function AdminPanel() {
                     <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                <tbody className="divide-y divide-rf-line-soft bg-rf-card">
                   {users.map((u) => {
                     const isSelf = u.id === currentAdminId;
                     const busy = actionId === u.id;
@@ -1542,24 +1542,24 @@ export default function AdminPanel() {
                     return (
                       <tr
                         key={u.id}
-                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60"
+                        className="cursor-pointer hover:bg-rf-line-soft"
                         onClick={() => {
                           setActivityUserId(u.id);
                           void loadUserActivity(u.id);
                         }}
                       >
                         <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900 dark:text-white">
+                          <div className="font-medium text-rf-ink">
                             {u.name || "—"}
                             {isSelf ? (
-                              <span className="ml-1.5 text-xs text-gray-400">
+                              <span className="ml-1.5 text-xs text-rf-ink-mute">
                                 (you)
                               </span>
                             ) : null}
                           </div>
-                          <div className="text-xs text-gray-500">{u.email}</div>
+                          <div className="text-xs text-rf-ink-mute">{u.email}</div>
                           {u.knownIps?.length || u.lastLoginIp || u.signupIp ? (
-                            <div className="mt-0.5 font-mono text-[10px] text-gray-400">
+                            <div className="mt-0.5 font-mono text-[10px] text-rf-ink-mute">
                               {u.lastSeenIp || u.lastLoginIp || u.signupIp}
                               {u.knownIps && u.knownIps.length > 1
                                 ? ` · ${u.knownIps.length} IPs`
@@ -1575,7 +1575,7 @@ export default function AdminPanel() {
                           {u.username ? (
                             <Link
                               href={`/u/${u.username}`}
-                              className="text-[#5D1C6A] hover:underline"
+                              className="text-rf-plum-ink hover:underline"
                               target="_blank"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -1588,7 +1588,7 @@ export default function AdminPanel() {
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-1">
                             {u.isAdmin ? (
-                              <span className="rounded-full bg-[#5D1C6A]/10 px-2 py-0.5 text-[10px] font-medium text-[#5D1C6A]">
+                              <span className="rounded-full bg-rf-plum-ink/10 px-2 py-0.5 text-[10px] font-medium text-rf-plum-ink">
                                 Admin
                               </span>
                             ) : null}
@@ -1605,7 +1605,7 @@ export default function AdminPanel() {
                             {!u.isAdmin &&
                             !u.communityBanned &&
                             !u.communityMuted ? (
-                              <span className="text-xs text-gray-400">—</span>
+                              <span className="text-xs text-rf-ink-mute">—</span>
                             ) : null}
                           </div>
                         </td>
@@ -1616,7 +1616,7 @@ export default function AdminPanel() {
                             <span className="text-amber-600">No</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-rf-ink-mute">
                           {u.createdAt
                             ? new Date(u.createdAt).toLocaleDateString()
                             : "—"}
@@ -1626,14 +1626,14 @@ export default function AdminPanel() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           {isSelf && !u.email ? (
-                            <span className="text-xs text-gray-400">—</span>
+                            <span className="text-xs text-rf-ink-mute">—</span>
                           ) : (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <button
                                   type="button"
                                   disabled={busy}
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rf-line text-rf-ink-mute hover:bg-rf-line-soft disabled:opacity-50"
                                   aria-label="User actions"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
@@ -1778,22 +1778,22 @@ export default function AdminPanel() {
                 value={deletedQuery}
                 onChange={(e) => setDeletedQuery(e.target.value)}
                 placeholder="Search deleted email, username, name, or IP…"
-                className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+                className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
               />
               <button
                 type="submit"
-                className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995]"
+                className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover"
               >
                 Search
               </button>
             </form>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-rf-ink-mute">
               {deletedTotal} deleted profile{deletedTotal === 1 ? "" : "s"}.
               Only accounts deleted after this feature shipped appear here.
             </p>
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="overflow-x-auto rounded-xl border border-rf-line">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">User</th>
                     <th className="px-4 py-3">Username</th>
@@ -1802,12 +1802,12 @@ export default function AdminPanel() {
                     <th className="px-4 py-3">Deleted</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                <tbody className="divide-y divide-rf-line-soft bg-rf-card">
                   {deletedUsers.length === 0 ? (
                     <tr>
                       <td
                         colSpan={5}
-                        className="px-4 py-8 text-center text-sm text-gray-500"
+                        className="px-4 py-8 text-center text-sm text-rf-ink-mute"
                       >
                         No deleted profiles yet.
                       </td>
@@ -1816,12 +1816,12 @@ export default function AdminPanel() {
                     deletedUsers.map((u) => (
                       <tr key={u.id}>
                         <td className="px-4 py-3">
-                          <div className="font-medium text-gray-900 dark:text-white">
+                          <div className="font-medium text-rf-ink">
                             {u.name || "—"}
                           </div>
-                          <div className="text-xs text-gray-500">{u.email || "—"}</div>
+                          <div className="text-xs text-rf-ink-mute">{u.email || "—"}</div>
                           {u.knownIps?.length || u.lastLoginIp || u.signupIp ? (
-                            <div className="mt-0.5 font-mono text-[10px] text-gray-400">
+                            <div className="mt-0.5 font-mono text-[10px] text-rf-ink-mute">
                               {u.lastSeenIp || u.lastLoginIp || u.signupIp}
                               {u.knownIps && u.knownIps.length > 1
                                 ? ` · ${u.knownIps.length} IPs`
@@ -1831,7 +1831,7 @@ export default function AdminPanel() {
                           {u.wasAdmin || u.communityBanned || u.communityMuted ? (
                             <div className="mt-1 flex flex-wrap gap-1">
                               {u.wasAdmin ? (
-                                <span className="rounded-full bg-[#5D1C6A]/10 px-2 py-0.5 text-[10px] font-medium text-[#5D1C6A]">
+                                <span className="rounded-full bg-rf-plum-ink/10 px-2 py-0.5 text-[10px] font-medium text-rf-plum-ink">
                                   Was admin
                                 </span>
                               ) : null}
@@ -1848,7 +1848,7 @@ export default function AdminPanel() {
                             </div>
                           ) : null}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-rf-ink-mute">
                           {u.username ? `@${u.username}` : "—"}
                         </td>
                         <td className="px-4 py-3">
@@ -1858,12 +1858,12 @@ export default function AdminPanel() {
                             <span className="text-amber-600">No</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-rf-ink-mute">
                           {u.createdAt
                             ? new Date(u.createdAt).toLocaleDateString()
                             : "—"}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-rf-ink-mute">
                           {u.deletedAt
                             ? new Date(u.deletedAt).toLocaleString()
                             : "—"}
@@ -1891,16 +1891,16 @@ export default function AdminPanel() {
                 value={blocksQuery}
                 onChange={(e) => setBlocksQuery(e.target.value)}
                 placeholder="Search blocker or blocked email, username, or name…"
-                className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+                className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
               />
               <button
                 type="submit"
-                className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995]"
+                className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover"
               >
                 Search
               </button>
             </form>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-rf-ink-mute">
               {userBlocksTotal} block{userBlocksTotal === 1 ? "" : "s"}
               {uniqueBlockers
                 ? ` from ${uniqueBlockers} person${uniqueBlockers === 1 ? "" : "s"}`
@@ -1908,21 +1908,21 @@ export default function AdminPanel() {
               . People on this list cannot see each other in sessions, community,
               or matchmaking.
             </p>
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="overflow-x-auto rounded-xl border border-rf-line">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">When</th>
                     <th className="px-4 py-3">Blocked by</th>
                     <th className="px-4 py-3">Blocked user</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                <tbody className="divide-y divide-rf-line-soft bg-rf-card">
                   {userBlocks.length === 0 ? (
                     <tr>
                       <td
                         colSpan={3}
-                        className="px-4 py-8 text-center text-sm text-gray-500"
+                        className="px-4 py-8 text-center text-sm text-rf-ink-mute"
                       >
                         No user blocks yet.
                       </td>
@@ -1930,7 +1930,7 @@ export default function AdminPanel() {
                   ) : (
                     userBlocks.map((b) => (
                       <tr key={b.id}>
-                        <td className="px-4 py-3 align-top text-gray-500">
+                        <td className="px-4 py-3 align-top text-rf-ink-mute">
                           {b.createdAt
                             ? new Date(b.createdAt).toLocaleString()
                             : "—"}
@@ -1947,7 +1947,7 @@ export default function AdminPanel() {
                 </tbody>
               </table>
               {userBlocksTotal > userBlocks.length ? (
-                <p className="border-t border-gray-100 px-4 py-2 text-xs text-gray-500 dark:border-gray-800">
+                <p className="border-t border-rf-line-soft px-4 py-2 text-xs text-rf-ink-mute">
                   Showing {userBlocks.length} of {userBlocksTotal}
                 </p>
               ) : null}
@@ -1976,8 +1976,8 @@ export default function AdminPanel() {
                 }}
                 className={`rounded-full px-3 py-1 text-sm ${
                   loginMode === "day"
-                    ? "bg-[#5D1C6A] text-white"
-                    : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                    ? "bg-rf-primary text-rf-on-primary"
+                    : "border border-rf-line text-rf-ink-soft"
                 }`}
               >
                 By day
@@ -1995,8 +1995,8 @@ export default function AdminPanel() {
                 }}
                 className={`rounded-full px-3 py-1 text-sm ${
                   loginMode === "user"
-                    ? "bg-[#5D1C6A] text-white"
-                    : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                    ? "bg-rf-primary text-rf-on-primary"
+                    : "border border-rf-line text-rf-ink-soft"
                 }`}
               >
                 By user
@@ -2010,8 +2010,8 @@ export default function AdminPanel() {
                   onClick={() => setLoginDate(localYmd())}
                   className={`rounded-full px-3 py-1 text-sm ${
                     loginDate === localYmd()
-                      ? "bg-[#5D1C6A] text-white"
-                      : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                      ? "bg-rf-primary text-rf-on-primary"
+                      : "border border-rf-line text-rf-ink-soft"
                   }`}
                 >
                   Today
@@ -2021,8 +2021,8 @@ export default function AdminPanel() {
                   onClick={() => setLoginDate(shiftLocalYmd(localYmd(), -1))}
                   className={`rounded-full px-3 py-1 text-sm ${
                     loginDate === shiftLocalYmd(localYmd(), -1)
-                      ? "bg-[#5D1C6A] text-white"
-                      : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                      ? "bg-rf-primary text-rf-on-primary"
+                      : "border border-rf-line text-rf-ink-soft"
                   }`}
                 >
                   Yesterday
@@ -2031,7 +2031,7 @@ export default function AdminPanel() {
                   type="date"
                   value={loginDate}
                   onChange={(e) => setLoginDate(e.target.value)}
-                  className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-rf-line bg-rf-card px-3 py-1.5 text-sm"
                 />
               </div>
             ) : (
@@ -2051,11 +2051,11 @@ export default function AdminPanel() {
                     setLoginUserId(null);
                   }}
                   placeholder="Email or username…"
-                  className="min-w-[16rem] flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+                  className="min-w-[16rem] flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
                 />
                 <button
                   type="submit"
-                  className="rounded-lg bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995]"
+                  className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover"
                 >
                   Look up
                 </button>
@@ -2072,7 +2072,7 @@ export default function AdminPanel() {
                         "Search email or username to see that user’s full login history.",
                       );
                     }}
-                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700"
+                    className="rounded-lg border border-rf-line px-3 py-2 text-sm"
                   >
                     Clear
                   </button>
@@ -2080,7 +2080,7 @@ export default function AdminPanel() {
               </form>
             )}
 
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-rf-ink-mute">
               {loginMode === "day"
                 ? `${loginCount} sign-ins · ${loginUniqueUsers} unique users · ${loginDate} (local day)`
                 : loginUserSummary
@@ -2094,24 +2094,24 @@ export default function AdminPanel() {
             ) : null}
 
             {loginUserSummary ? (
-              <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 text-sm space-y-2">
+              <div className="rounded-xl border border-rf-line bg-rf-card p-4 text-sm space-y-2">
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="font-medium text-rf-ink">
                     {loginUserSummary.name ||
                       loginUserSummary.email ||
                       loginUserSummary.username ||
                       loginUserSummary.id}
                   </span>
                   {loginUserSummary.email ? (
-                    <span className="text-gray-500">{loginUserSummary.email}</span>
+                    <span className="text-rf-ink-mute">{loginUserSummary.email}</span>
                   ) : null}
                   {loginUserSummary.username ? (
-                    <span className="text-gray-500">
+                    <span className="text-rf-ink-mute">
                       @{loginUserSummary.username}
                     </span>
                   ) : null}
                 </div>
-                <div className="grid gap-1 text-xs text-gray-600 dark:text-gray-300 sm:grid-cols-2">
+                <div className="grid gap-1 text-xs text-rf-ink-soft sm:grid-cols-2">
                   <p>
                     Joined:{" "}
                     {loginUserSummary.createdAt
@@ -2142,10 +2142,10 @@ export default function AdminPanel() {
                 </div>
                 {loginUserSummary.knownIps.length > 0 ? (
                   <div className="pt-1">
-                    <p className="text-xs font-medium text-gray-500 mb-1">
+                    <p className="text-xs font-medium text-rf-ink-mute mb-1">
                       Known IPs
                     </p>
-                    <ul className="space-y-0.5 text-xs font-mono text-gray-600 dark:text-gray-300">
+                    <ul className="space-y-0.5 text-xs font-mono text-rf-ink-soft">
                       {loginUserSummary.knownIps.map((row) => (
                         <li key={row.ip}>
                           {row.ip} · ×{row.count} · last{" "}
@@ -2158,9 +2158,9 @@ export default function AdminPanel() {
               </div>
             ) : null}
 
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="overflow-x-auto rounded-xl border border-rf-line">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">When</th>
                     {loginMode === "day" ? (
@@ -2173,12 +2173,12 @@ export default function AdminPanel() {
                     ) : null}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                <tbody className="divide-y divide-rf-line-soft bg-rf-card">
                   {loginRows.length === 0 ? (
                     <tr>
                       <td
                         colSpan={loginMode === "day" ? 5 : 3}
-                        className="px-4 py-8 text-center text-gray-500"
+                        className="px-4 py-8 text-center text-rf-ink-mute"
                       >
                         {loginMode === "user" && !loginUserSummary
                           ? "Search for a user to load history."
@@ -2188,17 +2188,17 @@ export default function AdminPanel() {
                   ) : (
                     loginRows.map((row) => (
                       <tr key={row.id}>
-                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                        <td className="px-4 py-3 text-rf-ink-mute whitespace-nowrap">
                           {row.at
                             ? new Date(row.at).toLocaleString()
                             : "—"}
                         </td>
                         {loginMode === "day" ? (
                           <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900 dark:text-white">
+                            <div className="font-medium text-rf-ink">
                               {row.name || row.email || row.username || row.userId}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-rf-ink-mute">
                               {[row.email, row.username ? `@${row.username}` : null]
                                 .filter(Boolean)
                                 .join(" · ")}
@@ -2220,7 +2220,7 @@ export default function AdminPanel() {
                                   row.email || row.username || row.userId,
                                 );
                               }}
-                              className="text-xs font-medium text-[#5D1C6A] hover:underline dark:text-[#FFB090]"
+                              className="text-xs font-medium text-rf-plum-ink hover:underline"
                             >
                               Full history
                             </button>
@@ -2237,13 +2237,13 @@ export default function AdminPanel() {
 
         {section === "ip-activity" ? (
           <div className="space-y-4">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-rf-ink-mute">
               Signup attempts from IPs used by banned accounts. Signups are not
               blocked.
             </p>
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="overflow-x-auto rounded-xl border border-rf-line">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">When</th>
                     <th className="px-4 py-3">IP</th>
@@ -2252,12 +2252,12 @@ export default function AdminPanel() {
                     <th className="px-4 py-3">Matches banned</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                <tbody className="divide-y divide-rf-line-soft bg-rf-card">
                   {ipEntries.length === 0 ? (
                     <tr>
                       <td
                         colSpan={5}
-                        className="px-4 py-8 text-center text-gray-500"
+                        className="px-4 py-8 text-center text-rf-ink-mute"
                       >
                         No watched-IP signup attempts yet.
                       </td>
@@ -2265,7 +2265,7 @@ export default function AdminPanel() {
                   ) : (
                     ipEntries.map((row) => (
                       <tr key={row.id}>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-rf-ink-mute">
                           {row.createdAt
                             ? new Date(row.createdAt).toLocaleString()
                             : "—"}
@@ -2277,7 +2277,7 @@ export default function AdminPanel() {
                         <td className="px-4 py-3 capitalize">
                           {String(row.outcome).replace(/_/g, " ")}
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-300">
+                        <td className="px-4 py-3 text-xs text-rf-ink-soft">
                           {row.matchedBannedUsers
                             .map((u) => u.label)
                             .join(", ") || "—"}
@@ -2302,8 +2302,8 @@ export default function AdminPanel() {
                 }}
                 className={`rounded-full px-3 py-1 text-sm ${
                   reportFilter === "pending"
-                    ? "bg-[#5D1C6A] text-white"
-                    : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                    ? "bg-rf-primary text-rf-on-primary"
+                    : "border border-rf-line text-rf-ink-soft"
                 }`}
               >
                 Pending
@@ -2316,17 +2316,17 @@ export default function AdminPanel() {
                 }}
                 className={`rounded-full px-3 py-1 text-sm ${
                   reportFilter === "all"
-                    ? "bg-[#5D1C6A] text-white"
-                    : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                    ? "bg-rf-primary text-rf-on-primary"
+                    : "border border-rf-line text-rf-ink-soft"
                 }`}
               >
                 All
               </button>
             </div>
-            <p className="text-xs text-gray-500">{reportsTotal} reports</p>
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <p className="text-xs text-rf-ink-mute">{reportsTotal} reports</p>
+            <div className="overflow-x-auto rounded-xl border border-rf-line">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">When</th>
                     <th className="px-4 py-3">Type</th>
@@ -2337,12 +2337,12 @@ export default function AdminPanel() {
                     <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                <tbody className="divide-y divide-rf-line-soft bg-rf-card">
                   {reports.length === 0 ? (
                     <tr>
                       <td
                         colSpan={7}
-                        className="px-4 py-8 text-center text-gray-500"
+                        className="px-4 py-8 text-center text-rf-ink-mute"
                       >
                         No reports in this view.
                       </td>
@@ -2356,39 +2356,39 @@ export default function AdminPanel() {
                         r.status === "pending";
                       return (
                         <tr key={r.id}>
-                          <td className="px-4 py-3 whitespace-nowrap text-gray-500">
+                          <td className="px-4 py-3 whitespace-nowrap text-rf-ink-mute">
                             {r.createdAt
                               ? new Date(r.createdAt).toLocaleString()
                               : "—"}
                           </td>
                           <td className="px-4 py-3">{r.targetTypeLabel}</td>
                           <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900 dark:text-white">
+                            <div className="font-medium text-rf-ink">
                               {r.reportedUserLabel || r.reportedUserEmail || "—"}
                             </div>
                             {r.reportedUserEmail ? (
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-rf-ink-mute">
                                 {r.reportedUserEmail}
                               </div>
                             ) : null}
                           </td>
                           <td className="px-4 py-3 max-w-xs">
-                            <p className="line-clamp-2 text-gray-600 dark:text-gray-300">
+                            <p className="line-clamp-2 text-rf-ink-soft">
                               {r.contentSnapshot || "—"}
                             </p>
                             {r.details ? (
-                              <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+                              <p className="mt-1 text-xs text-rf-ink-mute line-clamp-2">
                                 {r.details}
                               </p>
                             ) : null}
                           </td>
                           <td className="px-4 py-3">{r.reasonLabel}</td>
                           <td className="px-4 py-3">
-                            <div className="text-xs text-gray-600 dark:text-gray-300">
+                            <div className="text-xs text-rf-ink-soft">
                               {r.clusterReportCount} report
                               {r.clusterReportCount === 1 ? "" : "s"}
                             </div>
-                            <div className="text-[10px] text-gray-500 line-clamp-2">
+                            <div className="text-[10px] text-rf-ink-mute line-clamp-2">
                               {r.clusterReporterEmails.join(", ")}
                             </div>
                           </td>
@@ -2399,7 +2399,7 @@ export default function AdminPanel() {
                                   <button
                                     type="button"
                                     disabled={busy}
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rf-line text-rf-ink-mute hover:bg-rf-line-soft disabled:opacity-50"
                                     aria-label="Report actions"
                                   >
                                     <MoreHorizontal className="h-4 w-4" />
@@ -2460,7 +2460,7 @@ export default function AdminPanel() {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             ) : (
-                              <span className="text-xs capitalize text-gray-500">
+                              <span className="text-xs capitalize text-rf-ink-mute">
                                 {r.status.replace("_", " ")}
                               </span>
                             )}
@@ -2477,12 +2477,12 @@ export default function AdminPanel() {
 
         {section === "history" ? (
           <div className="space-y-4">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-rf-ink-mute">
               {auditTotal} admin actions logged
             </p>
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="overflow-x-auto rounded-xl border border-rf-line">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900/80 text-left text-xs uppercase text-gray-500">
+                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">When</th>
                     <th className="px-4 py-3">Admin</th>
@@ -2491,12 +2491,12 @@ export default function AdminPanel() {
                     <th className="px-4 py-3">Details</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                <tbody className="divide-y divide-rf-line-soft bg-rf-card">
                   {auditEntries.length === 0 ? (
                     <tr>
                       <td
                         colSpan={5}
-                        className="px-4 py-8 text-center text-gray-500"
+                        className="px-4 py-8 text-center text-rf-ink-mute"
                       >
                         No admin actions recorded yet.
                       </td>
@@ -2504,13 +2504,13 @@ export default function AdminPanel() {
                   ) : (
                     auditEntries.map((entry) => (
                       <tr key={entry.id}>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-500">
+                        <td className="px-4 py-3 whitespace-nowrap text-rf-ink-mute">
                           {entry.createdAt
                             ? new Date(entry.createdAt).toLocaleString()
                             : "—"}
                         </td>
                         <td className="px-4 py-3">
-                          <div className="text-gray-900 dark:text-white">
+                          <div className="text-rf-ink">
                             {entry.actorEmail || "—"}
                           </div>
                         </td>
@@ -2518,19 +2518,19 @@ export default function AdminPanel() {
                           {ACTION_LABELS[entry.action] || entry.action}
                         </td>
                         <td className="px-4 py-3">
-                          <div className="text-gray-900 dark:text-white">
+                          <div className="text-rf-ink">
                             {entry.targetLabel ||
                               entry.targetUserEmail ||
                               "—"}
                           </div>
                           {entry.targetUserEmail &&
                           entry.targetLabel !== entry.targetUserEmail ? (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-rf-ink-mute">
                               {entry.targetUserEmail}
                             </div>
                           ) : null}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-rf-ink-mute">
                           {formatAuditDetails(entry) ||
                             entry.resourceId ||
                             "—"}
@@ -2546,11 +2546,11 @@ export default function AdminPanel() {
 
         {section === "config" ? (
           <div className="space-y-4">
-            <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+            <div className="rounded-xl border border-rf-line bg-rf-card p-5">
+              <h2 className="text-sm font-semibold text-rf-ink">
                 Daily.co accounts
               </h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-rf-ink-mute">
                 Keys are configured in env (
                 <code className="text-xs">DAILY_API_KEY</code> /{" "}
                 <code className="text-xs">DAILY_DOMAIN</code>, then{" "}
@@ -2561,7 +2561,7 @@ export default function AdminPanel() {
               </p>
 
               {dailyAccounts.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-500">
+                <p className="mt-4 text-sm text-rf-ink-mute">
                   No Daily accounts found. Add{" "}
                   <code className="text-xs">DAILY_API_KEY</code> and{" "}
                   <code className="text-xs">DAILY_DOMAIN</code> to the server env.
@@ -2575,8 +2575,8 @@ export default function AdminPanel() {
                       disabled={actionId === "daily-rotate"}
                       className={`rounded-full px-3 py-1 text-sm ${
                         dailySelectionMode === "rotate"
-                          ? "bg-[#5D1C6A] text-white"
-                          : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                          ? "bg-rf-primary text-rf-on-primary"
+                          : "border border-rf-line text-rf-ink-soft"
                       }`}
                     >
                       Rotate equally
@@ -2592,19 +2592,19 @@ export default function AdminPanel() {
                       }}
                       className={`rounded-full px-3 py-1 text-sm ${
                         dailySelectionMode === "pin"
-                          ? "bg-[#5D1C6A] text-white"
-                          : "border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                          ? "bg-rf-primary text-rf-on-primary"
+                          : "border border-rf-line text-rf-ink-soft"
                       }`}
                     >
                       Pin to one account
                     </button>
                   </div>
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-rf-ink-mute">
                     {dailySelectionMode === "rotate"
                       ? `Next new room uses account ${dailyNextId ?? dailyAccounts[0]?.id}.`
                       : `New rooms stay on account ${dailyActiveId ?? dailyAccounts[0]?.id}.`}
                   </p>
-                  <ul className="mt-4 divide-y divide-gray-100 dark:divide-gray-800 rounded-lg border border-gray-200 dark:border-gray-800">
+                  <ul className="mt-4 divide-y divide-rf-line-soft rounded-lg border border-rf-line">
                     {dailyAccounts.map((account) => {
                       const isPinned =
                         dailySelectionMode === "pin" &&
@@ -2618,23 +2618,23 @@ export default function AdminPanel() {
                           className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
                         >
                           <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            <p className="text-sm font-medium text-rf-ink">
                               Account {account.id}
                               {isPinned ? (
-                                <span className="ml-2 text-xs font-normal text-[#5D1C6A]">
+                                <span className="ml-2 text-xs font-normal text-rf-plum-ink">
                                   Pinned
                                 </span>
                               ) : null}
                               {isNext ? (
-                                <span className="ml-2 text-xs font-normal text-[#5D1C6A]">
+                                <span className="ml-2 text-xs font-normal text-rf-plum-ink">
                                   Next
                                 </span>
                               ) : null}
                             </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                            <p className="text-sm text-rf-ink-soft">
                               {account.domain}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-rf-ink-mute">
                               Key {account.keyHint}
                             </p>
                           </div>
@@ -2642,7 +2642,7 @@ export default function AdminPanel() {
                             type="button"
                             disabled={isPinned || actionId === account.id}
                             onClick={() => switchDailyAccount(account)}
-                            className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                            className="rounded-lg border border-rf-line px-3 py-1.5 text-sm font-medium text-rf-ink-soft hover:bg-rf-line-soft disabled:opacity-50"
                           >
                             {isPinned
                               ? "In use"
@@ -2666,18 +2666,18 @@ export default function AdminPanel() {
         auditEntries.length === 0 &&
         reports.length === 0 &&
         dailyAccounts.length === 0 ? (
-          <p className="text-sm text-gray-500">Loading…</p>
+          <p className="text-sm text-rf-ink-mute">Loading…</p>
         ) : null}
       </div>
 
       {activityUserId ? (
-        <div className="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-950">
-          <div className="flex items-start justify-between gap-3 border-b border-gray-200 px-4 py-3 dark:border-gray-800">
+        <div className="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-rf-line bg-rf-card shadow-xl">
+          <div className="flex items-start justify-between gap-3 border-b border-rf-line px-4 py-3">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              <p className="text-sm font-semibold text-rf-ink">
                 {activity?.user.name || activity?.user.email || "User activity"}
               </p>
-              <p className="truncate text-xs text-gray-500">
+              <p className="truncate text-xs text-rf-ink-mute">
                 {activity?.user.email}
                 {activity?.user.username ? ` · @${activity.user.username}` : ""}
               </p>
@@ -2689,7 +2689,7 @@ export default function AdminPanel() {
                     activity.user.knownIps.map((row) => (
                       <p
                         key={row.ip}
-                        className="font-mono text-[10px] text-gray-400"
+                        className="font-mono text-[10px] text-rf-ink-mute"
                       >
                         {row.ip}
                         {row.lastSeenAt &&
@@ -2700,7 +2700,7 @@ export default function AdminPanel() {
                       </p>
                     ))
                   ) : (
-                    <p className="font-mono text-[10px] text-gray-400">
+                    <p className="font-mono text-[10px] text-rf-ink-mute">
                       last {activity.user.lastLoginIp || "—"}
                       {activity.user.signupIp
                         ? ` · signup ${activity.user.signupIp}`
@@ -2716,7 +2716,7 @@ export default function AdminPanel() {
                 setActivityUserId(null);
                 setActivity(null);
               }}
-              className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="rounded-lg p-1 text-rf-ink-mute hover:bg-rf-line-soft"
               aria-label="Close activity"
             >
               <X className="h-4 w-4" />
@@ -2724,19 +2724,19 @@ export default function AdminPanel() {
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
             {activityLoading ? (
-              <p className="text-sm text-gray-500">Loading activity…</p>
+              <p className="text-sm text-rf-ink-mute">Loading activity…</p>
             ) : (
               <ul className="space-y-3">
                 {(activity?.events ?? []).map((ev, i) => (
                   <li key={`${ev.type}-${ev.at}-${i}`} className="text-sm">
-                    <p className="text-[11px] text-gray-400">
+                    <p className="text-[11px] text-rf-ink-mute">
                       {new Date(ev.at).toLocaleString()} · {ev.type.replace(/_/g, " ")}
                     </p>
-                    <p className="text-gray-800 dark:text-gray-200">{ev.summary}</p>
+                    <p className="text-rf-ink">{ev.summary}</p>
                   </li>
                 ))}
                 {!activityLoading && (activity?.events.length ?? 0) === 0 ? (
-                  <li className="text-sm text-gray-500">No activity yet.</li>
+                  <li className="text-sm text-rf-ink-mute">No activity yet.</li>
                 ) : null}
               </ul>
             )}

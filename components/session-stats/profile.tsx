@@ -7,7 +7,8 @@ import {
   ActivityHeatmap,
   StatsErrorCard,
   StatsLoadingCard,
-  StatsSummaryLine,
+  HeatLegend,
+  formatPercent,
 } from "@/components/session-stats/shared";
 
 export function ProfileStats() {
@@ -54,6 +55,28 @@ export function ProfileStats() {
     );
   }
 
+  const weeks = Math.max(1, Math.round(stats.trend.length / 7));
+  const hours = Math.floor(stats.totalMinutes / 60);
+  const mins = stats.totalMinutes % 60;
+  const tiles: { label: string; value: string; unit: string }[] = [
+    { label: "Completed", value: String(stats.completed), unit: "" },
+    {
+      label: "Focused time",
+      value: String(hours),
+      unit: mins ? `h ${mins}m` : "h",
+    },
+    {
+      label: "Attendance",
+      value: formatPercent(stats.attendanceRate).replace("%", ""),
+      unit: "%",
+    },
+    {
+      label: "Streak",
+      value: String(stats.currentStreak),
+      unit: stats.currentStreak === 1 ? "day" : "days",
+    },
+  ];
+
   return (
     <section className={designStyles.card}>
       <div
@@ -62,33 +85,82 @@ export function ProfileStats() {
           alignItems: "flex-start",
           justifyContent: "space-between",
           gap: 12,
+          marginBottom: 18,
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
           <h2 className={designStyles.cardTitle} style={{ margin: 0 }}>
             Session stats
           </h2>
-          <StatsSummaryLine stats={stats} />
+          <p className={designStyles.cardSub} style={{ margin: "4px 0 0" }}>
+            Your focus history over the last {weeks} weeks.
+          </p>
         </div>
-        <span style={{ fontSize: 12, color: "var(--ink-mute)", flexShrink: 0 }}>
+        <span
+          className={designStyles.mono}
+          style={{ fontSize: 12, color: "var(--ink-mute)", flexShrink: 0, whiteSpace: "nowrap" }}
+        >
           {stats.booked} tracked
         </span>
       </div>
 
-      <ActivityHeatmap stats={stats} />
-
-      <Link
-        href="/dashboard?tab=sessions"
+      <div
         style={{
-          display: "inline-flex",
-          marginTop: 14,
-          fontSize: 13,
-          color: "var(--ink-mute)",
-          textDecoration: "none",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+          borderTop: "1px solid var(--line)",
+          borderBottom: "1px solid var(--line)",
+          marginBottom: 20,
         }}
       >
-        Full session history →
-      </Link>
+        {tiles.map((t) => (
+          <div key={t.label} style={{ padding: "14px 16px 14px 0" }}>
+            <div
+              className={designStyles.mono}
+              style={{
+                fontSize: 10.5,
+                color: "var(--ink-mute)",
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+              }}
+            >
+              {t.label}
+            </div>
+            <div
+              className={designStyles.mono}
+              style={{ fontSize: 24, letterSpacing: "-0.02em", marginTop: 4 }}
+            >
+              {t.value}
+              {t.unit ? (
+                <span style={{ fontSize: 12, color: "var(--ink-mute)", marginLeft: 3 }}>
+                  {t.unit}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <ActivityHeatmap stats={stats} bare />
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 12,
+          marginTop: 14,
+        }}
+      >
+        <Link
+          href="/dashboard?tab=sessions"
+          style={{ fontSize: 13, color: "var(--ink-mute)", textDecoration: "none" }}
+        >
+          Full session history →
+        </Link>
+        <HeatLegend />
+      </div>
     </section>
   );
 }

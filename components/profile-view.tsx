@@ -95,6 +95,7 @@ export function ProfileView({ embedded = false }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newInterest, setNewInterest] = useState("");
+  const [addedPrompts, setAddedPrompts] = useState<AboutMeKey[]>([]);
   const [copied, setCopied] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<
     "idle" | "checking" | "available" | "taken"
@@ -157,6 +158,7 @@ export function ProfileView({ embedded = false }: Props) {
         setUsernameStatus("idle");
         await loadUser();
         setIsEditing(false);
+        setAddedPrompts([]);
       }
     } finally {
       setSaving(false);
@@ -181,6 +183,7 @@ export function ProfileView({ embedded = false }: Props) {
     }
     setUsernameStatus("idle");
     setIsEditing(false);
+    setAddedPrompts([]);
   };
 
   // Debounced username availability check
@@ -361,14 +364,38 @@ export function ProfileView({ embedded = false }: Props) {
       ? user.attendance
       : null;
 
+  const answeredPrompts = ABOUT_ME_PROMPTS.filter(
+    (prompt) => (user?.aboutMe?.[prompt] || "").trim().length > 0,
+  );
+  const draftPrompts = ABOUT_ME_PROMPTS.filter(
+    (prompt) =>
+      addedPrompts.includes(prompt) ||
+      (editFields.aboutMe[prompt] || "").trim().length > 0,
+  );
+  const unansweredPrompts = ABOUT_ME_PROMPTS.filter(
+    (prompt) => !draftPrompts.includes(prompt),
+  );
+  const websiteHref = user?.website
+    ? user.website.startsWith("http")
+      ? user.website
+      : `https://${user.website}`
+    : undefined;
+  const websiteLabel = user?.website?.replace(/^https?:\/\//, "");
+  const metaDot = (
+    <span
+      aria-hidden
+      style={{ width: 3, height: 3, borderRadius: "50%", background: "var(--ink-mute)" }}
+    />
+  );
+
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: 32,
+        gap: 20,
         width: "100%",
-        maxWidth: 720,
+        maxWidth: 980,
         marginInline: embedded ? 0 : "auto",
       }}
     >
@@ -377,8 +404,11 @@ export function ProfileView({ embedded = false }: Props) {
       )}
 
       {/* Header */}
-      <header style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+      <header
+        className={designStyles.card}
+        style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 20 }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, flex: "none" }}>
           <div style={{ position: "relative" }}>
             <div
               className={`${designStyles.avatar} ${designStyles.avatarLg}`}
@@ -406,30 +436,30 @@ export function ProfileView({ embedded = false }: Props) {
               )}
             </div>
             <button
-                type="button"
-                onClick={handleAvatarPick}
-                disabled={avatarUploading}
-                aria-label="Change profile photo"
-                title="Change photo"
-                style={{
-                  position: "absolute",
-                  right: -4,
-                  bottom: -4,
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  border: "2px solid var(--card)",
-                  background: "var(--accent)",
-                  color: "#fff",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: avatarUploading ? "wait" : "pointer",
-                  boxShadow: "0 2px 8px rgba(0,0,0,.12)",
-                }}
-              >
-                <Camera size={14} />
-              </button>
+              type="button"
+              onClick={handleAvatarPick}
+              disabled={avatarUploading}
+              aria-label="Change profile photo"
+              title="Change photo"
+              style={{
+                position: "absolute",
+                right: -4,
+                bottom: -4,
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                border: "2px solid var(--card)",
+                background: "var(--rf-primary)",
+                color: "var(--rf-on-primary)",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: avatarUploading ? "wait" : "pointer",
+                boxShadow: "0 2px 8px rgba(0,0,0,.12)",
+              }}
+            >
+              <Camera size={14} />
+            </button>
             <input
               ref={avatarInputRef}
               type="file"
@@ -461,54 +491,84 @@ export function ProfileView({ embedded = false }: Props) {
             </button>
           )}
           {avatarError && (
-            <p style={{ fontSize: 12, color: "#b42318", margin: 0, maxWidth: 120, textAlign: "center" }}>
+            <p style={{ fontSize: 12, color: "var(--danger)", margin: 0, maxWidth: 120, textAlign: "center" }}>
               {avatarError}
             </p>
           )}
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+
+        <div style={{ flex: "1 1 280px", minWidth: 0 }}>
           <h1
-            className={designStyles.pageTitle}
-            style={{ fontSize: "clamp(24px, 4vw, 32px)", marginTop: 0 }}
+            style={{
+              fontSize: "clamp(24px, 4vw, 32px)",
+              lineHeight: 1.05,
+              letterSpacing: "-0.04em",
+              fontWeight: 500,
+              margin: 0,
+            }}
           >
             {displayName}
           </h1>
-          {user?.username && (
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                marginTop: 6,
-              }}
-            >
-              <Link
-                href={`/u/${user.username}`}
-                className={designStyles.linkMute}
-                style={{ fontSize: 14 }}
-              >
-                @{user.username}
-              </Link>
-              <button
-                type="button"
-                onClick={copyProfileLink}
-                title="Copy profile link"
-                aria-label="Copy profile link"
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "var(--ink-mute)",
-                  display: "inline-flex",
-                  padding: 4,
-                  borderRadius: 6,
-                  transition: "color .18s",
-                }}
-              >
-                {copied ? <Check size={12} /> : <Copy size={12} />}
-              </button>
-            </div>
-          )}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: "6px 12px",
+              marginTop: 8,
+              fontSize: 13,
+              color: "var(--ink-soft)",
+            }}
+          >
+            {user?.username && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
+                <Link href={`/u/${user.username}`} style={{ color: "var(--ink-soft)", textDecoration: "none" }}>
+                  @{user.username}
+                </Link>
+                <button
+                  type="button"
+                  onClick={copyProfileLink}
+                  title="Copy profile link"
+                  aria-label="Copy profile link"
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "var(--ink-mute)",
+                    display: "inline-flex",
+                    padding: 4,
+                    borderRadius: 6,
+                  }}
+                >
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                </button>
+              </span>
+            )}
+            {user?.location ? (
+              <>
+                {user?.username ? metaDot : null}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
+                  <MapPin size={13} />
+                  {user.location}
+                </span>
+              </>
+            ) : null}
+            {websiteHref ? (
+              <>
+                {user?.username || user?.location ? metaDot : null}
+                <a
+                  href={websiteHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={designStyles.link}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}
+                >
+                  <Globe size={13} />
+                  {websiteLabel}
+                </a>
+              </>
+            ) : null}
+          </div>
           {user?.email && (
             <div
               style={{
@@ -516,16 +576,10 @@ export function ProfileView({ embedded = false }: Props) {
                 alignItems: "center",
                 flexWrap: "wrap",
                 gap: 8,
-                marginTop: 4,
+                marginTop: 6,
               }}
             >
-              <p
-                style={{
-                  fontSize: 12,
-                  color: "var(--ink-mute)",
-                  margin: 0,
-                }}
-              >
+              <p style={{ fontSize: 12, color: "var(--ink-mute)", margin: 0 }}>
                 {user.email}
               </p>
               {user.emailVerified ? (
@@ -535,10 +589,10 @@ export function ProfileView({ embedded = false }: Props) {
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
-                    padding: "3px 8px",
+                    padding: "2px 8px",
                     borderRadius: 999,
-                    background: "var(--accent-soft)",
-                    color: "var(--ink-soft)",
+                    background: "var(--rf-amber-bg)",
+                    color: "var(--rf-amber-ink)",
                   }}
                 >
                   Unverified
@@ -552,24 +606,16 @@ export function ProfileView({ embedded = false }: Props) {
             </div>
           ) : null}
         </div>
-        <div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "none" }}>
           {!isEditing ? (
-            <DButton
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsEditing(true)}
-            >
-              <Pencil size={14} /> Edit
+            <DButton variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+              <Pencil size={14} /> Edit profile
             </DButton>
           ) : (
-            <div style={{ display: "flex", gap: 8 }}>
-              <DButton
-                variant="quiet"
-                size="sm"
-                onClick={handleCancel}
-                disabled={saving}
-              >
-                <X size={14} /> Cancel
+            <>
+              <DButton variant="quiet" size="sm" onClick={handleCancel} disabled={saving}>
+                Cancel
               </DButton>
               <DButton
                 variant="primary"
@@ -583,199 +629,230 @@ export function ProfileView({ embedded = false }: Props) {
               >
                 <Check size={14} /> {saving ? "Saving…" : "Save"}
               </DButton>
-            </div>
+            </>
           )}
-        </div>
-        <div style={{ marginLeft: "auto", flexShrink: 0 }}>
           <PageRefreshButton onRefresh={loadUser} />
         </div>
       </header>
 
-      {/* Session stats (compact) */}
-      {!isEditing && <ProfileStats />}
+      {!isEditing ? (
+        <>
+          <ProfileStats />
 
-      {/* Basic info */}
-      <section className={designStyles.card}>
-        <div className={designStyles.cardHead}>
-          <div>
-            <h2 className={designStyles.cardTitle}>Basic info</h2>
-            <p className={designStyles.cardSub}>
-              Name, handle, and how partners find you.
-            </p>
-          </div>
-        </div>
-
-        {isEditing ? (
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 16,
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
+              gap: 20,
+              alignItems: "start",
             }}
           >
-            <div style={{ gridColumn: "1 / -1" }}>
-              <Field
-                label="Username"
-                htmlFor="username"
-                error={usernameError}
-                ok={usernameOk}
-                hint={usernameHint}
+            <section className={designStyles.card} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div>
+                <h2 className={designStyles.cardTitle}>About</h2>
+                <p className={designStyles.cardSub}>
+                  A short bio that shows on your public profile.
+                </p>
+                <p
+                  style={{
+                    marginTop: 14,
+                    fontSize: 14.5,
+                    lineHeight: 1.6,
+                    color: user?.about ? "var(--ink)" : "var(--ink-mute)",
+                    textWrap: "pretty",
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {user?.about || "No bio added yet."}
+                </p>
+              </div>
+              <div style={{ paddingTop: 18, borderTop: "1px solid var(--line)" }}>
+                <h2 style={{ fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", margin: 0 }}>
+                  Interests
+                </h2>
+                <p style={{ marginTop: 2, fontSize: 12.5, color: "var(--ink-soft)" }}>
+                  Used by smart matching to find a partner on your wavelength.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+                  {(user?.interests?.length ?? 0) > 0 ? (
+                    user?.interests?.map((interest) => (
+                      <span key={interest} className={`${designStyles.tag} ${designStyles.tagAccent}`}>
+                        {interest}
+                      </span>
+                    ))
+                  ) : (
+                    <p style={{ fontSize: 14, color: "var(--ink-mute)", margin: 0 }}>
+                      No interests added yet.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            <section className={designStyles.card}>
+              <h2 className={designStyles.cardTitle}>Basic info</h2>
+              <p className={designStyles.cardSub}>Name, handle, and how partners find you.</p>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "18px 20px",
+                  marginTop: 18,
+                }}
               >
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <ReadField label="Username" value={user?.username ? `@${user.username}` : ""} />
+                </div>
+                <ReadField label="First name" value={firstname} />
+                <ReadField label="Last name" value={lastname} />
+                <ReadField label="Location" value={user?.location || ""} />
+                <ReadField
+                  label="Website"
+                  value={user?.website || ""}
+                  link={websiteHref}
+                  display={websiteLabel}
+                />
+              </div>
+            </section>
+          </div>
+
+          <section className={designStyles.card}>
+            <h2 className={designStyles.cardTitle}>About me prompts</h2>
+            <p className={designStyles.cardSub}>
+              Optional details to help partners understand your style and context.
+            </p>
+            {answeredPrompts.length > 0 ? (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+                  gap: 12,
+                  marginTop: 18,
+                }}
+              >
+                {answeredPrompts.map((prompt) => (
+                  <div
+                    key={prompt}
+                    style={{
+                      padding: "14px 16px",
+                      borderRadius: 12,
+                      background: "var(--bg)",
+                      border: "1px solid var(--line-soft)",
+                    }}
+                  >
+                    <div style={{ fontSize: 12, color: "var(--ink-mute)" }}>{prompt}</div>
+                    <div style={{ marginTop: 6, fontSize: 14, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>
+                      {user?.aboutMe?.[prompt]}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ fontSize: 14, color: "var(--ink-mute)", marginTop: 18 }}>
+                No prompt answers added yet.
+              </p>
+            )}
+          </section>
+        </>
+      ) : (
+        <>
+          <section className={designStyles.card}>
+            <h2 className={designStyles.cardTitle}>Basic info</h2>
+            <p className={designStyles.cardSub}>Name, handle, and how partners find you.</p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))",
+                gap: 16,
+                marginTop: 18,
+              }}
+            >
+              <div style={{ gridColumn: "1 / -1" }}>
+                <Field
+                  label="Username"
+                  htmlFor="username"
+                  error={usernameError}
+                  ok={usernameOk}
+                  hint={usernameHint}
+                >
+                  <DInput
+                    id="username"
+                    leading={<AtSign size={14} />}
+                    value={editFields.username}
+                    onChange={(e) =>
+                      setEditFields((prev) => ({
+                        ...prev,
+                        username: e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9_-]/g, ""),
+                      }))
+                    }
+                    placeholder="yourname"
+                    maxLength={20}
+                  />
+                </Field>
+              </div>
+              <Field label="First name" htmlFor="firstname">
                 <DInput
-                  id="username"
-                  leading={<AtSign size={14} />}
-                  value={editFields.username}
+                  id="firstname"
+                  value={editFields.firstname}
                   onChange={(e) =>
-                    setEditFields((prev) => ({
-                      ...prev,
-                      username: e.target.value
-                        .toLowerCase()
-                        .replace(/[^a-z0-9_-]/g, ""),
-                    }))
+                    setEditFields((prev) => ({ ...prev, firstname: e.target.value }))
                   }
-                  placeholder="yourname"
-                  maxLength={20}
+                  placeholder="First name"
+                />
+              </Field>
+              <Field label="Last name" htmlFor="lastname">
+                <DInput
+                  id="lastname"
+                  value={editFields.lastname}
+                  onChange={(e) =>
+                    setEditFields((prev) => ({ ...prev, lastname: e.target.value }))
+                  }
+                  placeholder="Last name"
+                />
+              </Field>
+              <Field label="Location" htmlFor="location">
+                <DInput
+                  id="location"
+                  leading={<MapPin size={14} />}
+                  value={editFields.location}
+                  onChange={(e) =>
+                    setEditFields((prev) => ({ ...prev, location: e.target.value }))
+                  }
+                  placeholder="City, Country"
+                />
+              </Field>
+              <Field label="Website" htmlFor="website">
+                <DInput
+                  id="website"
+                  leading={<Globe size={14} />}
+                  value={editFields.website}
+                  onChange={(e) =>
+                    setEditFields((prev) => ({ ...prev, website: e.target.value }))
+                  }
+                  placeholder="yourwebsite.com"
                 />
               </Field>
             </div>
-            <Field label="First name" htmlFor="firstname">
-              <DInput
-                id="firstname"
-                value={editFields.firstname}
-                onChange={(e) =>
-                  setEditFields((prev) => ({
-                    ...prev,
-                    firstname: e.target.value,
-                  }))
-                }
-                placeholder="First name"
-              />
-            </Field>
-            <Field label="Last name" htmlFor="lastname">
-              <DInput
-                id="lastname"
-                value={editFields.lastname}
-                onChange={(e) =>
-                  setEditFields((prev) => ({
-                    ...prev,
-                    lastname: e.target.value,
-                  }))
-                }
-                placeholder="Last name"
-              />
-            </Field>
-            <Field label="Location" htmlFor="location">
-              <DInput
-                id="location"
-                leading={<MapPin size={14} />}
-                value={editFields.location}
-                onChange={(e) =>
-                  setEditFields((prev) => ({
-                    ...prev,
-                    location: e.target.value,
-                  }))
-                }
-                placeholder="City, Country"
-              />
-            </Field>
-            <Field label="Website" htmlFor="website">
-              <DInput
-                id="website"
-                leading={<Globe size={14} />}
-                value={editFields.website}
-                onChange={(e) =>
-                  setEditFields((prev) => ({
-                    ...prev,
-                    website: e.target.value,
-                  }))
-                }
-                placeholder="yourwebsite.com"
-              />
-            </Field>
-          </div>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 20,
-            }}
-          >
-            <div style={{ gridColumn: "1 / -1" }}>
-              <ReadField
-                label="Username"
-                value={user?.username ? `@${user.username}` : ""}
-              />
+          </section>
+
+          <section className={designStyles.card} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <h2 className={designStyles.cardTitle}>About</h2>
+              <p className={designStyles.cardSub}>A short bio that shows on your public profile.</p>
             </div>
-            <ReadField label="First name" value={firstname} />
-            <ReadField label="Last name" value={lastname} />
-            <ReadField
-              label="Location"
-              value={user?.location || ""}
-              icon={<MapPin size={14} />}
-            />
-            <ReadField
-              label="Website"
-              value={user?.website || ""}
-              icon={<Globe size={14} />}
-              link={
-                user?.website
-                  ? user.website.startsWith("http")
-                    ? user.website
-                    : `https://${user.website}`
-                  : undefined
+            <DTextarea
+              value={editFields.about}
+              onChange={(e) =>
+                setEditFields((prev) => ({ ...prev, about: e.target.value }))
               }
-              display={user?.website?.replace(/^https?:\/\//, "")}
+              placeholder="What do you do — and what's a session with you like?"
+              rows={4}
             />
-          </div>
-        )}
-      </section>
-
-      {/* About */}
-      <section className={designStyles.card}>
-        <div className={designStyles.cardHead}>
-          <div>
-            <h2 className={designStyles.cardTitle}>About</h2>
-            <p className={designStyles.cardSub}>
-              A short bio that shows on your public profile.
-            </p>
-          </div>
-        </div>
-        {isEditing ? (
-          <DTextarea
-            value={editFields.about}
-            onChange={(e) =>
-              setEditFields((prev) => ({ ...prev, about: e.target.value }))
-            }
-            placeholder="What do you do — and what's a session with you like?"
-            rows={4}
-          />
-        ) : (
-          <p
-            style={{
-              fontSize: 14,
-              color: user?.about ? "var(--ink)" : "var(--ink-mute)",
-              lineHeight: 1.6,
-              margin: 0,
-            }}
-          >
-            {user?.about || "No bio added yet."}
-          </p>
-        )}
-      </section>
-
-      {/* Interests */}
-      <section className={designStyles.card}>
-        <div className={designStyles.cardHead}>
-          <div>
-            <h2 className={designStyles.cardTitle}>Interests</h2>
-            <p className={designStyles.cardSub}>
-              Used by smart matching to find a partner on your wavelength.
-            </p>
-          </div>
-        </div>
-        {isEditing ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+              <h2 style={{ fontSize: 15, fontWeight: 500, margin: 0 }}>Interests</h2>
+            </div>
             <div style={{ display: "flex", gap: 8 }}>
               <DInput
                 value={newInterest}
@@ -807,110 +884,108 @@ export function ProfileView({ embedded = false }: Props) {
                 ))}
               </div>
             )}
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {(user?.interests?.length ?? 0) > 0 ? (
-              user?.interests?.map((interest) => (
-                <span
-                  key={interest}
-                  className={`${designStyles.tag} ${designStyles.tagAccent}`}
+          </section>
+
+          <section className={designStyles.card} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+                gap: 12,
+              }}
+            >
+              <div>
+                <h2 className={designStyles.cardTitle}>About me prompts</h2>
+                <p className={designStyles.cardSub}>
+                  Answer the ones you like; empty prompts stay hidden.
+                </p>
+              </div>
+              {unansweredPrompts.length > 0 ? (
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const prompt = e.target.value as AboutMeKey;
+                    if (prompt) setAddedPrompts((prev) => [...prev, prompt]);
+                  }}
+                  aria-label="Add a prompt"
+                  style={{
+                    height: 36,
+                    maxWidth: 320,
+                    padding: "0 12px",
+                    borderRadius: 999,
+                    border: "1px solid var(--line)",
+                    background: "var(--card)",
+                    font: "inherit",
+                    fontSize: 13,
+                    color: "var(--ink)",
+                  }}
                 >
-                  {interest}
-                </span>
-              ))
-            ) : (
-              <p
-                style={{
-                  fontSize: 14,
-                  color: "var(--ink-mute)",
-                  margin: 0,
-                }}
-              >
-                No interests added yet.
-              </p>
-            )}
-          </div>
-        )}
-      </section>
-
-      {/* About me prompts */}
-      <section className={designStyles.card}>
-        <div className={designStyles.cardHead}>
-          <div>
-            <h2 className={designStyles.cardTitle}>About me prompts</h2>
-            <p className={designStyles.cardSub}>
-              Optional details to help partners understand your style and context.
-            </p>
-          </div>
-        </div>
-
-        {isEditing ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {ABOUT_ME_PROMPTS.map((prompt, idx) => (
-              <Field key={prompt} label={prompt} htmlFor={`aboutme-${idx}`}>
-                <DTextarea
-                  id={`aboutme-${idx}`}
-                  value={editFields.aboutMe[prompt]}
-                  onChange={(e) =>
-                    setEditFields((prev) => ({
-                      ...prev,
-                      aboutMe: {
-                        ...prev.aboutMe,
-                        [prompt]: e.target.value,
-                      },
-                    }))
-                  }
-                  rows={2}
-                  placeholder="Optional"
-                />
-              </Field>
-            ))}
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {ABOUT_ME_PROMPTS.filter((prompt) => (user?.aboutMe?.[prompt] || "").trim().length > 0)
-              .map((prompt) => (
-                <div key={prompt}>
-                  <p
+                  <option value="">+ Add a prompt</option>
+                  {unansweredPrompts.map((prompt) => (
+                    <option key={prompt} value={prompt}>
+                      {prompt}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
+            </div>
+            {draftPrompts.map((prompt) => {
+              const idx = ABOUT_ME_PROMPTS.indexOf(prompt);
+              return (
+                <div key={prompt} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <span
                     style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 12,
                       fontSize: 12,
-                      color: "var(--ink-mute)",
-                      margin: 0,
-                      letterSpacing: 0.005,
+                      fontWeight: 500,
+                      color: "var(--ink-soft)",
                     }}
                   >
-                    {prompt}
-                  </p>
-                  <p
-                    style={{
-                      margin: "6px 0 0",
-                      fontSize: 14,
-                      lineHeight: 1.6,
-                      color: "var(--ink)",
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {user?.aboutMe?.[prompt]}
-                  </p>
+                    <label htmlFor={`aboutme-${idx}`}>{prompt}</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddedPrompts((prev) => prev.filter((p) => p !== prompt));
+                        setEditFields((prev) => ({
+                          ...prev,
+                          aboutMe: { ...prev.aboutMe, [prompt]: "" },
+                        }));
+                      }}
+                      style={{
+                        border: 0,
+                        background: "transparent",
+                        font: "inherit",
+                        fontSize: 12,
+                        color: "var(--ink-mute)",
+                        cursor: "pointer",
+                        flex: "none",
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </span>
+                  <DTextarea
+                    id={`aboutme-${idx}`}
+                    value={editFields.aboutMe[prompt]}
+                    onChange={(e) =>
+                      setEditFields((prev) => ({
+                        ...prev,
+                        aboutMe: { ...prev.aboutMe, [prompt]: e.target.value },
+                      }))
+                    }
+                    rows={2}
+                    placeholder="Optional"
+                  />
                 </div>
-              ))}
-            {!ABOUT_ME_PROMPTS.some(
-              (prompt) => (user?.aboutMe?.[prompt] || "").trim().length > 0,
-            ) && (
-              <p
-                style={{
-                  fontSize: 14,
-                  color: "var(--ink-mute)",
-                  margin: 0,
-                }}
-              >
-                No prompt answers added yet.
-              </p>
-            )}
-          </div>
-        )}
-      </section>
+              );
+            })}
+          </section>
+        </>
+      )}
 
       {cropImageUrl && (
         <AvatarCropModal

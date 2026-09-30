@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent } from "react";
+import { ChangeEvent, ReactNode } from "react";
 import { Search } from "lucide-react";
 import { designStyles } from "@/components/design";
 import { PageRefreshButton } from "@/components/page-refresh";
@@ -8,17 +8,19 @@ import { PageRefreshButton } from "@/components/page-refresh";
 interface PageHeaderProps {
   query: string;
   onQueryChange: (value: string) => void;
+  /** Rendered along the bottom of the header card (stat strip). */
+  footer?: ReactNode;
 }
 
-export default function PageHeader({ query, onQueryChange }: PageHeaderProps) {
+export default function PageHeader({ query, onQueryChange, footer }: PageHeaderProps) {
   return (
-    <header className={`${designStyles.card} mb-6`}>
+    <header className={`${designStyles.card} mb-5`}>
       <span className={designStyles.eyebrow}>People</span>
-      <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1
             className={designStyles.pageTitle}
-            style={{ fontSize: "clamp(24px, 4vw, 32px)" }}
+            style={{ fontSize: "clamp(24px, 4vw, 32px)", lineHeight: 1.05, marginTop: 0 }}
           >
             Friends
           </h1>
@@ -30,10 +32,10 @@ export default function PageHeader({ query, onQueryChange }: PageHeaderProps) {
             focus sessions together.
           </p>
         </div>
-        <div className="flex w-full max-w-md flex-col items-stretch gap-2 sm:items-end">
-          <PageRefreshButton className="self-end" />
+        <div className="flex w-full max-w-[360px] items-center gap-2">
+          <PageRefreshButton className="shrink-0" />
           <label
-          className="flex h-10 w-full max-w-xs items-center gap-2 rounded-lg px-3"
+          className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full px-3.5"
           style={{
             border: "1px solid var(--line)",
             background: "var(--card)",
@@ -52,12 +54,13 @@ export default function PageHeader({ query, onQueryChange }: PageHeaderProps) {
               onQueryChange(e.target.value)
             }
             aria-label="Search friends"
-            className="flex-1 bg-transparent text-sm outline-none"
+            className="min-w-0 flex-1 bg-transparent text-[13.5px] outline-none"
             style={{ color: "var(--ink)" }}
           />
         </label>
         </div>
       </div>
+      {footer}
     </header>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect, useCallback } from "react";
+import type { ReactNode } from "react";
 import {
   DEFAULT_DURATION,
   isValidDuration,
@@ -27,7 +28,8 @@ export type CreatedSession = {
 };
 
 type Props = {
-  label?: string;
+  label?: ReactNode;
+  ariaLabel?: string;
   className?: string;
   defaultDuration?: DurationMin;
   defaultSessionType?: "focus" | "deep-work" | "learning";
@@ -36,6 +38,7 @@ type Props = {
 
 export default function BookSessionButton({
   label = "Book a session",
+  ariaLabel,
   className = "",
   defaultDuration,
   defaultSessionType = "focus",
@@ -258,7 +261,8 @@ export default function BookSessionButton({
     <>
       <button
         data-book-session-trigger
-        className={`w-full rounded-md bg-[#5D1C6A] px-3 py-2 text-sm font-medium text-white hover:bg-[#CA5995] disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+        className={`flex w-full items-center justify-center rounded-md bg-rf-primary px-3 py-2 text-sm font-medium text-rf-on-primary transition-colors hover:bg-rf-primary-hover disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+        aria-label={ariaLabel}
         onClick={() => canBook && setOpen(true)}
         disabled={!canBook}
         title={!canBook ? blockMessage : undefined}
@@ -268,13 +272,13 @@ export default function BookSessionButton({
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col rounded-lg bg-white dark:bg-gray-900 shadow-xl border border-gray-200 dark:border-gray-800">
-            <div className="flex items-start justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col rounded-lg bg-rf-card shadow-xl border border-rf-line">
+            <div className="flex items-start justify-between p-4 border-b border-rf-line">
+              <h2 className="text-lg font-semibold text-rf-ink">
                 Book a session
               </h2>
               <button
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                className="text-sm text-rf-ink-mute hover:text-rf-ink"
                 onClick={() => setOpen(false)}
                 disabled={busy}
               >
@@ -285,7 +289,7 @@ export default function BookSessionButton({
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Quick date selection (same as friends chat) */}
               <div>
-                <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 block">
+                <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide mb-1.5 block">
                   Pick a day
                 </label>
                 <div className="flex gap-1 overflow-x-auto pb-1">
@@ -303,8 +307,8 @@ export default function BookSessionButton({
                       }}
                       className={`shrink-0 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                         srDate?.toDateString() === opt.date.toDateString()
-                          ? "bg-[#5D1C6A] text-white"
-                          : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                          ? "bg-rf-primary text-rf-on-primary"
+                          : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                       }`}
                     >
                       {opt.label}
@@ -317,11 +321,11 @@ export default function BookSessionButton({
               {srDate && (
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide">
                       Pick a time
                     </label>
                     {loadingBusy && (
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-rf-ink-mute">
                         Checking availability…
                       </span>
                     )}
@@ -329,7 +333,7 @@ export default function BookSessionButton({
                   <div className="flex gap-1 mb-2 text-[10px]">
                     <span className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-red-400" />
-                      <span className="text-gray-500 dark:text-gray-400">
+                      <span className="text-rf-ink-mute">
                         You&apos;re busy
                       </span>
                     </span>
@@ -359,12 +363,12 @@ export default function BookSessionButton({
                           }
                           className={`rounded px-1.5 py-1.5 text-[11px] font-medium transition-colors ${
                             isPastSlot
-                              ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                              ? "bg-rf-line-soft text-rf-ink-mute cursor-not-allowed"
                               : conflict
                                 ? "bg-red-100 dark:bg-red-900/30 text-red-400 dark:text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
                                 : srHour === slot.hour
-                                  ? "bg-[#5D1C6A] text-white"
-                                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                                  ? "bg-rf-primary text-rf-on-primary"
+                                  : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                           }`}
                         >
                           {slot.label}
@@ -374,7 +378,7 @@ export default function BookSessionButton({
                   </div>
                   {srHour !== null && (
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-rf-ink-mute">
                         Minutes:
                       </span>
                       <div className="flex gap-1">
@@ -397,8 +401,8 @@ export default function BookSessionButton({
                                 minuteConflict
                                   ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed"
                                   : srMinute === m
-                                    ? "bg-[#5D1C6A] text-white"
-                                    : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                                    ? "bg-rf-primary text-rf-on-primary"
+                                    : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                               }`}
                             >
                               :{m.toString().padStart(2, "0")}
@@ -414,7 +418,7 @@ export default function BookSessionButton({
               {/* Duration */}
               {srDate && srHour !== null && (
                 <div>
-                  <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 block">
+                  <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide mb-1.5 block">
                     Duration
                   </label>
                   <div className="flex gap-1">
@@ -441,12 +445,12 @@ export default function BookSessionButton({
                           }
                           className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                             unavailable
-                              ? "cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400 opacity-45 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
+                              ? "cursor-not-allowed border border-rf-line bg-rf-line-soft text-rf-ink-mute opacity-45"
                               : durationConflict
                                 ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed border border-red-200 dark:border-red-800"
                                 : duration === d
-                                  ? "bg-[#5D1C6A] text-white"
-                                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                                  ? "bg-rf-primary text-rf-on-primary"
+                                  : "bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft border border-rf-line"
                           }`}
                         >
                           {d} min
@@ -454,7 +458,7 @@ export default function BookSessionButton({
                       );
                     })}
                   </div>
-                  <p className="mt-1.5 text-[11px] leading-snug text-gray-400 dark:text-gray-500">
+                  <p className="mt-1.5 text-[11px] leading-snug text-rf-ink-mute">
                     {DURATION_UNAVAILABLE_HINT}
                   </p>
                 </div>
@@ -463,7 +467,7 @@ export default function BookSessionButton({
               {/* Session type */}
               {srDate && srHour !== null && (
                 <div>
-                  <label className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5 block">
+                  <label className="text-[10px] font-medium text-rf-ink-mute uppercase tracking-wide mb-1.5 block">
                     Session type
                   </label>
                   <div className="flex gap-2 flex-wrap">
@@ -474,8 +478,8 @@ export default function BookSessionButton({
                         onClick={() => setSessionType(t)}
                         className={`rounded-md border px-3 py-1.5 text-xs font-medium capitalize ${
                           sessionType === t
-                            ? "border-[#CA5995] bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090]"
-                            : "border-gray-300 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                            ? "border-rf-rose bg-rf-cream-bg text-rf-plum-ink"
+                            : "border-rf-line bg-rf-card text-rf-ink-soft"
                         }`}
                         disabled={busy}
                       >
@@ -488,7 +492,7 @@ export default function BookSessionButton({
 
               {/* Quiet mode */}
               {srDate && srHour !== null && (
-                <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                <label className="flex items-center gap-3 text-sm text-rf-ink-soft">
                   <input
                     type="checkbox"
                     className="h-4 w-4 accent-gray-700 dark:accent-gray-300"
@@ -508,8 +512,8 @@ export default function BookSessionButton({
                       ⚠️ You already have a session during this time
                     </div>
                   ) : (
-                    <div className="text-xs text-gray-600 dark:text-gray-300">
-                      <span className="text-[#5D1C6A] dark:text-[#CA5995]">
+                    <div className="text-xs text-rf-ink-soft">
+                      <span className="text-rf-plum-ink">
                         ✓ Available
                       </span>
                       {" · "}
@@ -533,7 +537,7 @@ export default function BookSessionButton({
                     </div>
                   )}
                   {success && (
-                    <div className="rounded-md bg-[#FFF1D3] dark:bg-[#5D1C6A]/40 px-3 py-2 text-sm text-[#5D1C6A] dark:text-[#FFB090]">
+                    <div className="rounded-md bg-rf-cream-bg px-3 py-2 text-sm text-rf-plum-ink">
                       {success}
                     </div>
                   )}
@@ -542,10 +546,10 @@ export default function BookSessionButton({
             </div>
 
             {/* Footer actions */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-3">
+            <div className="p-4 border-t border-rf-line flex justify-end gap-3">
               <button
                 type="button"
-                className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="rounded-md border border-rf-line bg-rf-card text-rf-ink-soft px-4 py-2 text-sm hover:bg-rf-line-soft"
                 onClick={() => setOpen(false)}
                 disabled={busy}
               >
@@ -553,7 +557,7 @@ export default function BookSessionButton({
               </button>
               <button
                 type="button"
-                className="rounded-md bg-[#5D1C6A] dark:bg-[#5D1C6A] px-4 py-2 text-sm font-medium text-white hover:bg-[#CA5995] dark:hover:bg-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-md bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleCreate}
                 disabled={
                   busy ||

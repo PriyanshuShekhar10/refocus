@@ -192,7 +192,7 @@ function NotificationCard({
         right: layer.insetX,
         ...(isFront ? { maxHeight: FRONT_CARD_MAX_HEIGHT } : {}),
       }}
-      className={`absolute inset-x-0 top-0 overflow-hidden rounded-[18px] border border-black/[0.06] bg-white/92 px-3 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_8px_24px_-6px_rgba(0,0,0,0.18),0_2px_6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1c1c1e]/92 dark:shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_8px_24px_-6px_rgba(0,0,0,0.55),0_2px_6px_rgba(0,0,0,0.35)] ${
+      className={`absolute inset-x-0 top-0 overflow-hidden rounded-[18px] border border-black/[0.06] bg-rf-card/92 px-3 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_8px_24px_-6px_rgba(0,0,0,0.18),0_2px_6px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/[0.08] dark:shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_8px_24px_-6px_rgba(0,0,0,0.55),0_2px_6px_rgba(0,0,0,0.35)] ${
         showDisintegration ? "overflow-visible" : ""
       } ${update.dismissed ? "opacity-80" : ""}`}
     >
@@ -244,10 +244,10 @@ function NotificationCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate text-[11px] font-semibold text-gray-900 dark:text-white">
+                <p className="truncate text-[11px] font-semibold text-rf-ink">
                   {update.title || "Refocus"}
                 </p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                <p className="text-[10px] text-rf-ink-mute">
                   now · {formatTime(update.createdAt)}
                 </p>
               </div>
@@ -263,7 +263,7 @@ function NotificationCard({
                   whileTap={
                     prefersReducedMotion ? undefined : { scale: 0.9 }
                   }
-                  className="shrink-0 rounded-full bg-black/[0.06] p-1 text-gray-500 transition-colors hover:bg-black/[0.1] hover:text-gray-700 disabled:opacity-50 dark:bg-white/[0.08] dark:text-gray-300 dark:hover:bg-white/[0.14] dark:hover:text-white"
+                  className="shrink-0 rounded-full bg-black/[0.06] p-1 text-rf-ink-mute transition-colors hover:bg-black/[0.1] hover:text-rf-ink disabled:opacity-50 dark:bg-white/[0.08] dark:hover:bg-white/[0.14]"
                 >
                   <X className="h-3 w-3" />
                 </motion.button>
@@ -271,7 +271,7 @@ function NotificationCard({
             </div>
 
             <p
-              className={`mt-1.5 text-[12px] leading-snug text-gray-700 dark:text-gray-200 ${
+              className={`mt-1.5 text-[12px] leading-snug text-rf-ink-soft ${
                 isFront
                   ? "whitespace-pre-wrap line-clamp-4"
                   : "line-clamp-1"
@@ -430,7 +430,7 @@ export default function SidebarUpdatesBox() {
       </div>
 
       {hiddenCount > 0 ? (
-        <p className="mt-1.5 text-center text-[10px] font-medium text-gray-400 dark:text-gray-500">
+        <p className="mt-1.5 text-center text-[10px] font-medium text-rf-ink-mute">
           {hiddenCount} more update{hiddenCount === 1 ? "" : "s"}
         </p>
       ) : null}

@@ -3,14 +3,18 @@
 import { formatLocalDate } from "@/lib/localTime";
 import { addDaysInTimeZone } from "@/lib/zonedTime";
 import { useUserTimezone } from "@/components/user-timezone-provider";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, ListFilter, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DURATION_OPTIONS, type DurationMin } from "@/constants/calendar";
+import BookSessionButton from "../BookSessionButton";
 
 type ViewDays = 3 | 5 | 7;
 
-const VIEW_OPTIONS: { value: ViewDays; label: string }[] = [
-  { value: 3, label: "3 Days" },
-  { value: 5, label: "5 Days" },
-  { value: 7, label: "Week" },
+const VIEW_OPTIONS: { value: ViewDays; label: string; short: string }[] = [
+  { value: 3, label: "3 Days", short: "3D" },
+  { value: 5, label: "5 Days", short: "5D" },
+  { value: 7, label: "Week", short: "W" },
 ];
 
 interface CalendarHeaderProps {
@@ -20,6 +24,8 @@ interface CalendarHeaderProps {
   onGoToday: () => void;
   visibleDays: ViewDays;
   onVisibleDaysChange: (days: ViewDays) => void;
+  durationFilter?: DurationMin[];
+  onToggleDuration?: (duration: DurationMin) => void;
 }
 
 function formatVisibleRange(
@@ -46,99 +52,164 @@ export function CalendarHeader({
   onGoToday,
   visibleDays,
   onVisibleDaysChange,
+  durationFilter = [...DURATION_OPTIONS],
+  onToggleDuration,
 }: CalendarHeaderProps) {
   const { timeZone } = useUserTimezone();
   const rangeLabel = formatVisibleRange(startDate, visibleDays, timeZone);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+  const hiddenCount = DURATION_OPTIONS.length - durationFilter.length;
+
+  useEffect(() => {
+    if (!filterOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!filterRef.current?.contains(e.target as Node)) setFilterOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFilterOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [filterOpen]);
+
+  const navBtn =
+    "grid h-8 w-8 place-items-center rounded-lg text-rf-ink-soft transition-colors hover:bg-rf-line-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose";
 
   return (
-    <div className="flex h-14 shrink-0 items-center justify-between gap-6 border-b border-gray-200/90 px-5 dark:border-gray-700/70">
-      <div className="flex min-w-0 items-center gap-8">
-        <div className="flex items-center gap-2">
+    <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-rf-line pl-4 pr-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={() => onShiftRange(-1)}
-            className={cn(
-              "inline-flex h-8 w-8 items-center justify-center rounded-md",
-              "text-gray-400 transition-colors",
-              "hover:bg-gray-100/70 hover:text-gray-700",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35",
-              "dark:text-gray-500 dark:hover:bg-gray-800/60 dark:hover:text-gray-200",
-            )}
+            className={navBtn}
             title="Previous"
             aria-label="Previous range"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
+            <ChevronLeft size={16} />
           </button>
-
           <button
             type="button"
             onClick={onGoToday}
-            className={cn(
-              "inline-flex h-7 items-center rounded-md border border-gray-200/50 px-2",
-              "text-[13px] font-medium text-gray-500 transition-colors",
-              "hover:border-gray-300/70 hover:bg-gray-50/80 hover:text-gray-700",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35",
-              "dark:border-gray-700/50 dark:text-gray-400",
-              "dark:hover:border-gray-600/70 dark:hover:bg-gray-800/40 dark:hover:text-gray-200",
-            )}
+            className="h-7 whitespace-nowrap rounded-lg border border-rf-line px-2.5 text-[13px] font-medium text-rf-ink-soft transition-colors hover:bg-rf-line-soft hover:text-rf-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose"
           >
             Today
           </button>
-
           <button
             type="button"
             onClick={() => onShiftRange(1)}
-            className={cn(
-              "inline-flex h-8 w-8 items-center justify-center rounded-md",
-              "text-gray-400 transition-colors",
-              "hover:bg-gray-100/70 hover:text-gray-700",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35",
-              "dark:text-gray-500 dark:hover:bg-gray-800/60 dark:hover:text-gray-200",
-            )}
+            className={navBtn}
             title="Next"
             aria-label="Next range"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
+            <ChevronRight size={16} />
           </button>
         </div>
 
         <h2
-          className="truncate text-lg font-semibold tracking-tight text-gray-950 dark:text-white"
+          className="truncate text-lg font-semibold tracking-[-0.02em] text-rf-ink"
           title={`Times shown in ${timeZone.replace(/_/g, " ")}`}
         >
           {rangeLabel}
         </h2>
       </div>
 
-      <div
-        className="flex h-8 shrink-0 items-center rounded-md bg-gray-100/35 p-px dark:bg-gray-800/30"
-        role="group"
-        aria-label="Calendar view"
-      >
-        {VIEW_OPTIONS.map((option) => {
-          const selected = visibleDays === option.value;
-          return (
+      <div className="flex shrink-0 items-center gap-2.5">
+        {onToggleDuration ? (
+          <div className="relative" ref={filterRef}>
             <button
-              key={option.value}
               type="button"
-              onClick={() => onVisibleDaysChange(option.value)}
-              aria-pressed={selected}
+              onClick={() => setFilterOpen((v) => !v)}
+              aria-expanded={filterOpen}
               className={cn(
-                "h-7 rounded px-1.5 text-[13px] font-medium transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35",
-                selected
-                  ? "bg-white/85 text-gray-900 dark:bg-gray-700/70 dark:text-gray-50"
-                  : "text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300",
+                "flex h-[34px] items-center gap-1.5 whitespace-nowrap rounded-[9px] border border-rf-line px-3 text-[13px] font-medium text-rf-ink-soft transition-colors hover:text-rf-ink",
+                filterOpen ? "bg-rf-line-soft" : "bg-transparent",
               )}
             >
-              {option.label}
+              <ListFilter size={14} />
+              <span className="hidden min-[1400px]:inline">Filter</span>
+              {hiddenCount > 0 ? (
+                <span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-rf-primary px-[5px] text-[10.5px] font-semibold text-rf-on-primary">
+                  {hiddenCount}
+                </span>
+              ) : null}
             </button>
-          );
-        })}
+            {filterOpen ? (
+              <div className="absolute right-0 top-[calc(100%+6px)] z-30 flex w-[248px] flex-col gap-3 rounded-xl border border-rf-line bg-rf-card p-3 shadow-[0_12px_32px_rgba(0,0,0,.14)]">
+                <div className="flex flex-col gap-1.5">
+                  <span className="px-1.5 text-[11.5px] font-semibold tracking-[0.02em] text-rf-ink-mute">
+                    Duration (minutes)
+                  </span>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {DURATION_OPTIONS.map((d) => {
+                      const on = durationFilter.includes(d);
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => onToggleDuration(d)}
+                          aria-pressed={on}
+                          className={cn(
+                            "h-[30px] whitespace-nowrap rounded-lg border font-rf-mono text-xs transition-colors",
+                            on
+                              ? "border-rf-rose bg-rf-cream-bg text-rf-plum-ink"
+                              : "border-rf-line bg-transparent text-rf-ink-mute",
+                          )}
+                        >
+                          {d}m
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div
+          className="flex gap-0.5 rounded-[10px] bg-rf-line-soft p-[3px]"
+          role="group"
+          aria-label="Calendar view"
+        >
+          {VIEW_OPTIONS.map((option) => {
+            const selected = visibleDays === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => onVisibleDaysChange(option.value)}
+                aria-pressed={selected}
+                className={cn(
+                  "h-7 whitespace-nowrap rounded-[7px] px-2.5 text-[13px] font-medium transition-colors",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose",
+                  selected
+                    ? "bg-rf-card text-rf-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+                    : "text-rf-ink-mute hover:text-rf-ink-soft",
+                )}
+              >
+                <span className="hidden min-[1400px]:inline">{option.label}</span>
+                <span className="min-[1400px]:hidden">{option.short}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <BookSessionButton
+          label={
+            <span className="flex items-center gap-1.5">
+              <Plus size={15} strokeWidth={2.4} />
+              <span className="hidden min-[1400px]:inline">Book session</span>
+            </span>
+          }
+          ariaLabel="Book session"
+          className="!h-9 !w-auto whitespace-nowrap !rounded-[10px] !px-3.5 !py-0 text-[13.5px] !font-semibold"
+        />
       </div>
     </div>
   );

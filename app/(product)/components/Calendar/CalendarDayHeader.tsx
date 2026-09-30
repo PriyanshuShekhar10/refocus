@@ -24,12 +24,12 @@ export function CalendarDayHeader({
 
   return (
     <div
-      className="flex h-9 shrink-0 border-b border-gray-100/70 dark:border-gray-800/60"
+      className="flex h-9 shrink-0 border-b border-rf-line-soft/70"
       style={endInset > 0 ? { paddingRight: endInset } : undefined}
     >
       {/* Aligns with time gutter — intentionally blank */}
       <div
-        className="w-16 shrink-0 border-r border-gray-100/60 dark:border-gray-800/50"
+        className="w-16 shrink-0 border-r border-rf-line-soft/60"
         aria-hidden="true"
       />
       <div
@@ -45,15 +45,15 @@ export function CalendarDayHeader({
           return (
             <div
               key={key}
-              className="flex items-center justify-center border-r border-gray-100/60 dark:border-gray-800/50"
+              className="flex items-center justify-center border-r border-rf-line-soft/60"
             >
               <div className="relative flex items-baseline gap-1 pb-0.5">
                 <span
                   className={cn(
                     "text-[13px] font-normal",
                     isToday
-                      ? "text-gray-500 dark:text-gray-400"
-                      : "text-gray-400 dark:text-gray-500",
+                      ? "text-rf-ink-mute"
+                      : "text-rf-ink-mute",
                   )}
                 >
                   {weekday}
@@ -62,15 +62,15 @@ export function CalendarDayHeader({
                   className={cn(
                     "text-[14px] tabular-nums",
                     isToday
-                      ? "font-semibold text-[#5D1C6A] dark:text-[#E8B4D4]"
-                      : "font-medium text-gray-800 dark:text-gray-100",
+                      ? "font-semibold text-rf-plum-ink"
+                      : "font-medium text-rf-ink",
                   )}
                 >
                   {dateNum}
                 </span>
                 {isToday ? (
                   <span
-                    className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[#5D1C6A]/65 dark:bg-[#CA5995]/65"
+                    className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-rf-rose/65"
                     aria-hidden="true"
                   />
                 ) : null}

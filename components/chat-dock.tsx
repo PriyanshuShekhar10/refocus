@@ -203,24 +203,24 @@ export function ChatDock() {
       {/* Friends panel shows when toggled from sidebar */}
       {panelOpen ? (
         <div
-          className="pointer-events-auto mb-2 w-[300px] max-h-[420px] overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xl"
+          className="pointer-events-auto mb-2 w-[300px] max-h-[420px] overflow-hidden rounded-lg border border-rf-line bg-rf-card shadow-xl"
           style={{ transformOrigin: "bottom right" }}
         >
-          <div className="flex items-center justify-between px-3 h-10 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between px-3 h-10 border-b border-rf-line">
             <div className="text-sm font-semibold">Friends</div>
             <button
               onClick={() => setPanelOpen(false)}
               aria-label="Close friends list"
-              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-rf-ink-mute hover:text-rf-ink hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             >
               <FiX size={14} />
             </button>
           </div>
           <div className="max-h-[372px] overflow-y-auto">
             {!friendsLoaded || friendsLoading ? (
-              <div className="p-3 text-sm text-gray-500">Loading friends…</div>
+              <div className="p-3 text-sm text-rf-ink-mute">Loading friends…</div>
             ) : friends.length === 0 ? (
-              <div className="p-3 text-sm text-gray-500">No friends found</div>
+              <div className="p-3 text-sm text-rf-ink-mute">No friends found</div>
             ) : (
               friends.map((f) => {
                 const label = f.name || f.email || f.user_id;
@@ -247,7 +247,7 @@ export function ChatDock() {
                       <div className="text-sm font-medium">
                         {label}
                       </div>
-                      <div className="text-xs text-gray-500 truncate max-w-[160px]">
+                      <div className="text-xs text-rf-ink-mute truncate max-w-[160px]">
                         {f.username || f.email || ""}
                       </div>
                     </div>

@@ -38,7 +38,7 @@ export default function FriendChatInput({
 
   return (
     <div
-      className={`shrink-0 border-t border-gray-200/70 dark:border-gray-800 bg-white dark:bg-gray-900 ${
+      className={`shrink-0 border-t border-rf-line/70 bg-rf-card ${
         isModal ? "px-5 py-4" : "p-3"
       }`}
     >
@@ -51,7 +51,7 @@ export default function FriendChatInput({
               : verifyMessage || ""
           }
           disabled={!canInteract || isSending}
-          className={`flex-1 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:border-[#5D1C6A] focus:bg-white dark:focus:border-[#CA5995] dark:focus:bg-gray-900 transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+          className={`flex-1 rounded-full border border-rf-line bg-rf-bg text-rf-ink placeholder:text-rf-ink-mute focus:outline-none focus:border-rf-primary focus:bg-rf-line-soft transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
             isModal ? "px-4 py-2 text-sm" : "px-3 py-1.5 text-sm"
           }`}
           value={text}
@@ -70,8 +70,8 @@ export default function FriendChatInput({
           title={canInteract ? "Send session request" : verifyMessage || ""}
           className={`inline-flex shrink-0 items-center justify-center rounded-full border transition-colors ${
             srOpen
-              ? "border-[#5D1C6A] bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090] dark:border-[#CA5995]"
-              : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-[#5D1C6A] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-[#FFB090]"
+              ? "border-rf-primary bg-rf-cream-bg text-rf-plum-ink"
+              : "border-rf-line bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft hover:text-rf-plum-ink"
           } ${isModal ? "h-10 w-10" : "h-8 w-8"}`}
         >
           <FiCalendar size={isModal ? 16 : 14} />
@@ -80,7 +80,7 @@ export default function FriendChatInput({
           onClick={handleSend}
           disabled={!canInteract || isSending || !text.trim()}
           aria-label="Send message"
-          className={`inline-flex shrink-0 items-center justify-center rounded-full bg-[#5D1C6A] text-white shadow-sm hover:bg-[#CA5995] disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+          className={`inline-flex shrink-0 items-center justify-center rounded-full bg-rf-primary text-rf-on-primary shadow-sm hover:bg-rf-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
             isModal ? "h-10 w-10" : "h-8 w-8"
           }`}
         >

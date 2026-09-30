@@ -43,52 +43,26 @@ import {
 } from "./sessionUiState";
 import { useMobileAgendaColors } from "./mobileAgendaColors";
 
-const BOOK_TIME_STEP_MINUTES = BOOKING_TIME_STEP_MINUTES;
-const MAX_BOOK_MINUTES = 24 * 60 - BOOK_TIME_STEP_MINUTES;
+const BOOK_SLOT_MINUTES = BOOKING_TIME_STEP_MINUTES;
 const SWIPE_THRESHOLD_PX = 50;
+const BOOK_SHEET_DAYS = 5;
+const DAY_PARTS: Array<[label: string, from: number, to: number]> = [
+  ["Morning", 0, 12 * 60],
+  ["Afternoon", 12 * 60, 17 * 60],
+  ["Evening", 17 * 60, 24 * 60],
+];
 
-function formatBookTime(totalMinutes: number): string {
+function formatSlotLabel(totalMinutes: number): string {
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h >= 12 ? "p" : "a"}`;
 }
 
-function snapBookTimeMinutes(totalMinutes: number): number {
-  const rounded =
-    Math.round(totalMinutes / BOOK_TIME_STEP_MINUTES) * BOOK_TIME_STEP_MINUTES;
-  return Math.min(Math.max(0, rounded), MAX_BOOK_MINUTES);
-}
-
-function getDefaultBookTime(date: Date, timeZone: string): string {
-  const now = new Date();
-  const isToday =
-    ymdInTimeZone(date, timeZone) === ymdInTimeZone(now, timeZone);
-  if (!isToday) return "09:00";
-
-  const minutes = minutesOfDayInTimeZone(now, timeZone);
-  const rounded = snapBookTimeMinutes(
-    Math.ceil(minutes / BOOK_TIME_STEP_MINUTES) * BOOK_TIME_STEP_MINUTES,
-  );
-  return formatBookTime(rounded);
-}
-
-function parseBookTime(value: string): { hours: number; minutes: number } | null {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
-  if (!match) return null;
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
-  if (minutes % BOOK_TIME_STEP_MINUTES !== 0) return null;
-  return { hours, minutes };
-}
-
-function normalizeBookTime(value: string): string | null {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
-  if (!match) return null;
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
-  return formatBookTime(snapBookTimeMinutes(hours * 60 + minutes));
+function formatClock(totalMinutes: number): string {
+  const wrapped = ((totalMinutes % 1440) + 1440) % 1440;
+  const h = Math.floor(wrapped / 60);
+  const m = wrapped % 60;
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
 }
 
 type ModalState =
@@ -242,10 +216,12 @@ export default function MobileCalendar() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const nextUpRef = useRef<HTMLDivElement>(null);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
-  const datePickerRef = useRef<HTMLInputElement>(null);
   const [ui, dispatch] = useReducer(uiReducer, undefined, createInitialState);
   const [now, setNow] = useState(new Date());
-  const [bookTime, setBookTime] = useState("09:00");
+  const [bookMin, setBookMin] = useState<number | null>(null);
+  const [bookPart, setBookPart] = useState<string | null>(null);
+  const [bookQuiet, setBookQuiet] = useState(false);
+  const [booking, setBooking] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const { timeZone } = useUserTimezone();
   const { canBookSessions, bannedMessage } = useCommunityModeration();
@@ -261,8 +237,9 @@ export default function MobileCalendar() {
   }, [timeZone]);
 
   useEffect(() => {
-    setBookTime(getDefaultBookTime(ui.startDate, timeZone));
-  }, [ui.startDate, timeZone]);
+    setBookMin(null);
+    setBookPart(null);
+  }, [ui.startDate]);
 
   useEffect(() => {
     if (ui.toast) {
@@ -353,16 +330,6 @@ export default function MobileCalendar() {
     [timeZone],
   );
 
-  const openDatePicker = useCallback(() => {
-    const el = datePickerRef.current;
-    if (!el) return;
-    if (typeof el.showPicker === "function") {
-      el.showPicker();
-    } else {
-      el.click();
-    }
-  }, []);
-
   const handleJoinFromSheet = useCallback(async () => {
     const event = ui.sessionSheetEvent;
     if (!event) return;
@@ -437,80 +404,126 @@ export default function MobileCalendar() {
     }
   }, [ui.modal, createSession]);
 
-  const handleBookFromPicker = useCallback(() => {
+  // ── Book sheet: day chips, day parts, and 30-minute slots for the agenda day.
+  const bookSlots = useMemo(() => {
+    const todayMin = minutesOfDayInTimeZone(now, timeZone);
+    const first = isToday
+      ? Math.ceil((todayMin + 1) / BOOK_SLOT_MINUTES) * BOOK_SLOT_MINUTES
+      : 0;
+    const isMine = (ev: CalendarEvent) =>
+      (ev.owner_id && currentUserId && ev.owner_id === currentUserId) ||
+      (ev.participants ?? []).some((p) => p.user_id === currentUserId);
+    const slots: Array<{
+      minutes: number;
+      label: string;
+      busy: boolean;
+      openWith: string | null;
+      open: CalendarEvent | null;
+    }> = [];
+    for (let m = first; m < 24 * 60; m += BOOK_SLOT_MINUTES) {
+      const start = wallMinutesOnDayToUtc(ui.startDate, m, timeZone).getTime();
+      const end = start + DEFAULT_DURATION * 60_000;
+      const busy = events.some(
+        (ev) =>
+          isMine(ev) &&
+          start < new Date(ev.end).getTime() &&
+          end > new Date(ev.start).getTime(),
+      );
+      const open =
+        events.find(
+          (ev) =>
+            !isMine(ev) &&
+            (ev.participants?.length ?? 0) < 2 &&
+            ev.durationMin === DEFAULT_DURATION &&
+            new Date(ev.start).getTime() === start &&
+            start > Date.now(),
+        ) ?? null;
+      const host = open?.owner ?? open?.participants?.[0];
+      const openWith = open
+        ? (host?.firstname?.trim() || host?.username || "a partner")
+        : null;
+      slots.push({ minutes: m, label: formatSlotLabel(m), busy, openWith, open });
+    }
+    return slots;
+  }, [events, currentUserId, ui.startDate, timeZone, isToday, now]);
+
+  const firstFreeSlot = bookSlots.find((s) => !s.busy)?.minutes ?? null;
+  const selectedSlot =
+    bookSlots.find((s) => s.minutes === bookMin && !s.busy) ??
+    bookSlots.find((s) => s.minutes === firstFreeSlot) ??
+    null;
+  const activePart =
+    DAY_PARTS.find(
+      ([label, from, to]) =>
+        label === bookPart && bookSlots.some((s) => s.minutes >= from && s.minutes < to),
+    ) ??
+    DAY_PARTS.find(
+      ([, from, to]) =>
+        selectedSlot && selectedSlot.minutes >= from && selectedSlot.minutes < to,
+    ) ??
+    DAY_PARTS[1];
+
+  const sheetDays = useMemo(() => {
+    const today = startOfDayInTimeZone(now, timeZone);
+    return Array.from({ length: BOOK_SHEET_DAYS }, (_, i) => {
+      const date = addDaysInTimeZone(today, i, timeZone);
+      const key = ymdInTimeZone(date, timeZone);
+      return {
+        key,
+        label:
+          i === 0
+            ? "Today"
+            : i === 1
+              ? "Tomorrow"
+              : formatLocalDate(date, { weekday: "short", day: "numeric" }),
+        date,
+      };
+    });
+  }, [now, timeZone]);
+
+  const sheetDayLabel =
+    sheetDays.find((d) => d.key === dayKey)?.label ?? bookSheetDateLabel(ui.startDate);
+
+  const handleBookFromSheet = useCallback(async () => {
     if (!canBookSessions) {
       dispatch({ type: "SHOW_TOAST", message: bannedMessage });
       return;
     }
-
-    const parsed = parseBookTime(bookTime);
-    if (!parsed) {
-      dispatch({
-        type: "SHOW_TOAST",
-        message: `Choose a valid time in ${BOOK_TIME_STEP_MINUTES}-minute intervals`,
-      });
-      return;
+    if (!selectedSlot || booking) return;
+    setBooking(true);
+    try {
+      if (selectedSlot.open) {
+        if (hasSessionStarted(selectedSlot.open.start)) {
+          dispatch({ type: "SHOW_TOAST", message: "This session has already started" });
+          return;
+        }
+        await joinSession(selectedSlot.open.id, bookQuiet);
+        dispatch({ type: "CLOSE_BOOK_SHEET" });
+        setHighlightId(selectedSlot.open.id);
+        dispatch({ type: "SHOW_TOAST", message: "Joined session" });
+      } else {
+        const start = wallMinutesOnDayToUtc(ui.startDate, selectedSlot.minutes, timeZone);
+        const newId = await createSession(start, DEFAULT_DURATION, bookQuiet);
+        dispatch({ type: "CLOSE_BOOK_SHEET" });
+        setHighlightId(newId);
+        dispatch({ type: "SHOW_TOAST", message: "Session booked" });
+      }
+      setBookQuiet(false);
+    } catch (e) {
+      dispatch({ type: "SHOW_TOAST", message: (e as Error).message });
+    } finally {
+      setBooking(false);
     }
-
-    const snappedMinutes = parsed.hours * 60 + parsed.minutes;
-    const start = wallMinutesOnDayToUtc(ui.startDate, snappedMinutes, timeZone);
-    const nowDate = new Date();
-    const nowMinutes = minutesOfDayInTimeZone(nowDate, timeZone);
-
-    if (
-      ymdInTimeZone(ui.startDate, timeZone) < ymdInTimeZone(nowDate, timeZone) ||
-      (ymdInTimeZone(ui.startDate, timeZone) ===
-        ymdInTimeZone(nowDate, timeZone) &&
-        snappedMinutes < nowMinutes)
-    ) {
-      dispatch({
-        type: "SHOW_TOAST",
-        message: "Cannot create a session in the past",
-      });
-      return;
-    }
-
-    const startMs = start.getTime();
-    const newEndMs = addMinutes(start, DEFAULT_DURATION).getTime();
-    const overlaps = events.some((ev) => {
-      const mine =
-        (ev.owner_id && currentUserId && ev.owner_id === currentUserId) ||
-        (ev.participants ?? []).some((p) => p.user_id === currentUserId);
-      if (!mine) return false;
-      const evStart = new Date(ev.start).getTime();
-      const evEnd = new Date(ev.end).getTime();
-      return startMs < evEnd && newEndMs > evStart;
-    });
-
-    if (overlaps) {
-      dispatch({
-        type: "SHOW_TOAST",
-        message: "You already have a session at this time",
-      });
-      return;
-    }
-
-    const whenLabel = formatLocalDate(start, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-
-    dispatch({
-      type: "OPEN_CREATE_CONFIRM",
-      start,
-      preferred: DEFAULT_DURATION,
-      whenLabel,
-    });
   }, [
     canBookSessions,
     bannedMessage,
-    bookTime,
+    selectedSlot,
+    booking,
+    joinSession,
+    createSession,
+    bookQuiet,
     ui.startDate,
     timeZone,
-    events,
-    currentUserId,
   ]);
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
@@ -559,23 +572,6 @@ export default function MobileCalendar() {
         onSelectDate={selectDate}
       />
 
-      {/* Hidden date input for book-sheet date pick */}
-      <input
-        ref={datePickerRef}
-        type="date"
-        value={dayKey}
-        onChange={(e) => {
-          const value = e.target.value;
-          if (!value) return;
-          const [y, m, d] = value.split("-").map(Number);
-          if (!y || !m || !d) return;
-          selectDate(new Date(y, m - 1, d, 12, 0, 0));
-        }}
-        className="sr-only"
-        tabIndex={-1}
-        aria-hidden="true"
-      />
-
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto overscroll-y-contain"
@@ -585,9 +581,9 @@ export default function MobileCalendar() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        <div className="px-4 pb-4 pt-3">
+        <div className="mx-auto max-w-[560px] px-4 pb-4 pt-3">
           <h2
-            className="mb-3 text-sm font-semibold"
+            className="mb-3 text-[13.5px] font-semibold"
             style={{ color: agenda.textSecondary }}
           >
             {dayHeading}
@@ -616,8 +612,7 @@ export default function MobileCalendar() {
               <button
                 type="button"
                 onClick={() => dispatch({ type: "OPEN_BOOK_SHEET" })}
-                className="min-h-11 rounded-xl px-5 text-sm font-semibold text-white transition-colors hover:bg-[#5F2066]"
-                style={{ backgroundColor: agenda.plumCta }}
+                className="min-h-11 rounded-xl px-5 text-sm font-semibold bg-rf-primary text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
               >
                 Book a session
               </button>
@@ -658,8 +653,7 @@ export default function MobileCalendar() {
             }
             dispatch({ type: "OPEN_BOOK_SHEET" });
           }}
-          className="pointer-events-auto flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-[#5F2066] active:bg-[#5F2066]"
-          style={{ backgroundColor: agenda.plumCta }}
+          className="pointer-events-auto flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold bg-rf-primary text-rf-on-primary shadow-[0_8px_24px_rgba(0,0,0,.2)] transition-colors hover:bg-rf-primary-hover active:bg-rf-primary-hover"
         >
           <Plus className="h-5 w-5" aria-hidden />
           Book session
@@ -669,19 +663,37 @@ export default function MobileCalendar() {
       <MobileBookSheet
         open={ui.bookSheetOpen}
         onClose={() => dispatch({ type: "CLOSE_BOOK_SHEET" })}
-        dateLabel={bookSheetDateLabel(ui.startDate)}
-        bookTime={bookTime}
-        onBookTimeChange={(value) => {
-          const normalized = normalizeBookTime(value);
-          if (normalized) setBookTime(normalized);
-        }}
-        createDuration={ui.createDuration}
-        onDurationChange={(d) =>
-          dispatch({ type: "SET_CREATE_DURATION", duration: d })
+        days={sheetDays.map((d) => ({
+          key: d.key,
+          label: d.label,
+          selected: d.key === dayKey,
+          pick: () => selectDate(d.date),
+        }))}
+        parts={DAY_PARTS.map(([label, from, to]) => ({
+          label,
+          selected: activePart[0] === label,
+          disabled: !bookSlots.some((s) => s.minutes >= from && s.minutes < to),
+          pick: () => {
+            setBookPart(label);
+            setBookMin(null);
+          },
+        }))}
+        slots={bookSlots.filter(
+          (s) => s.minutes >= activePart[1] && s.minutes < activePart[2],
+        )}
+        selectedMinutes={selectedSlot?.minutes ?? null}
+        onSelectSlot={setBookMin}
+        quiet={bookQuiet}
+        onToggleQuiet={() => setBookQuiet((v) => !v)}
+        summary={
+          selectedSlot
+            ? `${sheetDayLabel} · ${formatClock(selectedSlot.minutes)} – ${formatClock(
+                selectedSlot.minutes + DEFAULT_DURATION,
+              )}${bookQuiet ? " · Quiet" : ""}`
+            : sheetDayLabel
         }
-        timeStepMinutes={BOOK_TIME_STEP_MINUTES}
-        onBook={handleBookFromPicker}
-        onPickDate={openDatePicker}
+        onBook={() => void handleBookFromSheet()}
+        booking={booking}
       />
 
       <MobileSessionSheet
@@ -745,7 +757,7 @@ export default function MobileCalendar() {
                 </strong>
                 ?
               </div>
-              <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-200">
+              <label className="flex items-center gap-3 text-sm text-rf-ink-soft">
                 <input
                   type="checkbox"
                   className="h-4 w-4"

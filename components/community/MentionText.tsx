@@ -38,7 +38,7 @@ export default function MentionText({
                   onMentionClick(part.label);
                 }
               }}
-              className="cursor-pointer font-medium text-[#5D1C6A] hover:underline dark:text-[#CA5995]"
+              className="cursor-pointer font-medium text-rf-plum-ink hover:underline"
             >
               @{part.label}
             </span>
@@ -47,7 +47,7 @@ export default function MentionText({
         return (
           <span
             key={index}
-            className="font-medium text-[#5D1C6A] dark:text-[#CA5995]"
+            className="font-medium text-rf-plum-ink"
           >
             @{part.label}
           </span>

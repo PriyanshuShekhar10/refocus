@@ -10,6 +10,8 @@ import DeviceTestModal from "../DeviceTestModal";
 import SidebarUpdatesBox from "../Updates/SidebarUpdatesBox";
 import { releaseAllLocalMediaStreams } from "@/lib/localMedia";
 import { AttendanceHighlight } from "@/components/attendance-highlight";
+import type { CalendarEvent } from "@/types/calendar";
+import { UpNextPanel } from "./UpNextPanel";
 
 function JoinCountdown({ startTime }: { startTime: string | Date }) {
   const [timeLeft, setTimeLeft] = useState<{ minutes: number; seconds: number } | null>(null);
@@ -39,14 +41,14 @@ function JoinCountdown({ startTime }: { startTime: string | Date }) {
 
   if (timeLeft.minutes === 0 && timeLeft.seconds === 0) {
     return (
-      <p className="text-xs font-medium text-[#5D1C6A] dark:text-[#CA5995]">
+      <p className="text-xs font-medium text-rf-plum-ink">
         Session is live now!
       </p>
     );
   }
 
   return (
-    <p className="text-xs text-[#5D1C6A] dark:text-[#CA5995]">
+    <p className="text-xs text-rf-plum-ink">
       Session starts in{" "}
       <span className="font-semibold">
         {timeLeft.minutes}m {timeLeft.seconds}s
@@ -73,6 +75,9 @@ interface CalendarRightSidebarProps {
   } | null;
   onClearProfilePreview?: () => void;
   onCollapseChange?: (collapsed: boolean) => void;
+  /** Dashboard only: show the Next up / Later cards. */
+  showUpNext?: boolean;
+  onOpenSession?: (event: CalendarEvent) => void;
 }
 
 type DetailedProfile = {
@@ -106,13 +111,13 @@ function formatDate(): string {
 }
 
 const utilityRowClass =
-  "flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-left text-[13px] text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35 dark:text-gray-300 dark:hover:bg-gray-800/60";
+  "flex min-h-9 w-full items-center justify-between gap-2 whitespace-nowrap rounded-lg px-2 text-left text-[13px] text-rf-ink-soft transition-colors hover:bg-rf-line-soft hover:text-rf-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose";
 
 function ChevronRight({ className }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className={className ?? "h-3.5 w-3.5 shrink-0 text-gray-400"}
+      className={className ?? "h-3.5 w-3.5 shrink-0 text-rf-ink-mute"}
       viewBox="0 0 20 20"
       fill="currentColor"
       aria-hidden="true"
@@ -133,6 +138,8 @@ export function CalendarRightSidebar({
   profilePreview,
   onClearProfilePreview,
   onCollapseChange,
+  showUpNext = false,
+  onOpenSession,
 }: CalendarRightSidebarProps) {
   const { data: session } = useSession();
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -315,7 +322,7 @@ export function CalendarRightSidebar({
   return (
     <aside
       className={`shrink-0 flex flex-col h-full overflow-hidden transition-[width] duration-300 ease-in-out ${
-        isCollapsed ? "w-14" : "w-56"
+        isCollapsed ? "w-14" : "w-72"
       }`}
     >
       <div className="relative flex-1 min-h-0 flex flex-col min-w-0">
@@ -327,10 +334,10 @@ export function CalendarRightSidebar({
         >
           <button
             onClick={() => setIsCollapsed(false)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg hover:bg-rf-line-soft transition-colors"
             title="Expand sidebar"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-rf-ink-mute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
             </svg>
           </button>
@@ -340,7 +347,7 @@ export function CalendarRightSidebar({
             ) : currentAvatarUrl ? (
               <AvatarImage src={currentAvatarUrl} alt={displayName} />
             ) : null}
-            <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#FFB090]">
+            <AvatarFallback className="text-sm font-semibold bg-rf-cream-bg text-rf-plum-ink">
               {profilePreview
                 ? previewInitials
                 : initials}
@@ -349,31 +356,31 @@ export function CalendarRightSidebar({
           <div className="flex-1" />
           <Link
             href="/profile"
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg hover:bg-rf-line-soft transition-colors"
             title="Profile"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-rf-ink-mute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </Link>
           <button
             onClick={() => mounted && setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg hover:bg-rf-line-soft transition-colors"
             title="Toggle theme"
           >
             {mounted && theme === "dark" ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-rf-ink-mute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-rf-ink-mute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             )}
           </button>
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 hover:text-red-600 transition-colors"
+            className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-rf-ink-mute hover:text-red-600 transition-colors"
             title="Sign out"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -384,7 +391,7 @@ export function CalendarRightSidebar({
 
         {/* Expanded content */}
         <div
-          className={`absolute inset-0 flex flex-col gap-2 pb-2 overflow-hidden transition-opacity duration-300 ${
+          className={`absolute inset-0 flex flex-col gap-3 pb-2 overflow-y-auto transition-opacity duration-300 ${
             !isCollapsed ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           }`}
         >
@@ -393,7 +400,7 @@ export function CalendarRightSidebar({
         <button
           type="button"
           onClick={() => setIsCollapsed(true)}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-rf-ink-mute transition-colors hover:bg-rf-line-soft hover:text-rf-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35"
           title="Collapse sidebar"
           aria-label="Collapse sidebar"
         >
@@ -405,15 +412,15 @@ export function CalendarRightSidebar({
 
       {/* Profile preview OR personal utility panel */}
       {profilePreview ? (
-        <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-gray-200/60 bg-white/80 p-3 dark:border-gray-700/50 dark:bg-gray-900/50">
+        <div className="min-h-0 flex-1 overflow-y-auto rounded-[14px] border border-rf-line bg-rf-card p-4">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#5D1C6A] dark:text-[#CA5995]">
-              Profile preview
+            <p className="text-[11.5px] font-semibold tracking-[0.02em] text-rf-ink-mute">
+              Profile
             </p>
             <div className="flex items-center gap-1">
               <Link
                 href={`/u/${profilePreview.username}`}
-                className="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-[#5D1C6A] dark:hover:bg-gray-800 dark:hover:text-[#CA5995]"
+                className="rounded p-1 text-rf-ink-mute hover:bg-rf-line-soft hover:text-rf-plum-ink"
                 title="Open full profile"
                 aria-label="Open full profile"
               >
@@ -425,7 +432,7 @@ export function CalendarRightSidebar({
                 <button
                   type="button"
                   onClick={onClearProfilePreview}
-                  className="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                  className="rounded p-1 text-rf-ink-mute hover:bg-rf-line-soft hover:text-rf-ink"
                   title="Close preview"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -441,12 +448,12 @@ export function CalendarRightSidebar({
               {previewAvatarUrl ? (
                 <AvatarImage src={previewAvatarUrl} alt={previewName} />
               ) : null}
-              <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#CA5995]">
+              <AvatarFallback className="text-sm font-semibold bg-rf-cream-bg text-rf-plum-ink">
                 {previewInitials}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+              <p className="truncate text-sm font-semibold text-rf-ink">
                 <VerifiedName
                   name={previewName}
                   verified={
@@ -455,7 +462,7 @@ export function CalendarRightSidebar({
                   }
                 />
               </p>
-              <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+              <p className="truncate text-xs text-rf-ink-mute">
                 @{profilePreview.username}
               </p>
             </div>
@@ -470,18 +477,18 @@ export function CalendarRightSidebar({
             </div>
           ) : null}
 
-          <p className="mt-3 line-clamp-4 text-xs leading-relaxed whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+          <p className="mt-3 line-clamp-4 text-xs leading-relaxed whitespace-pre-wrap text-rf-ink-soft">
             {previewAbout}
           </p>
 
           {isProfileLoading ? (
-            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-3 text-xs text-rf-ink-mute">
               Loading profile details...
             </p>
           ) : profileError ? null : (
             <>
               {(detailedProfile?.location || joinedDate || websiteHref) && (
-                <div className="mt-3 space-y-1.5 text-[11px] text-gray-600 dark:text-gray-300">
+                <div className="mt-3 space-y-1.5 text-[11px] text-rf-ink-soft">
                   {detailedProfile?.location && (
                     <p>Location: {detailedProfile.location}</p>
                   )}
@@ -491,7 +498,7 @@ export function CalendarRightSidebar({
                       href={websiteHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-block text-[#5D1C6A] underline hover:text-[#CA5995] dark:text-[#CA5995]"
+                      className="inline-block text-rf-plum-ink underline hover:text-rf-plum-ink"
                     >
                       {detailedProfile?.website}
                     </a>
@@ -504,7 +511,7 @@ export function CalendarRightSidebar({
                   {detailedProfile.interests.map((interest) => (
                     <span
                       key={interest}
-                      className="rounded-full border border-gray-200 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                      className="rounded-full border border-rf-line px-2 py-0.5 text-[10px] font-medium text-rf-ink-soft"
                     >
                       {interest}
                     </span>
@@ -515,28 +522,28 @@ export function CalendarRightSidebar({
           )}
         </div>
       ) : (
-        <div className="shrink-0 rounded-xl border border-gray-200/50 bg-white/70 px-3 pb-2 pt-3 dark:border-gray-700/40 dark:bg-gray-900/40">
+        <div className="shrink-0 rounded-[14px] border border-rf-line bg-rf-card px-3 pb-2 pt-5">
           <div className="flex flex-col items-center text-center">
             <Avatar className="mb-2.5 h-14 w-14">
               {currentAvatarUrl ? (
                 <AvatarImage src={currentAvatarUrl} alt={displayName} />
               ) : null}
-              <AvatarFallback className="text-sm font-semibold bg-[#FFF1D3] text-[#5D1C6A] dark:bg-slate-800 dark:text-[#CA5995]">
+              <AvatarFallback className="text-sm font-semibold bg-rf-cream-bg text-rf-plum-ink">
                 {initials}
               </AvatarFallback>
             </Avatar>
 
-            <h2 className="text-[18px] font-semibold leading-snug tracking-tight text-gray-900 dark:text-white">
+            <h2 className="whitespace-nowrap text-[17px] font-semibold leading-[1.3] tracking-[-0.02em] text-rf-ink">
               {getGreeting()}, {firstName}
             </h2>
 
-            <p className="mt-1 text-[14px] text-gray-500 dark:text-gray-400">
+            <p className="mt-1 whitespace-nowrap text-[14px] text-rf-ink-mute">
               {formatDate()}
             </p>
 
             <Link
-              href="/sessions"
-              className="mt-2.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[13px] font-medium text-[#6B7F6B] transition-colors hover:bg-[#9BAE9B]/15 hover:text-[#556655] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35 dark:text-[#9BAE9B] dark:hover:bg-[#9BAE9B]/10 dark:hover:text-[#B5C5B5]"
+              href="/dashboard?tab=sessions"
+              className="mt-2.5 inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-[7px] px-2 text-[13px] font-medium text-rf-success transition-colors hover:bg-rf-success-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -554,7 +561,7 @@ export function CalendarRightSidebar({
                 />
               </svg>
               {sessionCount} session{sessionCount !== 1 ? "s" : ""} today
-              <ChevronRight className="h-3 w-3 text-[#9BAE9B]" />
+              <ChevronRight className="h-3 w-3" />
             </Link>
 
             {myAttendance ? (
@@ -564,12 +571,12 @@ export function CalendarRightSidebar({
             ) : null}
           </div>
 
-          <div className="mt-3 space-y-0.5 border-t border-gray-100/80 pt-2 dark:border-gray-800/70">
+          <div className="mt-3.5 space-y-0.5 border-t border-rf-line-soft pt-1.5">
             <Link href="/profile" className={utilityRowClass}>
               <span className="flex items-center gap-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-3.5 w-3.5 text-gray-400"
+                  className="h-3.5 w-3.5 text-rf-ink-mute"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -602,7 +609,7 @@ export function CalendarRightSidebar({
               <span className="flex items-center gap-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-3.5 w-3.5 text-gray-400"
+                  className="h-3.5 w-3.5 text-rf-ink-mute"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -617,7 +624,7 @@ export function CalendarRightSidebar({
                 </svg>
                 Appearance
               </span>
-              <span className="flex items-center gap-1 text-[12px] text-gray-500 dark:text-gray-400">
+              <span className="flex items-center gap-1 text-[12px] text-rf-ink-mute">
                 {mounted
                   ? (resolvedTheme ?? theme) === "dark"
                     ? "Dark"
@@ -630,11 +637,20 @@ export function CalendarRightSidebar({
         </div>
       )}
 
-      {joinableSession ? (
-        <div className="mt-2 shrink-0 space-y-2 rounded-lg border border-[#CA5995]/35 bg-[#5D1C6A]/5 p-2.5 dark:border-[#CA5995]/30 dark:bg-[#CA5995]/10">
+      {showUpNext ? (
+        <UpNextPanel
+          onOpenSession={onOpenSession}
+          onTestDevices={() => setDeviceTestOpen(true)}
+          onJoin={() => {
+            releaseAllLocalMediaStreams();
+            setDeviceTestOpen(false);
+          }}
+        />
+      ) : joinableSession ? (
+        <div className="mt-2 shrink-0 space-y-2 rounded-lg border border-rf-rose/35 bg-rf-plum-ink/5 p-2.5">
           <div className="flex items-center gap-1.5">
-            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#CA5995]" />
-            <h3 className="text-xs font-semibold text-[#5D1C6A] dark:text-[#CA5995]">
+            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-rf-rose" />
+            <h3 className="text-xs font-semibold text-rf-plum-ink">
               Session Starting Soon
             </h3>
           </div>
@@ -648,7 +664,7 @@ export function CalendarRightSidebar({
                 releaseAllLocalMediaStreams();
                 setDeviceTestOpen(false);
               }}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5D1C6A] px-3 py-2 text-center text-xs font-semibold text-white transition-colors hover:bg-[#CA5995] dark:bg-[#7A2D88] dark:hover:bg-[#CA5995]"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-rf-primary px-3 py-2 text-center text-xs font-semibold text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -665,7 +681,7 @@ export function CalendarRightSidebar({
             <button
               type="button"
               onClick={() => setDeviceTestOpen(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200/80 bg-white px-3 py-2 text-xs font-semibold text-[#54657E] transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-rf-line/80 bg-rf-card px-3 py-2 text-xs font-semibold text-[#54657E] transition-colors hover:bg-rf-line-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35 dark:text-gray-300"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -692,7 +708,7 @@ export function CalendarRightSidebar({
                   `${window.location.origin}/sessions/${joinableSession.id}`,
                 );
               }}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200/80 bg-transparent px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-rf-line/80 bg-transparent px-3 py-1.5 text-xs font-medium text-rf-ink-soft transition-colors hover:bg-rf-line-soft"
             >
               Copy Meeting Link
             </button>
@@ -704,12 +720,12 @@ export function CalendarRightSidebar({
 
       <div className="min-h-0 flex-1" aria-hidden="true" />
 
-      {!joinableSession ? (
-        <div className="shrink-0 space-y-1.5 border-t border-gray-100/80 pt-2 dark:border-gray-800/70">
+      {!joinableSession || showUpNext ? (
+        <div className="shrink-0 space-y-1.5 border-t border-rf-line-soft/80 pt-2">
           <button
             type="button"
             onClick={() => setDeviceTestOpen(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200/80 bg-white px-3 py-2 text-xs font-semibold text-[#54657E] transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-rf-line/80 bg-rf-card px-3 py-2 text-xs font-semibold text-[#54657E] transition-colors hover:bg-rf-line-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35 dark:text-gray-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -745,7 +761,7 @@ export function CalendarRightSidebar({
             }}
             className={utilityRowClass}
           >
-            <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+            <span className="flex items-center gap-2 text-rf-ink-soft">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-3.5 w-3.5"
@@ -768,7 +784,7 @@ export function CalendarRightSidebar({
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-[13px] text-red-600/75 transition-colors hover:bg-red-50/80 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/35 dark:text-red-400/75 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-[13px] text-red-600/75 transition-colors hover:bg-red-50/80 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35 dark:text-red-400/75 dark:hover:bg-red-950/30 dark:hover:text-red-400"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

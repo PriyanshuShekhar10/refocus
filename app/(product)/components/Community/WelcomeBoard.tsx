@@ -20,6 +20,10 @@ type Props = {
   onPreviewProfile?: (profile: ProfilePreviewPayload) => void;
   /** When true, header is rendered by the parent panel */
   compactHeader?: boolean;
+  /** How many welcomes to show before "See more" (defaults to the page size). */
+  initialVisible?: number;
+  /** Let the list grow with its content instead of scrolling inside a fixed-height panel. */
+  autoHeight?: boolean;
 };
 
 type WelcomeResponse = {
@@ -74,6 +78,8 @@ function initials(name: string): string {
 export default function WelcomeBoard({
   onPreviewProfile,
   compactHeader = false,
+  initialVisible = INITIAL_LIMIT,
+  autoHeight = false,
 }: Props) {
   const { data, error, isLoading, mutate } = useSWR<WelcomeResponse>(
     swrKeys.communityWelcome(INITIAL_LIMIT),
@@ -141,9 +147,9 @@ export default function WelcomeBoard({
   const announcements = [...(data?.announcements ?? []), ...older];
   const visible = expanded
     ? announcements
-    : announcements.slice(0, INITIAL_LIMIT);
+    : announcements.slice(0, initialVisible);
   const canSeeMore =
-    announcements.length > INITIAL_LIMIT || Boolean(nextCursor);
+    announcements.length > initialVisible || Boolean(nextCursor);
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || loadingMore) return;
@@ -182,11 +188,11 @@ export default function WelcomeBoard({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className={autoHeight ? "flex flex-col" : "flex h-full min-h-0 flex-col"}>
       {!compactHeader ? (
         <div className="shrink-0 border-b border-border/70 px-4 py-3">
           <div className="flex items-start gap-2.5">
-            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5D1C6A]/10 text-[#5D1C6A]">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rf-plum-ink/10 text-rf-plum-ink">
               <PartyPopper className="h-3.5 w-3.5" />
             </div>
             <div className="min-w-0">
@@ -201,7 +207,7 @@ export default function WelcomeBoard({
         </div>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
+      <div className={autoHeight ? "p-1.5" : "min-h-0 flex-1 overflow-y-auto p-1.5"}>
         {isLoading && !data ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -214,7 +220,7 @@ export default function WelcomeBoard({
             <button
               type="button"
               onClick={() => void mutate()}
-              className="mt-2 text-sm font-medium text-[#5D1C6A] hover:underline"
+              className="mt-2 text-sm font-medium text-rf-plum-ink hover:underline"
             >
               Try again
             </button>
@@ -227,46 +233,46 @@ export default function WelcomeBoard({
             </p>
           </div>
         ) : (
-          <ul className="space-y-1">
+          <ul>
             {visible.map((a) => {
               const mention = mentionLabel(a);
               return (
                 <li
                   key={a.id}
-                  className="group flex gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted/50"
+                  className="group flex gap-2.5 rounded-[10px] p-2 transition-colors hover:bg-rf-line-soft"
                 >
-                  <Avatar className="mt-0.5 h-9 w-9 shrink-0">
+                  <Avatar className="h-[34px] w-[34px] shrink-0">
                     {a.avatarUrl ? (
                       <AvatarImage src={a.avatarUrl} alt={a.displayName} />
                     ) : null}
-                    <AvatarFallback className="bg-[#5D1C6A]/15 text-[11px] font-semibold text-[#5D1C6A]">
+                    <AvatarFallback className="bg-rf-cream-bg text-[11px] font-semibold text-rf-plum-ink">
                       {initials(a.displayName)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                      <span className="text-sm font-semibold text-foreground">
+                      <span className="text-[13.5px] font-semibold text-rf-ink">
                         Refocus
                       </span>
-                      <span className="rounded bg-[#5D1C6A]/10 px-1 py-px text-[10px] font-medium uppercase tracking-wide text-[#5D1C6A]">
+                      <span className="rounded bg-rf-plum-soft px-[5px] py-px text-[9.5px] font-semibold uppercase tracking-[0.04em] text-rf-plum-ink">
                         Bot
                       </span>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-[11px] text-rf-ink-mute">
                         {formatWhen(a.createdAt)}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-sm leading-relaxed text-foreground/90">
+                    <p className="mt-0.5 text-[13.5px] leading-[1.45] text-rf-ink-soft">
                       Welcome{" "}
                       {a.username && onPreviewProfile ? (
                         <button
                           type="button"
                           onClick={() => openProfile(a)}
-                          className="font-semibold text-[#5865F2] hover:underline"
+                          className="font-semibold text-rf-plum-ink hover:underline"
                         >
                           {mention}
                         </button>
                       ) : (
-                        <span className="font-semibold text-[#5865F2]">
+                        <span className="font-semibold text-rf-plum-ink">
                           {mention}
                         </span>
                       )}{" "}
@@ -283,7 +289,7 @@ export default function WelcomeBoard({
           <button
             type="button"
             onClick={() => void handleSeeMore()}
-            className="mt-2 w-full px-2 py-1.5 text-left text-xs font-medium text-[#5D1C6A] hover:underline dark:text-[#CA5995]"
+            className="w-full px-2 py-1.5 text-left text-xs font-medium text-rf-plum-ink hover:underline"
           >
             See more →
           </button>
@@ -294,7 +300,7 @@ export default function WelcomeBoard({
             type="button"
             onClick={() => void loadMore()}
             disabled={loadingMore}
-            className="mt-2 w-full px-2 py-1.5 text-left text-xs font-medium text-[#5D1C6A] hover:underline disabled:opacity-60 dark:text-[#CA5995]"
+            className="mt-2 w-full px-2 py-1.5 text-left text-xs font-medium text-rf-plum-ink hover:underline disabled:opacity-60"
           >
             {loadingMore ? "Loading…" : "See more →"}
           </button>

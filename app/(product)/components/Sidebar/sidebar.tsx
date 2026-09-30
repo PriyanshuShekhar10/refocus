@@ -2,16 +2,20 @@
 "use client";
 
 import { FC, ReactNode, useEffect, useState } from "react";
-import { BsGearFill } from "react-icons/bs";
-import { MdDashboard } from "react-icons/md";
-import { FaUserFriends } from "react-icons/fa";
-import { HiSun, HiMoon } from "react-icons/hi";
+import {
+  CircleUserRound,
+  Clock,
+  LayoutDashboard,
+  ListTodo,
+  MessageSquare,
+  Moon,
+  Settings,
+  ShieldCheck,
+  Sun,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { useTheme } from "next-themes";
-import { CgProfile } from "react-icons/cg";
-import { RiMessage3Line } from "react-icons/ri";
-import { HiOutlineUserGroup } from "react-icons/hi";
-import { LuListTodo } from "react-icons/lu";
-import { HiOutlineClock, HiOutlineShieldCheck } from "react-icons/hi";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -79,26 +83,26 @@ const SideBar: FC<SideBarProps> = ({
 
   return (
     <aside
-      className="fixed top-0 left-0 z-40 flex h-screen w-16 flex-col bg-white shadow-sm dark:bg-gray-900"
+      className="fixed top-0 left-0 z-40 flex h-screen w-16 flex-col items-center gap-3 border-r border-rf-line bg-rf-side-bg pb-4 pt-3 font-rf shadow-sm"
       aria-label="Main navigation"
     >
       {/* Primary work */}
-      <nav className="flex flex-col pt-1" aria-label="Workspace">
+      <nav className="flex flex-col gap-3" aria-label="Workspace">
         <SideBarIcon
-          icon={<MdDashboard size={20} />}
+          icon={<LayoutDashboard size={19} strokeWidth={1.8} />}
           text="Dashboard"
           onClick={() => onSelect("dashboard")}
           active={activeTab === "dashboard"}
         />
         <SideBarIcon
-          icon={<HiOutlineClock size={18} />}
+          icon={<Clock size={18} strokeWidth={1.8} />}
           text="Sessions"
           onClick={() => onSelect("sessions")}
           active={activeTab === "sessions"}
         />
         {showBacklogTab ? (
           <SideBarIcon
-            icon={<LuListTodo size={18} />}
+            icon={<ListTodo size={18} strokeWidth={1.8} />}
             text="Backlog"
             onClick={() => onSelect("backlog")}
             active={activeTab === "backlog"}
@@ -109,9 +113,9 @@ const SideBar: FC<SideBarProps> = ({
       <Divider />
 
       {/* People */}
-      <nav className="flex flex-col" aria-label="People">
+      <nav className="flex flex-col gap-3" aria-label="People">
         <SideBarIcon
-          icon={<CgProfile size={20} />}
+          icon={<CircleUserRound size={19} strokeWidth={1.8} />}
           text="Profile"
           onClick={() => onSelect("profile")}
           active={activeTab === "profile"}
@@ -119,10 +123,10 @@ const SideBar: FC<SideBarProps> = ({
         <SideBarIcon
           icon={
             <div className="relative inline-flex">
-              <FaUserFriends size={18} />
+              <Users size={18} strokeWidth={1.8} />
               {pendingSessionRequests > 0 ? (
                 <span
-                  className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900"
+                  className="absolute -right-1.5 -top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-rf-side-btn"
                   aria-hidden="true"
                 />
               ) : null}
@@ -137,7 +141,7 @@ const SideBar: FC<SideBarProps> = ({
           active={activeTab === "friends"}
         />
         <SideBarIcon
-          icon={<HiOutlineUserGroup size={18} />}
+          icon={<UserRound size={18} strokeWidth={1.8} />}
           text="Community"
           onClick={() => onSelect("community")}
           active={activeTab === "community"}
@@ -147,9 +151,9 @@ const SideBar: FC<SideBarProps> = ({
       {showAdminTab ? (
         <>
           <Divider />
-          <nav className="flex flex-col" aria-label="Admin">
+          <nav className="flex flex-col gap-3" aria-label="Admin">
             <SideBarIcon
-              icon={<HiOutlineShieldCheck size={18} />}
+              icon={<ShieldCheck size={18} strokeWidth={1.8} />}
               text="Admin"
               onClick={() => onSelect("admin")}
               active={activeTab === "admin"}
@@ -159,15 +163,15 @@ const SideBar: FC<SideBarProps> = ({
       ) : null}
 
       {/* Utilities */}
-      <div className="mb-3 mt-auto flex flex-col">
-        <nav className="flex flex-col" aria-label="Tools">
+      <div className="mt-auto flex flex-col items-center gap-3">
+        <nav className="flex flex-col gap-3" aria-label="Tools">
           <SideBarIcon
             icon={
               <div className="relative">
-                <RiMessage3Line size={18} />
+                <MessageSquare size={18} strokeWidth={1.8} />
                 {friendsUnread > 0 ? (
                   <span
-                    className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-white dark:ring-gray-900"
+                    className="absolute -right-1.5 -top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-rf-side-btn"
                     aria-hidden="true"
                   />
                 ) : null}
@@ -188,7 +192,7 @@ const SideBar: FC<SideBarProps> = ({
             active={false}
           />
           <SideBarIcon
-            icon={<BsGearFill size={18} />}
+            icon={<Settings size={18} strokeWidth={1.8} />}
             text="Settings"
             onClick={() => onSelect("settings")}
             active={activeTab === "settings"}
@@ -217,12 +221,12 @@ const SideBarIcon: FC<SideBarIconProps> = ({
   href,
 }) => {
   const className = cn(
-    "group relative mx-auto my-1.5 flex h-11 w-11 items-center justify-center rounded-xl",
-    "transition-colors duration-150 ease-out",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900",
+    "group relative flex h-12 w-12 items-center justify-center border shadow-sm",
+    "transition-all duration-200 ease-out",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose focus-visible:ring-offset-2 focus-visible:ring-offset-rf-side-bg",
     active
-      ? "bg-[#5D1C6A] text-white dark:bg-[#7A2D88]"
-      : "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100",
+      ? "rounded-xl border-rf-primary bg-rf-primary text-rf-on-primary"
+      : "rounded-3xl border-rf-line bg-rf-side-btn text-rf-side-icon hover:rounded-xl hover:text-rf-ink",
   );
 
   const content = (
@@ -233,7 +237,7 @@ const SideBarIcon: FC<SideBarIconProps> = ({
         className={cn(
           "pointer-events-none absolute left-[3.75rem] top-1/2 z-50 -translate-y-1/2",
           "whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium shadow-md",
-          "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900",
+          "bg-rf-ink text-rf-bg",
           "opacity-0 transition-opacity duration-100",
           "group-hover:opacity-100 group-focus-visible:opacity-100",
         )}
@@ -270,7 +274,7 @@ const SideBarIcon: FC<SideBarIconProps> = ({
 };
 
 const Divider: FC = () => (
-  <hr className="mx-auto my-1.5 h-px w-8 rounded-full border-0 bg-gray-200 dark:bg-gray-800" />
+  <hr className="h-px w-10 border-0 bg-rf-line" />
 );
 
 const ThemeToggle: FC = () => {
@@ -282,10 +286,10 @@ const ThemeToggle: FC = () => {
   if (!mounted) {
     return (
       <div
-        className="mx-auto my-1.5 flex h-11 w-11 items-center justify-center rounded-xl text-gray-400"
+        className="flex h-12 w-12 items-center justify-center rounded-3xl border border-rf-line bg-rf-side-btn text-rf-side-icon"
         aria-hidden
       >
-        <HiSun size={18} />
+        <Moon size={18} strokeWidth={1.8} />
       </div>
     );
   }
@@ -299,21 +303,20 @@ const ThemeToggle: FC = () => {
       type="button"
       onClick={() => setTheme(next)}
       className={cn(
-        "group relative mx-auto my-1.5 flex h-11 w-11 items-center justify-center rounded-xl",
-        "bg-transparent text-gray-500 transition-colors duration-150",
-        "hover:bg-gray-100 hover:text-gray-800",
-        "dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA5995]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900",
+        "group relative flex h-12 w-12 items-center justify-center rounded-3xl border border-rf-line shadow-sm",
+        "bg-rf-side-btn text-rf-side-icon transition-all duration-200",
+        "hover:rounded-xl hover:text-rf-ink",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose focus-visible:ring-offset-2 focus-visible:ring-offset-rf-side-bg",
       )}
       aria-label={label}
     >
-      {current === "dark" ? <HiSun size={18} /> : <HiMoon size={18} />}
+      {current === "dark" ? <Sun size={18} strokeWidth={1.8} /> : <Moon size={18} strokeWidth={1.8} />}
       <span
         role="tooltip"
         className={cn(
           "pointer-events-none absolute left-[3.75rem] top-1/2 z-50 -translate-y-1/2",
           "whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium shadow-md",
-          "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900",
+          "bg-rf-ink text-rf-bg",
           "opacity-0 transition-opacity duration-100",
           "group-hover:opacity-100 group-focus-visible:opacity-100",
         )}

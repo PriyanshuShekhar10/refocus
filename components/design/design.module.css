@@ -46,9 +46,9 @@
   --ink: #f4f4f5;
   --ink-soft: #c4c4cf;
   --ink-mute: #8f8f9a;
-  --line: #27272a;
-  --line-soft: #18181b;
-  --card: #111113;
+  --line: var(--rf-line);
+  --line-soft: var(--rf-line-soft);
+  --card: var(--rf-card);
   --accent: #8fa9c2;
   --accent-ink: #09090b;
   --accent-soft: #1f2a38;
@@ -415,9 +415,9 @@
   font-family: inherit;
 }
 .tagAccent {
-  background: var(--accent-soft);
-  border-color: color-mix(in oklab, var(--accent) 35%, var(--line));
-  color: color-mix(in oklab, var(--accent) 70%, var(--ink));
+  background: var(--rf-cream-bg);
+  border-color: var(--rf-cream-border);
+  color: var(--rf-plum-ink);
 }
 .tagRemovable {
   cursor: pointer;
@@ -497,8 +497,8 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: var(--accent-soft);
-  color: color-mix(in oklab, var(--accent) 70%, var(--ink));
+  background: var(--rf-cream-bg);
+  color: var(--rf-plum-ink);
   font-family: var(--font-display);
   font-weight: 500;
   font-size: 22px;

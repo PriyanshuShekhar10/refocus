@@ -109,12 +109,22 @@ export function StatsSummaryLine({ stats }: { stats: SessionStats }) {
   );
 }
 
-export function ActivityHeatmap({ stats }: { stats: SessionStats }) {
+export function ActivityHeatmap({
+  stats,
+  bare = false,
+}: {
+  stats: SessionStats;
+  /** Profile card: no title/legend row, 12px cells (legend rendered by caller). */
+  bare?: boolean;
+}) {
   const weeks = weeksFromTrend(stats.trend);
   const maxPerDay = maxSessionsPerDay(stats.trend);
+  const cell = bare ? 12 : HEAT_CELL_PX;
+  const gap = bare ? 4 : HEAT_GAP_PX;
 
   return (
-    <div style={{ marginTop: 16 }}>
+    <div style={{ marginTop: bare ? 0 : 16 }}>
+      {bare ? null : (
       <div
         style={{
           display: "flex",
@@ -160,6 +170,7 @@ export function ActivityHeatmap({ stats }: { stats: SessionStats }) {
           <span>More</span>
         </div>
       </div>
+      )}
       <div
         role="img"
         aria-label={`Activity over the past 8 weeks. ${stats.completed} completed sessions.`}
@@ -168,7 +179,7 @@ export function ActivityHeatmap({ stats }: { stats: SessionStats }) {
         <div
           style={{
             display: "inline-flex",
-            gap: HEAT_GAP_PX,
+            gap,
             alignItems: "flex-start",
           }}
         >
@@ -177,8 +188,8 @@ export function ActivityHeatmap({ stats }: { stats: SessionStats }) {
               key={wIdx}
               style={{
                 display: "grid",
-                gridTemplateRows: `repeat(7, ${HEAT_CELL_PX}px)`,
-                gap: HEAT_GAP_PX,
+                gridTemplateRows: `repeat(7, ${cell}px)`,
+                gap,
               }}
             >
               {week.map((day) => {
@@ -188,9 +199,9 @@ export function ActivityHeatmap({ stats }: { stats: SessionStats }) {
                     key={day.date}
                     title={`${day.date}: ${day.sessions} session${day.sessions === 1 ? "" : "s"}, ${formatTotalMinutes(day.minutes)}`}
                     style={{
-                      width: HEAT_CELL_PX,
-                      height: HEAT_CELL_PX,
-                      borderRadius: 2,
+                      width: cell,
+                      height: cell,
+                      borderRadius: bare ? 3 : 2,
                       background: heatColor(level),
                       flexShrink: 0,
                     }}
@@ -433,7 +444,7 @@ export function RecentActivityList({ recent }: { recent: RecentSession[] }) {
                   {r.partnerAvatarUrl ? (
                     <AvatarImage src={r.partnerAvatarUrl} alt={r.partnerName} />
                   ) : null}
-                  <AvatarFallback className="text-xs bg-[#FFF1D3] text-[#5D1C6A] dark:bg-[#5D1C6A]/40 dark:text-[#FFB090]">
+                  <AvatarFallback className="text-xs bg-rf-cream-bg text-rf-plum-ink">
                     {partnerInitial}
                   </AvatarFallback>
                 </Avatar>
@@ -708,12 +719,38 @@ function heatLevel(sessions: number, maxPerDay: number): 0 | 1 | 2 | 3 | 4 {
   return 4;
 }
 
-function heatColor(level: 0 | 1 | 2 | 3 | 4): string {
-  const mix = [0, 28, 48, 68, 88][level];
-  if (level === 0) {
-    return "color-mix(in oklab, var(--line) 55%, var(--bg))";
-  }
-  return `color-mix(in oklab, var(--accent) ${mix}%, var(--bg))`;
+export function heatColor(level: 0 | 1 | 2 | 3 | 4): string {
+  return [
+    "var(--rf-line-soft)",
+    "var(--rf-h1)",
+    "var(--rf-h2)",
+    "var(--rf-h3)",
+    "var(--rf-h4)",
+  ][level];
+}
+
+export function HeatLegend() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
+        fontSize: 11,
+        color: "var(--ink-mute)",
+      }}
+    >
+      <span style={{ marginRight: 4 }}>Less</span>
+      {([0, 1, 2, 3, 4] as const).map((level) => (
+        <span
+          key={level}
+          aria-hidden
+          style={{ width: 10, height: 10, borderRadius: 3, background: heatColor(level) }}
+        />
+      ))}
+      <span style={{ marginLeft: 4 }}>More</span>
+    </div>
+  );
 }
 
 export function StatsLoadingCard({ subtitle }: { subtitle: string }) {

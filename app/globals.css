@@ -344,3 +344,107 @@ html {
     transform: scale(0.95);
   }
 }
+
+/* Refocus app design tokens (Claude Design: Refocus App) */
+@layer base {
+  :root {
+    --rf-bg: #f7f8fa;
+    --rf-ink: #0a0a0a;
+    --rf-ink-soft: #4a4a47;
+    --rf-ink-mute: #8a8a85;
+    --rf-line: #e5e7eb;
+    --rf-line-soft: #eef0f3;
+    --rf-card: #ffffff;
+    --rf-danger: #b54848;
+    --rf-danger-soft: #f7e6e6;
+    --rf-success: #5b8a6b;
+    --rf-success-soft: #e6efe9;
+    --rf-warn: #b45a3c;
+    --rf-warn-soft: #f4e9e2;
+    --rf-side-bg: #ffffff;
+    --rf-side-btn: #ffffff;
+    --rf-side-icon: #4b5563;
+    --rf-dot: rgba(115,115,115,0.14);
+    --rf-bubble: #f1f2f4;
+    --rf-amber-bg: #fef3c7;
+    --rf-amber-ink: #92400e;
+    --rf-miss-bg: #fee2e2;
+    --rf-miss-ink: #b91c1c;
+    --rf-online: #3F6B4E;
+    --rf-tint-sage: #DCE6DE;
+    --rf-tint-blush: #F0DDD7;
+    --rf-tint-butter: #ECE3CB;
+    --rf-tint-lavender: #E0D9EC;
+    --rf-tint-clay: #EAD7CB;
+    --rf-tint-sky: #DEE5EE;
+    --rf-rose: #CA5995;
+    --rf-peach: #FFB090;
+    --rf-cream-bg: #FFF1D3;
+    --rf-cream-soft: #fffaf0;
+    --rf-cream-border: #f3dcb0;
+    --rf-plum-ink: #5D1C6A;
+    --rf-plum-soft: rgba(93,28,106,.1);
+    --rf-h1: #f3dcea;
+    --rf-h2: #e4a9c8;
+    --rf-h3: #CA5995;
+    --rf-h4: #5D1C6A;
+    --rf-primary: #5D1C6A;
+    --rf-primary-hover: #CA5995;
+    --rf-on-primary: #ffffff;
+  }
+  .dark {
+    --rf-bg: #09090b;
+    --rf-ink: #f4f4f5;
+    --rf-ink-soft: #c4c4cf;
+    --rf-ink-mute: #8f8f9a;
+    --rf-line: #374151;
+    --rf-line-soft: #1f2937;
+    --rf-card: #111827;
+    --rf-danger: #f87171;
+    --rf-danger-soft: #2a1417;
+    --rf-success: #4ade80;
+    --rf-success-soft: #112019;
+    --rf-warn: #D88663;
+    --rf-warn-soft: #2C1F18;
+    --rf-side-bg: #111827;
+    --rf-side-btn: #1f2937;
+    --rf-side-icon: #FFB090;
+    --rf-dot: rgba(160,160,170,0.12);
+    --rf-bubble: #1f2937;
+    --rf-amber-bg: rgba(120,53,15,.4);
+    --rf-amber-ink: #fcd34d;
+    --rf-miss-bg: rgba(127,29,29,.4);
+    --rf-miss-ink: #fca5a5;
+    --rf-online: #7CB694;
+    --rf-tint-sage: #1F302A;
+    --rf-tint-blush: #34241F;
+    --rf-tint-butter: #312C1E;
+    --rf-tint-lavender: #292335;
+    --rf-tint-clay: #2F2118;
+    --rf-tint-sky: #1E2630;
+    --rf-rose: #CA5995;
+    --rf-peach: #FFB090;
+    --rf-cream-bg: rgba(93,28,106,.32);
+    --rf-cream-soft: rgba(93,28,106,.16);
+    --rf-cream-border: rgba(202,89,149,.45);
+    --rf-plum-ink: #FFB090;
+    --rf-plum-soft: rgba(202,89,149,.18);
+    --rf-h1: #3a1f3f;
+    --rf-h2: #6b2d6f;
+    --rf-h3: #a8457f;
+    --rf-h4: #CA5995;
+    --rf-primary: #7A2D88;
+    --rf-primary-hover: #CA5995;
+    --rf-on-primary: #ffffff;
+  }
+}
+
+.rf-app {
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  color: var(--rf-ink);
+}
+.rf-dots {
+  background-color: var(--rf-bg);
+  background-image: radial-gradient(circle at center, var(--rf-dot) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
