@@ -144,7 +144,7 @@ export default function AdminUpdates({ active }: { active: boolean }) {
           value={title}
           onChange={(e) => setTitle(e.target.value.slice(0, PRODUCT_UPDATE_TITLE_MAX))}
           placeholder="e.g. New Community mentions"
-          className="w-full rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-[13.5px]"
           disabled={publishing || enhancing}
         />
 
@@ -176,7 +176,7 @@ export default function AdminUpdates({ active }: { active: boolean }) {
           onChange={(e) => setBody(e.target.value.slice(0, PRODUCT_UPDATE_BODY_MAX))}
           rows={4}
           placeholder="Share a quick product update, fix, or tip…"
-          className="w-full resize-y rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
+          className="w-full resize-y rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-[13.5px]"
           disabled={publishing || enhancing}
         />
         <div className="flex items-center justify-between gap-3">
@@ -200,7 +200,7 @@ export default function AdminUpdates({ active }: { active: boolean }) {
       </div>
 
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+        <div className="rounded-xl border border-rf-danger/35 bg-rf-danger-soft px-4 py-3 text-sm text-rf-danger">
           {error}
         </div>
       ) : null}

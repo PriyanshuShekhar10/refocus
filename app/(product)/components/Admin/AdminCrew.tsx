@@ -131,7 +131,7 @@ export default function AdminCrew({ active }: { active: boolean }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="email@example.com"
-          className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
+          className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-[13.5px]"
           disabled={busy}
         />
         <button
@@ -150,9 +150,9 @@ export default function AdminCrew({ active }: { active: boolean }) {
       {loading ? (
         <p className="text-sm text-rf-ink-mute">Loading…</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-rf-line">
+        <div className="overflow-x-auto rounded-xl border border-rf-line bg-rf-card">
           <table className="w-full text-sm">
-            <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
+            <thead className="border-b border-rf-line bg-rf-bg text-left text-[11.5px] font-medium uppercase tracking-[0.02em] text-rf-ink-mute">
               <tr>
                 <th className="px-4 py-3">Person</th>
                 <th className="px-4 py-3">Account</th>

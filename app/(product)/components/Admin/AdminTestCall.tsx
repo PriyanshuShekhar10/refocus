@@ -101,7 +101,7 @@ export default function AdminTestCall({ active }: { active: boolean }) {
                 setDurationMin(Number(e.target.value) as DurationMin)
               }
               disabled={creating}
-              className="rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
+              className="rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-[13.5px]"
             >
               {DURATION_OPTIONS.map((minutes) => (
                 <option key={minutes} value={minutes}>
@@ -144,7 +144,7 @@ export default function AdminTestCall({ active }: { active: boolean }) {
       </div>
 
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+        <div className="rounded-xl border border-rf-danger/35 bg-rf-danger-soft px-4 py-3 text-sm text-rf-danger">
           {error}
         </div>
       ) : null}

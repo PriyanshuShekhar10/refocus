@@ -36,6 +36,7 @@ import { PageRefreshButton } from "@/components/page-refresh";
 import AdminMailbox, {
   type MailRecipient,
 } from "./AdminMailbox";
+import AdminEngagement from "./AdminEngagement";
 import AdminCrew from "./AdminCrew";
 import AdminTestCall from "./AdminTestCall";
 import AdminUpdates from "./AdminUpdates";
@@ -319,10 +320,10 @@ function StatCard({
 }) {
   return (
     <div className="rounded-xl border border-rf-line bg-rf-card p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-rf-ink-mute">
+      <p className="text-[11.5px] font-medium uppercase tracking-[0.03em] text-rf-ink-mute">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-semibold text-rf-ink">
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-rf-ink">
         {value}
       </p>
       {hint ? (
@@ -459,9 +460,9 @@ function SessionsExpandTable({
   const colSpan = showActions ? 5 : 4;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-rf-line">
+    <div className="overflow-x-auto rounded-xl border border-rf-line bg-rf-card">
       <table className="w-full text-sm">
-        <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
+        <thead className="border-b border-rf-line bg-rf-bg text-left text-[11.5px] font-medium uppercase tracking-[0.02em] text-rf-ink-mute">
           <tr>
             <th className="px-4 py-3">When</th>
             <th className="px-4 py-3">Between</th>
@@ -1240,13 +1241,13 @@ export default function AdminPanel() {
 
   return (
     <div className="h-full overflow-y-auto p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold text-rf-ink">
               Admin
             </h1>
-            <p className="mt-1 text-sm text-rf-ink-mute">
+            <p className="mt-1 text-[13.5px] text-rf-ink-mute">
               Manage users, roles, and bans. Content moderation lives in
               Community.
             </p>
@@ -1260,10 +1261,10 @@ export default function AdminPanel() {
               key={id}
               type="button"
               onClick={() => setSection(id)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[13.5px] font-medium transition-colors ${
                 section === id
-                  ? "bg-rf-primary text-rf-on-primary"
-                  : "bg-rf-card border border-rf-line text-rf-ink-soft hover:bg-rf-line-soft"
+                  ? "border-rf-primary bg-rf-primary text-rf-on-primary"
+                  : "border-rf-line bg-rf-card text-rf-ink-soft hover:bg-rf-line-soft"
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -1273,7 +1274,7 @@ export default function AdminPanel() {
         </div>
 
         {error ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+          <div className="rounded-xl border border-rf-danger/35 bg-rf-danger-soft px-4 py-3 text-sm text-rf-danger">
             {error}
           </div>
         ) : null}
@@ -1433,9 +1434,9 @@ export default function AdminPanel() {
             ) : null}
 
             {friendRequestsExpanded ? (
-              <div className="overflow-x-auto rounded-xl border border-rf-line">
+              <div className="overflow-x-auto rounded-xl border border-rf-line bg-rf-card">
                 <table className="w-full text-sm">
-                  <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
+                  <thead className="border-b border-rf-line bg-rf-bg text-left text-[11.5px] font-medium uppercase tracking-[0.02em] text-rf-ink-mute">
                     <tr>
                       <th className="px-4 py-3">When</th>
                       <th className="px-4 py-3">From</th>
@@ -1489,6 +1490,7 @@ export default function AdminPanel() {
                 ) : null}
               </div>
             ) : null}
+            <AdminEngagement />
           </div>
         ) : null}
 
@@ -1512,7 +1514,7 @@ export default function AdminPanel() {
                 value={userQuery}
                 onChange={(e) => setUserQuery(e.target.value)}
                 placeholder="Search email, username, name, or IP…"
-                className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
+                className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-[13.5px]"
               />
               <button
                 type="submit"
@@ -1522,9 +1524,9 @@ export default function AdminPanel() {
               </button>
             </form>
             <p className="text-xs text-rf-ink-mute">{userTotal} users</p>
-            <div className="overflow-x-auto rounded-xl border border-rf-line">
+            <div className="overflow-x-auto rounded-xl border border-rf-line bg-rf-card">
               <table className="w-full text-sm">
-                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
+                <thead className="border-b border-rf-line bg-rf-bg text-left text-[11.5px] font-medium uppercase tracking-[0.02em] text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">User</th>
                     <th className="px-4 py-3">Username</th>
@@ -1778,7 +1780,7 @@ export default function AdminPanel() {
                 value={deletedQuery}
                 onChange={(e) => setDeletedQuery(e.target.value)}
                 placeholder="Search deleted email, username, name, or IP…"
-                className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
+                className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-[13.5px]"
               />
               <button
                 type="submit"
@@ -1791,9 +1793,9 @@ export default function AdminPanel() {
               {deletedTotal} deleted profile{deletedTotal === 1 ? "" : "s"}.
               Only accounts deleted after this feature shipped appear here.
             </p>
-            <div className="overflow-x-auto rounded-xl border border-rf-line">
+            <div className="overflow-x-auto rounded-xl border border-rf-line bg-rf-card">
               <table className="w-full text-sm">
-                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
+                <thead className="border-b border-rf-line bg-rf-bg text-left text-[11.5px] font-medium uppercase tracking-[0.02em] text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">User</th>
                     <th className="px-4 py-3">Username</th>
@@ -1891,7 +1893,7 @@ export default function AdminPanel() {
                 value={blocksQuery}
                 onChange={(e) => setBlocksQuery(e.target.value)}
                 placeholder="Search blocker or blocked email, username, or name…"
-                className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
+                className="flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-[13.5px]"
               />
               <button
                 type="submit"
@@ -1908,9 +1910,9 @@ export default function AdminPanel() {
               . People on this list cannot see each other in sessions, community,
               or matchmaking.
             </p>
-            <div className="overflow-x-auto rounded-xl border border-rf-line">
+            <div className="overflow-x-auto rounded-xl border border-rf-line bg-rf-card">
               <table className="w-full text-sm">
-                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
+                <thead className="border-b border-rf-line bg-rf-bg text-left text-[11.5px] font-medium uppercase tracking-[0.02em] text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">When</th>
                     <th className="px-4 py-3">Blocked by</th>
@@ -2031,7 +2033,7 @@ export default function AdminPanel() {
                   type="date"
                   value={loginDate}
                   onChange={(e) => setLoginDate(e.target.value)}
-                  className="rounded-lg border border-rf-line bg-rf-card px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-rf-line bg-rf-card px-3 py-1.5 text-[13.5px]"
                 />
               </div>
             ) : (
@@ -2051,7 +2053,7 @@ export default function AdminPanel() {
                     setLoginUserId(null);
                   }}
                   placeholder="Email or username…"
-                  className="min-w-[16rem] flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
+                  className="min-w-[16rem] flex-1 rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-[13.5px]"
                 />
                 <button
                   type="submit"
@@ -2158,9 +2160,9 @@ export default function AdminPanel() {
               </div>
             ) : null}
 
-            <div className="overflow-x-auto rounded-xl border border-rf-line">
+            <div className="overflow-x-auto rounded-xl border border-rf-line bg-rf-card">
               <table className="w-full text-sm">
-                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
+                <thead className="border-b border-rf-line bg-rf-bg text-left text-[11.5px] font-medium uppercase tracking-[0.02em] text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">When</th>
                     {loginMode === "day" ? (
@@ -2241,9 +2243,9 @@ export default function AdminPanel() {
               Signup attempts from IPs used by banned accounts. Signups are not
               blocked.
             </p>
-            <div className="overflow-x-auto rounded-xl border border-rf-line">
+            <div className="overflow-x-auto rounded-xl border border-rf-line bg-rf-card">
               <table className="w-full text-sm">
-                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
+                <thead className="border-b border-rf-line bg-rf-bg text-left text-[11.5px] font-medium uppercase tracking-[0.02em] text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">When</th>
                     <th className="px-4 py-3">IP</th>
@@ -2324,9 +2326,9 @@ export default function AdminPanel() {
               </button>
             </div>
             <p className="text-xs text-rf-ink-mute">{reportsTotal} reports</p>
-            <div className="overflow-x-auto rounded-xl border border-rf-line">
+            <div className="overflow-x-auto rounded-xl border border-rf-line bg-rf-card">
               <table className="w-full text-sm">
-                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
+                <thead className="border-b border-rf-line bg-rf-bg text-left text-[11.5px] font-medium uppercase tracking-[0.02em] text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">When</th>
                     <th className="px-4 py-3">Type</th>
@@ -2480,9 +2482,9 @@ export default function AdminPanel() {
             <p className="text-xs text-rf-ink-mute">
               {auditTotal} admin actions logged
             </p>
-            <div className="overflow-x-auto rounded-xl border border-rf-line">
+            <div className="overflow-x-auto rounded-xl border border-rf-line bg-rf-card">
               <table className="w-full text-sm">
-                <thead className="bg-rf-bg text-left text-xs uppercase text-rf-ink-mute">
+                <thead className="border-b border-rf-line bg-rf-bg text-left text-[11.5px] font-medium uppercase tracking-[0.02em] text-rf-ink-mute">
                   <tr>
                     <th className="px-4 py-3">When</th>
                     <th className="px-4 py-3">Admin</th>
@@ -2642,7 +2644,7 @@ export default function AdminPanel() {
                             type="button"
                             disabled={isPinned || actionId === account.id}
                             onClick={() => switchDailyAccount(account)}
-                            className="rounded-lg border border-rf-line px-3 py-1.5 text-sm font-medium text-rf-ink-soft hover:bg-rf-line-soft disabled:opacity-50"
+                            className="rounded-lg border border-rf-line px-3 py-1.5 text-[13px] font-medium text-rf-ink-soft hover:bg-rf-line-soft disabled:opacity-50"
                           >
                             {isPinned
                               ? "In use"

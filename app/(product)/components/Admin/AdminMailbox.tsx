@@ -273,7 +273,7 @@ export default function AdminMailbox({
               maxLength={ADMIN_MAIL_SUBJECT_MAX}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="What’s this about?"
-              className="w-full rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-[13.5px]"
             />
           </div>
           <div>
@@ -286,7 +286,7 @@ export default function AdminMailbox({
               onChange={(e) => setBody(e.target.value)}
               rows={10}
               placeholder="Write in plain text. Line breaks and links are kept."
-              className="w-full resize-y rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm leading-6"
+              className="w-full resize-y rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-[13.5px] leading-6"
             />
             <p className="mt-1 text-right text-[11px] text-rf-ink-mute">
               {body.length}/{ADMIN_MAIL_BODY_MAX}

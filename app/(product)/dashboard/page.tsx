@@ -313,7 +313,7 @@ function DashboardContent() {
               <TabPanel tab="admin" activeTab={activeTab} className="h-full">
                 <div className={isMobile ? "h-full overflow-y-auto pb-20" : "h-full"}>
                   {isMobile && (
-                    <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
+                    <div className="border-b border-rf-line bg-rf-amber-bg px-4 py-2 text-sm text-rf-amber-ink">
                       Moderation tools work best on desktop, but all actions are available here.
                     </div>
                   )}
