@@ -73,7 +73,9 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   // ---- CSRF / same-origin check on mutating API requests ----
-  if (MUTATING_METHODS.has(req.method) && pathname.startsWith("/api/")) {
+  // Key-authenticated (no cookies), so cross-origin callers are fine.
+  const keyAuthenticated = pathname === "/api/blog/publish";
+  if (MUTATING_METHODS.has(req.method) && pathname.startsWith("/api/") && !keyAuthenticated) {
     if (!originMatchesHost(req)) {
       return NextResponse.json(
         { error: "Cross-origin request blocked" },
