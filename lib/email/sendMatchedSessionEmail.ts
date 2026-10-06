@@ -26,6 +26,7 @@ export async function sendMatchedSessionEmail(input: {
   joinUrl: string;
   isFirstMatch: boolean;
   isHost?: boolean;
+  teamNote?: string | null;
 }): Promise<{ sent: boolean; reason?: string }> {
   if (!isResendConfigured()) {
     console.warn("[email] RESEND_API_KEY not set; skipping match email");
@@ -43,6 +44,7 @@ export async function sendMatchedSessionEmail(input: {
     joinUrl: input.joinUrl,
     isFirstMatch: input.isFirstMatch,
     isHost: input.isHost,
+    teamNote: input.teamNote,
   });
 
   const { error } = await resend.emails.send({

@@ -75,14 +75,23 @@ async function hasPriorMatchedSession(
 export async function notifySessionMatched(
   db: Db,
   session: SessionLike,
-): Promise<void> {
+  opts: {
+    /** Only email these participants (default: both). */
+    recipients?: string[];
+    /** Admin note shown as coming from the Refocus team. */
+    teamNote?: string | null;
+    /** Admin rematch: send even if a match email went out for this session before. */
+    skipDedupe?: boolean;
+  } = {},
+): Promise<{ sentTo: string[] }> {
+  const sentTo: string[] = [];
   try {
     const sessionId = String(session._id);
     const ownerId = String(session.owner_id);
     const participants = (session.session_participants ?? []).map((p) =>
       String(p.user_id),
     );
-    if (participants.length < 2) return;
+    if (participants.length < 2) return { sentTo };
 
     const objectIds = participants
       .filter((id) => ObjectId.isValid(id))
@@ -99,14 +108,18 @@ export async function notifySessionMatched(
 
     await Promise.all(
       participants.map(async (userId) => {
+        if (opts.recipients && !opts.recipients.includes(userId)) return;
         const user = byId.get(userId);
         const email = user?.email?.trim();
         if (!email) return;
 
+        const partnerKey = participants.find((id) => id !== userId) ?? "";
         const marked = await markReminderSent({
           userId,
           kind: "matched",
-          dedupeKey: `matched:${sessionId}:${userId}`,
+          dedupeKey: opts.skipDedupe
+            ? `matched:${sessionId}:${userId}:${partnerKey}:${Date.now()}`
+            : `matched:${sessionId}:${userId}`,
         });
         if (!marked) return;
 
@@ -123,7 +136,7 @@ export async function notifySessionMatched(
           sessionId,
         ));
 
-        await sendMatchedSessionEmail({
+        const result = await sendMatchedSessionEmail({
           email,
           firstName: displayName(user),
           partnerLabel: displayName(partner),
@@ -132,7 +145,9 @@ export async function notifySessionMatched(
           joinUrl: sessionJoinUrl(sessionId),
           isFirstMatch,
           isHost: userId === ownerId,
+          teamNote: opts.teamNote,
         });
+        if (result.sent) sentTo.push(userId);
       }),
     );
 
@@ -149,4 +164,5 @@ export async function notifySessionMatched(
   } catch (err) {
     console.error("[email] notifySessionMatched failed:", err);
   }
+  return { sentTo };
 }

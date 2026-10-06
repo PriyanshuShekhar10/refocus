@@ -56,14 +56,15 @@ export async function notifySessionCancelled(
     message?: string | null;
     kind: "delete" | "leave";
   },
-): Promise<void> {
+  opts: { teamNote?: string | null } = {},
+): Promise<{ sent: boolean }> {
   try {
     const actorId = String(input.actorUserId);
     const partnerId = (input.session.session_participants ?? [])
       .map((p) => String(p.user_id))
       .find((id) => id !== actorId);
     if (!partnerId || !ObjectId.isValid(partnerId) || !ObjectId.isValid(actorId)) {
-      return;
+      return { sent: false };
     }
 
     const users = (await db
@@ -76,14 +77,14 @@ export async function notifySessionCancelled(
     const partner = byId.get(partnerId);
     const actor = byId.get(actorId);
     const email = partner?.email?.trim();
-    if (!email) return;
+    if (!email) return { sent: false };
 
     const tz =
       partner?.preferences?.timezone && partner.preferences.timezone !== "auto"
         ? partner.preferences.timezone
         : "Asia/Kolkata";
 
-    await sendSessionCancelledEmail({
+    const result = await sendSessionCancelledEmail({
       email,
       firstName: displayName(partner),
       fromName: displayName(actor) || "Your partner",
@@ -93,8 +94,11 @@ export async function notifySessionCancelled(
       startsAtLabel: formatSessionTimeIST(new Date(input.session.start_time), tz),
       calendarUrl: `${getAppUrl()}/sessions`,
       kind: input.kind,
+      teamNote: opts.teamNote,
     });
+    return { sent: result.sent };
   } catch (err) {
     console.error("[email] notifySessionCancelled failed:", err);
+    return { sent: false };
   }
 }

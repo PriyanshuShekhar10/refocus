@@ -27,6 +27,7 @@ export async function sendSessionCancelledEmail(input: {
   startsAtLabel: string;
   calendarUrl: string;
   kind: "delete" | "leave";
+  teamNote?: string | null;
 }): Promise<{ sent: boolean; reason?: string }> {
   if (!isResendConfigured()) {
     console.warn("[email] RESEND_API_KEY not set; skipping cancel note");
@@ -44,6 +45,7 @@ export async function sendSessionCancelledEmail(input: {
     startsAtLabel: input.startsAtLabel,
     calendarUrl: input.calendarUrl,
     kind: input.kind,
+    teamNote: input.teamNote,
   });
 
   const replyTo = input.fromEmail?.trim() || undefined;

@@ -9,6 +9,7 @@ import {
   Flag,
   History,
   LayoutDashboard,
+  ArrowLeftRight,
   LogIn,
   Mail,
   Megaphone,
@@ -37,12 +38,14 @@ import AdminMailbox, {
   type MailRecipient,
 } from "./AdminMailbox";
 import AdminEngagement from "./AdminEngagement";
+import AdminRematch from "./AdminRematch";
 import AdminCrew from "./AdminCrew";
 import AdminTestCall from "./AdminTestCall";
 import AdminUpdates from "./AdminUpdates";
 
 type AdminSection =
   | "overview"
+  | "rematch"
   | "users"
   | "deleted"
   | "blocked"
@@ -271,6 +274,7 @@ const SECTIONS: {
   icon: typeof LayoutDashboard;
 }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "rematch", label: "Rematch", icon: ArrowLeftRight },
   { id: "users", label: "Users", icon: Users },
   { id: "crew", label: "Crew", icon: UserPlus },
   { id: "test-call", label: "Test call", icon: Video },
@@ -303,6 +307,8 @@ const ACTION_LABELS: Record<string, string> = {
   "crew.remove": "Removed crew member",
   "test_call.create": "Created Daily test call",
   "session.club": "Clubbed sessions",
+  "session.rematch": "Rematched session",
+  "session.remove_participant": "Removed from session",
   "daily.switch_account": "Switched Daily.co account",
   "daily.rotate_accounts": "Set Daily.co accounts to rotate",
   "update.publish": "Published product update",
@@ -631,6 +637,9 @@ function PersonLine({ person }: { person: AdminPerson }) {
 
 function formatAuditDetails(entry: AuditEntry): string | null {
   if (!entry.details) return null;
+  if (Array.isArray(entry.details.lines)) {
+    return (entry.details.lines as unknown[]).map(String).join("\n");
+  }
   if (entry.action === "user.mute" && entry.details.muteDays) {
     return `${entry.details.muteDays} day${entry.details.muteDays === 1 ? "" : "s"}`;
   }
@@ -1492,6 +1501,10 @@ export default function AdminPanel() {
             ) : null}
             <AdminEngagement />
           </div>
+        ) : null}
+
+        {section === "rematch" ? (
+          <AdminRematch onOpenHistory={() => setSection("history")} />
         ) : null}
 
         {section === "crew" ? <AdminCrew active /> : null}
@@ -2532,7 +2545,7 @@ export default function AdminPanel() {
                             </div>
                           ) : null}
                         </td>
-                        <td className="px-4 py-3 text-rf-ink-mute">
+                        <td className="whitespace-pre-line px-4 py-3 text-rf-ink-mute">
                           {formatAuditDetails(entry) ||
                             entry.resourceId ||
                             "—"}

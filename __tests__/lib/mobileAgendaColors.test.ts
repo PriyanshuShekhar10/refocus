@@ -16,9 +16,10 @@ describe("mobileAgendaColors", () => {
     expect(getAgendaColors("system")).toEqual(agendaLight);
   });
 
-  it("light palette uses light surfaces", () => {
-    expect(agendaLight.page).toBe("#f7f8fa");
-    expect(agendaLight.card).toBe("#ffffff");
+  it("palettes read the shared theme tokens and keep their color scheme", () => {
+    expect(agendaLight.page).toBe("var(--rf-bg)");
+    expect(agendaLight.card).toBe("var(--rf-card)");
     expect(agendaLight.colorScheme).toBe("light");
+    expect(agendaDark.colorScheme).toBe("dark");
   });
 });

@@ -19,6 +19,8 @@ export type AdminAuditAction =
   | "crew.remove"
   | "test_call.create"
   | "session.club"
+  | "session.rematch"
+  | "session.remove_participant"
   | "daily.switch_account"
   | "daily.rotate_accounts"
   | "update.publish"

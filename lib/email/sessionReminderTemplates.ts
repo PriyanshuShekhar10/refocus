@@ -208,6 +208,20 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
+function teamNoteBlock(note: string | null | undefined): { html: string; text: string } {
+  const trimmed = (note ?? "").trim();
+  if (!trimmed) return { html: "", text: "" };
+  const noteHtml = escapeHtml(trimmed).replace(/\n/g, "<br />");
+  return {
+    html: `
+    <div style="margin:0 0 20px;padding:12px 16px;border-left:3px solid ${emailBrand.line};">
+      <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:${emailBrand.inkMute};">A note from the Refocus team</p>
+      <p style="margin:0;font-size:14px;line-height:1.6;color:${emailBrand.inkSoft};">${noteHtml}</p>
+    </div>`,
+    text: `\nA note from the Refocus team:\n"${trimmed}"\n`,
+  };
+}
+
 export function buildMatchedSessionEmail(params: {
   firstName?: string | null;
   partnerLabel: string | null;
@@ -217,8 +231,11 @@ export function buildMatchedSessionEmail(params: {
   isFirstMatch: boolean;
   /** Host of a calendar slot that someone else just joined. */
   isHost?: boolean;
+  /** Admin note (rematch tool); shown as coming from the Refocus team. */
+  teamNote?: string | null;
 }): { subject: string; html: string; text: string } {
   const greet = greeting(params.firstName);
+  const team = teamNoteBlock(params.teamNote);
   const partner = params.partnerLabel?.trim() || "a focus partner";
   const partnerHtml = escapeHtml(partner);
   const titleHtml = escapeHtml(params.sessionTitle);
@@ -248,7 +265,7 @@ export function buildMatchedSessionEmail(params: {
   const bodyText = `${greet}
 
 ${introText}
-
+${team.text}
 ${params.sessionTitle}
 ${params.startsAtLabel}
 
@@ -260,7 +277,7 @@ You'll also get a reminder before it starts if you have session emails enabled.
 
   const bodyHtml = `
     <p style="margin:0 0 16px;font-size:17px;line-height:1.5;color:${emailBrand.ink};font-weight:500;">${greet}</p>
-    <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">${intro}</p>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">${intro}</p>${team.html}
     <div style="margin:0 0 24px;padding:16px;border-radius:12px;border:1px solid ${emailBrand.line};background:${emailBrand.bg};">
       <p style="margin:0 0 6px;font-size:16px;font-weight:600;color:${emailBrand.ink};">${titleHtml}</p>
       <p style="margin:0;font-size:14px;color:${emailBrand.inkSoft};">${startsHtml}</p>
@@ -290,8 +307,11 @@ export function buildSessionCancelledEmail(params: {
   startsAtLabel: string;
   calendarUrl: string;
   kind: "delete" | "leave";
+  /** Admin note (rematch tool); shown as coming from the Refocus team. */
+  teamNote?: string | null;
 }): { subject: string; html: string; text: string } {
   const greet = greeting(params.firstName);
+  const team = teamNoteBlock(params.teamNote);
   const from = params.fromName.trim() || "Your partner";
   const fromHtml = escapeHtml(from);
   const titleHtml = escapeHtml(params.sessionTitle);
@@ -323,7 +343,7 @@ export function buildSessionCancelledEmail(params: {
   const bodyText = `${greet}
 
 ${introText}
-${noteText}
+${noteText}${team.text}
 ${params.sessionTitle}
 ${params.startsAtLabel}
 
@@ -340,7 +360,7 @@ ${params.calendarUrl}
   const bodyHtml = `
     <p style="margin:0 0 16px;font-size:17px;line-height:1.5;color:${emailBrand.ink};font-weight:500;">${greet}</p>
     <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:${emailBrand.inkSoft};">${intro}</p>
-    ${noteHtmlBlock}
+    ${noteHtmlBlock}${team.html}
     <div style="margin:0 0 24px;padding:16px;border-radius:12px;border:1px solid ${emailBrand.line};background:${emailBrand.bg};">
       <p style="margin:0 0 6px;font-size:16px;font-weight:600;color:${emailBrand.ink};">${titleHtml}</p>
       <p style="margin:0;font-size:14px;color:${emailBrand.inkSoft};">${startsHtml}</p>
