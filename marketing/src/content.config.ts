@@ -1,8 +1,73 @@
 import { defineCollection, z } from "astro:content";
-import { glob } from "astro/loaders";
+import { glob, type Loader } from "astro/loaders";
+
+/**
+ * English blog = markdown files in src/content/blog + posts published through
+ * the dashboard API (POST /api/blog/publish, stored in MongoDB). API posts are
+ * fetched at build time; a failed fetch fails the build so the live site keeps
+ * the last good version instead of dropping posts.
+ */
+const BLOG_API_URL =
+  process.env.BLOG_API_URL ?? "https://dashboard.refocus.co.in/api/blog/posts";
+
+type ApiPost = {
+  slug: string;
+  title: string;
+  description: string;
+  markdown: string;
+  category: string;
+  tags: string[];
+  author: string;
+  coverImage: string | null;
+  coverImageAlt: string | null;
+  pubDate: string;
+  updatedAt?: string;
+};
+
+function blogLoader(): Loader {
+  const files = glob({ pattern: "**/*.md", base: "./src/content/blog" });
+  return {
+    name: "blog-files-and-api",
+    async load(ctx) {
+      await files.load(ctx);
+      if (process.env.BLOG_API_DISABLED === "1") return;
+      const res = await fetch(BLOG_API_URL);
+      if (!res.ok) throw new Error(`Blog API ${BLOG_API_URL} returned ${res.status}`);
+      const { posts } = (await res.json()) as { posts: ApiPost[] };
+      for (const p of posts) {
+        if (ctx.store.has(p.slug)) {
+          ctx.logger.warn(`Skipping API post "${p.slug}": a markdown file already uses that slug`);
+          continue;
+        }
+        const data = await ctx.parseData({
+          id: p.slug,
+          data: {
+            title: p.title,
+            description: p.description,
+            pubDate: p.pubDate,
+            updatedDate: p.updatedAt && p.updatedAt !== p.pubDate ? p.updatedAt : undefined,
+            category: p.category,
+            tags: p.tags,
+            author: p.author,
+            coverImage: p.coverImage ?? undefined,
+            coverImageAlt: p.coverImageAlt ?? undefined,
+          },
+        });
+        ctx.store.set({
+          id: p.slug,
+          data,
+          body: p.markdown,
+          rendered: await ctx.renderMarkdown(p.markdown),
+          digest: ctx.generateDigest(p),
+        });
+      }
+      ctx.logger.info(`Loaded ${posts.length} API post(s)`);
+    },
+  };
+}
 
 const blog = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./src/content/blog" }),
+  loader: blogLoader(),
   schema: z.object({
     title: z.string(),
     description: z.string(),
@@ -29,6 +94,8 @@ const blog = defineCollection({
       .default("productivity"),
     tags: z.array(z.string()).default([]),
     author: z.string().default("Refocus Team"),
+    coverImage: z.string().url().optional(),
+    coverImageAlt: z.string().optional(),
     draft: z.boolean().default(false),
   }),
 });

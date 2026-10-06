@@ -30,7 +30,7 @@ const { Content } = await render(post);
 
 const site = SITE_URL;
 const canonical = `/blog/${post.id}`;
-const ogImage = `/open-graph/${post.id}.png`;
+const ogImage = post.data.coverImage ?? `/open-graph/${post.id}.png`;
 
 const words = (post.body ?? "").trim().split(/\s+/).filter(Boolean).length;
 const minutes = Math.max(1, Math.round(words / 200));
@@ -44,10 +44,13 @@ const blogPostingJsonLd = {
   dateModified: new Date(
     post.data.updatedDate ?? post.data.pubDate,
   ).toISOString(),
-  author: { "@type": "Organization", name: post.data.author ?? "Refocus" },
+  author:
+    post.data.author && post.data.author !== "Refocus Team"
+      ? { "@type": "Person", name: post.data.author }
+      : { "@type": "Organization", name: post.data.author ?? "Refocus" },
   publisher: publisherJsonLd(),
   mainEntityOfPage: `${site}${canonical}`,
-  image: `${site}${ogImage}`,
+  image: ogImage.startsWith("http") ? ogImage : `${site}${ogImage}`,
   keywords: (post.data.tags ?? []).join(", "),
   articleSection: categoryLabel(post.data.category),
 };
@@ -71,6 +74,8 @@ const breadcrumb = breadcrumbJsonLd([
   minutes={minutes}
   related={related}
   ogImage={ogImage}
+  coverImage={post.data.coverImage}
+  coverImageAlt={post.data.coverImageAlt}
   jsonLd={[blogPostingJsonLd, breadcrumb]}
 >
   <Content />

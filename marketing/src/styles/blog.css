@@ -295,6 +295,15 @@
   padding: 4px 11px;
   border-radius: 999px;
 }
+.blog-cover {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin: 28px 0 32px;
+  background: var(--line);
+}
 .blog-divider {
   border: 0;
   border-top: 1px solid var(--line);
