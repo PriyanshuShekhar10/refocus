@@ -732,7 +732,7 @@ export default function MobileCalendar() {
             currentUserId={currentUserId}
             onUpdate={(patch) => handleUpdateSessionMeta(event.id, patch)}
             onLeave={
-              isBooked && !isOwner
+              isBooked && !isOwner && !hasSessionStarted(event.start)
                 ? () => dispatch({ type: "OPEN_LEAVE_CONFIRM", event })
                 : undefined
             }

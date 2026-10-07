@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { mutate as globalMutate } from "swr";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatLocalDate, formatLocalTime } from "@/lib/localTime";
-import { isCallJoinable } from "@/lib/sessionWindow";
+import { hasSessionStarted, isCallJoinable } from "@/lib/sessionWindow";
 import * as sessionsApi from "@/lib/api/sessionsApi";
 import { swrKeys } from "@/lib/swr/keys";
 
@@ -303,7 +303,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                         </Link>
                       </>
                     )}
-                    {!session.isOwner ? (
+                    {!session.isOwner && !hasSessionStarted(session.start) ? (
                       <button
                         type="button"
                         onClick={() => setLeaveTarget(session)}

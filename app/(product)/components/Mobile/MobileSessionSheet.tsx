@@ -1,5 +1,6 @@
 "use client";
 
+import { hasSessionStarted } from "@/lib/sessionWindow";
 import type { CalendarEvent } from "@/types/calendar";
 import { VerifiedName } from "@/components/verified-tag";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -167,13 +168,15 @@ export function MobileSessionSheet({
               >
                 View details
               </button>
-              <button
-                type="button"
-                onClick={onLeave}
-                className="min-h-12 w-full rounded-xl bg-rf-danger py-3.5 text-sm font-semibold text-white hover:opacity-90"
-              >
-                Leave session
-              </button>
+              {!hasSessionStarted(event.start) ? (
+                <button
+                  type="button"
+                  onClick={onLeave}
+                  className="min-h-12 w-full rounded-xl bg-rf-danger py-3.5 text-sm font-semibold text-white hover:opacity-90"
+                >
+                  Leave session
+                </button>
+              ) : null}
             </div>
           )}
 

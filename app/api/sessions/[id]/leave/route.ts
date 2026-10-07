@@ -8,6 +8,7 @@ import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { normalizeCancelMessage } from "@/lib/sessionCancelMessage";
 import { notifySessionCancelled } from "@/lib/notifySessionCancelled";
+import { hasSessionStarted } from "@/lib/sessionWindow";
 
 type SessionDoc = {
   _id: ObjectId;
@@ -53,6 +54,14 @@ export async function POST(
   const col = db.collection<SessionDoc>("sessions");
   const s = await col.findOne({ _id: new ObjectId(sessionId) });
   if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Once a session has started, partners can't back out of it.
+  if (s.start_time && hasSessionStarted(s.start_time)) {
+    return NextResponse.json(
+      { error: "This session has already started, so it can't be left." },
+      { status: 409 },
+    );
+  }
 
   const participants = s.session_participants ?? [];
   const isOwner = String(s.owner_id) === String(userId);

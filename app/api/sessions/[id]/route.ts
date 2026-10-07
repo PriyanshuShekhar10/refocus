@@ -18,6 +18,7 @@ import {
 import { normalizeCancelMessage } from "@/lib/sessionCancelMessage";
 import { notifySessionCancelled } from "@/lib/notifySessionCancelled";
 import { logSessionDeleted } from "@/lib/sessionLifecycleEvents";
+import { hasSessionStarted } from "@/lib/sessionWindow";
 import {
   readStoredPublicAttendance,
   schedulePublicAttendanceRefresh,
@@ -161,6 +162,14 @@ export async function DELETE(
   if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (String(s.owner_id) !== String(userId))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  // Once a session has started, the owner can't delete it either.
+  if (hasSessionStarted(s.start_time)) {
+    return NextResponse.json(
+      { error: "This session has already started, so it can't be deleted." },
+      { status: 409 },
+    );
+  }
 
   const participants = s.session_participants ?? [];
   const otherParticipant = participants.find(
