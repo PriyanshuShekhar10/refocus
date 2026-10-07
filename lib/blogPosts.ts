@@ -240,5 +240,10 @@ export async function triggerBlogDeploy(): Promise<{ ok: boolean; error?: string
     },
   );
   if (res.status === 204) return { ok: true };
-  return { ok: false, error: `GitHub returned ${res.status}` };
+  const detail = await res.text().catch(() => "");
+  const needs = res.headers.get("x-accepted-github-permissions");
+  return {
+    ok: false,
+    error: `GitHub returned ${res.status}${needs ? ` (token needs: ${needs})` : ""}: ${detail.slice(0, 300)}`,
+  };
 }
