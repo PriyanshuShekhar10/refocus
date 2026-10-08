@@ -1,5 +1,6 @@
 import { getResend, getResendFromEmail, isResendConfigured } from "@/lib/resend";
 import {
+  buildOpsBugReportEmail,
   buildOpsReportEmail,
   buildOpsSessionMatchedEmail,
   buildOpsSignupEmail,
@@ -12,6 +13,7 @@ async function sendOpsEmail(input: {
   subject: string;
   html: string;
   text: string;
+  replyTo?: string | null;
 }): Promise<{ sent: boolean; reason?: string }> {
   if (!isResendConfigured()) {
     console.warn("[email] RESEND_API_KEY not set; skipping ops notify");
@@ -27,6 +29,7 @@ async function sendOpsEmail(input: {
     subject: input.subject,
     html: input.html,
     text: input.text,
+    ...(input.replyTo ? { replyTo: input.replyTo } : {}),
   });
 
   if (error) {
@@ -88,5 +91,19 @@ export async function notifyOpsReport(input: {
     await sendOpsEmail(built);
   } catch (err) {
     console.error("[email] notifyOpsReport failed:", err);
+  }
+}
+
+/** Bug reports always email the team (not gated by ops notify toggles). */
+export async function notifyOpsBugReport(
+  input: Parameters<typeof buildOpsBugReportEmail>[0],
+): Promise<{ sent: boolean }> {
+  try {
+    const built = buildOpsBugReportEmail(input);
+    const res = await sendOpsEmail({ ...built, replyTo: input.reporter.email ?? null });
+    return { sent: res.sent };
+  } catch (err) {
+    console.error("[email] notifyOpsBugReport failed:", err);
+    return { sent: false };
   }
 }

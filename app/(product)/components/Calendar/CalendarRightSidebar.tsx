@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { VerifiedName } from "@/components/verified-tag";
 import DeviceTestModal from "../DeviceTestModal";
+import BugReportDialog from "../BugReportDialog";
+import { Bug } from "lucide-react";
 import SidebarUpdatesBox from "../Updates/SidebarUpdatesBox";
 import { releaseAllLocalMediaStreams } from "@/lib/localMedia";
 import { AttendanceHighlight } from "@/components/attendance-highlight";
@@ -155,6 +157,7 @@ export function CalendarRightSidebar({
     attended: number;
   } | null>(null);
   const [deviceTestOpen, setDeviceTestOpen] = useState(false);
+  const [bugReportOpen, setBugReportOpen] = useState(false);
   
   useEffect(() => {
     setMounted(true);
@@ -748,36 +751,12 @@ export function CalendarRightSidebar({
           <div className="space-y-0.5">
           <button
             type="button"
-            onClick={() => {
-              if (navigator.share) {
-                void navigator.share({
-                  title: "Refocus",
-                  text: "Check out Refocus - Virtual coworking made easy!",
-                  url: window.location.origin,
-                });
-              } else {
-                void navigator.clipboard.writeText(window.location.origin);
-              }
-            }}
+            onClick={() => setBugReportOpen(true)}
             className={utilityRowClass}
           >
             <span className="flex items-center gap-2 text-rf-ink-soft">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-3.5 w-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                />
-              </svg>
-              Share Refocus
+              <Bug className="h-3.5 w-3.5" aria-hidden="true" />
+              Report a bug
             </span>
           </button>
 
@@ -807,6 +786,7 @@ export function CalendarRightSidebar({
         </div>
       ) : null}
 
+      <BugReportDialog open={bugReportOpen} onClose={() => setBugReportOpen(false)} />
       <DeviceTestModal
         open={deviceTestOpen}
         onClose={() => {

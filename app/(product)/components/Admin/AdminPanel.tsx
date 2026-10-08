@@ -10,6 +10,7 @@ import {
   History,
   LayoutDashboard,
   ArrowLeftRight,
+  Bug,
   LogIn,
   Mail,
   Megaphone,
@@ -39,6 +40,7 @@ import AdminMailbox, {
 } from "./AdminMailbox";
 import AdminEngagement from "./AdminEngagement";
 import AdminRematch from "./AdminRematch";
+import AdminBugs from "./AdminBugs";
 import AdminCrew from "./AdminCrew";
 import AdminTestCall from "./AdminTestCall";
 import AdminUpdates from "./AdminUpdates";
@@ -51,6 +53,7 @@ type AdminSection =
   | "blocked"
   | "mailbox"
   | "reports"
+  | "bugs"
   | "history"
   | "ip-activity"
   | "logins"
@@ -87,6 +90,7 @@ type Stats = {
     pendingFriendRequests: number;
     pendingSessionRequests: number;
     pendingReports: number;
+    openBugReports?: number;
     bannedIpActivityWeek: number;
     userBlocks: number;
     uniqueBlockers: number;
@@ -285,6 +289,7 @@ const SECTIONS: {
   { id: "updates", label: "Updates", icon: Megaphone },
   { id: "ip-activity", label: "Banned IP activity", icon: Activity },
   { id: "reports", label: "Reports", icon: Flag },
+  { id: "bugs", label: "Bugs", icon: Bug },
   { id: "history", label: "History", icon: History },
   { id: "config", label: "Config", icon: Settings2 },
 ];
@@ -309,6 +314,8 @@ const ACTION_LABELS: Record<string, string> = {
   "session.club": "Clubbed sessions",
   "session.rematch": "Rematched session",
   "session.remove_participant": "Removed from session",
+  "bug.resolve": "Resolved bug report",
+  "bug.reopen": "Reopened bug report",
   "daily.switch_account": "Switched Daily.co account",
   "daily.rotate_accounts": "Set Daily.co accounts to rotate",
   "update.publish": "Published product update",
@@ -1410,6 +1417,17 @@ export default function AdminPanel() {
               </button>
               <button
                 type="button"
+                onClick={() => setSection("bugs")}
+                className="text-left"
+              >
+                <StatCard
+                  label="Open bug reports"
+                  value={stats.moderation.openBugReports ?? 0}
+                  hint="Reported from the dashboard"
+                />
+              </button>
+              <button
+                type="button"
                 onClick={() => setSection("ip-activity")}
                 className="text-left"
               >
@@ -1506,6 +1524,8 @@ export default function AdminPanel() {
         {section === "rematch" ? (
           <AdminRematch onOpenHistory={() => setSection("history")} />
         ) : null}
+
+        {section === "bugs" ? <AdminBugs /> : null}
 
         {section === "crew" ? <AdminCrew active /> : null}
 

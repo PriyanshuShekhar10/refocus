@@ -129,6 +129,7 @@ export async function GET() {
       messagesDeleted: chatDeleted,
     },
     moderation: {
+      openBugReports: await db.collection("bug_reports").countDocuments({ status: "open" }),
       pendingFriendRequests,
       pendingSessionRequests,
       pendingReports,

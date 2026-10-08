@@ -172,3 +172,53 @@ ${input.joinUrl}
 `,
   });
 }
+
+export function buildOpsBugReportEmail(input: {
+  reportId: string;
+  reporter: { name?: string | null; email?: string | null; userId: string };
+  description: string;
+  pageUrl?: string | null;
+  userAgent?: string | null;
+  viewport?: string | null;
+  timezone?: string | null;
+}): { subject: string; html: string; text: string } {
+  const reporter = personLine(input.reporter.name, input.reporter.email);
+  const firstLine = input.description.trim().split("\n")[0].slice(0, 70);
+  const subject = `Bug report: ${firstLine}${input.description.trim().length > 70 ? "…" : ""}`;
+  const meta: [string, string | null | undefined][] = [
+    ["Page", input.pageUrl],
+    ["Browser", input.userAgent],
+    ["Screen", input.viewport],
+    ["Timezone", input.timezone],
+    ["User id", input.reporter.userId],
+    ["Report id", input.reportId],
+  ];
+  const metaText = meta
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("\n");
+  const metaHtml = meta
+    .filter(([, v]) => v)
+    .map(
+      ([k, v]) =>
+        `<p style="margin:0 0 6px;font-size:13px;line-height:1.6;color:${emailBrand.inkMute};">${k}: ${escapeHtml(String(v))}</p>`,
+    )
+    .join("");
+
+  return opsShell({
+    eyebrow: "Bug report",
+    subject,
+    bodyText: `${reporter} reported a bug
+
+${input.description.trim()}
+
+${metaText}
+`,
+    bodyHtml: `
+              <p style="margin:0 0 16px;font-size:17px;line-height:1.5;color:${emailBrand.ink};font-weight:500;">${escapeHtml(reporter)} reported a bug</p>
+              <div style="margin:0 0 20px;padding:14px 16px;border-left:3px solid ${emailBrand.accent};background:${emailBrand.bg};border-radius:0 12px 12px 0;">
+                <p style="margin:0;font-size:15px;line-height:1.65;color:${emailBrand.ink};white-space:pre-wrap;">${escapeHtml(input.description.trim())}</p>
+              </div>
+              ${metaHtml}`,
+  });
+}

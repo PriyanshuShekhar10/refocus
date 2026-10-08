@@ -21,6 +21,8 @@ export type AdminAuditAction =
   | "session.club"
   | "session.rematch"
   | "session.remove_participant"
+  | "bug.resolve"
+  | "bug.reopen"
   | "daily.switch_account"
   | "daily.rotate_accounts"
   | "update.publish"

@@ -10,7 +10,10 @@ import {
   HiMoon,
 } from "react-icons/hi";
 import { BsGearFill } from "react-icons/bs";
-import { FiLogOut, FiShare2 } from "react-icons/fi";
+import { FiLogOut } from "react-icons/fi";
+import { Bug } from "lucide-react";
+import { useState } from "react";
+import BugReportDialog from "../BugReportDialog";
 import type { TabKey } from "../Sidebar/sidebar";
 import { MOBILE_MORE_TABS } from "./MobileBottomNav";
 
@@ -53,18 +56,6 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
-function shareRefocus() {
-  if (typeof navigator !== "undefined" && navigator.share) {
-    void navigator.share({
-      title: "Refocus",
-      text: "Check out Refocus - Virtual coworking made easy!",
-      url: window.location.origin,
-    });
-  } else if (typeof navigator !== "undefined" && navigator.clipboard) {
-    void navigator.clipboard.writeText(window.location.origin);
-  }
-}
-
 export function MobileMoreMenu({
   open,
   onClose,
@@ -73,8 +64,12 @@ export function MobileMoreMenu({
   isAdmin = false,
 }: MobileMoreMenuProps) {
   const { resolvedTheme, setTheme } = useTheme();
+  const [bugReportOpen, setBugReportOpen] = useState(false);
+  const bugDialog = (
+    <BugReportDialog open={bugReportOpen} onClose={() => setBugReportOpen(false)} />
+  );
 
-  if (!open) return null;
+  if (!open) return bugDialog;
 
   const visibleItems = MENU_ITEMS.filter((item) => !item.adminOnly || isAdmin);
   const nextTheme = (resolvedTheme || "light") === "dark" ? "light" : "dark";
@@ -86,6 +81,8 @@ export function MobileMoreMenu({
   };
 
   return (
+    <>
+    {bugDialog}
     <div className="fixed inset-0 z-[60] lg:hidden">
       <button
         type="button"
@@ -148,13 +145,13 @@ export function MobileMoreMenu({
             <button
               type="button"
               onClick={() => {
-                shareRefocus();
+                setBugReportOpen(true);
                 onClose();
               }}
               className="flex w-full min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-left text-rf-ink transition-colors hover:bg-rf-line-soft"
             >
-              <FiShare2 size={18} />
-              <span className="text-[15px] font-medium">Share Refocus</span>
+              <Bug size={18} />
+              <span className="text-[15px] font-medium">Report a bug</span>
             </button>
           </li>
           <li>
@@ -170,5 +167,6 @@ export function MobileMoreMenu({
         </ul>
       </div>
     </div>
+    </>
   );
 }
