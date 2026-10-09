@@ -6,6 +6,8 @@ import { authOptions } from '@/lib/auth';
 import { checkRateLimit, rateLimitedResponse } from '@/lib/ratelimit';
 import { requireVerifiedEmail } from '@/lib/requireVerifiedEmail';
 
+const MAX_GOAL_LENGTH = 500;
+
 // Simple LRU cache to avoid re-calling the LLM for identical goal strings.
 // Keeps the most recent 200 entries. Entries expire after 1 hour.
 const CACHE_MAX = 200;
@@ -50,10 +52,17 @@ export async function POST(req: Request) {
       return rateLimitedResponse(rl);
     }
 
-    const { goal } = await req.json();
+    const { goal } = (await req.json()) as { goal?: unknown };
 
-    if (!goal) {
+    if (typeof goal !== 'string' || !goal.trim()) {
       return Response.json({ error: 'Goal is required' }, { status: 400 });
+    }
+    // Keep LLM costs bounded: a session goal is a sentence or two.
+    if (goal.length > MAX_GOAL_LENGTH) {
+      return Response.json(
+        { error: `Goal must be ${MAX_GOAL_LENGTH} characters or fewer` },
+        { status: 400 },
+      );
     }
 
     // Normalise the goal string for cache lookup

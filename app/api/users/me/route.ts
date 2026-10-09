@@ -169,6 +169,40 @@ export async function PATCH(req: NextRequest) {
     website?: string;
   };
 
+  // Type and length checks so a profile can't store values that break pages
+  // other people view (community, calendar, public profile).
+  const textLimits: [string, unknown, number][] = [
+    ["username", username, 20],
+    ["firstname", firstname, 50],
+    ["lastname", lastname, 50],
+    ["about", about, 1000],
+    ["location", location, 100],
+    ["website", website, 200],
+  ];
+  for (const [field, value, max] of textLimits) {
+    if (value === undefined) continue;
+    if (typeof value !== "string" || value.length > max) {
+      return NextResponse.json(
+        { error: `${field} must be text of at most ${max} characters` },
+        { status: 400 },
+      );
+    }
+  }
+  if (
+    interests !== undefined &&
+    (!Array.isArray(interests) ||
+      interests.length > 20 ||
+      interests.some((i) => typeof i !== "string" || i.length > 40))
+  ) {
+    return NextResponse.json(
+      { error: "interests must be up to 20 items of at most 40 characters" },
+      { status: 400 },
+    );
+  }
+  if (aboutMe !== undefined && (typeof aboutMe !== "object" || aboutMe === null || Array.isArray(aboutMe))) {
+    return NextResponse.json({ error: "aboutMe must be an object" }, { status: 400 });
+  }
+
   const db = await getDb();
 
   // Validate and update username if provided
