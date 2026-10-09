@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createAblyTokenRequest } from "@/lib/ably-server";
-import { globalChatChannel, sessionsChannel, userChannel, welcomeBoardChannel } from "@/lib/realtimeChannels";
+import { getDb } from "@/lib/mongodb";
+import { buildAblyCapability } from "@/lib/ablyCapability";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -13,15 +14,7 @@ export async function GET() {
   }
 
   try {
-    const capability = JSON.stringify({
-      [globalChatChannel()]: ["subscribe", "publish", "history"],
-      [userChannel(userId)]: ["subscribe"],
-      "chat:*": ["subscribe", "publish", "history"],
-      [sessionsChannel()]: ["subscribe"],
-      [welcomeBoardChannel()]: ["subscribe"],
-      "session:*:tasks": ["subscribe"],
-      "session:*:alerts": ["subscribe"],
-    });
+    const capability = JSON.stringify(await buildAblyCapability(await getDb(), userId));
     const tokenRequest = await createAblyTokenRequest({
       clientId: userId,
       capability,

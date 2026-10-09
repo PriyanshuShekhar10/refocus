@@ -13,7 +13,7 @@ import MediaPermissionHelp, {
 import { WRAP_UP_MINUTES } from "@/lib/sessionWindow";
 import { playSessionCompleteSound, unlockSessionCompleteSound } from "@/lib/sessionCompleteSound";
 import { prepareForDailyCall, releaseAllLocalMediaStreams } from "@/lib/localMedia";
-import { getAblyClient } from "@/lib/ably-client";
+import { ensureAblyAccess, getAblyClient } from "@/lib/ably-client";
 import { sessionAlertsChannel } from "@/lib/realtimeChannels";
 import type { SessionCheerEvent } from "@/types/sessionCheer";
 import { useSessionTasks } from "@/hooks/useSessionTasks";
@@ -417,8 +417,13 @@ export default function ClientCall({
           );
         }
       };
-      channel.subscribe("event", onEvent);
+      let cancelled = false;
+      const ch = channel;
+      void ensureAblyAccess(sessionAlertsChannel(sessionId)).then(() => {
+        if (!cancelled) ch.subscribe("event", onEvent);
+      });
       return () => {
+        cancelled = true;
         try {
           channel?.unsubscribe("event", onEvent);
         } catch {

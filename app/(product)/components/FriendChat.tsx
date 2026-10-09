@@ -7,7 +7,7 @@ import {
   FiMessageCircle,
   FiMoreHorizontal,
 } from "react-icons/fi";
-import { getAblyClient } from "@/lib/ably-client";
+import { ensureAblyAccess, getAblyClient } from "@/lib/ably-client";
 import { chatChannel } from "@/lib/realtimeChannels";
 import { useEmailVerified } from "@/hooks/useEmailVerified";
 import { useCurrentUserAvatar } from "@/hooks/useCurrentUserAvatar";
@@ -442,7 +442,9 @@ export default function FriendChat({
       load();
     };
 
-    channel.subscribe("event", onEvent);
+    void ensureAblyAccess(channelName).then(() => {
+      if (!isUnmounted) channel.subscribe("event", onEvent);
+    });
     return () => {
       isUnmounted = true;
       channel.unsubscribe("event", onEvent);
