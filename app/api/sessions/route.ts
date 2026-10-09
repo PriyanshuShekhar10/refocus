@@ -357,7 +357,8 @@ export async function GET(req: NextRequest) {
       participants: (s.session_participants ?? []).map((p) => ({
         user_id: p.user_id,
         joined_at: String(p.joined_at),
-        email: usersById[p.user_id]?.email ?? undefined,
+        // Only the caller's own email — never expose other users' addresses.
+        email: p.user_id === userId ? (usersById[p.user_id]?.email ?? undefined) : undefined,
         firstname: usersById[p.user_id]?.firstname ?? undefined,
         lastname: usersById[p.user_id]?.lastname ?? undefined,
         username: usersById[p.user_id]?.username ?? undefined,
@@ -370,7 +371,7 @@ export async function GET(req: NextRequest) {
       owner: owner
         ? {
             id: owner.id,
-            email: owner.email ?? undefined,
+            email: owner.id === userId ? (owner.email ?? undefined) : undefined,
             firstname: owner.firstname ?? undefined,
             lastname: owner.lastname ?? undefined,
             username: owner.username ?? undefined,

@@ -100,7 +100,6 @@ export async function GET(req: NextRequest) {
           "author.name": 1,
           "author.firstname": 1,
           "author.lastname": 1,
-          "author.email": 1,
           "author.username": 1,
           "author.avatar_url": 1,
           "author.image": 1,
@@ -126,11 +125,11 @@ export async function GET(req: NextRequest) {
       authorName:
         [p.author?.firstname, p.author?.lastname].filter(Boolean).join(" ") ||
         p.author?.name ||
-        p.author?.email ||
-        "User",
+        (p.author?.username ? `@${p.author.username}` : null) ||
+        "Refocus member",
       authorUsername: p.author?.username || null,
       authorAvatarUrl: resolveAvatarUrl(p.author),
-      authorInitials: `${(p.author?.firstname?.[0] || p.author?.name?.[0] || p.author?.email?.[0] || "U").toUpperCase()}${(p.author?.lastname?.[0] || "").toUpperCase()}`,
+      authorInitials: `${(p.author?.firstname?.[0] || p.author?.name?.[0] || p.author?.username?.[0] || "U").toUpperCase()}${(p.author?.lastname?.[0] || "").toUpperCase()}`,
       authorIsAdmin: p.author?.role === ADMIN_ROLE,
       likesCount: p.likesCount,
       commentsCount: p.commentsCount,
@@ -200,7 +199,7 @@ export async function POST(req: NextRequest) {
     .collection("users")
     .findOne(
       { _id: new ObjectId(userId) },
-      { projection: { name: 1, firstname: 1, lastname: 1, email: 1, username: 1, avatar_url: 1, image: 1, role: 1 } }
+      { projection: { name: 1, firstname: 1, lastname: 1, username: 1, avatar_url: 1, image: 1, role: 1 } }
     )) as {
     name?: string | null;
     firstname?: string | null;
@@ -215,8 +214,8 @@ export async function POST(req: NextRequest) {
   const authorName =
     [author?.firstname, author?.lastname].filter(Boolean).join(" ") ||
     author?.name ||
-    author?.email ||
-    "User";
+    (author?.username ? `@${author.username}` : null) ||
+    "Refocus member";
 
   if (mentionedUserIds.length > 0) {
     after(() =>
@@ -242,11 +241,11 @@ export async function POST(req: NextRequest) {
       authorName:
         [author?.firstname, author?.lastname].filter(Boolean).join(" ") ||
         author?.name ||
-        author?.email ||
-        "User",
+        (author?.username ? `@${author.username}` : null) ||
+        "Refocus member",
       authorUsername: author?.username || null,
       authorAvatarUrl: resolveAvatarUrl(author),
-      authorInitials: `${(author?.firstname?.[0] || author?.name?.[0] || author?.email?.[0] || "U").toUpperCase()}${(author?.lastname?.[0] || "").toUpperCase()}`,
+      authorInitials: `${(author?.firstname?.[0] || author?.name?.[0] || author?.username?.[0] || "U").toUpperCase()}${(author?.lastname?.[0] || "").toUpperCase()}`,
       authorIsAdmin: author?.role === ADMIN_ROLE,
       likesCount: 0,
       commentsCount: 0,

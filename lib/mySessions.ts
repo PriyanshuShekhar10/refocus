@@ -145,7 +145,8 @@ export async function loadMySessions(
       const userInfo = userMap.get(String(p.user_id));
       return {
         userId: String(p.user_id),
-        email: userInfo?.email,
+        // Only the viewer's own email — partners see name and @username.
+        email: String(p.user_id) === currentUserId ? userInfo?.email : undefined,
         name: userInfo?.name,
         firstname: userInfo?.firstname,
         lastname: userInfo?.lastname,
@@ -156,7 +157,11 @@ export async function loadMySessions(
         completed: Boolean(p.call_completed),
       };
     }),
-    ownerInfo: userMap.get(String(s.owner_id)),
+    ownerInfo: (() => {
+      const info = userMap.get(String(s.owner_id));
+      if (!info) return undefined;
+      return String(s.owner_id) === currentUserId ? info : { ...info, email: undefined };
+    })(),
   });
 
   return {

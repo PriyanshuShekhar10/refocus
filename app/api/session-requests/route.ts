@@ -149,7 +149,7 @@ export async function GET(req: NextRequest) {
 
   let usersById: Record<
     string,
-    { email?: string; name?: string | null; avatarUrl?: string | null }
+    { displayName: string | null; avatarUrl?: string | null }
   > = {};
   if (otherIds.length > 0) {
     const users = await db
@@ -157,14 +157,17 @@ export async function GET(req: NextRequest) {
         "users",
       )
       .find({ _id: { $in: otherIds.map((id: string) => new ObjectId(id)) } })
-      .project({ email: 1, name: 1, avatar_url: 1, image: 1 })
+      .project({ name: 1, firstname: 1, lastname: 1, username: 1, avatar_url: 1, image: 1 })
       .toArray();
     usersById = Object.fromEntries(
       users.map((u) => [
         String(u._id),
         {
-          email: u.email,
-          name: u.name ?? null,
+          // Never expose another user's email — name or @username only.
+          displayName:
+            [u.firstname, u.lastname].filter(Boolean).join(" ").trim() ||
+            u.name ||
+            (u.username ? `@${u.username}` : null),
           avatarUrl: resolveAvatarUrl(u),
         },
       ]),
@@ -178,8 +181,8 @@ export async function GET(req: NextRequest) {
       id: String(d._id),
       from_user_id: d.from_user_id,
       to_user_id: d.to_user_id,
-      from_user_email: from.email,
-      to_user_email: to.email,
+      from_user_name: (from as { displayName?: string | null }).displayName ?? null,
+      to_user_name: (to as { displayName?: string | null }).displayName ?? null,
       from_user_avatar_url: from.avatarUrl ?? null,
       to_user_avatar_url: to.avatarUrl ?? null,
       start: d.start_time.toISOString(),

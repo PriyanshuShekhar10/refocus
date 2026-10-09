@@ -34,8 +34,7 @@ export function SessionDetailsModal({
   const partnerQuiet = Boolean(other?.quiet);
   const otherName = other
     ? [other.firstname, other.lastname].filter(Boolean).join(" ") ||
-      other.email ||
-      other.user_id
+      (other.username ? `@${other.username}` : "Your partner")
     : undefined;
   const isOwner =
     event.owner_id && currentUserId && event.owner_id === currentUserId;
@@ -261,9 +260,9 @@ export function SessionDetailsModal({
                 <p className="text-sm font-medium text-rf-ink">
                   {otherName}
                 </p>
-                {other?.email && (
+                {other?.username && (
                   <p className="text-xs text-rf-ink-mute mt-0.5">
-                    {other.email}
+                    @{other.username}
                   </p>
                 )}
                 <div className="flex gap-3 mt-2 text-xs text-rf-ink-mute">

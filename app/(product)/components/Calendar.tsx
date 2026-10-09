@@ -819,9 +819,9 @@ export default function Calendar({
                       const name = [other.firstname, other.lastname]
                         .filter(Boolean)
                         .join(" ");
-                      const label = name || other.email || other.user_id;
-                      const email = other.email;
-                      return { label, email };
+                      const label =
+                        name || (other.username ? `@${other.username}` : "Your partner");
+                      return { label, email: undefined };
                     })();
 
                     const otherQuiet = isBooked

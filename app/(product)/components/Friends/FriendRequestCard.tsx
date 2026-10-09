@@ -8,8 +8,8 @@ export type FriendRequestData = {
   to_user_id: string;
   status: "pending" | "accepted" | "declined";
   created_at: string;
-  from_user_email?: string;
-  to_user_email?: string;
+  from_user_name?: string | null;
+  to_user_name?: string | null;
   from_user_avatar_url?: string | null;
   to_user_avatar_url?: string | null;
 };
@@ -42,11 +42,9 @@ export default function FriendRequestCard({
     direction === "incoming"
       ? request.from_user_avatar_url
       : request.to_user_avatar_url;
-  const counterpartEmail =
-    direction === "incoming" ? request.from_user_email : request.to_user_email;
-  const counterpartId =
-    direction === "incoming" ? request.from_user_id : request.to_user_id;
-  const display = counterpartEmail || counterpartId;
+  const counterpartName =
+    direction === "incoming" ? request.from_user_name : request.to_user_name;
+  const display = counterpartName || "A Refocus member";
   const initial = (display[0] ?? "?").toUpperCase();
 
   const pill =

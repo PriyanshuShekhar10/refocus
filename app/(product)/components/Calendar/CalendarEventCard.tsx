@@ -555,9 +555,8 @@ export function CalendarEventCard({
                     [participant.firstname, participant.lastname]
                       .filter(Boolean)
                       .join(" ") ||
-                    participant.email ||
-                    participant.user_id ||
-                    "User";
+                    (participant.username ? `@${participant.username}` : "") ||
+                    "Partner";
                   const initials = displayName
                     .split(" ")
                     .map((n) => n[0])

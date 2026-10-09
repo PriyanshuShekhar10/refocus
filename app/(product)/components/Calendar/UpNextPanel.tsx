@@ -44,7 +44,7 @@ function partnerOf(ev: CalendarEvent, currentUserId: string | null) {
   if (!other) return null;
   const label =
     [other.firstname, other.lastname].filter(Boolean).join(" ").trim() ||
-    other.email ||
+    (other.username ? `@${other.username}` : "") ||
     "Partner";
   return { label, avatarUrl: other.avatar_url ?? null, initials: initialsOf(label) };
 }

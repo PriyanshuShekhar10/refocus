@@ -101,6 +101,7 @@ function getParticipantName(p: Participant): string {
     return [p.firstname, p.lastname].filter(Boolean).join(" ");
   }
   if (p.name) return p.name;
+  if (p.username) return `@${p.username}`;
   if (p.email) return p.email.split("@")[0];
   return "Unknown";
 }
