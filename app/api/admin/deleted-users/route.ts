@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
+import { escapeRegex } from "@/lib/communityMentions";
 import { requireAdmin } from "@/lib/admin";
 import {
   DELETED_USERS_COLLECTION,
@@ -18,17 +19,18 @@ export async function GET(req: NextRequest) {
 
   const filter: Record<string, unknown> = {};
   if (q) {
+    const qRe = escapeRegex(q);
     filter.$or = [
-      { email: { $regex: q, $options: "i" } },
-      { canonicalEmail: { $regex: q, $options: "i" } },
-      { username: { $regex: q, $options: "i" } },
-      { name: { $regex: q, $options: "i" } },
-      { firstname: { $regex: q, $options: "i" } },
-      { lastname: { $regex: q, $options: "i" } },
-      { signupIp: { $regex: q, $options: "i" } },
-      { lastLoginIp: { $regex: q, $options: "i" } },
-      { lastSeenIp: { $regex: q, $options: "i" } },
-      { knownIps: { $regex: q, $options: "i" } },
+      { email: { $regex: qRe, $options: "i" } },
+      { canonicalEmail: { $regex: qRe, $options: "i" } },
+      { username: { $regex: qRe, $options: "i" } },
+      { name: { $regex: qRe, $options: "i" } },
+      { firstname: { $regex: qRe, $options: "i" } },
+      { lastname: { $regex: qRe, $options: "i" } },
+      { signupIp: { $regex: qRe, $options: "i" } },
+      { lastLoginIp: { $regex: qRe, $options: "i" } },
+      { lastSeenIp: { $regex: qRe, $options: "i" } },
+      { knownIps: { $regex: qRe, $options: "i" } },
     ];
   }
 

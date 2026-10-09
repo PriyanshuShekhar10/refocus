@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 
 import { getDb } from "@/lib/mongodb";
+import { checkRateLimit, getClientIp, rateLimitedResponse } from "@/lib/ratelimit";
 
 const COLLECTION = "mobile_google_handoffs";
 const TTL_MS = 5 * 60 * 1000;
@@ -16,6 +17,9 @@ type HandoffDoc = {
 };
 
 export async function POST(req: Request) {
+  const limit = await checkRateLimit(`mobile-google-stash:${getClientIp(req)}`, "auth");
+  if (!limit.success) return rateLimitedResponse(limit);
+
   let body: {
     googleIdToken?: string;
     firebaseIdToken?: string;
