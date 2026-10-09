@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ObjectId } from "mongodb";
+import { NextRequest } from "next/server";
 import { mockCollection, mockDb, parseResponse } from "../../helpers";
 
 function fluentFind(rows: unknown[] = []) {
@@ -61,7 +62,7 @@ describe("GET /api/admin/deleted-users", () => {
 
   it("lists archived deleted profiles", async () => {
     const { status, json } = await parseResponse(
-      await GET(new Request("http://localhost/api/admin/deleted-users")),
+      await GET(new NextRequest("http://localhost/api/admin/deleted-users")),
     );
     expect(status).toBe(200);
     expect(json.total).toBe(1);

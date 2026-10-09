@@ -42,7 +42,7 @@ describe("GET /api/admin/blocks", () => {
       admin: { userId: String(new ObjectId()), email: "admin@example.com" },
     });
     blocksCol.countDocuments.mockResolvedValue(1);
-    (blocksCol as { distinct: ReturnType<typeof vi.fn> }).distinct.mockResolvedValue(
+    (blocksCol as unknown as { distinct: ReturnType<typeof vi.fn> }).distinct.mockResolvedValue(
       [blockerId],
     );
     blocksCol.find.mockReturnValue(
