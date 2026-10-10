@@ -34,6 +34,7 @@ export type BlogPostDoc = {
   author: string;
   coverImage: string | null;
   coverImageAlt: string | null;
+  faq: { q: string; a: string }[];
   pubDate: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +49,7 @@ export type PublishInput = {
   author?: unknown;
   coverImage?: unknown;
   coverImageAlt?: unknown;
+  faq?: unknown;
   slug?: unknown;
 };
 
@@ -187,6 +189,27 @@ export function validatePost(input: PublishInput): ValidationResult {
     }
   }
 
+  let faq: { q: string; a: string }[] = [];
+  if (input.faq !== undefined) {
+    const ok =
+      Array.isArray(input.faq) &&
+      input.faq.length <= 10 &&
+      input.faq.every(
+        (f) =>
+          f &&
+          typeof f === "object" &&
+          typeof (f as { q?: unknown }).q === "string" &&
+          typeof (f as { a?: unknown }).a === "string",
+      );
+    if (!ok) {
+      errors.push('faq must be up to 10 items like {"q": "question", "a": "answer"}');
+    } else {
+      faq = (input.faq as { q: string; a: string }[])
+        .map((f) => ({ q: f.q.trim().slice(0, 200), a: f.a.trim().slice(0, 1000) }))
+        .filter((f) => f.q && f.a);
+    }
+  }
+
   let coverImage: string | null = null;
   if (coverRaw) {
     coverImage = safeImageUrl(coverRaw);
@@ -209,6 +232,7 @@ export function validatePost(input: PublishInput): ValidationResult {
       author,
       coverImage,
       coverImageAlt: coverImage ? coverImageAlt || title : null,
+      faq,
     },
   };
 }

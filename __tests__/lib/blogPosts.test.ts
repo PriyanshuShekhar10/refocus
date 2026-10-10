@@ -65,6 +65,12 @@ describe("validatePost", () => {
     expect(r.ok && r.post.coverImageAlt).toBe("A good post title");
   });
 
+  it("accepts a valid faq and rejects a malformed one", () => {
+    const good = validatePost({ ...ok, faq: [{ q: "Is it free?", a: "Yes, Refocus is free to start." }] });
+    expect(good.ok && good.post.faq).toEqual([{ q: "Is it free?", a: "Yes, Refocus is free to start." }]);
+    expect(validatePost({ ...ok, faq: [{ question: "x" }] }).ok).toBe(false);
+  });
+
   it("reports every problem", () => {
     const r = validatePost({ title: "x", category: "nope" });
     expect(r.ok).toBe(false);
