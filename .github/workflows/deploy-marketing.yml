@@ -55,3 +55,9 @@ jobs:
           --project-name refocus-marketing
           --branch landing
           --commit-dirty=true
+
+      - name: Notify IndexNow of changed pages
+        if: success()
+        working-directory: marketing
+        continue-on-error: true
+        run: node scripts/indexnow.mjs --hours 48

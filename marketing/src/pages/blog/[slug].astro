@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from "astro:content";
 import BlogPost from "../../layouts/BlogPost.astro";
-import { SITE_URL, publisherJsonLd, breadcrumbJsonLd } from "../../lib/seo";
+import { SITE_URL, publisherJsonLd, breadcrumbJsonLd, faqJsonLd } from "../../lib/seo";
 import { categoryLabel } from "../../lib/categories";
 
 export async function getStaticPaths() {
@@ -76,7 +76,13 @@ const breadcrumb = breadcrumbJsonLd([
   ogImage={ogImage}
   coverImage={post.data.coverImage}
   coverImageAlt={post.data.coverImageAlt}
-  jsonLd={[blogPostingJsonLd, breadcrumb]}
+  jsonLd={[
+    blogPostingJsonLd,
+    breadcrumb,
+    ...(post.data.faq.length
+      ? [faqJsonLd(post.data.faq.map((f) => ({ question: f.q, answer: f.a })))]
+      : []),
+  ]}
 >
   <Content />
 </BlogPost>

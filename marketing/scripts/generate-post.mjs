@@ -732,6 +732,9 @@ Return:
   "slug": "kebab-case",
   "description": "meta under 155 chars",
   "tags": ["2-5","lowercase"],
+  "short_answer": "2-3 plain sentences (max 70 words) that directly answer the title's question — the takeaway an AI assistant could quote",
+  "key_takeaways": ["3-5 one-sentence, specific takeaways"],
+  "faq": [{"q": "a question a reader would ask", "a": "a direct 40-80 word answer"}],
   "sections": [
     {"heading": null, "purpose": "opening scene brief", "target_words": 120},
     {"heading": "H2 title", "purpose": "...", "target_words": 220},
@@ -740,6 +743,7 @@ Return:
   ]
 }
 Rules: first section heading MUST be null (intro). Then 3 or 4 H2 sections.
+Answer-first (AEO): at least 2 H2 headings must be natural questions a reader would type into a search box, ending in "?". short_answer must answer the title directly with no scene-setting. Give 3-5 key_takeaways and 3-5 faq entries; faq questions must not repeat the H2 headings.
 Sum of target_words must be between ${EN_OUTLINE_WORD_MIN} and ${EN_OUTLINE_WORD_MAX}.
 Every H2 purpose must add new tactics/scenes — no restating the intro.`,
     `${reuse}${avoidTitles}${fix}
@@ -757,7 +761,20 @@ Internal pillar will be linked later: ${pillarUrl(category, config)}.`,
     description: String(plan.description || "").slice(0, 160),
     tags: Array.isArray(plan.tags) ? plan.tags : [],
     sections: normalizeOutlineSections(plan.sections),
+    shortAnswer: String(plan.short_answer || "").trim(),
+    keyTakeaways: Array.isArray(plan.key_takeaways)
+      ? plan.key_takeaways.map((t) => String(t).trim()).filter(Boolean).slice(0, 5)
+      : [],
+    faq: normalizeFaq(plan.faq),
   };
+}
+
+function normalizeFaq(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((f) => ({ q: String(f?.q || "").trim(), a: String(f?.a || "").trim() }))
+    .filter((f) => f.q.length > 8 && f.a.length > 30)
+    .slice(0, 5);
 }
 
 async function writeEnglishSection(
@@ -785,7 +802,11 @@ Niche: ${category.label}. Voice: ${category.voice}.
 Return JSON only: {"markdown":"...","summary":"1-2 sentences of what this section covered"}.
 Rules:
 - No H1. ${isIntro ? "No ## headings in this chunk — opening paragraphs only." : `Start with exactly "## ${section.heading}" then the section body.`}
-- Write at least ${section.target_words} words.
+- Write at least ${section.target_words} words.${
+  !isIntro && /\?\s*$/.test(section.heading || "")
+    ? "\n- The heading is a question: the first paragraph after it must directly answer it in 40-60 words, then go into detail."
+    : ""
+}
 - Concrete and specific; no filler ("In today's fast-paced world", "It's important to note", "In conclusion", "Without further ado" banned).
 - Do not add a "Further reading" section or invent Refocus marketing copy.
 - Soft product mention at most once across the whole article — prefer none in this chunk unless purpose requires it.
@@ -913,6 +934,9 @@ async function draftEnglishSectioned(
     description: outline.description,
     tags: outline.tags,
     body_markdown: body,
+    shortAnswer: outline.shortAnswer,
+    keyTakeaways: outline.keyTakeaways,
+    faq: outline.faq,
   };
 }
 
@@ -943,6 +967,34 @@ function wordCount(markdown) {
     .replace(/!\[[^\]]*\]\([^)]+\)/g, " ")
     .split(/\s+/)
     .filter(Boolean).length;
+}
+
+/** Answer-first pieces English posts need so answer engines can quote them. */
+function aeoIssues(result, body) {
+  const issues = [];
+  const short = String(result.shortAnswer || "");
+  const sentences = short.split(/(?<=[.!?])\s+/).filter(Boolean).length;
+  if (!short || sentences < 2 || wordCount(short) > 80) {
+    issues.push("missing or malformed short answer (2-3 sentences, ≤80 words)");
+  }
+  const questionHeadings = (body.match(/^##\s+.+\?\s*$/gm) || []).length;
+  if (questionHeadings < 2) issues.push(`only ${questionHeadings} question-style ## headings (need ≥2)`);
+  if ((result.faq || []).length < 3) issues.push("fewer than 3 FAQ entries");
+  if ((result.keyTakeaways || []).length < 3) issues.push("fewer than 3 key takeaways");
+  return issues;
+}
+
+function withAnswerFirstBlocks(body, result) {
+  const parts = [`**Short answer:** ${result.shortAnswer}`, body];
+  if (result.keyTakeaways?.length) {
+    parts.push(`## Key takeaways\n\n${result.keyTakeaways.map((t) => `- ${t}`).join("\n")}`);
+  }
+  if (result.faq?.length) {
+    parts.push(
+      `## Frequently asked questions\n\n${result.faq.map((f) => `### ${f.q}\n\n${f.a}`).join("\n\n")}`,
+    );
+  }
+  return parts.join("\n\n");
 }
 
 const FILLER_RE =
@@ -1092,7 +1144,7 @@ function ensurePillarLink(body, category, config) {
   return paras.join("\n\n");
 }
 
-function toFrontmatter({ title, description, tags, category, config }) {
+function toFrontmatter({ title, description, tags, category, config, faq = [] }) {
   const pubDate = new Date().toISOString();
   const q = (s) => JSON.stringify(String(s));
   const tagList = Array.isArray(tags) ? tags : [];
@@ -1108,7 +1160,11 @@ description: ${q(description)}
 pubDate: ${q(pubDate)}
 category: ${q(category.id)}
 tags: [${tagList.map((t) => q(t)).join(", ")}]
-author: ${q(config.author)}${localeLine}
+author: ${q(config.author)}${localeLine}${
+    faq.length
+      ? `\nfaq:\n${faq.map((f) => `  - q: ${q(f.q)}\n    a: ${q(f.a)}`).join("\n")}`
+      : ""
+  }
 draft: false
 ---
 `;
@@ -1346,6 +1402,7 @@ async function main() {
     const close = titleTooClose(title, existingTitles);
     let issues = qualityIssues(title, body, config);
     if (close) issues.push("title too close to an existing post");
+    const aeo = config.id === "en" ? aeoIssues(result, body) : [];
 
     if (issuesAreRepairable(issues)) {
       for (let pass = 1; pass <= 2 && issuesAreRepairable(issues); pass++) {
@@ -1367,6 +1424,7 @@ async function main() {
         if (close) issues.push("title too close to an existing post");
       }
     }
+    issues.push(...aeo);
     lastIssues = issues;
 
     if (issues.length === 0) {
@@ -1413,12 +1471,15 @@ async function main() {
     body = await addRequiredIllustration(apiKey, title, body, slug);
   }
 
+  if (config.id === "en") body = withAnswerFirstBlocks(body, result);
+
   const contents = `${toFrontmatter({
     title,
     description,
     tags: result.tags,
     category,
     config,
+    faq: config.id === "en" ? result.faq : [],
   })}\n${body}\n`;
   const outPath = join(blogDir, `${slug}.md`);
   await writeFile(outPath, contents, "utf8");

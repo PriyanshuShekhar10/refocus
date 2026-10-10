@@ -9,6 +9,7 @@ Refocus pairs you with another person for 25, 50, or 75-minute focus sessions. S
 - [Home](https://refocus.co.in/)
 - [Features](https://refocus.co.in/features)
 - [Pricing](https://refocus.co.in/pricing) — free to start, no credit card
+- [Free focus sessions](https://refocus.co.in/free)
 - [Sign up (free)](https://dashboard.refocus.co.in/auth/sign-up)
 
 ## Topic guides
@@ -29,7 +30,22 @@ Refocus pairs you with another person for 25, 50, or 75-minute focus sessions. S
 ## Blog
 
 - [Blog index](https://refocus.co.in/blog)
-- Categories: productivity, ADHD, exams (JEE/NEET/UPSC/CA), loneliness, remote work
+- [Full content index for LLMs](https://refocus.co.in/llms-full.txt) — every page and post with a summary
+- [Productivity](https://refocus.co.in/blog/category/productivity)
+- [ADHD & mental health](https://refocus.co.in/blog/category/adhd)
+- [Study & focus (JEE/NEET/UPSC/CA)](https://refocus.co.in/blog/category/exams)
+- [Loneliness & studying alone](https://refocus.co.in/blog/category/loneliness)
+- [Remote work & freelancing](https://refocus.co.in/blog/category/remote)
+- [Med school & residency](https://refocus.co.in/blog/category/med-school)
+- [PhD & dissertation](https://refocus.co.in/blog/category/phd)
+- [Software engineers](https://refocus.co.in/blog/category/engineers)
+- [Working parents](https://refocus.co.in/blog/category/parents)
+- [Career switchers](https://refocus.co.in/blog/category/career-switch)
+- [Writers & long-form](https://refocus.co.in/blog/category/writers)
+- [Law school & articling](https://refocus.co.in/blog/category/law)
+- [Nursing & shift work](https://refocus.co.in/blog/category/nurses)
+- [Founders & indie makers](https://refocus.co.in/blog/category/founders)
+- [Teachers & educators](https://refocus.co.in/blog/category/teachers)
 
 ## Company
 

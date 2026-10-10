@@ -20,6 +20,7 @@ type ApiPost = {
   author: string;
   coverImage: string | null;
   coverImageAlt: string | null;
+  faq?: { q: string; a: string }[];
   pubDate: string;
   updatedAt?: string;
 };
@@ -51,6 +52,7 @@ function blogLoader(): Loader {
             author: p.author,
             coverImage: p.coverImage ?? undefined,
             coverImageAlt: p.coverImageAlt ?? undefined,
+            faq: p.faq ?? [],
           },
         });
         ctx.store.set({
@@ -96,6 +98,8 @@ const blog = defineCollection({
     author: z.string().default("Refocus Team"),
     coverImage: z.string().url().optional(),
     coverImageAlt: z.string().optional(),
+    /** Answer-first FAQ (also emitted as FAQPage structured data). */
+    faq: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
     draft: z.boolean().default(false),
   }),
 });
