@@ -68,6 +68,14 @@ describe("POST /api/users/me/delete — community cleanup", () => {
     expect(ids.every((id) => allowed.has(id))).toBe(true);
   });
 
+  it("deletes a password account without asking for the password", async () => {
+    users.findOne.mockResolvedValue({ _id: ME, email: "me@example.com", hashedPassword: "$2a$10$hash" });
+    const { status, json } = await parseResponse(await del());
+    expect(status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(users.deleteOne).toHaveBeenCalledWith({ _id: ME });
+  });
+
   it("deletes nothing in the community when the confirmation is wrong", async () => {
     const { status } = await parseResponse(
       await POST(mockRequest("/api/users/me/delete", { method: "POST", body: { confirmText: "nope" } })),

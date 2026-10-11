@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { ObjectId, type AnyBulkWriteOperation, type Db } from "mongodb";
-import bcrypt from "bcryptjs";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
@@ -108,7 +107,10 @@ async function deleteCommunityContent(db: Db, userObjectId: ObjectId) {
 
 /**
  * POST /api/users/me/delete
- * Body: { confirmText: "DELETE", currentPassword?: string }
+ * Body: { confirmText: "DELETE" }
+ *
+ * Auth is the signed-in session; no password re-entry. Clients confirm with an
+ * explicit "all data will be deleted" step before calling this.
  *
  * Permanently removes the authenticated user's account along with personal
  * artifacts that reference them directly (friendships, friend requests,
@@ -125,10 +127,7 @@ export async function POST(req: NextRequest) {
   if (!rl.success) return rateLimitedResponse(rl);
 
   const body = await req.json().catch(() => ({}));
-  const { confirmText, currentPassword } = body as {
-    confirmText?: string;
-    currentPassword?: string;
-  };
+  const { confirmText } = body as { confirmText?: string };
 
   if (confirmText !== "DELETE") {
     return NextResponse.json(
@@ -147,24 +146,6 @@ export async function POST(req: NextRequest) {
     .findOne({ _id });
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
-
-  // If the account has a password, require it. Accounts created purely via an
-  // OAuth flow (no hashedPassword) can proceed with just confirmText.
-  if (user.hashedPassword) {
-    if (!currentPassword) {
-      return NextResponse.json(
-        { error: "Password required" },
-        { status: 400 }
-      );
-    }
-    const ok = await bcrypt.compare(currentPassword, user.hashedPassword);
-    if (!ok) {
-      return NextResponse.json(
-        { error: "Incorrect password" },
-        { status: 401 }
-      );
-    }
   }
 
   try {

@@ -968,7 +968,6 @@ function DangerZone() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -984,10 +983,7 @@ function DangerZone() {
       const res = await fetch("/api/users/me/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          confirmText,
-          currentPassword: password || undefined,
-        }),
+        body: JSON.stringify({ confirmText }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -1044,17 +1040,6 @@ function DangerZone() {
               autoComplete="off"
             />
           </Field>
-          <Field
-            label="Current password"
-            hint="Required if your account has a password."
-            htmlFor="del-pw"
-          >
-            <DPasswordInput
-              id="del-pw"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </Field>
           {err && (
             <div className={`${designStyles.alert} ${designStyles.alertError}`}>
               {err}
@@ -1067,7 +1052,6 @@ function DangerZone() {
               onClick={() => {
                 setOpen(false);
                 setConfirmText("");
-                setPassword("");
                 setErr(null);
               }}
               disabled={busy}
