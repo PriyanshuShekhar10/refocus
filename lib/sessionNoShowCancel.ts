@@ -315,8 +315,10 @@ export async function runSessionNoShowCancellations(options?: {
     const remaining = await database
       .collection<SessionDoc>("sessions")
       .find({
-        end_time: { $gt: now },
-        start_time: { $gte: dayStart, $lt: dayEnd },
+        // Only sessions that haven't started yet. Removing someone from a
+        // session that is starting or in progress strands their partner
+        // mid-call (and bypasses the no-leaving-after-start rule).
+        start_time: { $gte: dayStart, $lt: dayEnd, $gt: now },
         $or: [
           { owner_id: userId },
           { "session_participants.user_id": userId },

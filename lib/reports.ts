@@ -254,7 +254,20 @@ export async function resolveReportTarget(
         reportedUserId === ownerId &&
         isOwnerOrParticipant(session, reporterId) &&
         reporterId !== ownerId;
-      if (!canReportOwner) {
+      // They may have been in this session and since been removed from it
+      // (e.g. a no-show cancellation or the owner deleting it) — their
+      // partner should still be able to report them.
+      const wasRemovedFromSession =
+        !canReportOwner &&
+        reportedUserId !== reporterId &&
+        isOwnerOrParticipant(session, reporterId) &&
+        Boolean(
+          await db.collection("session_lifecycle_events").findOne(
+            { type: "session_deleted", sessionId: targetId, userId: reportedUserId },
+            { projection: { _id: 1 } },
+          ),
+        );
+      if (!canReportOwner && !wasRemovedFromSession) {
         throw new ReportValidationError("Invalid reported user for this session");
       }
     }

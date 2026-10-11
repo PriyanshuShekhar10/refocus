@@ -186,6 +186,15 @@ describe("runSessionNoShowCancellations", () => {
     expect(sendNoShowDayCancelledEmail).toHaveBeenCalled();
     expect(sendPartnerRemovedForInactivityEmail).toHaveBeenCalled();
     expect(sessionsCol.updateOne).toHaveBeenCalled();
+
+    // Only sessions that haven't started yet are cancelled — never one that
+    // is starting or in progress (that stranded partners mid-call).
+    const remainingFilter = sessionsCol.find.mock.calls[1][0] as {
+      start_time: { $gt?: Date };
+      end_time?: unknown;
+    };
+    expect(remainingFilter.start_time.$gt).toEqual(now);
+    expect(remainingFilter.end_time).toBeUndefined();
   });
 
   it("skips day wipe when already processed (duplicate key)", async () => {
