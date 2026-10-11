@@ -81,14 +81,35 @@ async function detachDeletedUserFromSessions(db: Db, userId: string) {
   ]);
 }
 
+/** Removes the user's community posts (with their comments and likes), plus
+ * the comments and likes the user left on other people's posts. */
+async function deleteCommunityContent(db: Db, userObjectId: ObjectId) {
+  const ownPostIds = (
+    await db
+      .collection("community_posts")
+      .find({ authorId: userObjectId }, { projection: { _id: 1 } })
+      .toArray()
+  ).map((post) => post._id);
+
+  await Promise.all([
+    db.collection("community_comments").deleteMany({
+      $or: [{ authorId: userObjectId }, { postId: { $in: ownPostIds } }],
+    }),
+    db.collection("community_likes").deleteMany({
+      $or: [{ userId: userObjectId }, { postId: { $in: ownPostIds } }],
+    }),
+  ]);
+  await db.collection("community_posts").deleteMany({ authorId: userObjectId });
+}
+
 /**
  * POST /api/users/me/delete
  * Body: { confirmText: "DELETE", currentPassword?: string }
  *
  * Permanently removes the authenticated user's account along with personal
  * artifacts that reference them directly (friendships, friend requests,
- * session requests, global-chat presence). Sessions and chat messages are
- * left in place but anonymized.
+ * session requests, global-chat presence, community posts, comments and
+ * likes). Sessions and global chat messages are left in place but anonymized.
  */
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -184,6 +205,7 @@ export async function POST(req: NextRequest) {
     }),
     db.collection("globalChatPresence").deleteMany({ userId: _id }),
     db.collection("accounts").deleteMany({ userId: _id }),
+    deleteCommunityContent(db, _id),
     detachDeletedUserFromSessions(db, userId),
   ]);
 
