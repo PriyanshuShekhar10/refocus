@@ -1,0 +1,199 @@
+---
+import ContentPage from "../layouts/ContentPage.astro";
+import { ORG_EMAIL } from "../lib/seo";
+
+const site = "https://refocus.co.in";
+const UPDATED = "2026-10-11";
+const mailto = `mailto:${ORG_EMAIL}`;
+const title = "Community Guidelines";
+const description =
+  "How to be a good focus partner on Refocus: session etiquette, respect and safety, privacy, community posts, and how we handle reports.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Community Guidelines — Refocus",
+    url: `${site}/community-guidelines`,
+    description,
+    dateModified: new Date(UPDATED).toISOString(),
+  },
+];
+---
+
+<ContentPage
+  title={title}
+  description={description}
+  canonical="/community-guidelines"
+  heading="Community Guidelines"
+  updated={UPDATED}
+  jsonLd={jsonLd}
+>
+  <p>
+    Refocus works because people show up for each other. When you book a
+    session, someone else is planning their time around you. These guidelines
+    describe what that looks like in practice, so every session feels safe,
+    focused, and worth showing up for. They sit alongside our
+    <a href="/terms">Terms &amp; Conditions</a> and
+    <a href="/privacy">Privacy Policy</a>.
+  </p>
+
+  <h2>The short version</h2>
+  <ul>
+    <li>Show up on time, or let your partner know early if you can't.</li>
+    <li>Say what you'll work on, then actually work on it.</li>
+    <li>Be kind, keep it about focus, and respect people's privacy.</li>
+    <li>If something feels wrong, block and report. We take it seriously.</li>
+  </ul>
+
+  <h2>During a session</h2>
+  <h3>Be on time</h3>
+  <p>
+    Join when the session starts. Your partner has set aside this time, and a
+    late or missing partner makes the whole session harder. If your plans
+    change, cancel as early as you can so your partner can be matched with
+    someone else. Once a session with a partner has started, it can no longer
+    be cancelled or left from your calendar, so please plan ahead.
+  </p>
+
+  <h3>Start with a goal</h3>
+  <p>
+    Take a moment at the start to share what you plan to get done, and check in
+    briefly at the end. Saying it out loud is a big part of what makes body
+    doubling work. Keep both short; the time in between is for working.
+  </p>
+
+  <h3>Keep your camera on and your space appropriate</h3>
+  <p>
+    Seeing each other work is what creates the accountability, so keep your
+    camera on for the session unless you and your partner have agreed
+    otherwise. Make sure what's on camera is something you'd be comfortable
+    with in a shared library or co-working space: dress appropriately and keep
+    your surroundings work-friendly.
+  </p>
+
+  <h3>Respect quiet mode and noise</h3>
+  <p>
+    Some people book quiet sessions and start muted. Follow their lead, keep
+    your microphone muted while working if there's background noise, and save
+    conversation for the start and end of the session.
+  </p>
+
+  <h3>Do focused work</h3>
+  <p>
+    Sessions are for work, study, or a personal project you want to make
+    progress on. They're not for selling, recruiting, dating, or long social
+    chats. If you'd like to get to know a regular partner better, add them as a
+    friend and talk outside of sessions.
+  </p>
+
+  <h2>Respect and safety</h2>
+  <p>
+    Refocus is for everyone who wants to get things done, whatever their
+    background. We don't allow:
+  </p>
+  <ul>
+    <li>Harassment, threats, bullying, or intimidation of any kind.</li>
+    <li>Hate speech or discrimination based on who someone is.</li>
+    <li>
+      Sexual content, sexual comments, or unwanted advances, in sessions, chat,
+      or posts.
+    </li>
+    <li>Violent, graphic, or illegal content.</li>
+    <li>Impersonating someone else or misrepresenting who you are.</li>
+    <li>
+      Spam, scams, advertising, or repeatedly promoting your own products or
+      services.
+    </li>
+  </ul>
+
+  <h2>Privacy</h2>
+  <ul>
+    <li>
+      <strong>Don't record, screenshot, or share sessions</strong> without your
+      partner's clear permission.
+    </li>
+    <li>
+      Don't ask for or share personal information such as addresses, phone
+      numbers, or financial details.
+    </li>
+    <li>
+      What your partner says or shows during a session stays in that session.
+    </li>
+  </ul>
+
+  <h2>Friends, chat, and community posts</h2>
+  <p>
+    The same standards apply everywhere on Refocus, not just in sessions.
+  </p>
+  <ul>
+    <li>
+      Only send friend and session requests to people you'd like to work with,
+      and accept a "no" or no reply gracefully.
+    </li>
+    <li>
+      In the community feed, share progress, wins, questions, and
+      encouragement. Keep posts on topic: focus, study, work, goals, and habits.
+    </li>
+    <li>
+      Disagree respectfully. Criticise ideas, not people, and don't pile on.
+    </li>
+    <li>Don't post private messages or other people's information.</li>
+  </ul>
+
+  <h2>Looking after yourself</h2>
+  <p>
+    Refocus is a productivity tool, not a substitute for professional support.
+    If you're struggling with your mental health or feel unsafe, please reach
+    out to a local helpline or emergency service. If a partner says something
+    that makes you worried for their safety, tell us at
+    <a href={mailto}>{ORG_EMAIL}</a>.
+  </p>
+
+  <h2>Blocking and reporting</h2>
+  <p>
+    If someone makes you uncomfortable, you don't need to explain yourself.
+  </p>
+  <ul>
+    <li>
+      <strong>Leave the call</strong> at any point if you feel unsafe. Your
+      safety matters more than finishing the session.
+    </li>
+    <li>
+      <strong>Block</strong> the person, so you won't be matched with them or
+      hear from them again.
+    </li>
+    <li>
+      <strong>Report</strong> the person, post, or comment from the product.
+      Reports go to the Refocus team and are kept private.
+    </li>
+    <li>
+      For anything you can't report in the product, email
+      <a href={mailto}>{ORG_EMAIL}</a>.
+    </li>
+  </ul>
+
+  <h2>What happens when guidelines are broken</h2>
+  <p>
+    We review reports and act based on how serious the issue is and whether it
+    has happened before. Depending on the situation, we may:
+  </p>
+  <ul>
+    <li>Remove the content.</li>
+    <li>Send a warning.</li>
+    <li>Temporarily mute someone in the community.</li>
+    <li>Ban someone from the community, or from booking sessions.</li>
+    <li>Close the account permanently.</li>
+  </ul>
+  <p>
+    Serious harm, such as threats, sexual misconduct, or exploitation, can lead
+    to an immediate permanent ban. Repeatedly not showing up for booked
+    sessions can also limit how many sessions you can book.
+  </p>
+
+  <h2>Questions</h2>
+  <p>
+    These guidelines will evolve as the community grows. If you have a question
+    or a suggestion, write to us at <a href={mailto}>{ORG_EMAIL}</a>.
+  </p>
+</ContentPage>
