@@ -437,8 +437,8 @@ export function CalendarEventCard({
           else onDetails(evt);
         }}
       >
-        {/* Action button - top right corner (no deleting once the session has started) */}
-        {isOwner && !hasSessionStarted(event.start) ? (
+        {/* Action button - top right corner (no deleting a started session that has a partner) */}
+        {isOwner && (!hasSessionStarted(event.start) || !isBooked) ? (
           <button
             className="absolute top-1 right-1 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400 transition-colors"
             onClick={(e) => {

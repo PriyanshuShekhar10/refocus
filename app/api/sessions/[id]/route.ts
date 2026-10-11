@@ -163,18 +163,19 @@ export async function DELETE(
   if (String(s.owner_id) !== String(userId))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  // Once a session has started, the owner can't delete it either.
-  if (hasSessionStarted(s.start_time)) {
+  const participants = s.session_participants ?? [];
+  const otherParticipant = participants.find(
+    (p) => String(p.user_id) !== String(userId),
+  );
+
+  // Once a session with a partner has started, the owner can't delete it.
+  // Started solo sessions (nobody joined) can still be cleared away.
+  if (hasSessionStarted(s.start_time) && participants.length >= 2 && otherParticipant) {
     return NextResponse.json(
       { error: "This session has already started, so it can't be deleted." },
       { status: 409 },
     );
   }
-
-  const participants = s.session_participants ?? [];
-  const otherParticipant = participants.find(
-    (p) => String(p.user_id) !== String(userId),
-  );
   const body = (await req.json().catch(() => ({}))) as { message?: unknown };
   const message =
     participants.length >= 2 && otherParticipant

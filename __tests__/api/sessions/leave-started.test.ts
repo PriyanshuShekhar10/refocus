@@ -25,7 +25,7 @@ const OWNER_ID = new ObjectId();
 const JOINER_ID = new ObjectId();
 const SESSION_ID = new ObjectId();
 
-function session(startOffsetMin: number) {
+function session(startOffsetMin: number, solo = false) {
   const start = new Date(Date.now() + startOffsetMin * 60 * 1000);
   return {
     _id: SESSION_ID,
@@ -36,7 +36,7 @@ function session(startOffsetMin: number) {
     session_type: "focus",
     session_participants: [
       { user_id: String(OWNER_ID), joined_at: new Date() },
-      { user_id: String(JOINER_ID), joined_at: new Date() },
+      ...(solo ? [] : [{ user_id: String(JOINER_ID), joined_at: new Date() }]),
     ],
   };
 }
@@ -98,6 +98,14 @@ describe("DELETE /api/sessions/:id once started", () => {
     expect(json.error).toMatch(/already started/i);
     expect(sessionsCol.updateOne).not.toHaveBeenCalled();
     expect(sessionsCol.deleteOne).not.toHaveBeenCalled();
+    expect(notifySessionCancelled).not.toHaveBeenCalled();
+  });
+
+  it("still lets the owner delete a started solo session", async () => {
+    sessionsCol.findOne.mockResolvedValue(session(-5, true));
+    const { status } = await parseResponse(await del());
+    expect(status).toBe(200);
+    expect(sessionsCol.deleteOne).toHaveBeenCalled();
     expect(notifySessionCancelled).not.toHaveBeenCalled();
   });
 });
