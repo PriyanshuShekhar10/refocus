@@ -28,6 +28,7 @@ export function Footer() {
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
           <a href="/community-guidelines">Community Guidelines</a>
+          <a href="/delete-account">Delete account</a>
           <a href={url("/auth/login")}>Log in</a>
           <a href={url("/auth/sign-up")}>Sign up</a>
         </div>

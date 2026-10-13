@@ -1,0 +1,104 @@
+---
+import ContentPage from "../layouts/ContentPage.astro";
+import { ORG_EMAIL } from "../lib/seo";
+
+const site = "https://refocus.co.in";
+const UPDATED = "2026-10-14";
+const mailto = `mailto:${ORG_EMAIL}?subject=Delete%20my%20Refocus%20account`;
+const title = "Delete your Refocus account";
+const description =
+  "How to delete your Refocus account and data, what gets deleted, and what is kept.";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Delete your account — Refocus",
+    url: `${site}/delete-account`,
+    description,
+    dateModified: new Date(UPDATED).toISOString(),
+  },
+];
+---
+
+<ContentPage
+  title={title}
+  description={description}
+  canonical="/delete-account"
+  heading="Delete your Refocus account"
+  updated={UPDATED}
+  jsonLd={jsonLd}
+>
+  <p>
+    You can permanently delete your Refocus account and its data at any time.
+    Deletion is immediate and can't be undone.
+  </p>
+
+  <h2>Delete in the Refocus app</h2>
+  <ol>
+    <li>Open the Refocus app and sign in.</li>
+    <li>Go to <strong>Profile → Account → Delete account</strong>.</li>
+    <li>
+      Tick <em>“I understand that my account and all of its data will be
+      permanently deleted”</em>.
+    </li>
+    <li>Tap <strong>Delete account permanently</strong> and confirm.</li>
+  </ol>
+
+  <h2>Delete on the website</h2>
+  <ol>
+    <li>
+      Sign in at <a href="https://dashboard.refocus.co.in">dashboard.refocus.co.in</a>.
+    </li>
+    <li>Open <strong>Settings → Danger zone → Delete account</strong>.</li>
+    <li>Type <strong>DELETE</strong> to confirm.</li>
+  </ol>
+  <p>Either way, your account is deleted straight away and you're signed out.</p>
+
+  <h2>Can't sign in? Request deletion by email</h2>
+  <p>
+    Email <a href={mailto}>{ORG_EMAIL}</a> from the email address on your
+    account with the subject “Delete my Refocus account”. We'll confirm and
+    delete the account within 7 days.
+  </p>
+
+  <h2>What gets deleted</h2>
+  <ul>
+    <li>
+      Your account and profile: name, username, email, password, and
+      sign-in connections (Google, Apple)
+    </li>
+    <li>Your preferences and matching answers (gender, generation, focus areas)</li>
+    <li>Friends, friend requests, and direct messages</li>
+    <li>Session requests, and sessions only you were booked into</li>
+    <li>Your community posts, comments, and likes</li>
+    <li>Your blocks and personal task lists</li>
+  </ul>
+
+  <h2>What is kept</h2>
+  <ul>
+    <li>
+      <strong>Sessions you shared with a partner</strong> stay in your
+      partner's history, with you removed from them.
+    </li>
+    <li>
+      <strong>Messages you sent in the shared community chat</strong> stay
+      visible but are shown as “Deleted user”, without your name or photo.
+    </li>
+    <li>
+      <strong>A limited safety record</strong>: your email, name, username, IP
+      addresses, the dates you joined, last signed in and deleted your account,
+      and whether your account was restricted. We keep this to prevent abuse,
+      such as banned users signing up again. It is not used for anything else.
+    </li>
+    <li>
+      <strong>Anonymous usage analytics</strong> and records we are legally
+      required to keep may be retained.
+    </li>
+  </ul>
+
+  <p>
+    Questions? Contact <a href={mailto}>{ORG_EMAIL}</a>. See also our
+    <a href="/privacy">Privacy Policy</a>.
+  </p>
+</ContentPage>

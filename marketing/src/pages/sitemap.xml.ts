@@ -103,6 +103,7 @@ export const GET: APIRoute = async () => {
     { loc: `${site}/privacy`, changefreq: "yearly", priority: "0.3" },
     { loc: `${site}/terms`, changefreq: "yearly", priority: "0.3" },
     { loc: `${site}/community-guidelines`, changefreq: "yearly", priority: "0.4" },
+    { loc: `${site}/delete-account`, changefreq: "yearly", priority: "0.3" },
     // Indonesian (id) money pages + blog index.
     {
       loc: `${site}/id`,

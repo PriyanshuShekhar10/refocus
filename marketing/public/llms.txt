@@ -53,6 +53,7 @@ Refocus pairs you with another person for 25, 50, or 75-minute focus sessions. S
 - [Contact](https://refocus.co.in/contact) — hello@refocus.co.in
 - [Help and Support](https://refocus.co.in/support)
 - [Community Guidelines](https://refocus.co.in/community-guidelines)
+- [Delete your account](https://refocus.co.in/delete-account)
 - [Careers](https://dashboard.refocus.co.in/career)
 
 ## Optional
