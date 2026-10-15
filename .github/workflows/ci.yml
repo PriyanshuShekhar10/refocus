@@ -1,0 +1,51 @@
+# Safety net for the dashboard (docs/REFACTOR-PLAN.md, Phase 0).
+# Every push and PR to test-dash must pass typecheck, lint, tests with the
+# coverage floor, and a production build before it's deployed.
+name: CI
+
+on:
+  push:
+    branches: [test-dash]
+  pull_request:
+    branches: [test-dash]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Placeholders only: the build reads these at startup but CI never calls the services.
+    env:
+      CI: "true"
+      DAILY_API_KEY: ci-placeholder
+      DAILY_DOMAIN: ci-placeholder
+      ABLY_API_KEY: ciapp.cikey:cisecret
+      MONGODB_URI: mongodb://127.0.0.1:27017
+      MONGODB_DB: refocus_ci
+      NEXTAUTH_SECRET: ci-placeholder
+      NEXTAUTH_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests (with coverage floor)
+        run: npm run test:coverage
+
+      - name: Production build
+        run: npm run build

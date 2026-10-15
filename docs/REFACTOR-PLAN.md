@@ -4,7 +4,15 @@
 
 ## Progress
 
-- [ ] **Phase 0:** Safety net: CI gate, coverage baseline, API contract tests, characterisation tests, Playwright E2E, provider contract suites
+- [x] **Phase 0:** Safety net (2026-10-16)
+  - [x] CI gate: `.github/workflows/ci.yml` runs typecheck, lint, tests with the coverage floor, and a production build on every push/PR to `test-dash`
+  - [x] Coverage floor in `vitest.config.ts`: statements 48 / branches 37 / functions 52 / lines 49 (was 46/36/50/48 before Phase 0)
+  - [x] App contract: `__tests__/contract/mobile-api.test.ts`. All 65 app endpoints exist; every signed-in endpoint returns 401 `{ error }` when signed out
+  - [x] Admin access: `__tests__/contract/admin-access.test.ts`. Every admin route returns 401 signed out and 403 for non-admins (discovered automatically)
+  - [x] Characterisation: all email senders snapshotted (`emailSenders.characterisation.test.ts`); admin test calls (`adminTestCall.test.ts`). Daily rooms/tokens and the session join/leave/delete/no-show rules were already covered
+  - [x] Playwright E2E (`e2e/`, `npm run test:e2e`): public checks pass against production; signed-in two-account flows skip until test accounts exist
+  - [ ] **Waiting on you:** create the two E2E test accounts, then run the signed-in flows against a preview deploy
+  - Provider contract suites are written with each interface (Phases 1, 2 and 5), since the interfaces don't exist yet
 - [ ] **Phase 1:** Video provider layer (`lib/providers/video`), `ClientCall` split, `video_provider` per session
 - [ ] **Phase 2:** Email provider layer (`lib/providers/email`)
 - [ ] **Phase 3:** Route wrappers `withUser` / `withAdmin` / `withCron`; migrate the 81 routes

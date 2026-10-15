@@ -48,3 +48,5 @@ graphify-out/cost.json
 .venv
 .claude
 .env*
+/playwright-report
+/test-results

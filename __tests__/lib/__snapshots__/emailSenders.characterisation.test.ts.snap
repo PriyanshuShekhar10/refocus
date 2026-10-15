@@ -1,0 +1,209 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`email senders (characterisation) > admin mail: sends one email with today's content 1`] = `
+{
+  "subject": "Hello from Refocus",
+  "text": "Hi Ravi,
+
+Line one
+
+Line two
+
+— The Refocus team",
+}
+`;
+
+exports[`email senders (characterisation) > community mention: sends one email with today's content 1`] = `
+{
+  "subject": "Asha mentioned you in Community",
+  "text": "Hi Ravi,
+
+Asha tagged you in Community.
+
+"@ravi nice work"
+
+Open Community: https://dashboard.refocus.co.in/community
+
+
+Don't want these emails? Open Settings → Notifications and turn off Community @mentions.
+https://dashboard.refocus.co.in/settings
+",
+}
+`;
+
+exports[`email senders (characterisation) > community thread reply: sends one email with today's content 1`] = `
+{
+  "subject": "Asha replied in a Community thread you're in",
+  "text": "Hi Ravi,
+
+Asha replied in a Community thread where you were tagged.
+
+"agreed!"
+
+Open Community: https://dashboard.refocus.co.in/community
+
+
+Don't want these emails? Open Settings → Notifications and turn off Community @mentions.
+https://dashboard.refocus.co.in/settings
+",
+}
+`;
+
+exports[`email senders (characterisation) > matched: sends one email with today's content 1`] = `
+{
+  "subject": "You're matched — your first Refocus session awaits",
+  "text": "Hi Ravi,
+
+Congratulations — you've been matched with Asha. We can't wait for you to have your first focus session together.
+
+Focus · 50 min
+Tue, 20 Oct · 10:00 AM IST
+
+https://dashboard.refocus.co.in/sessions/s1
+
+You'll also get a reminder before it starts if you have session emails enabled.
+
+— The Refocus team",
+}
+`;
+
+exports[`email senders (characterisation) > morning digest: sends one email with today's content 1`] = `
+{
+  "subject": "Today's focus session on Refocus",
+  "text": "Hi Ravi,
+
+Here's your session summary for 2026-10-20:
+
+- Focus · 50 min with Asha
+  Tue, 20 Oct, 10:00 am
+  https://dashboard.refocus.co.in/sessions/s1
+
+Open Refocus to review details or join when your session window opens.
+
+— The Refocus team",
+}
+`;
+
+exports[`email senders (characterisation) > no-show day cancelled: sends one email with today's content 1`] = `
+{
+  "subject": "We cleared your sessions for today",
+  "text": "Hi Ravi,
+
+We noticed you missed a booked session (Focus · 50 min · 10:00 AM).
+
+To keep rooms from sitting empty, we cancelled your remaining Refocus sessions for today:
+
+- Focus · 50 min
+  3:00 PM
+
+You're always welcome back — book a fresh session when you're ready to show up.
+
+https://dashboard.refocus.co.in/dashboard
+
+— The Refocus team",
+}
+`;
+
+exports[`email senders (characterisation) > partner removed for inactivity: sends one email with today's content 1`] = `
+{
+  "subject": "Asha was removed from your session",
+  "text": "Hi Ravi,
+
+Asha was removed from your session due to inactivity (they didn't join the call).
+
+Your session is open again on the calendar — you can stay listed for a new partner, or cancel if you prefer.
+
+Focus · 50 min
+3:00 PM
+
+https://dashboard.refocus.co.in/dashboard
+
+— The Refocus team",
+}
+`;
+
+exports[`email senders (characterisation) > password reset: sends one email with today's content 1`] = `
+{
+  "subject": "Reset your Refocus password",
+  "text": "Hi Ravi,
+
+We received a request to reset your Refocus password.
+
+Reset your password:
+https://dashboard.refocus.co.in/auth/reset-password?token=reset-token-456
+
+This link expires in 1 hour. If you didn't ask for a reset, you can ignore this email — your password won't change.
+
+— The Refocus team",
+}
+`;
+
+exports[`email senders (characterisation) > session cancelled (delete): sends one email with today's content 1`] = `
+{
+  "subject": "Asha cancelled your session",
+  "text": "Hi Ravi,
+
+Asha cancelled the session you had together and sent a note.
+
+"Sorry, something came up"
+
+Focus · 50 min
+3:00 PM
+
+https://dashboard.refocus.co.in/dashboard
+
+— The Refocus team",
+}
+`;
+
+exports[`email senders (characterisation) > session cancelled (leave): sends one email with today's content 1`] = `
+{
+  "subject": "Asha left your session",
+  "text": "Hi Ravi,
+
+Asha left the session you had together.
+
+Focus · 50 min
+3:00 PM
+
+https://dashboard.refocus.co.in/dashboard
+
+— The Refocus team",
+}
+`;
+
+exports[`email senders (characterisation) > timed reminder 10m: sends one email with today's content 1`] = `
+{
+  "subject": "Starting soon: Focus · 50 min",
+  "text": "Hi Ravi,
+
+Your session starts in about 10 minutes. Tap below to open Refocus and join when the call window opens.
+
+Focus · 50 min with Asha
+10:00 AM IST
+
+https://dashboard.refocus.co.in/sessions/s1
+
+The room opens 30 min before start.
+
+— The Refocus team",
+}
+`;
+
+exports[`email senders (characterisation) > welcome verification: sends one email with today's content 1`] = `
+{
+  "subject": "Welcome to Refocus — verify your email",
+  "text": "Hi Ravi,
+
+Welcome to Refocus. Your account is ready — you can sign in and use the dashboard anytime.
+
+Verify your email (optional but recommended):
+https://dashboard.refocus.co.in/api/auth/verify-email?token=verify-token-123
+
+Sign in: https://dashboard.refocus.co.in/auth/login
+
+You don't need to verify to access your dashboard. Verification helps secure your account and unlocks profile trust signals.
+
+— The Refocus team",
+}
+`;
