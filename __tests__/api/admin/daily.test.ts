@@ -16,7 +16,7 @@ vi.mock("@/lib/admin", () => ({
   requireAdmin: mocks.requireAdmin,
 }));
 
-vi.mock("@/lib/dailyAccounts", () => ({
+vi.mock("@/lib/providers/video/daily/accounts", () => ({
   listDailyAccountsPublic: mocks.listDailyAccountsPublic,
   listDailyAccounts: mocks.listDailyAccounts,
   getDailyAdminState: mocks.getDailyAdminState,

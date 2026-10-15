@@ -5,14 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import type { DailyCall } from "@daily-co/daily-js";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
 import MediaPermissionHelp, {
   type DailyDeviceError,
 } from "@/app/(product)/components/MediaPermissionHelp";
 import { WRAP_UP_MINUTES } from "@/lib/sessionWindow";
 import { playSessionCompleteSound, unlockSessionCompleteSound } from "@/lib/sessionCompleteSound";
-import { prepareForDailyCall, releaseAllLocalMediaStreams } from "@/lib/localMedia";
+import { releaseAllLocalMediaStreams } from "@/lib/localMedia";
 import { ensureAblyAccess, getAblyClient } from "@/lib/ably-client";
 import { sessionAlertsChannel } from "@/lib/realtimeChannels";
 import type { SessionCheerEvent } from "@/types/sessionCheer";
@@ -23,6 +22,7 @@ import {
   SessionTaskSheet,
 } from "./SessionTaskRail";
 import { PreparingSessionShell } from "./PreparingSessionShell";
+import { VideoStage, type VideoJoin, type VideoStageHandle } from "./video/VideoStage";
 
 type Phase = "loading" | "in-call" | "ended" | "error";
 
@@ -55,7 +55,6 @@ function partnerFromPrejoin(prejoin: PrejoinInfo): SessionPartner | null {
   };
 }
 
-const ACCENT = "5D1C6A"; // shared plum accent
 const CONFETTI_COLORS = [
   "#5D1C6A",
   "#CA5995",
@@ -98,7 +97,8 @@ export default function ClientCall({
 
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState<string | null>(null);
-  const [joinIframeUrl, setJoinIframeUrl] = useState<string | null>(null);
+  const [join, setJoin] = useState<VideoJoin | null>(null);
+  const [startMuted, setStartMuted] = useState<boolean>(false);
   const [muted, setMuted] = useState<boolean>(false);
   const [deviceError, setDeviceError] = useState<DailyDeviceError | null>(null);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState<boolean>(false);
@@ -133,8 +133,7 @@ export default function ClientCall({
   const wrapUpEndingShownRef = useRef<boolean>(false);
   const completeSoundPlayedRef = useRef<boolean>(false);
   const attendanceReportedRef = useRef<boolean>(false);
-  const callContainerRef = useRef<HTMLDivElement | null>(null);
-  const callFrameRef = useRef<DailyCall | null>(null);
+  const stageRef = useRef<VideoStageHandle | null>(null);
   const deviceHelpDismissedRef = useRef(false);
 
   const showDeviceError = useCallback((error: DailyDeviceError) => {
@@ -168,7 +167,7 @@ export default function ClientCall({
     });
   }, [sessionId]);
 
-  // Prepare the call: join as participant, fetch a meeting token, build URL.
+  // Prepare the call: join as participant, then get join details for the video provider.
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
@@ -195,7 +194,7 @@ export default function ClientCall({
           setMuted(true);
         }
 
-        const tokenRes = await fetch(`/api/sessions/${sessionId}/daily/token`, {
+        const tokenRes = await fetch(`/api/sessions/${sessionId}/video/token`, {
           method: "POST",
         });
         if (!tokenRes.ok) {
@@ -203,29 +202,21 @@ export default function ClientCall({
           throw new Error(data.error || "Failed to initialize call");
         }
 
-        const tokenData = (await tokenRes.json()) as {
-          domain?: string;
-          roomName?: string;
-          token?: string;
-        };
-        if (!tokenData.domain || !tokenData.roomName || !tokenData.token) {
+        const tokenData = (await tokenRes.json()) as Partial<VideoJoin>;
+        if (
+          tokenData.provider !== "daily" ||
+          !tokenData.domain ||
+          !tokenData.roomName ||
+          !tokenData.token
+        ) {
           throw new Error("Invalid call configuration");
         }
         if (cancelled) return;
 
-        const query = new URLSearchParams({
-          t: tokenData.token,
-          theme: isDark ? "dark" : "light",
-          accent: ACCENT,
-        });
-        if (youQuiet) {
-          query.set("startAudioOff", "true");
-        }
-
-        const url = `https://${tokenData.domain}/${tokenData.roomName}?${query.toString()}`;
         unlockSessionCompleteSound();
         deviceHelpDismissedRef.current = false;
-        setJoinIframeUrl(url);
+        setStartMuted(youQuiet);
+        setJoin(tokenData as VideoJoin);
         setDeviceError(null);
         setPhase("in-call");
       } catch (e) {
@@ -239,7 +230,7 @@ export default function ClientCall({
     return () => {
       cancelled = true;
     };
-  }, [sessionId, isDark]);
+  }, [sessionId]);
 
   const handleLeftMeeting = useCallback(() => {
     if (endMs - Date.now() < COMPLETION_GRACE_MS) {
@@ -253,73 +244,10 @@ export default function ClientCall({
     setPhase("ended");
   }, [endMs, reportAttendance]);
 
-  // Mount Daily Prebuilt via daily-js so we can listen for camera-error events.
-  useEffect(() => {
-    if (phase !== "in-call" || !joinIframeUrl || !callContainerRef.current) return;
-
-    let cancelled = false;
-    let callFrame: DailyCall | null = null;
-
-    const setup = async () => {
-      const Daily = (await import("@daily-co/daily-js")).default;
-      if (cancelled || !callContainerRef.current) return;
-
-      // Device test holds the camera/mic on the Refocus origin; Daily needs
-      // the physical devices inside its iframe.
-      await prepareForDailyCall();
-
-      const container = callContainerRef.current;
-      container.replaceChildren();
-
-      const iframe = document.createElement("iframe");
-      iframe.title = "Refocus session";
-      iframe.setAttribute(
-        "allow",
-        "camera; microphone; autoplay; display-capture; fullscreen; clipboard-read; clipboard-write",
-      );
-      iframe.style.width = "100%";
-      iframe.style.height = "100%";
-      iframe.style.border = "0";
-      container.appendChild(iframe);
-
-      callFrame = Daily.wrap(iframe, {
-        showLeaveButton: false,
-      });
-      callFrameRef.current = callFrame;
-
-      callFrame
-        .on("camera-error", (event) => {
-          if (event.error) {
-            const err = event.error as DailyDeviceError;
-            console.info("[Daily] camera-error", err.type, err.msg ?? "");
-            showDeviceError(err);
-          }
-        })
-        .on("started-camera", () => {
-          deviceHelpDismissedRef.current = false;
-          setDeviceError(null);
-        })
-        .on("left-meeting", () => {
-          handleLeftMeeting();
-        });
-
-      try {
-        await callFrame.join({ url: joinIframeUrl });
-      } catch {
-        // Daily surfaces device errors via camera-error; join failures are rare here.
-      }
-    };
-
-    void setup();
-
-    return () => {
-      cancelled = true;
-      if (callFrame) {
-        void callFrame.destroy();
-      }
-      callFrameRef.current = null;
-    };
-  }, [phase, joinIframeUrl, handleLeftMeeting, showDeviceError]);
+  const handleCameraStarted = useCallback(() => {
+    deviceHelpDismissedRef.current = false;
+    setDeviceError(null);
+  }, []);
 
   // Keep partner info in sync when the other participant joins mid-wait.
   useEffect(() => {
@@ -474,7 +402,7 @@ export default function ClientCall({
     unlockSessionCompleteSound();
     setMuted((prev) => {
       const next = !prev;
-      callFrameRef.current?.setLocalAudio(!next);
+      stageRef.current?.setMicEnabled(!next);
       return next;
     });
   }, []);
@@ -489,18 +417,14 @@ export default function ClientCall({
       }
     }
     reportAttendance();
-    const frame = callFrameRef.current;
-    if (frame) {
-      void frame.leave();
-    }
+    stageRef.current?.leave();
     setPhase("ended");
   }, [endMs, reportAttendance]);
 
   const retryDeviceSetup = useCallback(async () => {
     deviceHelpDismissedRef.current = false;
     setDeviceError(null);
-    await prepareForDailyCall();
-    void callFrameRef.current?.startCamera();
+    await stageRef.current?.retryCamera();
   }, []);
 
   const inWrapUp = remainingMs === 0 && wrapUpRemainingMs > 0;
@@ -644,7 +568,7 @@ export default function ClientCall({
   }
 
   // phase === "in-call"
-  if (!joinIframeUrl) return null;
+  if (!join) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-950">
@@ -717,10 +641,14 @@ export default function ClientCall({
       </div>
 
       <div className="relative flex min-h-0 flex-1">
-        <div
-          ref={callContainerRef}
-          className="min-w-0 flex-1"
-          aria-label="Video call"
+        <VideoStage
+          ref={stageRef}
+          join={join}
+          startMuted={startMuted}
+          isDark={isDark}
+          onLeft={handleLeftMeeting}
+          onDeviceError={showDeviceError}
+          onCameraStarted={handleCameraStarted}
         />
         {deviceError ? (
           <MediaPermissionHelp

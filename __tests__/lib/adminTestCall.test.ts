@@ -10,12 +10,12 @@ import { mockCollection, mockDb } from "../helpers";
 const sessions = mockCollection();
 const db = mockDb({ sessions });
 vi.mock("@/lib/mongodb", () => ({ getDb: vi.fn().mockImplementation(() => Promise.resolve(db)) }));
-vi.mock("@/lib/daily", () => ({
+vi.mock("@/lib/providers/video/daily/rooms", () => ({
   createOrGetDailyRoom: vi.fn().mockResolvedValue({ roomName: "room-1", domain: "refocus.daily.co", account: { id: "a1" } }),
   createDailyMeetingToken: vi.fn().mockResolvedValue("tok-1"),
 }));
 
-import { createOrGetDailyRoom, createDailyMeetingToken } from "@/lib/daily";
+import { createOrGetDailyRoom, createDailyMeetingToken } from "@/lib/providers/video/daily/rooms";
 import {
   adminTestCallObjectId,
   createAdminTestCall,

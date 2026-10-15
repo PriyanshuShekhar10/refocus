@@ -1,10 +1,7 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
-import { createOrGetDailyRoom, createDailyMeetingToken } from "@/lib/daily";
-import {
-  CALL_JOIN_GRACE_MINUTES,
-  WRAP_UP_MINUTES,
-} from "@/lib/sessionAccess";
+import { defaultVideoProviderId, issueSessionVideoJoin } from "@/lib/providers/video";
+import { CALL_JOIN_GRACE_MINUTES } from "@/lib/sessionAccess";
 import {
   DURATION_OPTIONS,
   type DurationMin,
@@ -41,6 +38,7 @@ export async function createAdminTestCall(params: {
   const endTime = new Date(now.getTime() + durationMin * 60_000);
 
   const db = await getDb();
+  const videoProvider = defaultVideoProviderId();
   const insert = await db.collection("sessions").insertOne({
     owner_id: params.adminUserId,
     start_time: startTime,
@@ -50,6 +48,7 @@ export async function createAdminTestCall(params: {
     status: "available",
     participant_count: 1,
     is_admin_test: true,
+    video_provider: videoProvider,
     name: "Admin test call",
     session_participants: [
       {
@@ -63,19 +62,12 @@ export async function createAdminTestCall(params: {
   });
 
   const sessionId = String(insert.insertedId);
-  const sessionEndExp =
-    Math.floor(endTime.getTime() / 1000) + 30 * 60;
-  const { roomName, domain, account } = await createOrGetDailyRoom(
+  const { roomName, domain, token } = await issueSessionVideoJoin({
     sessionId,
-    sessionEndExp,
-  );
-  const tokenExp =
-    Math.floor(endTime.getTime() / 1000) +
-    Math.max(CALL_JOIN_GRACE_MINUTES, WRAP_UP_MINUTES) * 60;
-  const token = await createDailyMeetingToken(roomName, params.adminUserId, {
+    userId: params.adminUserId,
     userName: params.adminName?.trim() || "Admin",
-    exp: tokenExp,
-    account,
+    sessionEnd: endTime,
+    storedProvider: videoProvider,
   });
 
   return {

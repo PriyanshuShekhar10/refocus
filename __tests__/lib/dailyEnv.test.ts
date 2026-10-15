@@ -13,7 +13,7 @@ describe("dailyEnv", () => {
     vi.stubEnv("DAILY_DOMAIN_2", "b.daily.co");
 
     const { listDailyDomainsFromEnv, listDailyOriginsFromEnv } = await import(
-      "@/lib/dailyEnv"
+      "@/lib/providers/video/daily/env"
     );
 
     expect(listDailyDomainsFromEnv()).toEqual(["a.daily.co", "b.daily.co"]);

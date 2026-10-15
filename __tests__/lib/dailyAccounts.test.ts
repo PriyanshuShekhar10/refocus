@@ -15,7 +15,7 @@ describe("listDailyAccounts", () => {
     // DOMAIN_3 missing → skipped
 
     const { listDailyAccounts, listDailyAccountsPublic } = await import(
-      "@/lib/dailyAccounts"
+      "@/lib/providers/video/daily/accounts"
     );
 
     expect(listDailyAccounts()).toEqual([

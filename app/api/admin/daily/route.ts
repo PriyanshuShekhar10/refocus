@@ -7,7 +7,7 @@ import {
   listDailyAccountsPublic,
   setDailyActiveId,
   setDailySelectionMode,
-} from "@/lib/dailyAccounts";
+} from "@/lib/providers/video/daily/accounts";
 
 export async function GET() {
   const guard = await requireAdmin();

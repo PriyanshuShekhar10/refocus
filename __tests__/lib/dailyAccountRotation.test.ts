@@ -51,7 +51,7 @@ describe("pickDailyAccountForNewRoom", () => {
     });
 
     const { pickDailyAccountForNewRoom } = await import(
-      "@/lib/dailyAccounts"
+      "@/lib/providers/video/daily/accounts"
     );
     const first = await pickDailyAccountForNewRoom();
     expect(first.id).toBe("1");
@@ -80,7 +80,7 @@ describe("pickDailyAccountForNewRoom", () => {
     });
 
     const { pickDailyAccountForNewRoom } = await import(
-      "@/lib/dailyAccounts"
+      "@/lib/providers/video/daily/accounts"
     );
     const account = await pickDailyAccountForNewRoom();
     expect(account.id).toBe("2");
@@ -99,7 +99,7 @@ describe("pickDailyAccountForNewRoom", () => {
     });
 
     const { pickDailyAccountForNewRoom } = await import(
-      "@/lib/dailyAccounts"
+      "@/lib/providers/video/daily/accounts"
     );
     await expect(pickDailyAccountForNewRoom()).rejects.toThrow(
       /rotation counter missing/i,
@@ -146,7 +146,7 @@ describe("createOrGetDailyRoom fail-safes", () => {
       .mockResolvedValueOnce(jsonResponse(200, { name: `session-${sessionId}` })) // create
       .mockResolvedValueOnce(jsonResponse(200, { name: `session-${sessionId}` })); // update props
 
-    const { createOrGetDailyRoom } = await import("@/lib/daily");
+    const { createOrGetDailyRoom } = await import("@/lib/providers/video/daily/rooms");
     const result = await createOrGetDailyRoom(sessionId);
 
     expect(result.account.id).toBe("1");
@@ -178,7 +178,7 @@ describe("createOrGetDailyRoom fail-safes", () => {
       .mockResolvedValueOnce(jsonResponse(200, { name: "room" })) // create
       .mockResolvedValueOnce(jsonResponse(200, { name: "room" })); // update
 
-    const { createOrGetDailyRoom } = await import("@/lib/daily");
+    const { createOrGetDailyRoom } = await import("@/lib/providers/video/daily/rooms");
     const result = await createOrGetDailyRoom(sessionId);
     expect(result.account.id).toBe("2");
   });
@@ -201,7 +201,7 @@ describe("createOrGetDailyRoom fail-safes", () => {
       rotationCounter: 1,
     });
 
-    const { createOrGetDailyRoom } = await import("@/lib/daily");
+    const { createOrGetDailyRoom } = await import("@/lib/providers/video/daily/rooms");
     const result = await createOrGetDailyRoom(sessionId);
 
     expect(result.account.id).toBe("2");
@@ -218,7 +218,7 @@ describe("createOrGetDailyRoom fail-safes", () => {
 
     fetchMock.mockResolvedValueOnce(textResponse(503, "unavailable"));
 
-    const { createOrGetDailyRoom } = await import("@/lib/daily");
+    const { createOrGetDailyRoom } = await import("@/lib/providers/video/daily/rooms");
     await expect(createOrGetDailyRoom(sessionId)).rejects.toThrow(
       /Daily room error: 503/,
     );
@@ -241,7 +241,7 @@ describe("createOrGetDailyRoom fail-safes", () => {
       .mockResolvedValueOnce(textResponse(404)) // account 1 miss
       .mockResolvedValueOnce(textResponse(503)); // account 2 abort
 
-    const { createOrGetDailyRoom } = await import("@/lib/daily");
+    const { createOrGetDailyRoom } = await import("@/lib/providers/video/daily/rooms");
     await expect(createOrGetDailyRoom(sessionId)).rejects.toThrow(
       /probe inconclusive/,
     );

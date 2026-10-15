@@ -5,7 +5,7 @@ import {
   listDailyAccounts,
   pickDailyAccountForNewRoom,
   type DailyAccount,
-} from "@/lib/dailyAccounts";
+} from "./accounts";
 
 const DAILY_API_BASE = "https://api.daily.co/v1";
 

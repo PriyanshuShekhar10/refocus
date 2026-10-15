@@ -1,0 +1,131 @@
+import { NextRequest, NextResponse, after } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getDb } from "@/lib/mongodb";
+import { issueSessionVideoJoin } from "@/lib/providers/video";
+import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
+import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
+import {
+  CALL_JOIN_GRACE_MINUTES,
+  isOwnerOrParticipant,
+  isWithinCallWindow,
+  toObjectId,
+} from "@/lib/sessionAccess";
+import { notifyPartnerJoinedPush } from "@/lib/push/notify";
+
+type SessionDoc = {
+  owner_id: string;
+  start_time: Date | string;
+  end_time: Date | string;
+  session_participants?: Array<{ user_id: string }>;
+  video_provider?: string;
+};
+
+/**
+ * POST /api/sessions/[id]/video/token → { provider, token, roomName, domain }
+ * for joining the session's call. Also served at the legacy
+ * /api/sessions/[id]/daily/token path, which shipped app builds still call.
+ */
+export async function POST(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  const user = session?.user as { id?: string; name?: string } | undefined;
+  const userId = user?.id;
+  if (!userId)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const emailGate = await requireVerifiedEmail(userId);
+  if (emailGate) return emailGate;
+
+  const { requireNotCommunityBanned } = await import("@/lib/communityModeration");
+  const banGate = await requireNotCommunityBanned(userId);
+  if (banGate) return banGate;
+
+  const rl = await checkRateLimit(userId, "api");
+  if (!rl.success) return rateLimitedResponse(rl);
+
+  const { id: sessionId } = await params;
+  const sessionObjectId = toObjectId(sessionId);
+  if (!sessionObjectId) {
+    return NextResponse.json({ error: "Invalid session id" }, { status: 400 });
+  }
+
+  const db = await getDb();
+  const s = await db.collection<SessionDoc>("sessions").findOne({ _id: sessionObjectId });
+  if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!isOwnerOrParticipant(s, userId)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  if (!isWithinCallWindow(s.start_time, s.end_time)) {
+    return NextResponse.json(
+      {
+        error: `Call access is only available from ${CALL_JOIN_GRACE_MINUTES} minutes before start until ${CALL_JOIN_GRACE_MINUTES} minutes after end`,
+      },
+      { status: 403 },
+    );
+  }
+
+  try {
+    const join = await issueSessionVideoJoin({
+      sessionId,
+      userId,
+      userName: user?.name,
+      sessionEnd: s.end_time,
+      storedProvider: s.video_provider,
+    });
+
+    // Mark the participant as having joined the call. Only set call_joined_at
+    // the first time so repeated token requests (refresh, rejoin) don't
+    // overwrite the original attendance timestamp. Best-effort — a failure
+    // here should not block call access.
+    let firstCallJoin = false;
+    try {
+      const attend = await db.collection("sessions").updateOne(
+        {
+          _id: sessionObjectId,
+          session_participants: {
+            $elemMatch: {
+              user_id: userId,
+              call_joined_at: { $exists: false },
+            },
+          },
+        },
+        {
+          $set: { "session_participants.$.call_joined_at": new Date() },
+        },
+      );
+      firstCallJoin = attend.modifiedCount > 0;
+    } catch (err) {
+      console.warn("[VideoToken] Failed to record call attendance", err);
+    }
+
+    if (firstCallJoin) {
+      const partnerIds = new Set<string>();
+      if (s.owner_id && String(s.owner_id) !== String(userId)) {
+        partnerIds.add(String(s.owner_id));
+      }
+      for (const p of s.session_participants ?? []) {
+        if (String(p.user_id) !== String(userId)) {
+          partnerIds.add(String(p.user_id));
+        }
+      }
+      for (const partnerId of partnerIds) {
+        after(() =>
+          notifyPartnerJoinedPush({
+            toUserId: partnerId,
+            fromUserId: userId,
+            sessionId,
+          }).catch((err) => {
+            console.error("[push] partner_joined failed:", err);
+          }),
+        );
+      }
+    }
+
+    return NextResponse.json(join);
+  } catch (e) {
+    console.error("[VideoToken] Failed to create token", e);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

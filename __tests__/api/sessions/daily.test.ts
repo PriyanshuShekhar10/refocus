@@ -24,12 +24,13 @@ vi.mock("@/lib/ratelimit", () => ({
   rateLimitedResponse: mocks.rateLimitedResponse,
 }));
 
-vi.mock("@/lib/daily", () => ({
+vi.mock("@/lib/providers/video/daily/rooms", () => ({
   createOrGetDailyRoom: mocks.createOrGetDailyRoom,
   createDailyMeetingToken: mocks.createDailyMeetingToken,
 }));
 
 import { POST as postDailyToken } from "@/app/api/sessions/[id]/daily/token/route";
+import { POST as postVideoToken } from "@/app/api/sessions/[id]/video/token/route";
 
 const OWNER_ID = "owner-1";
 const PARTICIPANT_ID = "participant-1";
@@ -87,6 +88,7 @@ describe("POST /api/sessions/:id/daily/token", () => {
 
     expect(ownerRes.status).toBe(200);
     expect(ownerRes.json).toEqual({
+      provider: "daily",
       token: "token-123",
       roomName: `session-${SESSION_ID}`,
       domain: "refocus.daily.co",
@@ -100,6 +102,7 @@ describe("POST /api/sessions/:id/daily/token", () => {
 
     expect(participantRes.status).toBe(200);
     expect(participantRes.json).toEqual({
+      provider: "daily",
       token: "token-123",
       roomName: `session-${SESSION_ID}`,
       domain: "refocus.daily.co",
@@ -120,5 +123,54 @@ describe("POST /api/sessions/:id/daily/token", () => {
     expect(tokenRes.json.error).toBe("Internal server error");
     expect(tokenRes.json.error).not.toContain("DAILY_API_KEY");
     expect(tokenRes.json.error).not.toContain("createOrGetDailyRoom");
+  });
+
+  it("serves the legacy /daily/token path with the same handler as /video/token", () => {
+    expect(postDailyToken).toBe(postVideoToken);
+  });
+
+  it("keeps today's room and token expiry rules", async () => {
+    mockSession(OWNER_ID);
+    const end = new Date(Date.now() + 60 * 60 * 1000);
+    mocks.sessionsCol.findOne.mockResolvedValue({
+      _id: new ObjectId(SESSION_ID),
+      owner_id: OWNER_ID,
+      start_time: new Date(Date.now() - 60 * 1000),
+      end_time: end,
+      session_participants: [{ user_id: PARTICIPANT_ID }],
+    });
+    await postVideoToken(mockRequest(`/api/sessions/${SESSION_ID}/video/token`), makeParams(SESSION_ID));
+    const endSec = Math.floor(end.getTime() / 1000);
+    expect(mocks.createOrGetDailyRoom).toHaveBeenCalledWith(SESSION_ID, endSec + 30 * 60);
+    expect(mocks.createDailyMeetingToken.mock.calls[0][2]).toMatchObject({ exp: endSec + 10 * 60 });
+  });
+
+  it("pins the call provider on the session the first time someone joins", async () => {
+    mockSession(OWNER_ID);
+    await postVideoToken(mockRequest(`/api/sessions/${SESSION_ID}/video/token`), makeParams(SESSION_ID));
+    expect(mocks.sessionsCol.updateOne).toHaveBeenCalledWith(
+      { _id: new ObjectId(SESSION_ID), video_provider: { $exists: false } },
+      { $set: { video_provider: "daily" } },
+    );
+  });
+
+  it("uses the provider already stored on the session without re-pinning", async () => {
+    mockSession(OWNER_ID);
+    mocks.sessionsCol.findOne.mockResolvedValue({
+      _id: new ObjectId(SESSION_ID),
+      owner_id: OWNER_ID,
+      start_time: new Date(Date.now() - 60 * 1000),
+      end_time: new Date(Date.now() + 60 * 60 * 1000),
+      session_participants: [{ user_id: PARTICIPANT_ID }],
+      video_provider: "daily",
+    });
+    const res = await parseResponse(
+      await postVideoToken(mockRequest(`/api/sessions/${SESSION_ID}/video/token`), makeParams(SESSION_ID)),
+    );
+    expect(res.json.provider).toBe("daily");
+    expect(mocks.sessionsCol.updateOne).not.toHaveBeenCalledWith(
+      expect.objectContaining({ video_provider: { $exists: false } }),
+      expect.anything(),
+    );
   });
 });

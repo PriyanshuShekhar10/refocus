@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { listDailyDomainsFromEnv, listDailyOriginsFromEnv } from "./lib/dailyEnv";
+import { listDailyDomainsFromEnv, listDailyOriginsFromEnv } from "./lib/providers/video/daily/env";
 
 const dailyDomains = listDailyDomainsFromEnv();
 const dailyOrigins = listDailyOriginsFromEnv();
