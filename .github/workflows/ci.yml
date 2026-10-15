@@ -39,7 +39,8 @@ jobs:
       - run: npm ci
 
       - name: Typecheck
-        run: npx tsc --noEmit
+        # next-env.d.ts (image/route types) is generated, not committed.
+        run: npx next typegen && npx tsc --noEmit
 
       - name: Lint
         run: npm run lint
