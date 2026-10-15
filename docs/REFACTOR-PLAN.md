@@ -13,7 +13,15 @@
   - [x] Playwright E2E (`e2e/`, `npm run test:e2e`): public checks pass against production; signed-in two-account flows skip until test accounts exist
   - [ ] **Waiting on you:** create the two E2E test accounts, then run the signed-in flows against a preview deploy
   - Provider contract suites are written with each interface (Phases 1, 2 and 5), since the interfaces don't exist yet
-- [ ] **Phase 1:** Video provider layer (`lib/providers/video`), `ClientCall` split, `video_provider` per session
+- [x] **Phase 1:** Video provider layer (2026-10-16)
+  - [x] `lib/providers/video/`: interface (`types.ts`), Daily adapter (`daily/`, with the former `lib/daily*.ts` moved unchanged), `issueSessionVideoJoin` holds the room/token expiry rules
+  - [x] `POST /api/sessions/[id]/video/token` returns `{ provider, token, roomName, domain }`; `/daily/token` kept as an alias for shipped app builds
+  - [x] `video_provider` pinned on a session at first join (default from `VIDEO_PROVIDER`, else `daily`)
+  - [x] Call screen: `video/VideoStage.tsx` → `DailyStage.tsx`; `ClientCall` no longer imports the Daily SDK
+  - [x] Video provider contract suite (`__tests__/contract/videoProvider.*`); Daily + fake adapters pass
+  - [x] Verified on a preview deploy (admin test call), then production
+  - Moved to Phase 6: extracting `useSessionCall` (timer/attendance/cheers) from `ClientCall`
+  - To add LiveKit later: `lib/providers/video/livekit/` adapter, a `LiveKitStage`, add `"livekit"` to `VideoProviderId`, then set `VIDEO_PROVIDER=livekit`
 - [ ] **Phase 2:** Email provider layer (`lib/providers/email`)
 - [ ] **Phase 3:** Route wrappers `withUser` / `withAdmin` / `withCron`; migrate the 81 routes
 - [ ] **Phase 4:** Repositories for sessions, users and community
