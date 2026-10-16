@@ -1,4 +1,4 @@
-import { getResend, getResendFromEmail, isResendConfigured } from "@/lib/resend";
+import { sendEmail } from "@/lib/providers/email";
 import {
   buildOpsBugReportEmail,
   buildOpsReportEmail,
@@ -15,29 +15,10 @@ async function sendOpsEmail(input: {
   text: string;
   replyTo?: string | null;
 }): Promise<{ sent: boolean; reason?: string }> {
-  if (!isResendConfigured()) {
-    console.warn("[email] RESEND_API_KEY not set; skipping ops notify");
-    return { sent: false, reason: "not_configured" };
-  }
-
-  const resend = getResend();
-  if (!resend) return { sent: false, reason: "not_configured" };
-
-  const { error } = await resend.emails.send({
-    from: getResendFromEmail(),
-    to: OPS_NOTIFY_EMAIL,
-    subject: input.subject,
-    html: input.html,
-    text: input.text,
-    ...(input.replyTo ? { replyTo: input.replyTo } : {}),
-  });
-
-  if (error) {
-    console.error("[email] ops notify failed:", error);
-    return { sent: false, reason: "send_failed" };
-  }
-
-  return { sent: true };
+  return sendEmail(
+    { to: OPS_NOTIFY_EMAIL, subject: input.subject, html: input.html, text: input.text, replyTo: input.replyTo },
+    "ops notify",
+  );
 }
 
 /** Fire-and-forget safe: never throws to the request path. */

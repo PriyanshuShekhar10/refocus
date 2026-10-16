@@ -22,7 +22,13 @@
   - [x] Verified on a preview deploy (admin test call), then production
   - Moved to Phase 6: extracting `useSessionCall` (timer/attendance/cheers) from `ClientCall`
   - To add LiveKit later: `lib/providers/video/livekit/` adapter, a `LiveKitStage`, add `"livekit"` to `VideoProviderId`, then set `VIDEO_PROVIDER=livekit`
-- [ ] **Phase 2:** Email provider layer (`lib/providers/email`)
+- [x] **Phase 2:** Email provider layer (2026-10-16)
+  - [x] `lib/providers/email/`: interface, Resend adapter, `sendEmail(message, label)` (configured check, sandbox detection, logging in one place)
+  - [x] All 8 sender files + ops notify call `sendEmail`; nothing outside the provider imports Resend. Welcome/reset still skip token creation when email is off
+  - [x] Email provider contract suite (`__tests__/contract/emailProvider.*`); Resend + fake adapters pass
+  - [x] Phase 0 email snapshots unchanged (identical subjects/text); reply-to rules now pinned too
+  - [x] New tests for `lib/admin.ts` and every report type in `lib/reports.ts`; coverage floor lines 49 → 50
+  - To switch provider later: add `lib/providers/email/<vendor>.ts`, register it in `index.ts`, set `EMAIL_PROVIDER`
 - [ ] **Phase 3:** Route wrappers `withUser` / `withAdmin` / `withCron`; migrate the 81 routes
 - [ ] **Phase 4:** Repositories for sessions, users and community
 - [ ] **Phase 5:** Payments-ready skeleton and entitlements (`can(user, feature)`)

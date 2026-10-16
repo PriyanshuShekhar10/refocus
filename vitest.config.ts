@@ -13,7 +13,7 @@ export default defineConfig({
       exclude: ["**/*.d.ts"],
       reporter: ["text-summary", "json-summary"],
       // Baseline from docs/REFACTOR-PLAN.md Phase 0; raise as coverage grows, never lower.
-      thresholds: { statements: 48, branches: 37, functions: 52, lines: 49 },
+      thresholds: { statements: 48, branches: 37, functions: 52, lines: 50 },
     },
   },
   resolve: {

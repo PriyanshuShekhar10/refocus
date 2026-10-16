@@ -26,6 +26,7 @@ vi.mock("@/lib/passwordReset", async (orig) => ({
 }));
 
 import { isResendConfigured } from "@/lib/resend";
+import { OPS_NOTIFY_EMAIL } from "@/lib/email/opsNotify";
 import { sendAdminUserEmail } from "@/lib/email/sendAdminMail";
 import { sendCommunityMentionEmail } from "@/lib/email/sendCommunityMentionEmail";
 import { sendMatchedSessionEmail } from "@/lib/email/sendMatchedSessionEmail";
@@ -100,5 +101,23 @@ describe("email senders (characterisation)", () => {
     send.mockResolvedValue({ data: null, error: { message: "boom" } });
     const result = await run();
     expect(result.sent).toBe(false);
+  });
+
+  it("admin mail replies go to the team inbox", async () => {
+    await SENDERS[0][1]();
+    expect(send.mock.calls[0][0].replyTo).toBe(OPS_NOTIFY_EMAIL);
+  });
+
+  it("cancel notes reply to the partner who cancelled, and only when known", async () => {
+    const base = { email: TO, fromName: "Asha", sessionTitle: "Focus · 50 min", startsAtLabel: "3:00 PM", calendarUrl: "https://dashboard.refocus.co.in/dashboard", kind: "delete" as const };
+    await sendSessionCancelledEmail({ ...base, fromEmail: "asha@example.com" });
+    await sendSessionCancelledEmail({ ...base, fromEmail: "  " });
+    expect(send.mock.calls[0][0].replyTo).toBe("asha@example.com");
+    expect(send.mock.calls[1][0]).not.toHaveProperty("replyTo");
+  });
+
+  it("other emails set no reply-to", async () => {
+    for (const [, run] of SENDERS.slice(1)) await run();
+    for (const [msg] of send.mock.calls) expect(msg).not.toHaveProperty("replyTo");
   });
 });

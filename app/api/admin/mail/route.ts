@@ -4,7 +4,7 @@ import { getDb } from "@/lib/mongodb";
 import { requireAdmin } from "@/lib/admin";
 import { logAdminAction } from "@/lib/adminAudit";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
-import { isResendConfigured } from "@/lib/resend";
+import { isEmailConfigured } from "@/lib/providers/email";
 import {
   ADMIN_MAIL_BODY_MAX,
   ADMIN_MAIL_MAX_RECIPIENTS,
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
   const rl = await checkRateLimit(guard.admin.userId, "admin_mail");
   if (!rl.success) return rateLimitedResponse(rl);
 
-  if (!isResendConfigured()) {
+  if (!isEmailConfigured()) {
     return NextResponse.json(
       { error: "Email is not configured on this server." },
       { status: 503 },
