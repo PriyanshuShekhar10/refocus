@@ -32,7 +32,7 @@ function setup(docs: Record<string, unknown>) {
 }
 
 async function expectError(p: Promise<unknown>, message: string, status: number) {
-  const err = await p.catch((e) => e);
+  const err = (await p.catch((e: unknown) => e)) as ReportValidationError;
   expect(err).toBeInstanceOf(ReportValidationError);
   expect(err.message).toBe(message);
   expect(err.status).toBe(status);
