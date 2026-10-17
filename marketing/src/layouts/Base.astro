@@ -65,6 +65,16 @@ const posthogHost = (
     {robots && <meta name="robots" content={robots} />}
     <meta name="theme-color" content={THEME_COLOR} />
     <link rel="canonical" href={canonicalUrl} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin="anonymous"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600&family=VT323&display=swap"
+      rel="stylesheet"
+    />
     {
       hreflangAlternates.map((alt) => (
         <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />

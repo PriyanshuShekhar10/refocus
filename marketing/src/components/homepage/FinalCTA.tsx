@@ -7,25 +7,21 @@ export function FinalCTA() {
   return (
     <section className={styles.finalCta}>
       <div className={styles.wrap}>
-        <Reveal as="h2">
-          Sit down. Start the timer.
-          <br />
-          Get the thing done.
-        </Reveal>
-        <Reveal as="p">Free to start. One click to your first session.</Reveal>
+        <Reveal as="h2">sit down. start the timer. get the thing done.</Reveal>
+        <Reveal as="p">free to start. one click to your first session.</Reveal>
         <Reveal className={styles.finalCtaRow}>
           <a
             href={url("/auth/sign-up")}
             className={`${styles.btn} ${styles.btnBrand} ${styles.btnLg}`}
           >
-            Start focusing
+            start focusing
             <ArrowIcon />
           </a>
           <a
             href="/features"
             className={`${styles.btn} ${styles.btnGhost} ${styles.btnLg}`}
           >
-            See features
+            see features
           </a>
         </Reveal>
       </div>

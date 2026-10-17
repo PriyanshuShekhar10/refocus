@@ -6,12 +6,12 @@ import { WhyItWorks } from "./WhyItWorks";
 import { Faq } from "./Faq";
 import { FinalCTA } from "./FinalCTA";
 import { Footer } from "./Footer";
-import Navbar from "../Navbar";
+import LandingNavbar from "../LandingNavbar";
 
 export function Homepage() {
   return (
     <div className={styles.root}>
-      <Navbar />
+      <LandingNavbar />
       <main>
         <Hero />
         <Sessions />

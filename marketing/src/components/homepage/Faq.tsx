@@ -15,8 +15,10 @@ export function Faq() {
     <section className={styles.block} id="faq">
       <div className={styles.wrap}>
         <Reveal className={styles.sectionHead}>
-          <span className={styles.eyebrow}>05 — FAQs</span>
-          <h2 className={styles.sectionTitle}>Answers before your first session.</h2>
+          <span className={styles.eyebrow}>faq</span>
+          <h2 className={styles.sectionTitle}>
+            answers before your first session.
+          </h2>
         </Reveal>
 
         <ul className={styles.faqList} role="list">
@@ -40,7 +42,7 @@ export function Faq() {
                   aria-controls={panelId}
                   onClick={() => toggle(index)}
                 >
-                  <span>{item.question}</span>
+                  <span>{item.question.toLowerCase()}</span>
                   <span aria-hidden className={styles.faqIcon}>
                     {isOpen ? "−" : "+"}
                   </span>

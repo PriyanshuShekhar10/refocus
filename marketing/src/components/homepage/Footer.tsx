@@ -4,53 +4,44 @@ import { url } from "../../lib/config";
 export function Footer() {
   return (
     <footer className={styles.footer}>
-      <div className={`${styles.wrap} ${styles.footInner}`}>
-        <a href="/" className={styles.brand}>
-          <img src="/logo.svg" alt="Refocus" style={{ height: 28, width: "auto" }} />
-        </a>
-        <div className={styles.footLinks}>
-          <a href="/features">Features</a>
-          <a href="/free">Free</a>
-          <a href="/pricing">Pricing</a>
-          <a href="/body-doubling">Body doubling</a>
-          <a href="/virtual-coworking">Virtual coworking</a>
-          <a href="/focus-room">Focus room</a>
-          <a href="/study-partner">Study partner</a>
-          <a href="/study-with-me">Study with me</a>
-          <a href="/focusmate-alternative">vs Focusmate</a>
-          <a href="/cofocus-alternative">vs Cofocus</a>
-          <a href="/studystream-alternative">vs StudyStream</a>
-          <a href="/about">About</a>
-          <a href="/blog">Blog</a>
-          <a href="/contact">Contact</a>
-          <a href="/support">Help and Support</a>
-          <a href="/developers">Developers</a>
-          <a href="/privacy">Privacy</a>
-          <a href="/terms">Terms</a>
-          <a href="/community-guidelines">Community Guidelines</a>
-          <a href="/delete-account">Delete account</a>
-          <a href={url("/auth/login")}>Log in</a>
-          <a href={url("/auth/sign-up")}>Sign up</a>
+      <div className={styles.wrap}>
+        <div className={styles.footGrid}>
+          <div className={styles.footCol}>
+            <span className={styles.footColHead}>product</span>
+            <a href="/features">features</a>
+            <a href="/free">free</a>
+            <a href="/pricing">pricing</a>
+            <a href={url("/auth/login")}>log in</a>
+            <a href={url("/auth/sign-up")}>sign up</a>
+          </div>
+          <div className={styles.footCol}>
+            <span className={styles.footColHead}>resources</span>
+            <a href="/blog">blog</a>
+            <a href="/body-doubling">body doubling</a>
+            <a href="/virtual-coworking">virtual coworking</a>
+            <a href="/focus-room">focus room</a>
+            <a href="/study-partner">study partner</a>
+            <a href="/study-with-me">study with me</a>
+            <a href="/developers">developers</a>
+          </div>
+          <div className={styles.footCol}>
+            <span className={styles.footColHead}>compare</span>
+            <a href="/focusmate-alternative">vs focusmate</a>
+            <a href="/cofocus-alternative">vs cofocus</a>
+            <a href="/studystream-alternative">vs studystream</a>
+          </div>
+          <div className={styles.footCol}>
+            <span className={styles.footColHead}>company</span>
+            <a href="/about">about</a>
+            <a href="/contact">contact</a>
+            <a href="/support">help and support</a>
+            <a href="/privacy">privacy</a>
+            <a href="/terms">terms</a>
+            <a href="/community-guidelines">community guidelines</a>
+            <a href="/delete-account">delete account</a>
+          </div>
         </div>
         <div className={styles.footMeta}>v0.4.2 · made for deep work</div>
-      </div>
-      <div className={styles.footBadgeWrap} aria-hidden="true">
-        <a
-          href="https://www.betterlaunch.co"
-          target="_blank"
-          rel="noopener noreferrer"
-          tabIndex={-1}
-        >
-          <img
-            src="https://www.betterlaunch.co/badge-light.svg"
-            alt="Featured on Better Launch"
-            width={120}
-            height={40}
-            loading="lazy"
-            decoding="async"
-            className={styles.footBadge}
-          />
-        </a>
       </div>
     </footer>
   );

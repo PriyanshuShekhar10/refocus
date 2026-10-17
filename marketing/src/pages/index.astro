@@ -1,9 +1,9 @@
 ---
 import Base from "../layouts/Base.astro";
 import { getImage } from "astro:assets";
-import dashboardImg from "../assets/dashboard.png";
+import dashboardImg from "../assets/dashboard-real.png";
 import homeStyles from "../components/homepage/Homepage.module.css";
-import Navbar from "../components/Navbar";
+import LandingNavbar from "../components/LandingNavbar";
 import { Hero } from "../components/homepage/Hero";
 import { Sessions } from "../components/homepage/Sessions";
 import { Modes } from "../components/homepage/Modes";
@@ -100,7 +100,7 @@ const heroImage = {
     imagesizes={heroSizes}
   />
   <div class={homeStyles.root}>
-    <Navbar client:idle />
+    <LandingNavbar client:idle />
     <main>
       <Hero client:load image={heroImage} />
       <Sessions client:visible />
