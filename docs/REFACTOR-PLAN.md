@@ -28,6 +28,7 @@
   - [x] Email provider contract suite (`__tests__/contract/emailProvider.*`); Resend + fake adapters pass
   - [x] Phase 0 email snapshots unchanged (identical subjects/text); reply-to rules now pinned too
   - [x] New tests for `lib/admin.ts` and every report type in `lib/reports.ts`; coverage floor lines 49 → 50
+  - [x] Verified in production: bug-report email delivered after deploy (2026-10-17)
   - To switch provider later: add `lib/providers/email/<vendor>.ts`, register it in `index.ts`, set `EMAIL_PROVIDER`
 - [ ] **Phase 3:** Route wrappers `withUser` / `withAdmin` / `withCron`; migrate the 81 routes
 - [ ] **Phase 4:** Repositories for sessions, users and community
