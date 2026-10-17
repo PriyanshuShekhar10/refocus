@@ -3,7 +3,9 @@ import { broadcastEvent } from "./broadcaster";
 import { chatChannel, userChannel } from "./sse";
 import { hasSessionOverlap } from "./sessionOverlap";
 import {
+  BOOKABLE_DURATION_ERROR,
   BOOKING_TIME_STEP_MINUTES,
+  isBookableDuration,
   isBookingStartAligned,
 } from "@/constants/calendar";
 import { notifySessionRequestPush } from "@/lib/push/notify";
@@ -23,8 +25,8 @@ export async function createSessionRequest(params: {
 }) {
   const { db, currentUserId, friendId, start, durationMin, message, goal } = params;
 
-  if (!DURATION_OPTIONS.includes(durationMin as DurationMin)) {
-    throw new Error(`Invalid durationMin (allowed: ${DURATION_OPTIONS.join(", ")})`);
+  if (!isBookableDuration(durationMin)) {
+    throw new Error(BOOKABLE_DURATION_ERROR);
   }
   
   const s = new Date(start);

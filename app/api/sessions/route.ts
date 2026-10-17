@@ -6,7 +6,7 @@ import { ObjectId } from "mongodb";
 import { checkRateLimit, rateLimitedResponse } from "@/lib/ratelimit";
 import { publishSessionDocUpserted } from "@/lib/sessionRealtime";
 import { isEmailVerified } from "@/lib/emailVerification";
-import { DURATION_OPTIONS, SESSION_TYPES, BOOKING_TIME_STEP_MINUTES, isBookingStartAligned, type DurationMin, type SessionType } from "@/constants/calendar";
+import { BOOKABLE_DURATION_ERROR, isBookableDuration, SESSION_TYPES, BOOKING_TIME_STEP_MINUTES, isBookingStartAligned, type DurationMin, type SessionType } from "@/constants/calendar";
 import { hasSessionOverlap } from "@/lib/sessionOverlap";
 import { requireVerifiedEmail } from "@/lib/requireVerifiedEmail";
 import { requireNotCommunityBanned } from "@/lib/communityModeration";
@@ -451,11 +451,8 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
-  if (!DURATION_OPTIONS.includes(durationMin as DurationMin)) {
-    return NextResponse.json(
-      { error: `Invalid durationMin (allowed: ${DURATION_OPTIONS.join(", ")})` },
-      { status: 400 },
-    );
+  if (!isBookableDuration(durationMin)) {
+    return NextResponse.json({ error: BOOKABLE_DURATION_ERROR }, { status: 400 });
   }
   if (!SESSION_TYPES.includes(sessionType as SessionType)) {
     return NextResponse.json(

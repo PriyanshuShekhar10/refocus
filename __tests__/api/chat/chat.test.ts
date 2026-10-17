@@ -156,7 +156,7 @@ describe("POST /api/chat/:friendId", () => {
 
   it("returns 400 for session-request with missing start", async () => {
     const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
-      body: { type: "session-request", durationMin: 25 },
+      body: { type: "session-request", durationMin: 50 },
     });
     const { status, json } = await parseResponse(
       await POST(req, makeParams(FRIEND_ID))
@@ -175,7 +175,7 @@ describe("POST /api/chat/:friendId", () => {
     const start = alignedFutureIso();
 
     const req = mockRequest(`/api/chat/${FRIEND_ID}`, {
-      body: { type: "session-request", start, durationMin: 25 },
+      body: { type: "session-request", start, durationMin: 50 },
     });
     const { status, json } = await parseResponse(
       await POST(req, makeParams(FRIEND_ID))

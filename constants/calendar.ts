@@ -31,6 +31,18 @@ export type DurationMin = (typeof DURATION_OPTIONS)[number];
 export const DEFAULT_DURATION: DurationMin = 50;
 
 /**
+ * Lengths people can book right now. DURATION_OPTIONS still lists every length
+ * so existing 25/75-minute sessions display; only these can be created.
+ */
+export const BOOKABLE_DURATIONS: readonly DurationMin[] = [50];
+
+export const BOOKABLE_DURATION_ERROR = `Sessions are ${BOOKABLE_DURATIONS.join(" or ")} minutes long. Please book a ${BOOKABLE_DURATIONS.join(" or ")}-minute session.`;
+
+export function isBookableDuration(value: unknown): value is DurationMin {
+  return typeof value === "number" && BOOKABLE_DURATIONS.includes(value as DurationMin);
+}
+
+/**
  * Default filter state (all durations selected)
  */
 export const DEFAULT_DURATION_FILTER: DurationMin[] = [...DURATION_OPTIONS];

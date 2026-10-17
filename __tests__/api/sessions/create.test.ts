@@ -69,7 +69,7 @@ describe("POST /api/sessions", () => {
   it("rejects past start times", async () => {
     const past = alignedPastIso();
     const req = mockRequest("/api/sessions", {
-      body: { start: past, durationMin: 25, sessionType: "focus" },
+      body: { start: past, durationMin: 50, sessionType: "focus" },
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(400);
@@ -81,11 +81,23 @@ describe("POST /api/sessions", () => {
       Math.ceil(Date.now() / (30 * 60_000)) * (30 * 60_000) + 15 * 60_000,
     ).toISOString();
     const req = mockRequest("/api/sessions", {
-      body: { start: misaligned, durationMin: 25, sessionType: "focus" },
+      body: { start: misaligned, durationMin: 50, sessionType: "focus" },
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(400);
     expect(json.error).toMatch(/30-minute/i);
+    expect(sessionsCol.insertOne).not.toHaveBeenCalled();
+  });
+
+  it.each([25, 75])("rejects %i-minute bookings (only 50 is bookable)", async (durationMin) => {
+    mockSession(USER_ID);
+    const start = alignedFutureIso();
+    const req = mockRequest("/api/sessions", {
+      body: { start, durationMin, sessionType: "focus" },
+    });
+    const { status, json } = await parseResponse(await POST(req));
+    expect(status).toBe(400);
+    expect(json.error).toBe("Sessions are 50 minutes long. Please book a 50-minute session.");
     expect(sessionsCol.insertOne).not.toHaveBeenCalled();
   });
 
@@ -96,13 +108,13 @@ describe("POST /api/sessions", () => {
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(400);
-    expect(json.error).toMatch(/durationMin/);
+    expect(json.error).toBe("Sessions are 50 minutes long. Please book a 50-minute session.");
   });
 
   it("rejects invalid sessionType", async () => {
     const start = alignedFutureIso();
     const req = mockRequest("/api/sessions", {
-      body: { start, durationMin: 25, sessionType: "marathon" },
+      body: { start, durationMin: 50, sessionType: "marathon" },
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(400);
@@ -112,7 +124,7 @@ describe("POST /api/sessions", () => {
   it("rejects bookings beyond the horizon", async () => {
     const tooFar = alignedFutureIso(200 * 24 * 60 * 60 * 1000);
     const req = mockRequest("/api/sessions", {
-      body: { start: tooFar, durationMin: 25, sessionType: "focus" },
+      body: { start: tooFar, durationMin: 50, sessionType: "focus" },
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(400);
@@ -127,7 +139,7 @@ describe("POST /api/sessions", () => {
     sessionsCol.countDocuments.mockResolvedValue(0);
     const start = alignedFutureIso();
     const req = mockRequest("/api/sessions", {
-      body: { start, durationMin: 25, sessionType: "focus" },
+      body: { start, durationMin: 50, sessionType: "focus" },
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(409);
@@ -139,7 +151,7 @@ describe("POST /api/sessions", () => {
     sessionsCol.countDocuments.mockResolvedValue(1);
     const start = alignedFutureIso();
     const req = mockRequest("/api/sessions", {
-      body: { start, durationMin: 25, sessionType: "focus" },
+      body: { start, durationMin: 50, sessionType: "focus" },
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(403);
@@ -150,7 +162,7 @@ describe("POST /api/sessions", () => {
   it("creates a session when valid + non-overlapping", async () => {
     const start = alignedFutureIso();
     const req = mockRequest("/api/sessions", {
-      body: { start, durationMin: 25, sessionType: "focus", quietOwner: true },
+      body: { start, durationMin: 50, sessionType: "focus", quietOwner: true },
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(200);
@@ -168,7 +180,7 @@ describe("POST /api/sessions", () => {
     const req = mockRequest("/api/sessions", {
       body: {
         start: alignedFutureIso(),
-        durationMin: 25,
+        durationMin: 50,
         sessionType: "focus",
       },
     });
@@ -187,18 +199,6 @@ describe("POST /api/sessions", () => {
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(400);
     expect(json.error).toMatch(/1 hour/i);
-    expect(sessionsCol.insertOne).not.toHaveBeenCalled();
-  });
-
-  it("rejects crew creating a 25-minute session", async () => {
-    isEngagementCrewUserId.mockResolvedValue(true);
-    const start = alignedFutureIso(61 * 60 * 1000);
-    const req = mockRequest("/api/sessions", {
-      body: { start, durationMin: 25, sessionType: "focus" },
-    });
-    const { status, json } = await parseResponse(await POST(req));
-    expect(status).toBe(400);
-    expect(json.error).toMatch(/25-minute/i);
     expect(sessionsCol.insertOne).not.toHaveBeenCalled();
   });
 
@@ -224,7 +224,7 @@ describe("POST /api/sessions", () => {
         owner_id: "other-user",
         start_time: startDate,
         end_time: new Date(startDate.getTime() + 25 * 60_000),
-        duration_min: 25,
+        duration_min: 50,
         session_type: "focus",
         participant_count: 1,
         session_participants: [{ user_id: "other-user", joined_at: new Date() }],
@@ -235,7 +235,7 @@ describe("POST /api/sessions", () => {
       owner_id: "other-user",
       start_time: startDate,
       end_time: new Date(startDate.getTime() + 25 * 60_000),
-      duration_min: 25,
+      duration_min: 50,
       session_type: "focus",
       status: "booked",
       participant_count: 2,
@@ -248,7 +248,7 @@ describe("POST /api/sessions", () => {
     const req = mockRequest("/api/sessions", {
       body: {
         start,
-        durationMin: 25,
+        durationMin: 50,
         sessionType: "focus",
         autoMatch: true,
       },
@@ -265,7 +265,7 @@ describe("POST /api/sessions", () => {
     const req = mockRequest("/api/sessions", {
       body: {
         start,
-        durationMin: 25,
+        durationMin: 50,
         sessionType: "focus",
         autoMatch: true,
       },
@@ -288,14 +288,14 @@ describe("POST /api/sessions", () => {
         owner_id: "other-user",
         start_time: startDate,
         end_time: new Date(startDate.getTime() + 25 * 60_000),
-        duration_min: 25,
+        duration_min: 50,
         participant_count: 1,
         session_participants: [{ user_id: "other-user", joined_at: new Date() }],
       },
     ]);
 
     const req = mockRequest("/api/sessions", {
-      body: { start, durationMin: 25, sessionType: "focus" },
+      body: { start, durationMin: 50, sessionType: "focus" },
     });
     const { status, json } = await parseResponse(await POST(req));
     expect(status).toBe(200);
