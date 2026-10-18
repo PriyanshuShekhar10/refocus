@@ -11,10 +11,10 @@ import BookSessionButton from "../BookSessionButton";
 
 type ViewDays = 3 | 5 | 7;
 
-const VIEW_OPTIONS: { value: ViewDays; label: string; short: string }[] = [
-  { value: 3, label: "3 Days", short: "3D" },
-  { value: 5, label: "5 Days", short: "5D" },
-  { value: 7, label: "Week", short: "W" },
+const VIEW_OPTIONS: { value: ViewDays; label: string }[] = [
+  { value: 3, label: "3 Days" },
+  { value: 5, label: "5 Days" },
+  { value: 7, label: "Week" },
 ];
 
 interface CalendarHeaderProps {
@@ -167,38 +167,42 @@ export function CalendarHeader({
                     })}
                   </div>
                 </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <span className="px-1.5 text-[11.5px] font-semibold tracking-[0.02em] text-rf-ink-mute">
+                    View
+                  </span>
+                  <div
+                    className="grid grid-cols-3 gap-0.5 rounded-[10px] bg-rf-line-soft p-[3px]"
+                    role="group"
+                    aria-label="Calendar view"
+                  >
+                    {VIEW_OPTIONS.map((option) => {
+                      const selected = visibleDays === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => onVisibleDaysChange(option.value)}
+                          aria-pressed={selected}
+                          className={cn(
+                            "h-7 whitespace-nowrap rounded-[7px] px-2 text-[12.5px] font-medium transition-colors",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose",
+                            selected
+                              ? "bg-rf-card text-rf-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+                              : "text-rf-ink-mute hover:text-rf-ink-soft",
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             ) : null}
           </div>
         ) : null}
-
-        <div
-          className="flex gap-0.5 rounded-[10px] bg-rf-line-soft p-[3px]"
-          role="group"
-          aria-label="Calendar view"
-        >
-          {VIEW_OPTIONS.map((option) => {
-            const selected = visibleDays === option.value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => onVisibleDaysChange(option.value)}
-                aria-pressed={selected}
-                className={cn(
-                  "h-7 whitespace-nowrap rounded-[7px] px-2.5 text-[13px] font-medium transition-colors",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose",
-                  selected
-                    ? "bg-rf-card text-rf-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
-                    : "text-rf-ink-mute hover:text-rf-ink-soft",
-                )}
-              >
-                <span className="hidden min-[1400px]:inline">{option.label}</span>
-                <span className="min-[1400px]:hidden">{option.short}</span>
-              </button>
-            );
-          })}
-        </div>
 
         <BookSessionButton
           label={
