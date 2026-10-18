@@ -40,7 +40,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Is Refocus free?",
     answer:
-      "Yes. During this free period Refocus has no credit card requirement and no weekly session cap. See /free and /pricing for what's included. If paid plans appear later, what's free will stay clear on the pricing page.",
+      "Refocus is free for early members: no credit card and no weekly session cap. See /pricing for what's included. If paid plans arrive later, the pricing page will always make clear what's free.",
   },
 ];
 

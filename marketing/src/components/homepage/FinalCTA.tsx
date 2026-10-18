@@ -8,7 +8,7 @@ export function FinalCTA() {
     <section className={styles.finalCta}>
       <div className={styles.wrap}>
         <Reveal as="h2">sit down. start the timer. get the thing done.</Reveal>
-        <Reveal as="p">free to start. one click to your first session.</Reveal>
+        <Reveal as="p">free for early members. one click to your first session.</Reveal>
         <Reveal className={styles.finalCtaRow}>
           <a
             href={url("/auth/sign-up")}

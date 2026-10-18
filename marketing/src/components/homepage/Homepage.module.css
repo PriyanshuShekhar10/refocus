@@ -176,18 +176,18 @@
 
 .freeSticker {
   position: absolute;
-  top: -26px;
-  right: -28px;
-  transform: rotate(8deg);
-  width: 44px;
-  height: 44px;
+  top: -24px;
+  left: calc(100% - 32px);
+  transform: rotate(6deg);
+  padding: 6px 8px;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--accent-chip);
   color: var(--ink);
   font-family: var(--font-pixel);
-  font-size: 14px;
+  font-size: 12px;
   box-shadow: 0 6px 10px -6px rgba(0, 0, 0, 0.35);
   border-radius: 2px;
   line-height: 1;
