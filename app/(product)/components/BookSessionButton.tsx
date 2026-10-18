@@ -151,13 +151,19 @@ export default function BookSessionButton({
     [myBusySlots]
   );
 
-  const isTimeSlotPast = useCallback((date: Date | null, hour: number) => {
-    if (!date) return false;
-    const now = new Date();
-    const slotTime = new Date(date);
-    slotTime.setHours(hour, 0, 0, 0);
-    return slotTime <= now;
-  }, []);
+  const isTimeSlotPast = useCallback(
+    (date: Date | null, hour: number, minute = 0) => {
+      if (!date) return false;
+      const now = new Date();
+      const slotTime = new Date(date);
+      slotTime.setHours(hour, minute, 0, 0);
+      return slotTime <= now;
+    },
+    []
+  );
+
+  const lastMinuteOption =
+    BOOKING_MINUTE_OPTIONS[BOOKING_MINUTE_OPTIONS.length - 1];
 
   const dateOptions = useMemo(() => {
     const today = new Date();
@@ -300,7 +306,7 @@ export default function BookSessionButton({
                         setSrDate(opt.date);
                         if (
                           srHour !== null &&
-                          isTimeSlotPast(opt.date, srHour)
+                          isTimeSlotPast(opt.date, srHour, lastMinuteOption)
                         ) {
                           setSrHour(null);
                         }
@@ -340,7 +346,11 @@ export default function BookSessionButton({
                   </div>
                   <div className="grid grid-cols-6 gap-1">
                     {timeSlots.map((slot) => {
-                      const isPastSlot = isTimeSlotPast(srDate, slot.hour);
+                      const isPastSlot = isTimeSlotPast(
+                        srDate,
+                        slot.hour,
+                        lastMinuteOption
+                      );
                       const conflict = getSlotConflict(
                         srDate,
                         slot.hour,
@@ -389,16 +399,24 @@ export default function BookSessionButton({
                             m,
                             duration
                           );
+                          const minutePast = isTimeSlotPast(
+                            srDate,
+                            srHour,
+                            m
+                          );
+                          const minuteDisabled = minuteConflict || minutePast;
                           return (
                             <button
                               key={m}
                               type="button"
                               onClick={() =>
-                                !minuteConflict && setSrMinute(m)
+                                !minuteDisabled && setSrMinute(m)
                               }
-                              disabled={minuteConflict}
+                              disabled={minuteDisabled}
                               className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-                                minuteConflict
+                                minutePast
+                                  ? "bg-rf-line-soft text-rf-ink-mute cursor-not-allowed"
+                                  : minuteConflict
                                   ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed"
                                   : srMinute === m
                                     ? "bg-rf-primary text-rf-on-primary"

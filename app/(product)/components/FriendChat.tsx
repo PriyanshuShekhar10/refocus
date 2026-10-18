@@ -283,13 +283,18 @@ export default function FriendChat({
   }, []);
 
   // Check if a time slot is in the past
-  const isTimeSlotPast = useCallback((date: Date | null, hour: number) => {
-    if (!date) return false;
-    const now = new Date(currentTime);
-    const slotTime = new Date(date);
-    slotTime.setHours(hour, 0, 0, 0);
-    return slotTime <= now;
-  }, [currentTime]);
+  const isTimeSlotPast = useCallback(
+    (date: Date | null, hour: number, minute = 0) => {
+      if (!date) return false;
+      const now = new Date(currentTime);
+      const slotTime = new Date(date);
+      slotTime.setHours(hour, minute, 0, 0);
+      return slotTime <= now;
+    },
+    [currentTime]
+  );
+  const lastMinuteOption =
+    BOOKING_MINUTE_OPTIONS[BOOKING_MINUTE_OPTIONS.length - 1];
   const [respondNoteById, setRespondNoteById] = useState<
     Record<string, string>
   >({});
@@ -1118,7 +1123,10 @@ export default function FriendChat({
                     onClick={() => {
                       setSrDate(opt.date);
                       // Reset hour if switching dates and current hour is past
-                      if (srHour !== null && isTimeSlotPast(opt.date, srHour)) {
+                      if (
+                        srHour !== null &&
+                        isTimeSlotPast(opt.date, srHour, lastMinuteOption)
+                      ) {
                         setSrHour(null);
                       }
                     }}
@@ -1160,7 +1168,11 @@ export default function FriendChat({
                 )}
                 <div className={`grid gap-1 ${layout === "docked" ? "grid-cols-6" : "grid-cols-6"}`}>
                   {timeSlots.map((slot) => {
-                    const isPast = isTimeSlotPast(srDate, slot.hour);
+                    const isPast = isTimeSlotPast(
+                      srDate,
+                      slot.hour,
+                      lastMinuteOption
+                    );
                     // Check conflict for this hour with default duration
                     const conflict = getSlotConflict(srDate, slot.hour, 0, srDuration);
                     const isDisabled = isPast || conflict.hasConflict;
@@ -1207,11 +1219,13 @@ export default function FriendChat({
                     <div className="flex gap-1">
                       {BOOKING_MINUTE_OPTIONS.map((m) => {
                         const minuteConflict = getSlotConflict(srDate, srHour, m, srDuration);
+                        const minutePast = isTimeSlotPast(srDate, srHour, m);
+                        const minuteDisabled = minuteConflict.hasConflict || minutePast;
                         return (
                           <button
                             key={m}
-                            onClick={() => !minuteConflict.hasConflict && setSrMinute(m)}
-                            disabled={minuteConflict.hasConflict}
+                            onClick={() => !minuteDisabled && setSrMinute(m)}
+                            disabled={minuteDisabled}
                             title={
                               minuteConflict.isMine && minuteConflict.isFriend
                                 ? "Both busy"
@@ -1222,7 +1236,9 @@ export default function FriendChat({
                                     : undefined
                             }
                             className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-                              minuteConflict.hasConflict
+                              minutePast
+                                ? "bg-rf-line-soft text-rf-ink-mute cursor-not-allowed"
+                                : minuteConflict.hasConflict
                                 ? minuteConflict.isMine
                                   ? "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed"
                                   : "bg-orange-100 dark:bg-orange-900/30 text-orange-400 cursor-not-allowed"
