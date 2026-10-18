@@ -189,8 +189,8 @@ export function UpNextPanel({ onOpenSession, onTestDevices, onJoin }: UpNextPane
         })()
       ) : null}
 
-      <div className="flex shrink-0 flex-col rounded-[14px] border border-rf-line bg-rf-card px-2 pb-2 pt-3">
-        <span className="px-2 pb-1.5 text-[11.5px] font-semibold tracking-[0.02em] text-rf-ink-mute">
+      <div className="flex shrink-0 flex-col">
+        <span className="px-2 pb-1 text-[11.5px] font-semibold tracking-[0.02em] text-rf-ink-mute">
           Later
         </span>
         {later.map((ev) => {
@@ -201,29 +201,13 @@ export function UpNextPanel({ onOpenSession, onTestDevices, onJoin }: UpNextPane
               key={ev.id}
               type="button"
               onClick={() => onOpenSession?.(ev)}
-              className="flex min-h-12 items-center gap-2.5 rounded-[9px] px-2 py-1.5 text-left text-rf-ink transition-colors hover:bg-rf-line-soft"
+              className="flex items-baseline justify-between gap-2.5 rounded-[8px] px-1 py-2 text-left text-rf-ink transition-colors hover:bg-rf-line-soft"
             >
-              <Avatar
-                className={`h-7 w-7 shrink-0 ${partner ? "" : "border border-dashed border-rf-ink-mute"}`}
-              >
-                {partner?.avatarUrl ? (
-                  <AvatarImage src={partner.avatarUrl} alt={partner.label} />
-                ) : null}
-                <AvatarFallback
-                  className={`text-[10px] font-semibold text-rf-ink-soft ${
-                    partner ? "bg-rf-tint-sky" : "bg-transparent"
-                  }`}
-                >
-                  {partner ? partner.initials : "···"}
-                </AvatarFallback>
-              </Avatar>
-              <span className="flex min-w-0 flex-1 flex-col leading-[1.3]">
-                <span className="truncate text-[13px] font-medium">
-                  {partner ? partner.label : "Waiting for match"}
-                </span>
-                <span className="whitespace-nowrap text-[11.5px] text-rf-ink-mute">
-                  {relDay(start, now)} · {formatLocalTime(start, timeFmt)}
-                </span>
+              <span className="truncate text-[13px] font-medium">
+                {partner ? partner.label : "Waiting for match"}
+              </span>
+              <span className="shrink-0 whitespace-nowrap text-xs text-rf-ink-mute">
+                {relDay(start, now)} · {formatLocalTime(start, timeFmt)}
               </span>
             </button>
           );

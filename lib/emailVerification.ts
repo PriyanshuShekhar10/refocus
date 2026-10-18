@@ -31,6 +31,22 @@ export async function setEmailVerificationToken(
   );
 }
 
+/** Read-only check — does not consume the token. Safe to call from a GET. */
+export async function isEmailVerificationTokenValid(
+  token: string,
+): Promise<boolean> {
+  const hashed = hashVerificationToken(token);
+  const db = await getDb();
+  const user = await db.collection("users").findOne(
+    {
+      emailVerificationToken: hashed,
+      emailVerificationExpires: { $gt: new Date() },
+    },
+    { projection: { _id: 1 } },
+  );
+  return !!user;
+}
+
 export async function verifyEmailWithToken(
   token: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {

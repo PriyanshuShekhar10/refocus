@@ -39,11 +39,11 @@ const fetcher = (url: string) =>
   });
 
 const FRAGMENT_COLORS = [
-  "#FFF1D3",
+  "#C8DFDB",
   "#FFD166",
   "#FFB090",
-  "#CA5995",
-  "#5D1C6A",
+  "#66A3BF",
+  "#3368A0",
   "#E8DCC8",
 ];
 
@@ -237,7 +237,7 @@ function NotificationCard({
         transition={{ duration: 0.12 }}
       >
         <div className="flex items-start gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-gradient-to-br from-[#5D1C6A] to-[#CA5995] shadow-sm">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-gradient-to-br from-rf-primary to-rf-primary-hover shadow-sm">
             <Megaphone className="h-4 w-4 text-white" aria-hidden />
           </div>
 

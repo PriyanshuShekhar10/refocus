@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import useSWR from "swr";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import * as sessionsApi from "@/lib/api/sessionsApi";
+import { swrKeys } from "@/lib/swr/keys";
 import { VerifiedName } from "@/components/verified-tag";
 import DeviceTestModal from "../DeviceTestModal";
 import BugReportDialog from "../BugReportDialog";
@@ -115,24 +118,6 @@ function formatDate(): string {
 const utilityRowClass =
   "flex min-h-9 w-full items-center justify-between gap-2 whitespace-nowrap rounded-lg px-2 text-left text-[13px] text-rf-ink-soft transition-colors hover:bg-rf-line-soft hover:text-rf-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose";
 
-function ChevronRight({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className={className ?? "h-3.5 w-3.5 shrink-0 text-rf-ink-mute"}
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        fillRule="evenodd"
-        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
-
 export function CalendarRightSidebar({
   sessionCount,
   onGoToday: _onGoToday,
@@ -158,7 +143,23 @@ export function CalendarRightSidebar({
   } | null>(null);
   const [deviceTestOpen, setDeviceTestOpen] = useState(false);
   const [bugReportOpen, setBugReportOpen] = useState(false);
-  
+
+  // Same SWR key UpNextPanel uses — reads from cache, no extra request.
+  const { data: upcomingData } = useSWR(
+    swrKeys.sessionsMineUpcoming,
+    () =>
+      sessionsApi.listMineUpcoming().then((result) => {
+        if (!result.ok) throw new Error(result.error);
+        return result.data;
+      }),
+  );
+  const upcomingCount = useMemo(() => {
+    const sessions = upcomingData?.sessions;
+    if (!sessions) return null;
+    const now = Date.now();
+    return sessions.filter((s) => new Date(s.end).getTime() >= now).length;
+  }, [upcomingData]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -525,118 +526,78 @@ export function CalendarRightSidebar({
           )}
         </div>
       ) : (
-        <div className="shrink-0 rounded-[14px] border border-rf-line bg-rf-card px-3 pb-2 pt-5">
-          <div className="flex flex-col items-center text-center">
-            <Avatar className="mb-2.5 h-14 w-14">
-              {currentAvatarUrl ? (
-                <AvatarImage src={currentAvatarUrl} alt={displayName} />
-              ) : null}
-              <AvatarFallback className="text-sm font-semibold bg-rf-cream-bg text-rf-plum-ink">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-
-            <h2 className="whitespace-nowrap text-[17px] font-semibold leading-[1.3] tracking-[-0.02em] text-rf-ink">
-              {getGreeting()}, {firstName}
-            </h2>
-
-            <p className="mt-1 whitespace-nowrap text-[14px] text-rf-ink-mute">
-              {formatDate()}
-            </p>
-
-            <Link
-              href="/dashboard?tab=sessions"
-              className="mt-2.5 inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-[7px] px-2 text-[13px] font-medium text-rf-success transition-colors hover:bg-rf-success-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-3.5 w-3.5 opacity-80"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              {sessionCount} session{sessionCount !== 1 ? "s" : ""} today
-              <ChevronRight className="h-3 w-3" />
-            </Link>
-
-            {myAttendance ? (
-              <div className="mt-3 w-full min-w-0 self-stretch">
-                <AttendanceHighlight attendance={myAttendance} variant="app" />
+        <div className="shrink-0">
+          <div className="flex items-start justify-between gap-2 px-0.5">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Link href="/profile" className="shrink-0" aria-label="My Profile">
+                <Avatar className="h-9 w-9">
+                  {currentAvatarUrl ? (
+                    <AvatarImage src={currentAvatarUrl} alt={displayName} />
+                  ) : null}
+                  <AvatarFallback className="text-xs font-semibold bg-rf-cream-bg text-rf-plum-ink">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <div className="min-w-0">
+                <h2 className="truncate text-[18px] font-semibold leading-[1.25] tracking-[-0.02em] text-rf-ink">
+                  {getGreeting()}, {firstName}
+                </h2>
+                <p className="mt-0.5 text-[13px] text-rf-ink-mute">
+                  {formatDate()} ·{" "}
+                  <Link
+                    href="/dashboard?tab=sessions"
+                    className="font-medium text-rf-plum-ink hover:underline"
+                  >
+                    {sessionCount} session{sessionCount !== 1 ? "s" : ""} today
+                  </Link>
+                </p>
               </div>
-            ) : null}
+            </div>
           </div>
 
-          <div className="mt-3.5 space-y-0.5 border-t border-rf-line-soft pt-1.5">
-            <Link href="/profile" className={utilityRowClass}>
-              <span className="flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-3.5 w-3.5 text-rf-ink-mute"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-                My Profile
-              </span>
-              <ChevronRight />
-            </Link>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (!mounted) return;
-                const active = resolvedTheme ?? theme;
-                setTheme(active === "dark" ? "light" : "dark");
-              }}
-              className={utilityRowClass}
-              aria-label={`Appearance, currently ${
-                mounted && (resolvedTheme ?? theme) === "dark" ? "Dark" : "Light"
-              }. Toggle theme.`}
+          {myAttendance ? (
+            <Link
+              href="/profile"
+              className="mt-2 flex flex-col gap-3 rounded-[14px] border border-rf-line bg-rf-card p-3.5 text-left transition-colors hover:border-rf-rose"
             >
-              <span className="flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-3.5 w-3.5 text-rf-ink-mute"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-xs font-semibold text-rf-ink-mute">
+                  Your attendance
+                </span>
+                <span className="text-[11.5px] text-rf-ink-mute">
+                  {myAttendance.attended} of {myAttendance.booked} showed up
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[26px] font-semibold leading-none tracking-[-0.03em] tabular-nums text-rf-ink">
+                  {myAttendance.percent}%
+                </span>
+                <span className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-rf-line-soft">
+                  <span
+                    className="absolute inset-y-0 left-0 rounded-full bg-rf-primary"
+                    style={{ width: `${myAttendance.percent}%` }}
                   />
-                </svg>
-                Appearance
-              </span>
-              <span className="flex items-center gap-1 text-[12px] text-rf-ink-mute">
-                {mounted
-                  ? (resolvedTheme ?? theme) === "dark"
-                    ? "Dark"
-                    : "Light"
-                  : "…"}
-                <ChevronRight />
-              </span>
-            </button>
-          </div>
+                </span>
+              </div>
+              <div className="flex gap-4 border-t border-rf-line-soft pt-2.5 text-[12.5px] text-rf-ink-soft">
+                <span>
+                  <strong className="font-semibold text-rf-ink">
+                    {myAttendance.attended}
+                  </strong>{" "}
+                  sessions done
+                </span>
+                {upcomingCount !== null ? (
+                  <span>
+                    <strong className="font-semibold text-rf-ink">
+                      {upcomingCount}
+                    </strong>{" "}
+                    upcoming
+                  </span>
+                ) : null}
+              </div>
+            </Link>
+          ) : null}
         </div>
       )}
 
@@ -749,6 +710,43 @@ export function CalendarRightSidebar({
           </button>
 
           <div className="space-y-0.5">
+          <button
+            type="button"
+            onClick={() => {
+              if (!mounted) return;
+              const active = resolvedTheme ?? theme;
+              setTheme(active === "dark" ? "light" : "dark");
+            }}
+            className={utilityRowClass}
+            aria-label={`Appearance, currently ${
+              mounted && (resolvedTheme ?? theme) === "dark" ? "Dark" : "Light"
+            }. Toggle theme.`}
+          >
+            <span className="flex items-center gap-2 text-rf-ink-soft">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                />
+              </svg>
+              Appearance:{" "}
+              {mounted
+                ? (resolvedTheme ?? theme) === "dark"
+                  ? "Dark"
+                  : "Light"
+                : "…"}
+            </span>
+          </button>
+
           <button
             type="button"
             onClick={() => setBugReportOpen(true)}

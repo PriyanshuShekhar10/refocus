@@ -91,7 +91,7 @@ export function MobileMoreMenu({
         onClick={onClose}
       />
       <div
-        className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-[18px] border-t border-rf-line bg-rf-side-bg shadow-[0_-10px_40px_rgba(0,0,0,.2)]"
+        className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-[18px] border-t border-rf-line bg-rf-card shadow-[0_-10px_40px_rgba(0,0,0,.2)]"
         style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
         role="dialog"
         aria-modal="true"

@@ -198,7 +198,7 @@ exports[`email senders (characterisation) > welcome verification: sends one emai
 Welcome to Refocus. Your account is ready — you can sign in and use the dashboard anytime.
 
 Verify your email (optional but recommended):
-https://dashboard.refocus.co.in/api/auth/verify-email?token=verify-token-123
+https://dashboard.refocus.co.in/auth/verify-email?token=verify-token-123
 
 Sign in: https://dashboard.refocus.co.in/auth/login
 

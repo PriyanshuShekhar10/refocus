@@ -18,7 +18,7 @@ export default function Providers({ children }: ProvidersProps) {
           <PageRefreshProvider>
             <ThemeProvider
               attribute="class"
-              defaultTheme="system"
+              defaultTheme="light"
               enableSystem
               disableTransitionOnChange
             >

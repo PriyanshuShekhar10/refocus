@@ -3,21 +3,19 @@
 
 import { FC, ReactNode, useEffect, useState } from "react";
 import {
-  CircleUserRound,
   Clock,
-  LayoutDashboard,
+  Hash,
+  Heart,
+  Home,
   ListTodo,
-  MessageSquare,
-  Moon,
-  Settings,
+  MessageCircle,
+  Settings2,
   ShieldCheck,
-  Sun,
-  UserRound,
-  Users,
 } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export type TabKey =
   | "profile"
@@ -43,6 +41,15 @@ const SideBar: FC<SideBarProps> = ({
   showBacklogTab = false,
   showAdminTab = false,
 }) => {
+  const { data: session } = useSession();
+  const user = session?.user as { name?: string; email?: string; image?: string } | undefined;
+  const displayName = user?.name || user?.email?.split("@")[0] || "Profile";
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
   const [friendsUnread, setFriendsUnread] = useState(0);
   const [pendingSessionRequests, setPendingSessionRequests] = useState(0);
 
@@ -83,13 +90,13 @@ const SideBar: FC<SideBarProps> = ({
 
   return (
     <aside
-      className="fixed top-0 left-0 z-40 flex h-screen w-16 flex-col items-center gap-3 border-r border-rf-line bg-rf-side-bg pb-4 pt-3 font-rf shadow-sm"
+      className="fixed top-0 left-0 z-40 flex h-screen w-16 flex-col items-center gap-3 border-r border-rf-side-line bg-rf-side-bg pb-4 pt-3 font-rf shadow-sm"
       aria-label="Main navigation"
     >
       {/* Primary work */}
       <nav className="flex flex-col gap-3" aria-label="Workspace">
         <SideBarIcon
-          icon={<LayoutDashboard size={19} strokeWidth={1.8} />}
+          icon={<Home size={19} strokeWidth={1.8} />}
           text="Dashboard"
           onClick={() => onSelect("dashboard")}
           active={activeTab === "dashboard"}
@@ -115,18 +122,12 @@ const SideBar: FC<SideBarProps> = ({
       {/* People */}
       <nav className="flex flex-col gap-3" aria-label="People">
         <SideBarIcon
-          icon={<CircleUserRound size={19} strokeWidth={1.8} />}
-          text="Profile"
-          onClick={() => onSelect("profile")}
-          active={activeTab === "profile"}
-        />
-        <SideBarIcon
           icon={
             <div className="relative inline-flex">
-              <Users size={18} strokeWidth={1.8} />
+              <Heart size={18} strokeWidth={1.8} />
               {pendingSessionRequests > 0 ? (
                 <span
-                  className="absolute -right-1.5 -top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-rf-side-btn"
+                  className="absolute -right-1.5 -top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-rf-side-bg"
                   aria-hidden="true"
                 />
               ) : null}
@@ -141,7 +142,7 @@ const SideBar: FC<SideBarProps> = ({
           active={activeTab === "friends"}
         />
         <SideBarIcon
-          icon={<UserRound size={18} strokeWidth={1.8} />}
+          icon={<Hash size={18} strokeWidth={1.8} />}
           text="Community"
           onClick={() => onSelect("community")}
           active={activeTab === "community"}
@@ -168,10 +169,10 @@ const SideBar: FC<SideBarProps> = ({
           <SideBarIcon
             icon={
               <div className="relative">
-                <MessageSquare size={18} strokeWidth={1.8} />
+                <MessageCircle size={18} strokeWidth={1.8} />
                 {friendsUnread > 0 ? (
                   <span
-                    className="absolute -right-1.5 -top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-rf-side-btn"
+                    className="absolute -right-1.5 -top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-rf-side-bg"
                     aria-hidden="true"
                   />
                 ) : null}
@@ -192,14 +193,42 @@ const SideBar: FC<SideBarProps> = ({
             active={false}
           />
           <SideBarIcon
-            icon={<Settings size={18} strokeWidth={1.8} />}
+            icon={<Settings2 size={18} strokeWidth={1.8} />}
             text="Settings"
             onClick={() => onSelect("settings")}
             active={activeTab === "settings"}
           />
+          <button
+            type="button"
+            onClick={() => onSelect("profile")}
+            aria-label="Profile"
+            aria-current={activeTab === "profile" ? "page" : undefined}
+            className={cn(
+              "group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-3xl border-2 p-0 shadow-sm transition-all duration-200 ease-out hover:rounded-xl",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose focus-visible:ring-offset-2 focus-visible:ring-offset-rf-side-bg",
+              activeTab === "profile" ? "border-rf-side-hover" : "border-rf-side-line",
+            )}
+          >
+            <Avatar className="h-full w-full rounded-none">
+              {user?.image ? <AvatarImage src={user.image} alt={displayName} /> : null}
+              <AvatarFallback className="rounded-none text-xs font-semibold bg-rf-side-btn text-rf-side-icon">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <span
+              role="tooltip"
+              className={cn(
+                "pointer-events-none absolute left-[3.75rem] top-1/2 z-50 -translate-y-1/2",
+                "whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium shadow-md",
+                "bg-rf-ink text-rf-bg",
+                "opacity-0 transition-opacity duration-100",
+                "group-hover:opacity-100 group-focus-visible:opacity-100",
+              )}
+            >
+              Profile
+            </span>
+          </button>
         </nav>
-        <Divider />
-        <ThemeToggle />
       </div>
     </aside>
   );
@@ -225,8 +254,8 @@ const SideBarIcon: FC<SideBarIconProps> = ({
     "transition-all duration-200 ease-out",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose focus-visible:ring-offset-2 focus-visible:ring-offset-rf-side-bg",
     active
-      ? "rounded-xl border-rf-primary bg-rf-primary text-rf-on-primary"
-      : "rounded-3xl border-rf-line bg-rf-side-btn text-rf-side-icon hover:rounded-xl hover:text-rf-ink",
+      ? "rounded-xl border-rf-side-active bg-rf-side-active text-rf-side-active-ink"
+      : "rounded-3xl border-rf-side-line bg-rf-side-btn text-rf-side-icon hover:rounded-xl hover:text-rf-side-hover",
   );
 
   const content = (
@@ -274,57 +303,7 @@ const SideBarIcon: FC<SideBarIconProps> = ({
 };
 
 const Divider: FC = () => (
-  <hr className="h-px w-10 border-0 bg-rf-line" />
+  <hr className="h-px w-10 border-0 bg-rf-side-line" />
 );
-
-const ThemeToggle: FC = () => {
-  const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
-    return (
-      <div
-        className="flex h-12 w-12 items-center justify-center rounded-3xl border border-rf-line bg-rf-side-btn text-rf-side-icon"
-        aria-hidden
-      >
-        <Moon size={18} strokeWidth={1.8} />
-      </div>
-    );
-  }
-
-  const current = resolvedTheme || "light";
-  const next = current === "dark" ? "light" : "dark";
-  const label = current === "dark" ? "Switch to light mode" : "Switch to dark mode";
-
-  return (
-    <button
-      type="button"
-      onClick={() => setTheme(next)}
-      className={cn(
-        "group relative flex h-12 w-12 items-center justify-center rounded-3xl border border-rf-line shadow-sm",
-        "bg-rf-side-btn text-rf-side-icon transition-all duration-200",
-        "hover:rounded-xl hover:text-rf-ink",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose focus-visible:ring-offset-2 focus-visible:ring-offset-rf-side-bg",
-      )}
-      aria-label={label}
-    >
-      {current === "dark" ? <Sun size={18} strokeWidth={1.8} /> : <Moon size={18} strokeWidth={1.8} />}
-      <span
-        role="tooltip"
-        className={cn(
-          "pointer-events-none absolute left-[3.75rem] top-1/2 z-50 -translate-y-1/2",
-          "whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium shadow-md",
-          "bg-rf-ink text-rf-bg",
-          "opacity-0 transition-opacity duration-100",
-          "group-hover:opacity-100 group-focus-visible:opacity-100",
-        )}
-      >
-        {current === "dark" ? "Light mode" : "Dark mode"}
-      </span>
-    </button>
-  );
-};
 
 export default SideBar;

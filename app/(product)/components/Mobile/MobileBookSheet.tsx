@@ -74,7 +74,7 @@ export function MobileBookSheet({
         onClick={onClose}
       />
       <div
-        className="relative flex max-h-[88%] w-full flex-col overflow-hidden rounded-t-2xl border-t border-rf-line bg-rf-side-bg text-rf-ink shadow-[0_-10px_40px_rgba(0,0,0,.25)]"
+        className="relative flex max-h-[88%] w-full flex-col overflow-hidden rounded-t-2xl border-t border-rf-line bg-rf-card text-rf-ink shadow-[0_-10px_40px_rgba(0,0,0,.25)]"
         role="dialog"
         aria-modal="true"
         aria-label="Book a session"

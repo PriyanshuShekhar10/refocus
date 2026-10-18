@@ -674,6 +674,29 @@ export default function Calendar({
                   </div>
                   );
                 })}
+                {/* Past-time hatch */}
+                {(() => {
+                  const dayYmd = ymdInTimeZone(d, timeZone);
+                  const nowYmd = ymdInTimeZone(now, timeZone);
+                  const pastHeight =
+                    dayYmd < nowYmd
+                      ? gridHourCount * hourBlockHeight
+                      : dayYmd === nowYmd && nowLine !== null
+                        ? nowLine
+                        : 0;
+                  if (pastHeight <= 0) return null;
+                  return (
+                    <div
+                      className="pointer-events-none absolute inset-x-0 top-0 z-[1]"
+                      style={{
+                        height: pastHeight,
+                        backgroundImage:
+                          "repeating-linear-gradient(135deg, var(--rf-hatch) 0 1px, transparent 1px 8px)",
+                      }}
+                      aria-hidden="true"
+                    />
+                  );
+                })()}
                 {/* Now Line */}
                 {nowLine !== null &&
                   ymdInTimeZone(now, timeZone) === ymdInTimeZone(d, timeZone) && (
