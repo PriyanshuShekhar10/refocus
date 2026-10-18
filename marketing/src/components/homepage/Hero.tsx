@@ -130,8 +130,8 @@ export function Hero({ image }: { image?: HeroImage }) {
             >
               start
               <ArrowIcon />
-              <span className={styles.freeSticker}>free for early members</span>
             </a>
+            <span className={styles.freeSticker}>free for early members</span>
           </Reveal>
 
           <Reveal as="p" className={styles.heroFoot}>

@@ -175,13 +175,10 @@
 }
 
 .freeSticker {
-  position: absolute;
-  top: -24px;
-  left: calc(100% - 32px);
-  transform: rotate(6deg);
+  align-self: center;
   padding: 6px 8px;
   white-space: nowrap;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--accent-chip);
