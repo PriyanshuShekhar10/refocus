@@ -26,6 +26,9 @@ function ensureInit() {
     persistence: "localStorage+cookie",
     capture_pageview: true,
     capture_pageleave: true,
+    // Error tracking: uncaught errors and unhandled promise rejections,
+    // linked to the session replay.
+    capture_exceptions: true,
     disable_session_recording: false,
     session_recording: {
       maskAllInputs: true,
