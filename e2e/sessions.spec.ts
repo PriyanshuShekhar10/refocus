@@ -53,3 +53,24 @@ test.describe("sessions (two test accounts)", () => {
     await expect(page.locator("#bug-report-title")).toBeVisible();
   });
 });
+
+test.describe("dashboard sections", () => {
+  test("sections open beside the sidebar and survive a refresh", async ({ page }) => {
+    requireTestUsers(userA);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await signIn(page, userA!);
+    const sidebar = page.getByText("Your attendance").or(page.getByText("Appearance")).first();
+
+    for (const [tab, label] of [["sessions", "Sessions"], ["community", "Community"], ["settings", "Settings"]] as const) {
+      await page.getByRole("button", { name: label }).first().click();
+      await expect(page).toHaveURL(new RegExp(`/dashboard\\?tab=${tab}`));
+      await expect(sidebar).toBeVisible();
+      await page.reload();
+      await expect(page).toHaveURL(new RegExp(`/dashboard\\?tab=${tab}`));
+      await expect(sidebar).toBeVisible();
+    }
+
+    await page.getByRole("button", { name: "Dashboard" }).first().click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+  });
+});

@@ -1,10 +1,14 @@
 "use client";
 
-import Calendar from "./Calendar";
+import Calendar, { type SidebarProfilePreview } from "./Calendar";
 import { MobileCalendar } from "./Mobile";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 
-export default function Dashboard() {
+export default function Dashboard({
+  onPreviewProfile,
+}: {
+  onPreviewProfile?: (profile: SidebarProfilePreview) => void;
+}) {
   const { isMobile } = useIsMobileShell();
 
   if (isMobile) {
@@ -17,7 +21,7 @@ export default function Dashboard() {
 
   return (
     <div className="h-full">
-      <Calendar />
+      <Calendar onPreviewProfile={onPreviewProfile} />
     </div>
   );
 }

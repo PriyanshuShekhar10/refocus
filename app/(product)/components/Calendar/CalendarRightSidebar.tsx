@@ -18,6 +18,7 @@ import { AttendanceHighlight } from "@/components/attendance-highlight";
 import type { CalendarEvent } from "@/types/calendar";
 import { UpNextPanel } from "./UpNextPanel";
 import { attendanceLevel } from "@/lib/sessionAttendanceStats";
+import { pickJoinableSession } from "@/lib/sessionWindow";
 
 const ATTENDANCE_COLORS = {
   good: { text: "text-rf-ink", bar: "bg-rf-primary" },
@@ -71,8 +72,9 @@ function JoinCountdown({ startTime }: { startTime: string | Date }) {
 }
 
 interface CalendarRightSidebarProps {
-  sessionCount: number;
-  onGoToday: () => void;
+  /** Defaults to your sessions starting today that haven't ended yet. */
+  sessionCount?: number;
+  onGoToday?: () => void;
   joinableSession?: {
     id: string;
     start: string | Date;
@@ -127,9 +129,9 @@ const utilityRowClass =
   "flex min-h-9 w-full items-center justify-between gap-2 whitespace-nowrap rounded-lg px-2 text-left text-[13px] text-rf-ink-soft transition-colors hover:bg-rf-line-soft hover:text-rf-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose";
 
 export function CalendarRightSidebar({
-  sessionCount,
+  sessionCount: sessionCountProp,
   onGoToday: _onGoToday,
-  joinableSession,
+  joinableSession: joinableSessionProp,
   profilePreview,
   onClearProfilePreview,
   onCollapseChange,
@@ -167,6 +169,38 @@ export function CalendarRightSidebar({
     const now = Date.now();
     return sessions.filter((s) => new Date(s.end).getTime() >= now).length;
   }, [upcomingData]);
+
+  // Re-check the join window and today's count as time passes.
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const todayCount = useMemo(() => {
+    const sessions = upcomingData?.sessions ?? [];
+    const now = new Date(nowTick);
+    return sessions.filter((s) => {
+      const start = new Date(s.start);
+      return (
+        new Date(s.end).getTime() >= nowTick &&
+        start.getFullYear() === now.getFullYear() &&
+        start.getMonth() === now.getMonth() &&
+        start.getDate() === now.getDate()
+      );
+    }).length;
+  }, [upcomingData, nowTick]);
+
+  const derivedJoinable = useMemo(
+    () =>
+      pickJoinableSession(
+        (upcomingData?.sessions ?? []).filter((s) => (s.participants?.length ?? 0) >= 2),
+        new Date(nowTick),
+      ),
+    [upcomingData, nowTick],
+  );
+  const sessionCount = sessionCountProp ?? todayCount;
+  const joinableSession = joinableSessionProp !== undefined ? joinableSessionProp : derivedJoinable;
 
   useEffect(() => {
     setMounted(true);

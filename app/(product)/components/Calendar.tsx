@@ -34,9 +34,8 @@ import { SessionDetailsModal } from "./Calendar/Modals/SessionDetailsModal";
 import { CalendarHeader } from "./Calendar/CalendarHeader";
 import { CalendarDayHeader } from "./Calendar/CalendarDayHeader";
 import { CalendarEventCard } from "./Calendar/CalendarEventCard";
-import { CalendarRightSidebar } from "./Calendar/CalendarRightSidebar";
 import { HourOccupancyChip } from "./Calendar/HourOccupancyChip";
-import { pickJoinableSession, hasSessionStarted } from "@/lib/sessionWindow";
+import { hasSessionStarted } from "@/lib/sessionWindow";
 import {
   aggregateHourOccupancy,
   hoursWithMyPastMatchedSessions,
@@ -57,9 +56,14 @@ interface CalendarProps {
   locale?: string;
   onEventsChange?: (next: CalendarEvent[]) => void;
   className?: string;
+  /** Show someone's profile in the page's right sidebar (owned by the dashboard shell). */
+  onPreviewProfile?: (profile: SidebarProfilePreview) => void;
 }
 
-type SidebarProfilePreview = {
+/** Ask the calendar (always mounted on the dashboard) to open a session's details. */
+export const OPEN_SESSION_EVENT = "refocus:open-session";
+
+export type SidebarProfilePreview = {
   username: string;
   name: string;
   about?: string | null;
@@ -237,6 +241,7 @@ export default function Calendar({
   locale,
   onEventsChange,
   className = "",
+  onPreviewProfile,
 }: CalendarProps) {
   const { hourBlockHeight, minorLinePositions } = CALENDAR_LAYOUT;
   const overflowHours = BOOKING_DAY_OVERFLOW_MINUTES / 60;
@@ -261,9 +266,16 @@ export default function Calendar({
   useEffect(() => {
     dispatch({ type: "GO_TODAY", timeZone });
   }, [timeZone]);
-  const [profilePreview, setProfilePreview] = useState<SidebarProfilePreview | null>(
-    null,
-  );
+  // Open a session's details when another part of the page asks (e.g. the
+  // right sidebar's Next up, clicked while another section was showing).
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const event = (e as CustomEvent<CalendarEvent>).detail;
+      if (event) dispatch({ type: "OPEN_DETAILS_MODAL", event });
+    };
+    window.addEventListener(OPEN_SESSION_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_SESSION_EVENT, onOpen);
+  }, []);
 
   // Sync external startDate prop
   useEffect(() => {
@@ -899,7 +911,7 @@ export default function Calendar({
                                 dispatch({ type: "OPEN_LEAVE_CONFIRM", event: ev })
                             : undefined
                         }
-                        onPreviewProfile={(profile) => setProfilePreview(profile)}
+                        onPreviewProfile={(profile) => onPreviewProfile?.(profile)}
                       />
                     );
                   });
@@ -910,24 +922,6 @@ export default function Calendar({
           </div>
         </div>
       </section>
-
-      {/* Right Sidebar - Greeting & Misc */}
-      <CalendarRightSidebar
-        sessionCount={events.filter((ev) => {
-          const isOwner = ev.owner_id === currentUserId;
-          const isParticipant = (ev.participants ?? []).some((p) => p.user_id === currentUserId);
-          return isOwner || isParticipant;
-        }).length}
-        onGoToday={goToday}
-        joinableSession={pickJoinableSession(
-          events.filter((ev) => (ev.participants?.length ?? 0) >= 2),
-          now,
-        )}
-        profilePreview={profilePreview}
-        onClearProfilePreview={() => setProfilePreview(null)}
-        showUpNext
-        onOpenSession={(ev) => dispatch({ type: "OPEN_DETAILS_MODAL", event: ev })}
-      />
 
       {/* Modals – only one can be open at a time (enforced by state machine) */}
       {ui.modal.type === "booking" && (

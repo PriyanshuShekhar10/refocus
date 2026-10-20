@@ -8,6 +8,9 @@ import Profile from "../components/profile";
 import Settings from "../components/settings";
 import Friends from "../components/Friends";
 import Dashboard from "../components/dashboard";
+import { OPEN_SESSION_EVENT, type SidebarProfilePreview } from "../components/Calendar";
+import { showsRightSidebar, tabFromParam, urlForTab } from "@/lib/dashboardTabs";
+import type { CalendarEvent } from "@/types/calendar";
 import Community from "../components/Community/Community";
 import Matchmaking from "../components/Matchmaking";
 import AdminPanel from "../components/Admin/AdminPanel";
@@ -28,23 +31,9 @@ type TourStep = {
   tab: TabKey;
 };
 
-type ProfilePreviewPayload = {
-  username: string;
-  name: string;
-  about?: string | null;
-  avatarUrl?: string | null;
-};
+type ProfilePreviewPayload = SidebarProfilePreview;
 
 const TOUR_STORAGE_KEY = "refocus-dashboard-tour-v1";
-const DASHBOARD_TABS: TabKey[] = [
-  "profile",
-  "dashboard",
-  "sessions",
-  "settings",
-  "friends",
-  "community",
-  "matches",
-];
 
 const TOUR_STEPS_DESKTOP: TourStep[] = [
   {
@@ -135,7 +124,12 @@ function TabPanel({
 }
 
 function DashboardContent() {
-  const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
+  const searchParams = useSearchParams();
+  // Start on the section in the URL so a refresh doesn't flash the calendar first.
+  // Admin is confirmed later, once we know the user is an admin.
+  const [activeTab, setActiveTab] = useState<TabKey>(
+    () => tabFromParam(searchParams.get("tab"), { isAdmin: false }) ?? "dashboard",
+  );
   const { isAdmin } = useAdminMe();
   const { count: pendingSessionRequests, refresh: refreshPendingRequests } =
     usePendingSessionRequestsCount();
@@ -145,10 +139,8 @@ function DashboardContent() {
   const [profilePreview, setProfilePreview] = useState<ProfilePreviewPayload | null>(
     null,
   );
-  const [isPreviewSidebarCollapsed, setIsPreviewSidebarCollapsed] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [tourStepIndex, setTourStepIndex] = useState(0);
-  const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -165,14 +157,12 @@ function DashboardContent() {
   useEffect(() => {
     const requestedTab = searchParams.get("tab");
     if (!requestedTab) return;
-    if (requestedTab === "admin") {
-      if (isAdmin) setActiveTab("admin");
-      else setActiveTab("dashboard");
+    if (requestedTab === "admin" && !isAdmin) {
+      setActiveTab("dashboard");
       return;
     }
-    if (DASHBOARD_TABS.includes(requestedTab as TabKey)) {
-      setActiveTab(requestedTab as TabKey);
-    }
+    const tab = tabFromParam(requestedTab, { isAdmin });
+    if (tab) setActiveTab(tab);
   }, [searchParams, isAdmin]);
 
   useEffect(() => {
@@ -204,10 +194,9 @@ function DashboardContent() {
     window.history.replaceState(null, "", nextUrl);
   }, [searchParams, pathname]);
 
+  // A profile preview belongs to the section it was opened from.
   useEffect(() => {
-    if (activeTab === "friends" || activeTab === "community") return;
     setProfilePreview(null);
-    setIsPreviewSidebarCollapsed(false);
   }, [activeTab]);
 
   useEffect(() => {
@@ -233,9 +222,17 @@ function DashboardContent() {
     setTourStepIndex((prev) => Math.max(0, prev - 1));
   };
 
+  // Every user-chosen section goes in the URL, so a refresh reopens it.
   const handleSelectTab = (tab: TabKey) => {
     setMoreMenuOpen(false);
     setActiveTab(tab);
+    if (tab !== "backlog") router.replace(urlForTab(tab), { scroll: false });
+  };
+
+  // Sidebar "Next up" from any section: show the calendar and open that session.
+  const openSessionOnCalendar = (event: CalendarEvent) => {
+    handleSelectTab("dashboard");
+    window.dispatchEvent(new CustomEvent(OPEN_SESSION_EVENT, { detail: event }));
   };
 
   const { wallpaperUrl } = useDashboardWallpaper();
@@ -278,7 +275,7 @@ function DashboardContent() {
           >
             <TabPanel tab="dashboard" activeTab={activeTab} className="h-full">
               <div className={mainPadding}>
-                <Dashboard />
+                <Dashboard onPreviewProfile={setProfilePreview} />
               </div>
             </TabPanel>
             <TabPanel tab="sessions" activeTab={activeTab} className="h-full">
@@ -323,26 +320,14 @@ function DashboardContent() {
             ) : null}
           </main>
           </WallpaperProvider>
-          {(activeTab === "friends" || activeTab === "community") && (
-            <div
-              className={`hidden overflow-hidden transition-all duration-300 ease-out lg:block ${
-                profilePreview
-                  ? isPreviewSidebarCollapsed
-                    ? "w-[4.5rem] translate-x-0 opacity-100 p-4 pl-0"
-                    : "w-[16.5rem] translate-x-0 opacity-100 p-4 pl-0"
-                  : "w-0 translate-x-2 opacity-0 p-0 pointer-events-none"
-              }`}
-            >
-              {profilePreview && (
-                <CalendarRightSidebar
-                  sessionCount={0}
-                  onGoToday={() => setActiveTab("dashboard")}
-                  joinableSession={null}
-                  profilePreview={profilePreview}
-                  onClearProfilePreview={() => setProfilePreview(null)}
-                  onCollapseChange={setIsPreviewSidebarCollapsed}
-                />
-              )}
+          {showsRightSidebar(activeTab) && (
+            <div className="hidden min-h-0 shrink-0 p-4 pl-0 lg:flex">
+              <CalendarRightSidebar
+                showUpNext
+                profilePreview={profilePreview}
+                onClearProfilePreview={() => setProfilePreview(null)}
+                onOpenSession={openSessionOnCalendar}
+              />
             </div>
           )}
         </div>
