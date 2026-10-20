@@ -196,3 +196,19 @@ describe("attendanceOf", () => {
     ).toBe("completed");
   });
 });
+
+describe("attendanceLevel", () => {
+  it.each([
+    [100, "good"],
+    [80, "good"],
+    [79, "caution"],
+    [65, "caution"],
+    [64, "warning"],
+    [55, "warning"],
+    [54, "critical"],
+    [0, "critical"],
+  ] as const)("%i%% is %s", async (percent, level) => {
+    const { attendanceLevel } = await import("@/lib/sessionAttendanceStats");
+    expect(attendanceLevel(percent)).toBe(level);
+  });
+});

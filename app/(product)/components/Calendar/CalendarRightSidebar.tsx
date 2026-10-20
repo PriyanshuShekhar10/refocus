@@ -17,6 +17,14 @@ import { releaseAllLocalMediaStreams } from "@/lib/localMedia";
 import { AttendanceHighlight } from "@/components/attendance-highlight";
 import type { CalendarEvent } from "@/types/calendar";
 import { UpNextPanel } from "./UpNextPanel";
+import { attendanceLevel } from "@/lib/sessionAttendanceStats";
+
+const ATTENDANCE_COLORS = {
+  good: { text: "text-rf-ink", bar: "bg-rf-primary" },
+  caution: { text: "text-rf-caution", bar: "bg-rf-caution" },
+  warning: { text: "text-rf-warn", bar: "bg-rf-warn" },
+  critical: { text: "text-rf-danger", bar: "bg-rf-danger" },
+} as const;
 
 function JoinCountdown({ startTime }: { startTime: string | Date }) {
   const [timeLeft, setTimeLeft] = useState<{ minutes: number; seconds: number } | null>(null);
@@ -570,12 +578,18 @@ export function CalendarRightSidebar({
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[26px] font-semibold leading-none tracking-[-0.03em] tabular-nums text-rf-ink">
+                <span
+                  className={`text-[26px] font-semibold leading-none tracking-[-0.03em] tabular-nums ${
+                    ATTENDANCE_COLORS[attendanceLevel(myAttendance.percent)].text
+                  }`}
+                >
                   {myAttendance.percent}%
                 </span>
                 <span className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-rf-line-soft">
                   <span
-                    className="absolute inset-y-0 left-0 rounded-full bg-rf-primary"
+                    className={`absolute inset-y-0 left-0 rounded-full ${
+                      ATTENDANCE_COLORS[attendanceLevel(myAttendance.percent)].bar
+                    }`}
                     style={{ width: `${myAttendance.percent}%` }}
                   />
                 </span>

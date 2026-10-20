@@ -361,6 +361,7 @@ html {
     --rf-success-soft: #e6efe9;
     --rf-warn: #b45a3c;
     --rf-warn-soft: #f4e9e2;
+    --rf-caution: #b7860b;
     --rf-side-bg: #3368A0;
     --rf-side-btn: rgba(255,255,255,.1);
     --rf-side-icon: #F2EFE7;
@@ -411,6 +412,7 @@ html {
     --rf-success-soft: #112019;
     --rf-warn: #D88663;
     --rf-warn-soft: #2C1F18;
+    --rf-caution: #facc15;
     --rf-side-bg: #16314f;
     --rf-side-btn: rgba(255,255,255,.06);
     --rf-side-icon: #C8DFDB;

@@ -98,3 +98,17 @@ export function toPublicAttendanceFromRates(input: {
     attendanceRate: input.attendanceRate,
   });
 }
+
+/** Attendance colour bands: below 80% yellow, below 65% orange, below 55% red. */
+export const ATTENDANCE_CAUTION_BELOW = 80;
+export const ATTENDANCE_WARNING_BELOW = 65;
+export const ATTENDANCE_CRITICAL_BELOW = 55;
+
+export type AttendanceLevel = "good" | "caution" | "warning" | "critical";
+
+export function attendanceLevel(percent: number): AttendanceLevel {
+  if (percent < ATTENDANCE_CRITICAL_BELOW) return "critical";
+  if (percent < ATTENDANCE_WARNING_BELOW) return "warning";
+  if (percent < ATTENDANCE_CAUTION_BELOW) return "caution";
+  return "good";
+}

@@ -25,6 +25,7 @@ export default {
           "success": "color-mix(in srgb, var(--rf-success) calc(<alpha-value> * 100%), transparent)",
           "success-soft": "color-mix(in srgb, var(--rf-success-soft) calc(<alpha-value> * 100%), transparent)",
           "warn": "color-mix(in srgb, var(--rf-warn) calc(<alpha-value> * 100%), transparent)",
+          "caution": "color-mix(in srgb, var(--rf-caution) calc(<alpha-value> * 100%), transparent)",
           "warn-soft": "color-mix(in srgb, var(--rf-warn-soft) calc(<alpha-value> * 100%), transparent)",
           "side-bg": "color-mix(in srgb, var(--rf-side-bg) calc(<alpha-value> * 100%), transparent)",
           "side-btn": "color-mix(in srgb, var(--rf-side-btn) calc(<alpha-value> * 100%), transparent)",
