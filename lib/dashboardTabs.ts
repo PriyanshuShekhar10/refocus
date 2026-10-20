@@ -12,7 +12,9 @@ export type DashboardTab =
   | "friends"
   | "community"
   | "matches"
-  | "admin";
+  | "admin"
+  /** Someone's profile, opened in place: `?tab=user&u=<username>`. */
+  | "user";
 
 /** Sections that can be opened from `?tab=` (admin is checked separately). */
 export const DASHBOARD_TABS: readonly DashboardTab[] = [
@@ -23,6 +25,7 @@ export const DASHBOARD_TABS: readonly DashboardTab[] = [
   "friends",
   "community",
   "matches",
+  "user",
 ];
 
 /** The section a `?tab=` value asks for, or null when it isn't one the user can open. */
@@ -36,8 +39,17 @@ export function tabFromParam(
 }
 
 /** Address for a section: the calendar is plain `/dashboard`. */
-export function urlForTab(tab: DashboardTab): string {
-  return tab === "dashboard" ? "/dashboard" : `/dashboard?tab=${tab}`;
+export function urlForTab(tab: DashboardTab, opts: { username?: string | null } = {}): string {
+  if (tab === "dashboard") return "/dashboard";
+  if (tab === "user" && opts.username) {
+    return `/dashboard?tab=user&u=${encodeURIComponent(opts.username)}`;
+  }
+  return `/dashboard?tab=${tab}`;
+}
+
+/** Someone's profile, shown inside the dashboard rather than on its own page. */
+export function profileHref(username: string): string {
+  return urlForTab("user", { username });
 }
 
 /** Sections that show the right sidebar beside them on desktop. */

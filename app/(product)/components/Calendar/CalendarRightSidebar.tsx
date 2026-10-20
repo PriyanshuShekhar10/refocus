@@ -19,6 +19,8 @@ import type { CalendarEvent } from "@/types/calendar";
 import { UpNextPanel } from "./UpNextPanel";
 import { attendanceLevel } from "@/lib/sessionAttendanceStats";
 import { pickJoinableSession } from "@/lib/sessionWindow";
+import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
+import { profileHref, urlForTab } from "@/lib/dashboardTabs";
 
 const ATTENDANCE_COLORS = {
   good: { text: "text-rf-ink", bar: "bg-rf-primary" },
@@ -144,7 +146,10 @@ export function CalendarRightSidebar({
 }: CalendarRightSidebarProps) {
   const { data: session } = useSession();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Auto-minimises on narrow screens until the person chooses; a profile
+  // preview opens it without changing their saved choice.
+  const { isCollapsed: savedCollapsed, setCollapsed: setIsCollapsed } = useSidebarCollapse();
+  const isCollapsed = profilePreview ? false : savedCollapsed;
   const [mounted, setMounted] = useState(false);
   const [detailedProfile, setDetailedProfile] = useState<DetailedProfile | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
@@ -274,12 +279,6 @@ export function CalendarRightSidebar({
   }, []);
 
   useEffect(() => {
-    if (profilePreview) {
-      setIsCollapsed(false);
-    }
-  }, [profilePreview]);
-
-  useEffect(() => {
     onCollapseChange?.(isCollapsed);
   }, [isCollapsed, onCollapseChange]);
 
@@ -405,7 +404,7 @@ export function CalendarRightSidebar({
           </Avatar>
           <div className="flex-1" />
           <Link
-            href="/profile"
+            href={urlForTab("profile")}
             className="p-2 rounded-lg hover:bg-rf-line-soft transition-colors"
             title="Profile"
           >
@@ -467,7 +466,7 @@ export function CalendarRightSidebar({
             </p>
             <div className="flex items-center gap-1">
               <Link
-                href={`/u/${profilePreview.username}`}
+                href={profileHref(profilePreview.username)}
                 className="rounded p-1 text-rf-ink-mute hover:bg-rf-line-soft hover:text-rf-plum-ink"
                 title="Open full profile"
                 aria-label="Open full profile"
@@ -573,7 +572,7 @@ export function CalendarRightSidebar({
         <div className="shrink-0">
           <div className="flex items-start justify-between gap-2 px-0.5">
             <div className="flex min-w-0 items-center gap-2.5">
-              <Link href="/profile" className="shrink-0" aria-label="My Profile">
+              <Link href={urlForTab("profile")} className="shrink-0" aria-label="My Profile">
                 <Avatar className="h-9 w-9">
                   {currentAvatarUrl ? (
                     <AvatarImage src={currentAvatarUrl} alt={displayName} />
@@ -602,7 +601,7 @@ export function CalendarRightSidebar({
 
           {myAttendance ? (
             <Link
-              href="/profile"
+              href={urlForTab("profile")}
               className="mt-2 flex flex-col gap-3 rounded-[14px] border border-rf-line bg-rf-card p-3.5 text-left transition-colors hover:border-rf-rose"
             >
               <div className="flex items-baseline justify-between gap-2">

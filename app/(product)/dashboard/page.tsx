@@ -1,7 +1,8 @@
 // app/(product)/dashboard/page.tsx
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { ChevronLeft } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import SideBar, { type TabKey } from "../components/Sidebar/sidebar";
 import Profile from "../components/profile";
@@ -15,6 +16,7 @@ import Community from "../components/Community/Community";
 import Matchmaking from "../components/Matchmaking";
 import AdminPanel from "../components/Admin/AdminPanel";
 import SessionHistory from "../components/SessionHistory";
+import PublicProfilePanel from "../components/PublicProfilePanel";
 import { CalendarRightSidebar } from "../components/Calendar/CalendarRightSidebar";
 import { EmailVerificationStrip } from "@/components/email-verification-strip";
 import { UserTimezoneProvider } from "@/components/user-timezone-provider";
@@ -128,18 +130,37 @@ function TabPanel({
  * with the same padding, so switching sections only swaps what's in the box.
  * Mobile keeps its layout; `fill` only affects mobile (no outer padding).
  */
+function BackArrow({ onBack, label }: { onBack: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onBack}
+      aria-label={label}
+      title={label}
+      className="mb-3 inline-flex h-7 w-7 items-center justify-center rounded-md text-rf-ink-mute transition-colors hover:bg-rf-line-soft hover:text-rf-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35"
+    >
+      <ChevronLeft className="h-[18px] w-[18px]" strokeWidth={2.25} aria-hidden="true" />
+    </button>
+  );
+}
+
 function SectionBox({
   isMobile,
   fill = false,
+  back,
   children,
 }: {
   isMobile: boolean;
   fill?: boolean;
+  /** Shown when the section was opened from a link, to return where you were. */
+  back?: { onBack: () => void; label: string } | null;
   children: React.ReactNode;
 }) {
+  const arrow = back ? <BackArrow onBack={back.onBack} label={back.label} /> : null;
   if (isMobile) {
     return (
       <div className={fill ? "h-full overflow-y-auto no-scrollbar" : "h-full overflow-y-auto px-3 pb-20 pt-4"}>
+        {arrow ? <div className={fill ? "px-3 pt-3" : undefined}>{arrow}</div> : null}
         {children}
       </div>
     );
@@ -148,6 +169,7 @@ function SectionBox({
     <div className="h-full p-4">
       <div className="rf-embedded h-full min-h-0 overflow-hidden rounded-[14px] border border-rf-line bg-rf-card text-rf-ink">
         <div className="h-full overflow-y-auto px-[clamp(16px,3vw,40px)] pb-16 pt-8">
+          {arrow ? <div className="mx-auto max-w-[980px]">{arrow}</div> : null}
           {children}
         </div>
       </div>
@@ -159,9 +181,17 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   // Start on the section in the URL so a refresh doesn't flash the calendar first.
   // Admin is confirmed later, once we know the user is an admin.
-  const [activeTab, setActiveTab] = useState<TabKey>(
-    () => tabFromParam(searchParams.get("tab"), { isAdmin: false }) ?? "dashboard",
-  );
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    const tab = tabFromParam(searchParams.get("tab"), { isAdmin: false });
+    if (tab === "user" && !searchParams.get("u")) return "dashboard";
+    return tab ?? "dashboard";
+  });
+  // Someone's profile shown in place (`?tab=user&u=…`).
+  const [profileUsername, setProfileUsername] = useState<string | null>(() => searchParams.get("u"));
+  // Where to return to when a link (not the nav) opened the current section.
+  const [backTo, setBackTo] = useState<TabKey | null>(null);
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
   const { isAdmin } = useAdminMe();
   const { count: pendingSessionRequests, refresh: refreshPendingRequests } =
     usePendingSessionRequestsCount();
@@ -188,13 +218,18 @@ function DashboardContent() {
 
   useEffect(() => {
     const requestedTab = searchParams.get("tab");
+    const username = searchParams.get("u");
+    setProfileUsername(username);
     if (!requestedTab) return;
     if (requestedTab === "admin" && !isAdmin) {
       setActiveTab("dashboard");
       return;
     }
     const tab = tabFromParam(requestedTab, { isAdmin });
-    if (tab) setActiveTab(tab);
+    if (!tab || (tab === "user" && !username)) return;
+    // A link inside the dashboard changed the section: remember where we were.
+    if (tab !== activeTabRef.current) setBackTo(activeTabRef.current);
+    setActiveTab(tab);
   }, [searchParams, isAdmin]);
 
   useEffect(() => {
@@ -257,9 +292,28 @@ function DashboardContent() {
   // Every user-chosen section goes in the URL, so a refresh reopens it.
   const handleSelectTab = (tab: TabKey) => {
     setMoreMenuOpen(false);
+    setBackTo(null);
     setActiveTab(tab);
     if (tab !== "backlog") router.replace(urlForTab(tab), { scroll: false });
   };
+
+  const TAB_NAMES: Partial<Record<TabKey, string>> = {
+    dashboard: "calendar",
+    sessions: "Sessions",
+    friends: "Friends",
+    community: "Community",
+    settings: "Settings",
+    profile: "Profile",
+    matches: "Matches",
+  };
+  // Back arrow: for anything opened from a link, and always for someone's profile.
+  const back =
+    backTo || activeTab === "user"
+      ? {
+          onBack: () => handleSelectTab(backTo ?? "dashboard"),
+          label: `Back to ${TAB_NAMES[backTo ?? "dashboard"] ?? "calendar"}`,
+        }
+      : null;
 
   // Sidebar "Next up" from any section: show the calendar and open that session.
   const openSessionOnCalendar = (event: CalendarEvent) => {
@@ -302,22 +356,22 @@ function DashboardContent() {
               </div>
             </TabPanel>
             <TabPanel tab="sessions" activeTab={activeTab} className="h-full">
-              <SectionBox isMobile={isMobile}>
+              <SectionBox isMobile={isMobile} back={activeTab === "sessions" ? back : null}>
                 <div className="mx-auto max-w-[980px]"><SessionHistory /></div>
               </SectionBox>
             </TabPanel>
             <TabPanel tab="profile" activeTab={activeTab} className="h-full">
-              <SectionBox isMobile={isMobile}>
+              <SectionBox isMobile={isMobile} back={activeTab === "profile" ? back : null}>
                 <div className="mx-auto max-w-[980px]"><Profile /></div>
               </SectionBox>
             </TabPanel>
             <TabPanel tab="settings" activeTab={activeTab} className="h-full">
-              <SectionBox isMobile={isMobile}>
+              <SectionBox isMobile={isMobile} back={activeTab === "settings" ? back : null}>
                 <div className="mx-auto max-w-[980px]"><Settings /></div>
               </SectionBox>
             </TabPanel>
             <TabPanel tab="friends" activeTab={activeTab} className="h-full">
-              <SectionBox isMobile={isMobile} fill>
+              <SectionBox isMobile={isMobile} fill back={activeTab === "friends" ? back : null}>
                 <Friends onPreviewProfile={setProfilePreview} />
               </SectionBox>
             </TabPanel>
@@ -325,14 +379,21 @@ function DashboardContent() {
               {isMobile ? (
                 <Community onPreviewProfile={setProfilePreview} />
               ) : (
-                <SectionBox isMobile={false} fill>
+                <SectionBox isMobile={false} fill back={activeTab === "community" ? back : null}>
                   <Community onPreviewProfile={setProfilePreview} />
                 </SectionBox>
               )}
             </TabPanel>
             <TabPanel tab="matches" activeTab={activeTab} className="h-full">
-              <SectionBox isMobile={isMobile}>
+              <SectionBox isMobile={isMobile} back={activeTab === "matches" ? back : null}>
                 <Matchmaking />
+              </SectionBox>
+            </TabPanel>
+            <TabPanel tab="user" activeTab={activeTab} className="h-full">
+              <SectionBox isMobile={isMobile} back={activeTab === "user" ? back : null}>
+                <div className="mx-auto max-w-[980px]">
+                  {profileUsername ? <PublicProfilePanel username={profileUsername} /> : null}
+                </div>
               </SectionBox>
             </TabPanel>
             {isAdmin ? (

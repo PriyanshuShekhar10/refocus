@@ -47,6 +47,12 @@ export const REPORT_TARGET_LABELS: Record<ReportTargetType, string> = {
 };
 
 export const REPORT_DETAILS_MAX_LENGTH = 500;
+/** A report must say what happened: at least a short sentence. */
+export const REPORT_DETAILS_MIN_LENGTH = 10;
+
+export function hasEnoughReportDetails(details: string | null | undefined): boolean {
+  return (details ?? "").trim().length >= REPORT_DETAILS_MIN_LENGTH;
+}
 export const CONTENT_SNAPSHOT_MAX_LENGTH = 500;
 export const SESSION_REPORT_MAX_AGE_DAYS = 7;
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { urlForTab } from "@/lib/dashboardTabs";
 import type { ReactNode } from "react";
 import { designStyles } from "@/components/design";
 import { formatLocalDate, formatLocalTime } from "@/lib/localTime";
@@ -396,7 +397,7 @@ export function RecentActivityList({ recent }: { recent: RecentSession[] }) {
           Recent activity
         </h3>
         <Link
-          href="/sessions"
+          href={urlForTab("sessions")}
           style={{
             fontSize: 12,
             color: "var(--ink-mute)",

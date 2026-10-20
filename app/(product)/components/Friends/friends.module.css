@@ -716,7 +716,7 @@
 /* Inside the dashboard's section box: same theme as the rest of the app. */
 :global(.rf-embedded) .root,
 :global(.dark) :global(.rf-embedded) .root {
-  --bg: transparent;
+  --bg: var(--rf-card);
   --ink: var(--rf-ink);
   --ink-soft: var(--rf-ink-soft);
   --ink-mute: var(--rf-ink-mute);
@@ -734,4 +734,15 @@
   --tint-clay: var(--rf-tint-clay);
   --tint-sky: var(--rf-tint-sky);
   background: transparent;
+}
+
+/* Inside the dashboard's section box, primary row buttons match the app's. */
+:global(.rf-embedded) .rowBtnPrimary {
+  background: var(--rf-primary);
+  border-color: var(--rf-primary);
+  color: var(--rf-on-primary);
+}
+:global(.rf-embedded) .rowBtnPrimary:hover {
+  background: var(--rf-primary-hover);
+  border-color: var(--rf-primary-hover);
 }

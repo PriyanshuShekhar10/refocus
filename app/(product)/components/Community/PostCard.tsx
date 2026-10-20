@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { profileHref } from "@/lib/dashboardTabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import MentionComposer from "@/components/community/MentionComposer";
@@ -339,7 +340,7 @@ export default function PostCard({
               />
             </button>
           ) : post.authorUsername ? (
-            <Link href={`/u/${post.authorUsername}`} onClick={(e) => e.stopPropagation()}>
+            <Link href={profileHref(post.authorUsername)} onClick={(e) => e.stopPropagation()}>
               <AuthorAvatar
                 author={post}
                 className="h-10 w-10 hover:ring-2 hover:ring-rf-rose transition-shadow cursor-pointer"
@@ -373,7 +374,7 @@ export default function PostCard({
                   </button>
                 ) : post.authorUsername ? (
                   <Link
-                    href={`/u/${post.authorUsername}`}
+                    href={profileHref(post.authorUsername)}
                     onClick={(e) => e.stopPropagation()}
                     className="min-w-0 hover:text-rf-plum-ink hover:underline"
                   >
@@ -565,7 +566,7 @@ export default function PostCard({
                               />
                             </button>
                           ) : comment.authorUsername ? (
-                            <Link href={`/u/${comment.authorUsername}`}>
+                            <Link href={profileHref(comment.authorUsername)}>
                               <AuthorAvatar
                                 author={comment}
                                 className="h-7 w-7 hover:ring-2 hover:ring-rf-rose transition-shadow cursor-pointer"
@@ -602,7 +603,7 @@ export default function PostCard({
                                   </button>
                                 ) : comment.authorUsername ? (
                                   <Link
-                                    href={`/u/${comment.authorUsername}`}
+                                    href={profileHref(comment.authorUsername)}
                                     className="hover:text-rf-plum-ink hover:underline"
                                   >
                                     <AuthorName

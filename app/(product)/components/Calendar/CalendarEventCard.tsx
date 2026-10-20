@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { profileHref } from "@/lib/dashboardTabs";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { CalendarEvent } from "@/types/calendar";
@@ -88,6 +90,7 @@ export function CalendarEventCard({
   onLeave,
   onPreviewProfile,
 }: CalendarEventCardProps) {
+  const router = useRouter();
   const s = new Date(event.start);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -361,7 +364,7 @@ export function CalendarEventCard({
                     });
                     return;
                   }
-                  window.location.href = `/u/${compactPartner.username}`;
+                  router.push(profileHref(compactPartner.username));
                 }}
               >
                 View profile

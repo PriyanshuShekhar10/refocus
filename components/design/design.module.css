@@ -45,7 +45,8 @@
    through the --rf-* tokens) and let the box's card colour show through. */
 :global(.rf-embedded) .shell,
 :global(.dark) :global(.rf-embedded) .shell {
-  --bg: transparent;
+  /* --bg is also the text colour on dark buttons, so it must stay a real colour. */
+  --bg: var(--rf-card);
   --ink: var(--rf-ink);
   --ink-soft: var(--rf-ink-soft);
   --ink-mute: var(--rf-ink-mute);
@@ -696,4 +697,13 @@
   .shimmer::after {
     animation: none;
   }
+}
+
+/* Inside the dashboard's section box, primary buttons match the app's. */
+:global(.rf-embedded) .btnPrimary {
+  background: var(--rf-primary);
+  color: var(--rf-on-primary);
+}
+:global(.rf-embedded) .btnPrimary:hover:not(:disabled) {
+  background: var(--rf-primary-hover);
 }

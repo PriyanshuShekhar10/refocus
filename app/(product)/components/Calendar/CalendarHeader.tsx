@@ -208,11 +208,11 @@ export function CalendarHeader({
           label={
             <span className="flex items-center gap-1.5">
               <Plus size={15} strokeWidth={2.4} />
-              <span className="hidden min-[1400px]:inline">Book session</span>
+              <span>Book session</span>
             </span>
           }
           ariaLabel="Book session"
-          className="!h-9 !w-auto whitespace-nowrap !rounded-[10px] !px-3.5 !py-0 text-[13.5px] !font-semibold"
+          className="!h-9 !w-auto shrink-0 whitespace-nowrap !rounded-[10px] !px-3.5 !py-0 text-[13.5px] !font-semibold"
         />
       </div>
     </div>

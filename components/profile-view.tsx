@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { profileHref } from "@/lib/dashboardTabs";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Pencil, Check, X, Plus, Copy, MapPin, Globe, AtSign, Camera, Trash2 } from "lucide-react";
@@ -522,7 +523,7 @@ export function ProfileView({ embedded = false }: Props) {
           >
             {user?.username && (
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
-                <Link href={`/u/${user.username}`} style={{ color: "var(--ink-soft)", textDecoration: "none" }}>
+                <Link href={embedded ? profileHref(user.username) : `/u/${user.username}`} style={{ color: "var(--ink-soft)", textDecoration: "none" }}>
                   @{user.username}
                 </Link>
                 <button

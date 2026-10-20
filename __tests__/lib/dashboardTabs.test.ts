@@ -39,3 +39,14 @@ describe("showsRightSidebar", () => {
     expect(showsRightSidebar("admin")).toBe(false);
   });
 });
+
+describe("profileHref", () => {
+  it("opens someone's profile inside the dashboard", async () => {
+    const { profileHref } = await import("@/lib/dashboardTabs");
+    expect(profileHref("priyanshu")).toBe("/dashboard?tab=user&u=priyanshu");
+    const url = new URL(profileHref("a b&c"), "http://x");
+    expect(url.searchParams.get("tab")).toBe("user");
+    expect(url.searchParams.get("u")).toBe("a b&c");
+    expect(tabFromParam(url.searchParams.get("tab"), { isAdmin: false })).toBe("user");
+  });
+});

@@ -7,6 +7,7 @@ import {
   REPORT_REASONS,
   type ReportReason,
   type ReportTargetType,
+  hasEnoughReportDetails,
 } from "@/lib/reportConstants";
 
 type Props = {
@@ -48,6 +49,10 @@ export default function ReportDialog({
   };
 
   const handleSubmit = async () => {
+    if (!hasEnoughReportDetails(details)) {
+      setError("Please describe what they did in at least one sentence.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -150,7 +155,7 @@ export default function ReportDialog({
                   htmlFor="report-details"
                   className="text-xs font-medium uppercase tracking-wide text-rf-ink-mute"
                 >
-                  Additional details (optional)
+                  What did they do?
                 </label>
                 <textarea
                   id="report-details"
@@ -158,9 +163,15 @@ export default function ReportDialog({
                   onChange={(e) => setDetails(e.target.value)}
                   rows={3}
                   maxLength={500}
-                  placeholder="Anything else we should know?"
+                  required
+                  aria-required="true"
+                  aria-describedby="report-details-hint"
+                  placeholder="e.g. They kept their mic on and talked over me for most of the session."
                   className="mt-1.5 w-full rounded-lg border border-rf-line bg-rf-card px-3 py-2 text-sm text-rf-ink placeholder:text-rf-ink-mute"
                 />
+                <p id="report-details-hint" className="mt-1 text-xs text-rf-ink-mute">
+                  Required. One sentence is enough; it helps us act on the report.
+                </p>
               </div>
 
               {error ? (
@@ -183,7 +194,7 @@ export default function ReportDialog({
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={busy}
+              disabled={busy || !hasEnoughReportDetails(details)}
               className="inline-flex items-center gap-2 rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50"
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
