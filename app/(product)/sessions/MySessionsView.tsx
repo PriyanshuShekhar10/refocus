@@ -26,11 +26,7 @@ export function MySessionsView({
     <div className="flex flex-col">
       <header className="mb-5 flex flex-wrap items-end justify-between gap-4 rounded-[14px] border border-rf-line bg-rf-card p-6">
         <div>
-          <span className="inline-flex items-center gap-2.5 font-rf-mono text-xs uppercase tracking-[0.04em] text-rf-ink-mute">
-            <span aria-hidden className="h-px w-[18px] bg-rf-ink-mute" />
-            Sessions
-          </span>
-          <h1 className="mt-2 text-[clamp(24px,4vw,32px)] font-medium leading-[1.05] tracking-[-0.04em] text-rf-ink">
+          <h1 className="text-[clamp(24px,4vw,32px)] font-medium leading-[1.05] tracking-[-0.04em] text-rf-ink">
             My Sessions
           </h1>
           <p className="mt-2.5 text-sm text-rf-ink-soft">

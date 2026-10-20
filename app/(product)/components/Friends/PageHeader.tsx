@@ -15,8 +15,7 @@ interface PageHeaderProps {
 export default function PageHeader({ query, onQueryChange, footer }: PageHeaderProps) {
   return (
     <header className={`${designStyles.card} mb-5`}>
-      <span className={designStyles.eyebrow}>People</span>
-      <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1
             className={designStyles.pageTitle}

@@ -144,7 +144,7 @@ export default function Matchmaking() {
                   {user.name || `${user.firstname} ${user.lastname}`}
                 </CardTitle>
                 <div className="flex items-center gap-1 text-xs text-rf-plum-ink font-medium">
-                   <Zap size={12} className="fill-[#CA5995]" />
+                   <Zap size={12} className="fill-rf-rose" />
                    {Math.round(user.score * 100)}% Match
                 </div>
               </div>

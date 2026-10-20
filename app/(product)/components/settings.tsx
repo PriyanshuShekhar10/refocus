@@ -40,6 +40,7 @@ import { listTimeZones } from "@/lib/zonedTime";
 import { TIMEZONE_PREF_EVENT } from "@/components/user-timezone-provider";
 import { notifyWallpaperPref } from "@/hooks/useDashboardWallpaper";
 import { useWallpaperActive } from "@/components/wallpaper-context";
+import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 import { PageRefreshButton, useOnPageRefreshEvent, dispatchPageRefreshEvent, PAGE_REFRESH_EVENTS } from "@/components/page-refresh";
 
 type Prefs = {
@@ -78,13 +79,14 @@ const DEFAULT_PREFS: Prefs = {
 
 export default function Settings() {
   const wallpaperActive = useWallpaperActive();
+  const { isMobile } = useIsMobileShell();
 
   return (
     <Shell transparent={wallpaperActive}>
-      <div style={{ padding: "8px 4px", maxWidth: 720, margin: "0 auto" }}>
+      <div style={{ padding: isMobile ? "8px 4px" : 0, maxWidth: isMobile ? 720 : 980, margin: "0 auto" }}>
         <header
           style={{
-            marginBottom: 32,
+            marginBottom: 20,
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
@@ -92,7 +94,6 @@ export default function Settings() {
           }}
         >
           <div>
-            <span className={designStyles.eyebrow}>Account</span>
             <h1
               className={designStyles.pageTitle}
               style={{ fontSize: "clamp(24px, 4vw, 32px)" }}

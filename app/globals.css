@@ -242,6 +242,28 @@ html {
 .no-scrollbar {
   scrollbar-width: none;
 }
+
+/* Dashboard section box: theme avatar tints for every section inside it. */
+.rf-embedded {
+  --tint-sage: var(--rf-tint-sage);
+  --tint-blush: var(--rf-tint-blush);
+  --tint-butter: var(--rf-tint-butter);
+  --tint-lavender: var(--rf-tint-lavender);
+  --tint-clay: var(--rf-tint-clay);
+  --tint-sky: var(--rf-tint-sky);
+}
+
+/* Dashboard section box: content scrolls, but no scrollbar is drawn. */
+.rf-embedded,
+.rf-embedded * {
+  scrollbar-width: none;
+}
+.rf-embedded::-webkit-scrollbar,
+.rf-embedded *::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
 .no-scrollbar::-webkit-scrollbar {
   width: 0;
   height: 0;

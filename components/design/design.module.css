@@ -41,6 +41,28 @@
   min-height: 0;
 }
 
+/* Inside the dashboard's section box: use the app theme (follows light/dark
+   through the --rf-* tokens) and let the box's card colour show through. */
+:global(.rf-embedded) .shell,
+:global(.dark) :global(.rf-embedded) .shell {
+  --bg: transparent;
+  --ink: var(--rf-ink);
+  --ink-soft: var(--rf-ink-soft);
+  --ink-mute: var(--rf-ink-mute);
+  --line: var(--rf-line);
+  --line-soft: var(--rf-line-soft);
+  --card: var(--rf-card);
+  --accent: var(--rf-primary);
+  --accent-ink: var(--rf-on-primary);
+  --accent-soft: var(--rf-plum-soft);
+  --danger: var(--rf-danger);
+  --danger-soft: var(--rf-danger-soft);
+  --success: var(--rf-success);
+  --success-soft: var(--rf-success-soft);
+  background: transparent;
+  min-height: 0;
+}
+
 :global(.dark) .shell {
   --bg: #09090b;
   --ink: #f4f4f5;

@@ -290,7 +290,7 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--ink);
-  background: #e1e8f0;
+  background: var(--rf-tint-sky);
   position: relative;
   flex-shrink: 0;
 }
@@ -711,4 +711,27 @@
 
 :global(.dark) .root .av {
   background: #1E2229;
+}
+
+/* Inside the dashboard's section box: same theme as the rest of the app. */
+:global(.rf-embedded) .root,
+:global(.dark) :global(.rf-embedded) .root {
+  --bg: transparent;
+  --ink: var(--rf-ink);
+  --ink-soft: var(--rf-ink-soft);
+  --ink-mute: var(--rf-ink-mute);
+  --line: var(--rf-line);
+  --line-soft: var(--rf-line-soft);
+  --card: var(--rf-card);
+  --accent: var(--rf-primary);
+  --accent-soft: var(--rf-plum-soft);
+  --warn: var(--rf-warn);
+  --warn-soft: var(--rf-warn-soft);
+  --tint-sage: var(--rf-tint-sage);
+  --tint-blush: var(--rf-tint-blush);
+  --tint-butter: var(--rf-tint-butter);
+  --tint-lavender: var(--rf-tint-lavender);
+  --tint-clay: var(--rf-tint-clay);
+  --tint-sky: var(--rf-tint-sky);
+  background: transparent;
 }

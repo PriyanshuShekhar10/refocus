@@ -247,10 +247,12 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
   const [mobileView, setMobileView] = useState<"feed" | "welcome">("feed");
 
   return (
-    <div className="h-full overflow-y-auto">
+    // Desktop: the dashboard's section box scrolls this page (like every other
+    // section), so its bottom padding ends the content instead of framing it.
+    <div className={isMobile ? "h-full overflow-y-auto" : undefined}>
       <div
         className={`mx-auto flex max-w-[980px] flex-col gap-5 ${
-          isMobile ? "px-3 pb-24 pt-4" : "px-[clamp(16px,3vw,40px)] pb-24 pt-8"
+          isMobile ? "px-3 pb-24 pt-4" : ""
         } box-content`}
       >
         {isMobile ? (
@@ -281,11 +283,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
         ) : (
         <header className="flex flex-wrap items-end justify-between gap-4 rounded-[14px] border border-rf-line bg-rf-card p-6">
           <div>
-            <span className="inline-flex items-center gap-2.5 font-rf-mono text-xs uppercase tracking-[0.04em] text-rf-ink-mute">
-              <span aria-hidden className="h-px w-[18px] bg-rf-ink-mute" />
-              Community
-            </span>
-            <h1 className="mt-2 text-[clamp(24px,4vw,32px)] font-medium leading-[1.05] tracking-[-0.04em] text-rf-ink">
+            <h1 className="text-[clamp(24px,4vw,32px)] font-medium leading-[1.05] tracking-[-0.04em] text-rf-ink">
               Community
             </h1>
             <p className="mt-2.5 text-sm text-rf-ink-soft">

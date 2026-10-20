@@ -123,6 +123,38 @@ function TabPanel({
   );
 }
 
+/**
+ * Desktop: every section sits inside the same rounded card as the calendar,
+ * with the same padding, so switching sections only swaps what's in the box.
+ * Mobile keeps its layout; `fill` only affects mobile (no outer padding).
+ */
+function SectionBox({
+  isMobile,
+  fill = false,
+  children,
+}: {
+  isMobile: boolean;
+  fill?: boolean;
+  children: React.ReactNode;
+}) {
+  if (isMobile) {
+    return (
+      <div className={fill ? "h-full overflow-y-auto no-scrollbar" : "h-full overflow-y-auto px-3 pb-20 pt-4"}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <div className="h-full p-4">
+      <div className="rf-embedded h-full min-h-0 overflow-hidden rounded-[14px] border border-rf-line bg-rf-card text-rf-ink">
+        <div className="h-full overflow-y-auto px-[clamp(16px,3vw,40px)] pb-16 pt-8">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DashboardContent() {
   const searchParams = useSearchParams();
   // Start on the section in the URL so a refresh doesn't flash the calendar first.
@@ -242,16 +274,7 @@ function DashboardContent() {
     ? "bg-dashboard-wallpaper"
     : "rf-dots";
 
-  const mainPadding =
-    activeTab === "dashboard"
-      ? isMobile
-        ? "h-full"
-        : "h-full p-4"
-      : activeTab === "friends" || activeTab === "community"
-        ? "h-full overflow-y-auto no-scrollbar"
-        : isMobile
-          ? "h-full overflow-y-auto px-3 pb-20 pt-4"
-          : "h-full overflow-y-auto px-[clamp(16px,3vw,40px)] pb-24 pt-8";
+  const calendarPadding = isMobile ? "h-full" : "h-full p-4";
 
   return (
     <UserTimezoneProvider>
@@ -274,37 +297,43 @@ function DashboardContent() {
             }
           >
             <TabPanel tab="dashboard" activeTab={activeTab} className="h-full">
-              <div className={mainPadding}>
+              <div className={calendarPadding}>
                 <Dashboard onPreviewProfile={setProfilePreview} />
               </div>
             </TabPanel>
             <TabPanel tab="sessions" activeTab={activeTab} className="h-full">
-              <div className={mainPadding}>
+              <SectionBox isMobile={isMobile}>
                 <div className="mx-auto max-w-[980px]"><SessionHistory /></div>
-              </div>
+              </SectionBox>
             </TabPanel>
             <TabPanel tab="profile" activeTab={activeTab} className="h-full">
-              <div className={mainPadding}>
+              <SectionBox isMobile={isMobile}>
                 <div className="mx-auto max-w-[980px]"><Profile /></div>
-              </div>
+              </SectionBox>
             </TabPanel>
             <TabPanel tab="settings" activeTab={activeTab} className="h-full">
-              <div className={mainPadding}>
+              <SectionBox isMobile={isMobile}>
                 <div className="mx-auto max-w-[980px]"><Settings /></div>
-              </div>
+              </SectionBox>
             </TabPanel>
             <TabPanel tab="friends" activeTab={activeTab} className="h-full">
-              <div className={mainPadding}>
+              <SectionBox isMobile={isMobile} fill>
                 <Friends onPreviewProfile={setProfilePreview} />
-              </div>
+              </SectionBox>
             </TabPanel>
             <TabPanel tab="community" activeTab={activeTab} className="h-full">
-              <Community onPreviewProfile={setProfilePreview} />
+              {isMobile ? (
+                <Community onPreviewProfile={setProfilePreview} />
+              ) : (
+                <SectionBox isMobile={false} fill>
+                  <Community onPreviewProfile={setProfilePreview} />
+                </SectionBox>
+              )}
             </TabPanel>
             <TabPanel tab="matches" activeTab={activeTab} className="h-full">
-              <div className={mainPadding}>
+              <SectionBox isMobile={isMobile}>
                 <Matchmaking />
-              </div>
+              </SectionBox>
             </TabPanel>
             {isAdmin ? (
               <TabPanel tab="admin" activeTab={activeTab} className="h-full">

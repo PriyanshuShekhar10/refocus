@@ -11,7 +11,7 @@ import { swrKeys } from "@/lib/swr/keys";
 import { VerifiedName } from "@/components/verified-tag";
 import DeviceTestModal from "../DeviceTestModal";
 import BugReportDialog from "../BugReportDialog";
-import { Bug } from "lucide-react";
+import { Bug, ChevronLeft, ChevronRight } from "lucide-react";
 import SidebarUpdatesBox from "../Updates/SidebarUpdatesBox";
 import { releaseAllLocalMediaStreams } from "@/lib/localMedia";
 import { AttendanceHighlight } from "@/components/attendance-highlight";
@@ -127,6 +127,10 @@ function formatDate(): string {
 
 const utilityRowClass =
   "flex min-h-9 w-full items-center justify-between gap-2 whitespace-nowrap rounded-lg px-2 text-left text-[13px] text-rf-ink-soft transition-colors hover:bg-rf-line-soft hover:text-rf-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose";
+
+/** Collapse / expand: just an arrow, highlighted on hover. */
+const sidebarToggleClass =
+  "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-rf-ink-mute transition-colors hover:bg-rf-line-soft hover:text-rf-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35";
 
 export function CalendarRightSidebar({
   sessionCount: sessionCountProp,
@@ -379,13 +383,13 @@ export function CalendarRightSidebar({
           }`}
         >
           <button
+            type="button"
             onClick={() => setIsCollapsed(false)}
-            className="p-2 rounded-lg hover:bg-rf-line-soft transition-colors"
+            className={sidebarToggleClass}
             title="Expand sidebar"
+            aria-label="Expand sidebar"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-rf-ink-mute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="h-[18px] w-[18px]" strokeWidth={2.25} aria-hidden="true" />
           </button>
           <Avatar className="h-10 w-10">
             {previewAvatarUrl ? (
@@ -442,17 +446,15 @@ export function CalendarRightSidebar({
           }`}
         >
       {/* Collapse */}
-      <div className="flex shrink-0 justify-end px-0.5 pt-0.5">
+      <div className="flex shrink-0 justify-end">
         <button
           type="button"
           onClick={() => setIsCollapsed(true)}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-rf-ink-mute transition-colors hover:bg-rf-line-soft hover:text-rf-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35"
+          className={sidebarToggleClass}
           title="Collapse sidebar"
           aria-label="Collapse sidebar"
         >
-          <span className="text-sm leading-none" aria-hidden="true">
-            ›
-          </span>
+          <ChevronRight className="h-[18px] w-[18px]" strokeWidth={2.25} aria-hidden="true" />
         </button>
       </div>
 

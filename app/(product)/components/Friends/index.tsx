@@ -268,7 +268,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
     <Shell transparent={wallpaperActive}>
       <div
         style={{
-          padding: "8px 4px",
+          padding: isMobile ? "8px 4px" : 0,
           maxWidth: 980,
           margin: "0 auto",
         }}
