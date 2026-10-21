@@ -29,7 +29,9 @@ export const DailyStage = forwardRef<VideoStageHandle, VideoStageProps>(function
       },
       async retryCamera() {
         await prepareForDailyCall();
-        void callFrameRef.current?.startCamera();
+        // This is a Prebuilt iframe (Daily.wrap), not a custom call object,
+        // so startCamera() isn't available — re-enable local video instead.
+        void callFrameRef.current?.setLocalVideo(true);
       },
     }),
     [],

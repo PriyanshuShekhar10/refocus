@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Flame } from "lucide-react";
 import type { TrendDay } from "@/hooks/useSessionStats";
 
@@ -26,7 +27,12 @@ export function weekFocusDays(trend: TrendDay[], now = new Date()): { label: str
 
 /** The "this week" streak row from the prototype: flame circles for focused days. */
 export function WeekStreak({ trend, streak, best }: { trend: TrendDay[]; streak: number; best: number }) {
-  const days = weekFocusDays(trend);
+  // "Today" depends on the viewer's local clock; computing it during SSR (server
+  // timezone/instant) can disagree with the client's first render and trigger a
+  // hydration mismatch. Resolve it only after mount, like the server would see it.
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => setNow(new Date()), []);
+  const days = weekFocusDays(trend, now ?? new Date(0));
   return (
     <div className="border-t border-rf-line-soft pt-2.5">
       <div className="mb-2 flex items-center justify-between">
