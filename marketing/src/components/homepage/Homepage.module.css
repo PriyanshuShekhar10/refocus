@@ -1,29 +1,47 @@
 /* ─────────────────────────────────────────────────────────────
-   Refocus marketing homepage — "Glass" design
+   Refocus marketing homepage — "Workbench" design
    Design system:
-     · type: Inter (body), Pixelify Sans (labels/eyebrows), VT323 (numerals/timers)
-     · color: neutral grays, glass surfaces over a soft gray field
+     · type: Bricolage Grotesque (body/headings), Geist Mono (labels/numerals)
+     · color: warm cream field, chunky bottom-border "pressed" cards, blue brand accent
      · copy: lowercase headings/labels throughout
    ───────────────────────────────────────────────────────────── */
 
 .root {
-  --ink: #1d1d1f;
-  --ink-soft: #6e6e73;
-  --ink-mute: #86868b;
-  --line: rgba(29, 29, 31, 0.08);
-  --line-soft: rgba(29, 29, 31, 0.06);
-  --bg: #ececea;
-  --surface: #f2f2f2;
-  --glass: rgba(255, 255, 255, 0.55);
-  --glass-strong: rgba(255, 255, 255, 0.75);
+  --ink: #0a0a0a;
+  --ink-soft: #4a4a47;
+  --ink-mute: #8a8a85;
+  --line: #e6e1d6;
+  --line-soft: #efebe2;
+  --bg: #f2efe7;
+  --surface: #f2efe7;
+  --bar: #f7f5ef;
   --white: #ffffff;
   --accent-chip: #fff3a6;
+  --brand: #3b7dd8;
+  --brand-dark: #2a5fa8;
+  --brand-hover: #4a8ae0;
+  --brand-soft: #c5daf5;
+  --brand-softer: #e3eefb;
+  --green-bg: #e8f6ed;
+  --green-ink: #1f5c37;
+  --num-blue: #3b7dd8;
+  --num-blue-sh: #2a5fa8;
+  --num-pink: #e0609f;
+  --num-pink-sh: #b8457f;
+  --num-green: #4fb477;
+  --num-green-sh: #3a8e5b;
 
-  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-pixel: "Pixelify Sans", monospace;
-  --font-digit: "VT323", monospace;
+  --font-body: "Bricolage Grotesque Variable", "Bricolage Grotesque",
+    ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  background: var(--surface);
+  background-color: var(--surface);
+  background-image: radial-gradient(
+    circle at center,
+    rgba(115, 115, 115, 0.14) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -37,7 +55,7 @@
   color: var(--ink);
 }
 .root :global(a:hover) {
-  color: #4a4a4d;
+  color: var(--brand-dark);
 }
 
 .wrap {
@@ -49,8 +67,8 @@
 /* ── shared primitives ───────────────────────────────────── */
 
 .eyebrow {
-  font-family: var(--font-pixel);
-  font-size: 15px;
+  font-family: var(--font-mono);
+  font-size: 14px;
   color: var(--ink-mute);
   text-transform: lowercase;
 }
@@ -87,23 +105,23 @@
 /* window-chrome card: the little mock browser/app frame used everywhere */
 
 .winCard {
-  background: var(--glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--line);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border-radius: 18px;
+  background: var(--white);
+  border: 2px solid var(--line);
+  border-bottom-width: 6px;
+  border-radius: 20px;
+  box-shadow: 0 24px 50px -30px rgba(10, 10, 10, 0.3);
   overflow: hidden;
   text-align: left;
 }
 
 .winTitlebar {
-  height: 34px;
+  height: 36px;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--line-soft);
+  padding: 0 14px;
+  border-bottom: 2px solid var(--line-soft);
+  background: var(--bar);
   position: relative;
 }
 
@@ -111,15 +129,15 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 1px solid rgba(29, 29, 31, 0.25);
+  border: 2px solid #d9d5cb;
 }
 
 .winLabel {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  font-family: var(--font-pixel);
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
   color: var(--ink-mute);
   white-space: nowrap;
 }
@@ -135,65 +153,82 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 48px;
-  padding: 0 24px;
-  border-radius: 999px;
-  font-size: 15px;
-  font-weight: 600;
+  gap: 10px;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 800;
   text-decoration: none;
   white-space: nowrap;
   text-transform: lowercase;
   max-width: 100%;
   border: 0;
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 .btn.btnBrand,
 .btn.btnPrimary {
-  background: var(--ink);
+  background: var(--brand);
   color: var(--white);
+  box-shadow: 0 4px 0 var(--brand-dark);
 }
 .btn.btnBrand:hover,
 .btn.btnPrimary:hover {
-  background: #3a3a3d;
+  background: var(--brand-hover);
   color: var(--white);
+}
+.btn.btnBrand:active,
+.btn.btnPrimary:active {
+  transform: translateY(4px);
+  box-shadow: none;
 }
 
 .btn.btnGhost {
-  background: rgba(255, 255, 255, 0.5);
+  background: transparent;
   color: var(--ink);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
+  border-bottom-width: 4px;
+  padding: 0 24px;
 }
 .btn.btnGhost:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--white);
   color: var(--ink);
+}
+.btn.btnGhost:active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
 }
 
 .btnLg {
-  height: 48px;
+  height: 52px;
 }
 
 .freeSticker {
   align-self: center;
-  padding: 6px 8px;
+  padding: 6px 10px;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--accent-chip);
   color: var(--ink);
-  font-family: var(--font-pixel);
+  font-family: var(--font-mono);
   font-size: 12px;
-  box-shadow: 0 6px 10px -6px rgba(0, 0, 0, 0.35);
-  border-radius: 2px;
   line-height: 1;
+  transform: rotate(-2deg);
+  box-shadow: 0 6px 10px -6px rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
 }
 
 /* ── hero ─────────────────────────────────────────────────── */
 
 .hero {
-  padding: clamp(96px, 11vw, 128px) 0 clamp(64px, 10vw, 112px);
+  padding: clamp(72px, 11vw, 104px) 0 clamp(40px, 10vw, 56px);
 }
 
 .heroTop {
@@ -220,7 +255,6 @@
   height: clamp(48px, 6vw, 64px);
   width: auto;
   margin: 0 0 20px;
-  filter: grayscale(1);
 }
 
 .heroTitle {
@@ -246,13 +280,14 @@
   margin-top: 32px;
   display: flex;
   justify-content: flex-start;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .heroFoot {
   margin: 14px 0 0;
-  font-family: var(--font-pixel);
+  font-family: var(--font-mono);
   font-size: 13px;
   color: var(--ink-mute);
   text-transform: lowercase;
@@ -273,7 +308,8 @@
   aspect-ratio: 4 / 3;
   border-radius: 20px;
   overflow: hidden;
-  background: #e6e6e6;
+  background: var(--line);
+  border: 2px solid var(--line);
   box-shadow: 0 24px 40px -26px rgba(0, 0, 0, 0.4);
 }
 
@@ -304,7 +340,7 @@
   background: var(--white);
   color: var(--ink);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: lowercase;
 }
 
@@ -313,11 +349,12 @@
   left: 0;
   top: 0;
   z-index: 4;
-  font-family: var(--font-pixel);
-  font-size: 14px;
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--ink);
   background: var(--white);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
+  border-bottom-width: 4px;
   border-radius: 999px;
   padding: 5px 12px;
   display: inline-flex;
@@ -326,8 +363,8 @@
 }
 
 .heroLiveDigits {
-  font-family: var(--font-digit);
-  font-size: 20px;
+  font-family: var(--font-mono);
+  font-size: 16px;
   line-height: 1;
 }
 
@@ -336,7 +373,8 @@
   z-index: 3;
   width: min(56%, 250px);
   background: var(--white);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
+  border-bottom-width: 5px;
   border-radius: 16px;
   padding: 12px 14px;
   box-shadow: 0 16px 30px -18px rgba(0, 0, 0, 0.3);
@@ -366,7 +404,7 @@
 }
 
 .taskCardCount {
-  font-family: var(--font-pixel);
+  font-family: var(--font-mono);
   font-size: 12px;
   color: var(--ink-mute);
 }
@@ -394,20 +432,21 @@
 
 .taskBox {
   flex: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1.5px solid var(--ink);
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 2px solid var(--ink-soft);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--white);
   font-size: 11px;
-  line-height: 1;
+  line-height: 14px;
 }
 
 .taskBoxDone {
-  background: var(--ink);
+  background: var(--brand);
+  border-color: var(--brand);
 }
 
 .mobileTaskCard {
@@ -415,10 +454,10 @@
   z-index: 3;
   max-width: 62%;
   background: var(--white);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
+  border-bottom-width: 4px;
   border-radius: 12px;
   padding: 8px 12px;
-  box-shadow: 0 12px 24px -16px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -432,7 +471,7 @@
   width: 14px;
   height: 14px;
   border-radius: 4px;
-  border: 1.5px solid var(--ink);
+  border: 2px solid var(--brand);
 }
 
 .mobileTaskLin {
@@ -447,13 +486,14 @@
 /* ── dashboard screenshot block ──────────────────────────── */
 
 .dashboardBlock {
-  padding: clamp(40px, 6vw, 72px) 0 clamp(64px, 10vw, 112px);
+  padding: clamp(24px, 6vw, 40px) 0 clamp(56px, 10vw, 80px);
 }
 
 .dashboardImg {
   width: 100%;
   height: auto;
   display: block;
+  background: var(--surface);
 }
 
 /* ── sessions ─────────────────────────────────────────────── */
@@ -476,23 +516,32 @@
   color: var(--ink);
   cursor: pointer;
   padding: 18px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  border: 2px solid var(--line);
+  border-bottom-width: 5px;
+  background: var(--white);
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: 0 0 0 0 transparent;
 }
 .lengthCard:hover {
-  border-color: #c4c4c0;
+  border-color: #c9c3b5;
 }
 .lengthCardSelected {
-  box-shadow: 0 0 0 2px var(--ink);
+  background: var(--brand);
+  border-color: var(--brand-dark);
+  color: var(--white);
+}
+.lengthCardSelected .lcBadge,
+.lengthCardSelected .lcUnit {
+  color: var(--brand-soft);
+}
+.lengthCardSelected .lcDesc {
+  color: var(--brand-softer);
 }
 
 .lcBadge {
-  font-family: var(--font-pixel);
+  font-family: var(--font-mono);
   font-size: 12px;
   color: var(--ink-mute);
   min-height: 18px;
@@ -500,9 +549,10 @@
 }
 
 .lcTime {
-  font-family: var(--font-digit);
-  font-size: 60px;
-  line-height: 0.9;
+  font-family: var(--font-mono);
+  font-size: 56px;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
   display: flex;
   align-items: baseline;
   gap: 6px;
@@ -516,7 +566,7 @@
 
 .lcName {
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 700;
   margin-top: 8px;
   text-transform: lowercase;
 }
@@ -531,7 +581,7 @@
 .sessionAction {
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid var(--line);
+  border-top: 2px solid var(--line-soft);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -549,7 +599,7 @@
 .sessionActionStatus {
   margin: 0;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .sessionActionHint {
@@ -570,7 +620,7 @@
 
 .modeCardBody h3 {
   font-size: 21px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.015em;
   margin: 0 0 8px;
   text-transform: lowercase;
@@ -602,20 +652,36 @@
 
 .whyRow {
   display: grid;
-  grid-template-columns: clamp(32px, 8vw, 48px) minmax(0, 1fr);
+  grid-template-columns: clamp(36px, 8vw, 48px) minmax(0, 1fr);
   gap: 12px;
 }
 
 .whyNum {
-  font-family: var(--font-digit);
-  font-size: 28px;
-  line-height: 1;
-  color: var(--ink-mute);
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--num-blue);
+  color: var(--white);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  box-shadow: 0 3px 0 var(--num-blue-sh);
+}
+
+.whyRow:nth-child(2) .whyNum {
+  background: var(--num-pink);
+  box-shadow: 0 3px 0 var(--num-pink-sh);
+}
+
+.whyRow:nth-child(3) .whyNum {
+  background: var(--num-green);
+  box-shadow: 0 3px 0 var(--num-green-sh);
 }
 
 .whyTitle {
   font-size: 19px;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0 0 6px;
   text-transform: lowercase;
 }
@@ -623,11 +689,12 @@
 .whyTitle :global(a) {
   color: var(--ink);
   text-decoration: underline;
-  text-decoration-color: #c4c4c0;
+  text-decoration-color: var(--brand-soft);
   text-underline-offset: 3px;
 }
 .whyTitle :global(a:hover) {
-  text-decoration-color: var(--ink);
+  color: var(--brand-dark);
+  text-decoration-color: var(--brand-dark);
 }
 
 .whyText {
@@ -646,41 +713,61 @@
   text-align: left;
   display: flex;
   flex-direction: column;
+  gap: 12px;
   list-style: none;
   padding: 0;
 }
 
 .faqItem {
-  border-bottom: 1px solid var(--line);
-}
-.faqItem:last-child {
-  border-bottom: 0;
+  border-radius: 16px;
+  border: 2px solid var(--line);
+  border-bottom-width: 5px;
+  background: var(--white);
+  overflow: hidden;
 }
 
 .faqButton {
   width: 100%;
+  min-height: 60px;
   border: 0;
   background: transparent;
-  padding: 18px 0;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
   text-align: left;
   font-family: inherit;
-  font-size: clamp(17px, 2.4vw, 19px);
-  font-weight: 500;
+  font-size: clamp(16px, 2.4vw, 19px);
+  font-weight: 600;
+  line-height: 1.3;
   color: var(--ink);
   cursor: pointer;
   text-transform: lowercase;
 }
-.faqButton:hover {
-  color: var(--ink-soft);
-}
 
 .faqIcon {
-  font-family: var(--font-pixel);
-  color: var(--ink-mute);
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--line-soft);
+  color: var(--ink-soft);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.faqButton[aria-expanded="true"] .faqIcon {
+  background: var(--brand);
+  color: var(--white);
+}
+.faqButton[aria-expanded="true"] {
+  color: var(--ink);
+}
+.faqItem:has(.faqButton[aria-expanded="true"]) {
+  border-color: var(--brand-soft);
 }
 
 .faqPanel {
@@ -694,7 +781,7 @@
 
 .faqAnswer {
   margin: 0;
-  padding: 0 40px 18px 0;
+  padding: 0 56px 20px 18px;
   font-size: 16px;
   line-height: 1.6;
   color: var(--ink-soft);
@@ -705,8 +792,17 @@
 /* ── final cta ────────────────────────────────────────────── */
 
 .finalCta {
+  padding: clamp(16px, 4vw, 24px) 0 clamp(56px, 10vw, 96px);
+}
+
+.finalCta .wrap {
   text-align: center;
-  padding: clamp(72px, 12vw, 120px) 0 clamp(56px, 10vw, 96px);
+  padding: clamp(56px, 9vw, 88px) clamp(22px, 5vw, 40px);
+  border-radius: 28px;
+  background: var(--brand);
+  box-shadow: 0 8px 0 var(--brand-dark);
+  color: var(--white);
+  max-width: 1100px;
 }
 
 .finalCta :global(h2) {
@@ -723,7 +819,7 @@
 .finalCta :global(p) {
   margin: 14px auto 0;
   max-width: 46ch;
-  color: var(--ink-soft);
+  color: var(--brand-softer);
   font-size: 17px;
   text-transform: lowercase;
 }
@@ -731,9 +827,28 @@
 .finalCtaRow {
   margin-top: 32px;
   display: flex;
-  gap: 12px;
+  gap: 14px;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+.finalCta .btnGhost {
+  border-color: rgba(255, 255, 255, 0.55);
+  border-bottom-width: 4px;
+  color: var(--white);
+}
+.finalCta .btnGhost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+}
+.finalCta .btnBrand {
+  background: var(--white);
+  color: var(--brand-dark);
+  box-shadow: 0 4px 0 #1e4a82;
+}
+.finalCta .btnBrand:hover {
+  background: #f3f8fe;
+  color: var(--brand-dark);
 }
 
 /* ── footer ───────────────────────────────────────────────── */
@@ -741,7 +856,7 @@
 .footer {
   position: relative;
   z-index: 1;
-  padding: 80px 0 40px;
+  padding: 64px 0 40px;
 }
 
 .footGrid {
@@ -758,7 +873,7 @@
 
 .footColHead {
   font-size: 17px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--ink);
   margin-bottom: 6px;
   text-transform: lowercase;
@@ -777,6 +892,7 @@
 .footMeta {
   margin: 56px 0 0;
   text-align: center;
+  font-family: var(--font-mono);
   font-size: 14px;
   color: var(--ink-mute);
 }
