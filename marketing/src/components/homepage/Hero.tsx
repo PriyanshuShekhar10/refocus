@@ -75,22 +75,6 @@ function TaskList({
   );
 }
 
-/**
- * Looping, muted hero clip. Written as raw HTML so the server-rendered markup
- * keeps `muted` (React drops it), which browsers require for autoplay. The
- * poster shows instantly while the ~100 KB video loads.
- */
-function HeroVideo({ name, label, className }: { name: string; label: string; className?: string }) {
-  return (
-    <span
-      style={{ display: "contents" }}
-      dangerouslySetInnerHTML={{
-        __html: `<video class="${className ?? ""}" autoplay muted loop playsinline preload="auto" poster="/${name}-poster.jpg" aria-label="${label}"><source src="/${name}.webm" type="video/webm"><source src="/${name}.mp4" type="video/mp4"></video>`,
-      }}
-    />
-  );
-}
-
 export function Hero({ image }: { image?: HeroImage }) {
   const lin = useTaskList([true, true, false]);
   const maya = useTaskList([true, false, false]);
@@ -157,11 +141,19 @@ export function Hero({ image }: { image?: HeroImage }) {
 
         <Reveal className={styles.heroVisual}>
           <div className={`${styles.heroShot} ${styles.heroShotLin}`}>
-            <HeroVideo name="study-lin" label="Lin studying on a video call" className={styles.heroShotImg} />
+            <img
+              src="/study-lin.gif"
+              alt="Lin studying on a video call"
+              className={styles.heroShotImg}
+            />
             <span className={styles.heroShotTag}>lin</span>
           </div>
           <div className={`${styles.heroShot} ${styles.heroShotMaya}`}>
-            <HeroVideo name="study-maya" label="Maya studying on a video call" className={styles.heroShotImg} />
+            <img
+              src="/study-maya.gif"
+              alt="Maya studying on a video call"
+              className={styles.heroShotImg}
+            />
             <span className={styles.heroShotTag}>maya</span>
           </div>
 
