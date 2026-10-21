@@ -17,7 +17,7 @@ import { logBannedIpSignupAttempt } from "@/lib/bannedIpWatch";
 import { recordSignupIp } from "@/lib/userIps";
 import { notifyOpsSignup } from "@/lib/email/opsNotify";
 
-export type AuthProviderKey = "google";
+export type AuthProviderKey = "google" | "apple";
 
 export type UpsertFirebaseUserResult = {
   id: string;
@@ -47,6 +47,7 @@ function parseProvider(
   firebase: DecodedIdToken["firebase"],
 ): AuthProviderKey | null {
   if (firebase?.sign_in_provider === "google.com") return "google";
+  if (firebase?.sign_in_provider === "apple.com") return "apple";
   return null;
 }
 
@@ -54,7 +55,8 @@ function resolveEmailVerified(
   decoded: DecodedIdToken,
   provider: AuthProviderKey | null,
 ): Date | null {
-  if (provider === "google") return new Date();
+  // Google and Apple only issue tokens for addresses they have verified.
+  if (provider === "google" || provider === "apple") return new Date();
   if (decoded.email_verified === true) return new Date();
   return null;
 }
@@ -208,7 +210,7 @@ export async function upsertFirebaseUser(
     userId,
     email,
     firstName: firstname,
-    method: "google",
+    method: provider === "apple" ? "apple" : "google",
   });
 
   try {

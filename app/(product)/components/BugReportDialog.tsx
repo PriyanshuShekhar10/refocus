@@ -60,7 +60,7 @@ export default function BugReportDialog({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="bug-report-title"
-        className="relative w-full max-w-md rounded-2xl border border-rf-line bg-rf-card p-5 text-rf-ink shadow-2xl"
+        className="relative w-full max-w-md rounded-[20px] border-2 border-b-[5px] border-rf-chunk bg-rf-card p-5 text-rf-ink shadow-[0_30px_80px_-20px_rgba(0,0,0,.4)]"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -80,7 +80,7 @@ export default function BugReportDialog({ open, onClose }: Props) {
               <CircleCheck className="mt-0.5 h-[18px] w-[18px] shrink-0 text-rf-success" />
               <p className="text-sm">Thanks! Your report was sent. We may reply by email if we need more details.</p>
             </div>
-            <button type="button" onClick={onClose} className="rounded-[10px] border border-rf-line px-4 py-2 text-sm font-medium hover:bg-rf-line-soft">
+            <button type="button" onClick={onClose} className="rf-btn rounded-xl px-4 py-2 text-sm">
               Done
             </button>
           </div>
@@ -104,14 +104,14 @@ export default function BugReportDialog({ open, onClose }: Props) {
             </p>
             {error ? <p className="mt-2 text-sm text-rf-danger">{error}</p> : null}
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="rounded-[10px] border border-rf-line px-4 py-2 text-sm font-medium hover:bg-rf-line-soft">
+              <button type="button" onClick={onClose} className="rf-btn rounded-xl px-4 py-2 text-sm">
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => void submit()}
                 disabled={tooShort || busy}
-                className="inline-flex items-center gap-1.5 rounded-[10px] bg-rf-primary px-4 py-2 text-sm font-semibold text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50"
+                className="rf-btn-primary rounded-xl px-4 py-2 text-sm"
               >
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Send report

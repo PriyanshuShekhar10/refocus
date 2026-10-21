@@ -841,8 +841,10 @@ export default function FriendChat({
 
   const header = (
     <div
-      className={`flex items-center justify-between border-b border-rf-line/70 bg-rf-card/95 backdrop-blur-sm ${
-        isModal ? "px-5 py-4" : "px-3 h-10"
+      className={`flex items-center justify-between ${
+        isModal
+          ? "border-b border-rf-line/70 bg-rf-card/95 px-5 py-4 backdrop-blur-sm"
+          : "h-9 bg-rf-primary pl-2.5 pr-2 text-white"
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -862,8 +864,8 @@ export default function FriendChat({
         </Avatar>
         <div className="min-w-0">
           <div
-            className={`inline-flex max-w-full min-w-0 items-center gap-1.5 font-semibold text-rf-ink truncate ${
-              isModal ? "text-base max-w-[260px]" : "text-sm max-w-[200px]"
+            className={`inline-flex max-w-full min-w-0 items-center gap-1.5 truncate ${
+              isModal ? "text-base font-semibold text-rf-ink max-w-[260px]" : "text-[13px] font-bold text-white max-w-[200px]"
             }`}
           >
             <span className="truncate">{friendLabel}</span>
@@ -881,8 +883,8 @@ export default function FriendChat({
           <button
             onClick={onMinimizeToggle}
             aria-label={minimized ? "Maximize chat" : "Minimize chat"}
-            className={`inline-flex items-center justify-center rounded-md text-rf-ink-mute hover:text-rf-ink hover:bg-rf-line-soft transition-colors ${
-              isModal ? "h-8 w-8" : "h-6 w-6"
+            className={`inline-flex items-center justify-center rounded-md transition-colors ${
+              isModal ? "h-8 w-8 text-rf-ink-mute hover:bg-rf-line-soft hover:text-rf-ink" : "h-6 w-6 text-white/85 hover:bg-white/15 hover:text-white"
             }`}
           >
             {minimized ? <FiMaximize2 size={isModal ? 16 : 14} /> : <FiMinus size={isModal ? 16 : 14} />}
@@ -891,8 +893,8 @@ export default function FriendChat({
         <button
           onClick={onClose}
           aria-label="Close chat"
-          className={`inline-flex items-center justify-center rounded-md text-rf-ink-mute hover:text-rf-ink hover:bg-rf-line-soft transition-colors ${
-            isModal ? "h-8 w-8" : "h-6 w-6"
+          className={`inline-flex items-center justify-center rounded-md transition-colors ${
+            isModal ? "h-8 w-8 text-rf-ink-mute hover:bg-rf-line-soft hover:text-rf-ink" : "h-6 w-6 text-white/85 hover:bg-white/15 hover:text-white"
           }`}
         >
           <FiX size={isModal ? 16 : 14} />
@@ -1412,7 +1414,7 @@ export default function FriendChat({
     return (
       <>
       <div
-        className={`flex w-[320px] h-[380px] min-w-[300px] min-h-[320px] flex-col overflow-hidden rounded-xl bg-rf-card shadow-2xl border border-rf-line animate-[slide-up_180ms_ease-out] ${
+        className={`flex w-[320px] h-[380px] min-w-[300px] min-h-[320px] flex-col overflow-hidden rounded-t-xl border-2 border-rf-chunk bg-rf-card shadow-[0_20px_40px_-16px_rgba(0,0,0,.3)] animate-[slide-up_180ms_ease-out] ${
           minimized ? "h-10" : ""
         }`}
         style={{ transformOrigin: "bottom left" }}
@@ -1461,7 +1463,7 @@ export default function FriendChat({
     <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div
-        className="flex w-full max-w-lg h-[600px] max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-rf-card shadow-2xl ring-1 ring-rf-line animate-[scale-in_180ms_ease-out]"
+        className="flex w-full max-w-lg h-[600px] max-h-[85vh] flex-col overflow-hidden rounded-[20px] border-2 border-b-[5px] border-rf-chunk bg-rf-card shadow-[0_30px_80px_-20px_rgba(0,0,0,.4)] animate-[scale-in_180ms_ease-out]"
         style={{ transformOrigin: "center" }}
       >
         {header}

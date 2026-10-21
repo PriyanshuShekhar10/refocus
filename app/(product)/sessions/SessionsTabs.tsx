@@ -89,7 +89,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-full px-4 text-[13px] font-medium transition-colors ${
+      className={`inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-full px-4 text-[13px] font-semibold transition-colors ${
         active
           ? "bg-rf-primary text-rf-on-primary"
           : "text-rf-ink-soft hover:bg-rf-line-soft"

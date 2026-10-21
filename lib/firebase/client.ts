@@ -1,7 +1,7 @@
 "use client";
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, type Auth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, OAuthProvider, type Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -32,3 +32,16 @@ export function getFirebaseAuth(): Auth {
 
 export const googleAuthProvider = new GoogleAuthProvider();
 googleAuthProvider.setCustomParameters({ prompt: "select_account" });
+
+/**
+ * Sign in with Apple (web). Needs the Apple provider's web settings in Firebase
+ * (Services ID, team ID, key ID, private key); hidden until
+ * NEXT_PUBLIC_APPLE_SIGNIN_ENABLED=true.
+ */
+export const appleAuthProvider = new OAuthProvider("apple.com");
+appleAuthProvider.addScope("email");
+appleAuthProvider.addScope("name");
+
+export function isAppleSignInEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_APPLE_SIGNIN_ENABLED === "true";
+}

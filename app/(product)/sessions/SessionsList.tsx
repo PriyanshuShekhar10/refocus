@@ -165,7 +165,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
         </p>
         <Link
           href="/dashboard"
-          className="mt-4 inline-flex h-9 items-center gap-2 rounded-full bg-rf-primary px-4 text-[13px] font-medium text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
+          className="rf-btn-primary mt-4 h-9 px-4 text-[13px]"
         >
           Go to Calendar
         </Link>
@@ -285,7 +285,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                         </span>
                         <Link
                           href={`/sessions/${session.id}`}
-                          className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-rf-primary px-4 text-[13px] font-medium text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
+                          className="rf-btn-primary h-9 px-4 text-[13px]"
                         >
                           <Video className="h-3.5 w-3.5" aria-hidden />
                           Join now
@@ -298,7 +298,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                         </span>
                         <Link
                           href={`/sessions/${session.id}`}
-                          className="inline-flex h-[34px] items-center whitespace-nowrap rounded-full border border-rf-line bg-rf-card px-3.5 text-[13px] font-medium text-rf-ink transition-colors hover:border-rf-ink-mute"
+                          className="rf-btn h-[34px] px-3.5 text-[13px]"
                         >
                           View details
                         </Link>
@@ -308,7 +308,7 @@ export function SessionsList({ sessions, currentUserId }: SessionsListProps) {
                       <button
                         type="button"
                         onClick={() => setLeaveTarget(session)}
-                        className="inline-flex h-[34px] items-center whitespace-nowrap rounded-full border border-rf-warn px-3.5 text-[13px] font-medium text-rf-warn transition-colors hover:bg-rf-warn-soft"
+                        className="rf-btn-warn h-[34px] px-3.5 text-[13px]"
                       >
                         Leave
                       </button>

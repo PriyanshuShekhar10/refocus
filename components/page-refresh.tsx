@@ -111,8 +111,8 @@ export function PageRefreshButton({
       title="Refresh"
       className={
         compact
-          ? `inline-flex items-center justify-center rounded-lg border border-gray-200 p-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 ${className}`
-          : `inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 ${className}`
+          ? `rf-btn h-10 w-10 ${className}`
+          : `rf-btn h-9 px-3.5 text-[13px] ${className}`
       }
     >
       <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />

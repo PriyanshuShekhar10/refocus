@@ -82,7 +82,7 @@ export default function ReportDialog({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
       <div
-        className="w-full max-w-md rounded-xl border border-rf-line bg-rf-card shadow-xl"
+        className="w-full max-w-md rounded-[20px] border-2 border-b-[5px] border-rf-chunk bg-rf-card shadow-[0_30px_80px_-20px_rgba(0,0,0,.4)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="report-dialog-title"
@@ -187,7 +187,7 @@ export default function ReportDialog({
               type="button"
               onClick={handleClose}
               disabled={busy}
-              className="rounded-lg border border-rf-line px-4 py-2 text-sm font-medium text-rf-ink-soft hover:bg-rf-line-soft"
+              className="rf-btn rounded-xl px-4 py-2 text-sm"
             >
               Cancel
             </button>
@@ -195,7 +195,7 @@ export default function ReportDialog({
               type="button"
               onClick={handleSubmit}
               disabled={busy || !hasEnoughReportDetails(details)}
-              className="inline-flex items-center gap-2 rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50"
+              className="rf-btn-primary rounded-xl px-4 py-2 text-sm"
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Submit report

@@ -397,11 +397,29 @@ export function CalendarEventCard({
     return null;
   }
 
+  // Only the current user's own participant entry carries `attended`.
+  const myAttended = event.participants?.find((p) => p.attended !== undefined)?.attended;
+  const isMissed = isPast && isBooked && myAttended === false;
   const pastPrimaryLabel = isBooked
-    ? "Completed"
+    ? isMissed
+      ? "Missed"
+      : "Completed"
     : isOwner
       ? "Unmatched"
       : "Past session";
+
+  // Prototype colours per state: completed / missed / joinable now / booked / waiting for a partner.
+  const tone = isPast
+    ? isMissed
+      ? { box: "border-dashed border-rf-sess-miss-border bg-rf-sess-miss-bg", time: "text-rf-sess-miss-ink", sub: "text-rf-sess-miss-ink", label: "text-rf-sess-miss-ink" }
+      : { box: "border-rf-sess-done-border bg-rf-sess-done-bg", time: "text-rf-sess-done-ink", sub: "text-rf-sess-done-sub", label: "text-rf-sess-done-sub" }
+    : hasCustomColor
+      ? { box: "border-black/10 dark:border-white/10", time: "text-rf-ink", sub: "text-rf-ink-soft", label: "text-rf-ink" }
+      : isJoinableNow
+        ? { box: "border-rf-sess-live-border bg-rf-sess-live-bg shadow-[inset_0_0_0_1px_var(--rf-sess-live-border)]", time: "text-rf-sess-live-ink", sub: "text-rf-sess-live-sub", label: "text-rf-sess-live-ink" }
+        : isBooked
+          ? { box: "border-rf-sess-booked-border bg-rf-sess-booked-bg shadow-[0_1px_0_rgba(0,0,0,.04)]", time: "text-rf-sess-booked-ink", sub: "text-rf-sess-booked-sub", label: "text-rf-sess-booked-ink" }
+          : { box: "border-dashed border-rf-sess-open-border bg-rf-sess-open-bg", time: "text-rf-sess-open-ink", sub: "text-rf-sess-open-sub", label: "text-rf-sess-open-ink" };
 
   return (
     <div className="absolute inset-x-2 z-20" style={{ top }}>
@@ -412,21 +430,7 @@ export function CalendarEventCard({
             ? { backgroundColor: resolvedColor! }
             : {}),
         }}
-        className={`relative group rounded-lg p-2 flex flex-col justify-between overflow-hidden border ${
-          isPast
-            ? "border-dashed border-rf-line/90 bg-rf-bg/90 opacity-80 shadow-none dark:opacity-75"
-            : hasCustomColor
-              ? "border-transparent shadow-sm"
-              : isBooked
-                ? "border-rf-line/80 bg-rf-line shadow-sm"
-                : "border-rf-peach/90 bg-rf-cream-bg hover:border-rf-rose cursor-pointer shadow-sm"
-        } ${
-          isJoinableNow
-            ? "border-rf-rose ring-2 ring-rf-rose/45 shadow-md"
-            : ""
-        } ${!isPast && hasCustomColor ? "border-black/10 dark:border-white/10" : ""} ${
-          isPast ? "cursor-pointer" : ""
-        }`}
+        className={`relative group flex cursor-pointer flex-col justify-between overflow-hidden rounded-lg border p-2 transition-[filter] hover:brightness-[.97] ${tone.box}`}
         title={
           isPast
             ? `${pastPrimaryLabel} · ${event.durationMin} min`
@@ -499,11 +503,7 @@ export function CalendarEventCard({
 
         <div className="pr-8">
           <p
-            className={`font-semibold text-sm leading-tight ${
-              isPast
-                ? "text-rf-ink-mute"
-                : "text-rf-ink"
-            }`}
+            className={`font-semibold text-sm leading-tight ${tone.time}`}
           >
             {formatLocalTime(s, {
               hour: "2-digit",
@@ -514,13 +514,7 @@ export function CalendarEventCard({
           <p
             className={`font-semibold leading-tight ${
               isShortCard ? "text-[10px]" : "text-xs"
-            } ${
-              isPast
-                ? "text-rf-ink-mute"
-                : isBooked
-                  ? "text-rf-ink"
-                  : "text-rf-ink"
-            }`}
+            } ${tone.sub}`}
           >
             {(() => {
               if (isPast) {
@@ -537,13 +531,7 @@ export function CalendarEventCard({
         {!isShortCard && (
           <div className="mt-1 flex items-center justify-between">
             <span
-              className={`text-xs font-medium ${
-                isPast
-                  ? "text-rf-ink-mute"
-                  : isBooked
-                    ? "text-rf-ink"
-                    : "text-rf-plum-ink"
-              }`}
+              className={`text-xs font-medium ${tone.label}`}
             >
               {isPast
                 ? pastPrimaryLabel
@@ -551,7 +539,7 @@ export function CalendarEventCard({
             </span>
             {event.participants && event.participants.length > 0 && (
               <div
-                className={`ml-1 flex -space-x-1 ${isPast ? "opacity-60 grayscale" : ""}`}
+                className="ml-1 flex -space-x-1"
               >
                 {event.participants.slice(0, 2).map((participant, idx) => {
                   const displayName =

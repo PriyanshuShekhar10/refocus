@@ -51,6 +51,7 @@ type DbSession = {
   session_participants?: Array<{
     user_id: string;
     joined_at: Date | string;
+    call_joined_at?: Date | string;
     quiet?: boolean;
     label?: string | null;
   }>;
@@ -366,6 +367,8 @@ export async function GET(req: NextRequest) {
         avatar_url: usersById[p.user_id]?.avatar_url ?? undefined,
         emailVerified: usersById[p.user_id]?.emailVerified ?? false,
         quiet: Boolean(p.quiet),
+        // Whether *you* joined the call (shows Completed vs Missed); never others'.
+        attended: p.user_id === userId ? Boolean(p.call_joined_at) : undefined,
         attendance: usersById[p.user_id]?.attendance ?? null,
       })),
       owner: owner

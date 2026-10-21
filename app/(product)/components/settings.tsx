@@ -953,7 +953,7 @@ function SessionSection() {
           label="Sign out"
           hint="Return to the homepage and end this session."
         >
-          <DButton variant="ghost" onClick={handleLogout}>
+          <DButton variant="danger" onClick={handleLogout}>
             <LogOut size={14} /> Sign out
           </DButton>
         </Row>

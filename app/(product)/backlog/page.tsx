@@ -84,7 +84,7 @@ export default function BacklogPage() {
         showAdminTab={isAdmin}
       />
       <main
-        className={`ml-16 flex-1 ${
+        className={`ml-[72px] flex-1 ${
           showWallpaper ? "bg-dashboard-wallpaper" : "bg-rf-bg"
         }`}
         style={

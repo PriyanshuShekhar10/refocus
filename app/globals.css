@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prototype "chunky" buttons: a thick bottom edge that presses down on click. */
+@layer components {
+  .rf-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap; border-radius: 9999px;
+    border: 2px solid var(--rf-chunk); border-bottom-width: 4px;
+    background: var(--rf-card); color: var(--rf-ink-soft); font-weight: 700;
+    transition: transform .08s ease, background-color .15s ease;
+  }
+  .rf-btn:hover { background: var(--rf-chunk-hover); }
+  .rf-btn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
+  .rf-btn-primary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap; border-radius: 9999px; border: 0;
+    background: var(--rf-primary); color: #fff; font-weight: 800;
+    box-shadow: 0 3px 0 var(--rf-primary-shadow);
+    transition: transform .08s ease, background-color .15s ease;
+  }
+  .rf-btn-primary:hover { background: var(--rf-primary-hover); }
+  .rf-btn-primary:active:not(:disabled) { transform: translateY(3px); box-shadow: none; }
+  .rf-btn-warn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    white-space: nowrap; border-radius: 9999px;
+    border: 2px solid #E8C27A; border-bottom-width: 4px;
+    background: var(--rf-card); color: var(--rf-warn); font-weight: 700;
+    transition: transform .08s ease, background-color .15s ease;
+  }
+  .rf-btn-warn:hover { background: var(--rf-warn-soft); }
+  .rf-btn-warn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
+  .rf-btn:disabled, .rf-btn-primary:disabled, .rf-btn-warn:disabled { opacity: .55; cursor: not-allowed; }
+}
+
 :root {
   /* Quicksand is self-hosted via next/font in app/layout.tsx */
   --font-quicksand: "Quicksand", sans-serif;
@@ -384,13 +416,13 @@ html {
     --rf-warn: #b45a3c;
     --rf-warn-soft: #f4e9e2;
     --rf-caution: #b7860b;
-    --rf-side-bg: #3368A0;
-    --rf-side-btn: rgba(255,255,255,.1);
-    --rf-side-icon: #F2EFE7;
-    --rf-side-line: rgba(255,255,255,.18);
+    --rf-side-bg: #3B7DD8;
+    --rf-side-btn: rgba(255,255,255,.14);
+    --rf-side-icon: #ffffff;
+    --rf-side-line: rgba(255,255,255,.22);
     --rf-side-hover: #ffffff;
-    --rf-side-active: #F2EFE7;
-    --rf-side-active-ink: #3368A0;
+    --rf-side-active: #ffffff;
+    --rf-side-active-ink: #3B7DD8;
     --rf-dot: rgba(115,115,115,0.14);
     --rf-hatch: rgba(51,104,160,.14);
     --rf-bubble: #f1f2f4;
@@ -410,41 +442,61 @@ html {
     --rf-cream-bg: #C8DFDB;
     --rf-cream-soft: #e9f2f1;
     --rf-cream-border: #a9cdd0;
-    --rf-plum-ink: #3368A0;
-    --rf-plum-soft: rgba(51,104,160,.1);
+    --rf-plum-ink: #2A5FA8;
+    --rf-plum-soft: rgba(59,125,216,.1);
     --rf-h1: #f3dcea;
     --rf-h2: #e4a9c8;
     --rf-h3: #CA5995;
     --rf-h4: #5D1C6A;
-    --rf-primary: #3368A0;
-    --rf-primary-hover: #66A3BF;
+    --rf-primary: #3B7DD8;
+    --rf-primary-hover: #4A8AE0;
     --rf-on-primary: #ffffff;
+    /* Refocus prototype ("chunky" look) */
+    --rf-primary-shadow: #2A5FA8;
+    --rf-chunk: #E6E1D6;
+    --rf-chunk-hover: #F7F5EF;
+    --rf-divider: #EFEBE2;
+    --rf-side-shadow: rgba(0,0,0,.14);
+    --rf-side-active-shadow: #2A5FA8;
+    --rf-streak: #FF8A4C;
+    --rf-streak-bg: #FFEDE3;
+    --rf-streak-ink: #C2531F;
+    --rf-pink: #E0609F;
+    --rf-pink-soft: #FBE6F0;
+    --rf-pink-ink: #B8457F;
+    --rf-sess-done-bg: #EAF6EF; --rf-sess-done-border: #BFE3CC; --rf-sess-done-ink: #1F5C37; --rf-sess-done-sub: #3A8E5B;
+    --rf-sess-miss-bg: #FEF2F2; --rf-sess-miss-border: #F5C2C2; --rf-sess-miss-ink: #B91C1C;
+    --rf-sess-live-bg: #FFF0F7; --rf-sess-live-border: #E0609F; --rf-sess-live-ink: #7A2350; --rf-sess-live-sub: #B8457F;
+    --rf-sess-booked-bg: #E8F1FC; --rf-sess-booked-border: #B9D3F3; --rf-sess-booked-ink: #1C4A86; --rf-sess-booked-sub: #3B7DD8;
+    --rf-next-bg: #F3F8FE; --rf-next-soft: #C5DAF5;
+    --rf-sess-open-bg: #FFF9E6; --rf-sess-open-border: #E5B93C; --rf-sess-open-ink: #6B4600; --rf-sess-open-sub: #8A5A00;
+    --rf-today: #3B7DD8;
   }
   .dark {
-    --rf-bg: #09090b;
-    --rf-ink: #f4f4f5;
-    --rf-ink-soft: #c4c4cf;
-    --rf-ink-mute: #8f8f9a;
-    --rf-line: #374151;
-    --rf-line-soft: #1f2937;
-    --rf-card: #111827;
-    --rf-danger: #f87171;
-    --rf-danger-soft: #2a1417;
+    --rf-bg: #0E1015;
+    --rf-ink: #ECEEF3;
+    --rf-ink-soft: #C3C8D2;
+    --rf-ink-mute: #9AA2B0;
+    --rf-line: #2B303A;
+    --rf-line-soft: #262A34;
+    --rf-card: #181B22;
+    --rf-danger: #E45858;
+    --rf-danger-soft: #3E1E1E;
     --rf-success: #4ade80;
     --rf-success-soft: #112019;
     --rf-warn: #D88663;
     --rf-warn-soft: #2C1F18;
     --rf-caution: #facc15;
-    --rf-side-bg: #16314f;
-    --rf-side-btn: rgba(255,255,255,.06);
-    --rf-side-icon: #C8DFDB;
-    --rf-side-line: rgba(255,255,255,.12);
+    --rf-side-bg: #3B7DD8;
+    --rf-side-btn: rgba(255,255,255,.14);
+    --rf-side-icon: #ffffff;
+    --rf-side-line: rgba(255,255,255,.22);
     --rf-side-hover: #ffffff;
-    --rf-side-active: #66A3BF;
-    --rf-side-active-ink: #0b1a2b;
+    --rf-side-active: #ffffff;
+    --rf-side-active-ink: #3B7DD8;
     --rf-dot: rgba(160,160,170,0.12);
     --rf-hatch: rgba(200,223,219,.08);
-    --rf-bubble: #1f2937;
+    --rf-bubble: #20242D;
     --rf-amber-bg: rgba(120,53,15,.4);
     --rf-amber-ink: #fcd34d;
     --rf-miss-bg: rgba(127,29,29,.4);
@@ -455,21 +507,40 @@ html {
     --rf-tint-butter: #312C1E;
     --rf-tint-lavender: #292335;
     --rf-tint-clay: #2F2118;
-    --rf-tint-sky: #1E2630;
+    --rf-tint-sky: #1E2C3E;
     --rf-rose: #CA5995;
     --rf-peach: #FFB090;
     --rf-cream-bg: rgba(51,104,160,.3);
     --rf-cream-soft: rgba(51,104,160,.16);
     --rf-cream-border: rgba(102,163,191,.45);
-    --rf-plum-ink: #66A3BF;
-    --rf-plum-soft: rgba(102,163,191,.18);
+    --rf-plum-ink: #6B9ADA;
+    --rf-plum-soft: rgba(90,146,222,.18);
     --rf-h1: #3a1f3f;
     --rf-h2: #6b2d6f;
     --rf-h3: #a8457f;
     --rf-h4: #CA5995;
-    --rf-primary: #3368A0;
-    --rf-primary-hover: #66A3BF;
+    --rf-primary: #3B7DD8;
+    --rf-primary-hover: #528FE1;
     --rf-on-primary: #ffffff;
+    --rf-primary-shadow: #6B9ADA;
+    --rf-chunk: #343A47;
+    --rf-chunk-hover: #1D2028;
+    --rf-divider: #262A34;
+    --rf-side-shadow: rgba(0,0,0,.14);
+    --rf-side-active-shadow: #2A5FA8;
+    --rf-streak: #FF8A4C;
+    --rf-streak-bg: #412B1F;
+    --rf-streak-ink: #E5885D;
+    --rf-pink: #E0609F;
+    --rf-pink-soft: #411F30;
+    --rf-pink-ink: #CA729F;
+    --rf-sess-done-bg: #20422E; --rf-sess-done-border: #275036; --rf-sess-done-ink: #82D5A2; --rf-sess-done-sub: #7DCA9B;
+    --rf-sess-miss-bg: #3E1E1E; --rf-sess-miss-border: #4B2424; --rf-sess-miss-ink: #E75E5E;
+    --rf-sess-live-bg: #3E1E2D; --rf-sess-live-border: #E0609F; --rf-sess-live-ink: #D878AA; --rf-sess-live-sub: #CA729F;
+    --rf-sess-booked-bg: #1F2E41; --rf-sess-booked-border: #26384E; --rf-sess-booked-ink: #6EA0E1; --rf-sess-booked-sub: #5A92DE;
+    --rf-next-bg: #1E2C3E; --rf-next-soft: #24354B;
+    --rf-sess-open-bg: #40381F; --rf-sess-open-border: #E5B93C; --rf-sess-open-ink: #F3C267; --rf-sess-open-sub: #F2C061;
+    --rf-today: #3B7DD8;
   }
 }
 

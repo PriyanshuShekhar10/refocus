@@ -171,6 +171,44 @@ describe("upsertFirebaseUser", () => {
     expect(insertedDoc.emailVerified).toBeInstanceOf(Date);
   });
 
+  it("creates Apple users as verified, records the provider and says Apple in the signup notice", async () => {
+    usersCol.insertOne.mockResolvedValue({ insertedId: new ObjectId() });
+    const { upsertFirebaseUser } = await import("@/lib/users/upsertFirebaseUser");
+    await upsertFirebaseUser(
+      makeDecodedToken({
+        email: "abc123@privaterelay.appleid.com",
+        email_verified: false,
+        name: undefined,
+        picture: undefined,
+        firebase: { sign_in_provider: "apple.com", identities: {} },
+      }),
+      "Ana L",
+    );
+    const insertedDoc = usersCol.insertOne.mock.calls[0][0];
+    expect(insertedDoc.emailVerified).toBeInstanceOf(Date);
+    expect(insertedDoc.firstname).toBe("Ana");
+    expect(notifyOpsSignup).toHaveBeenCalledWith(expect.objectContaining({ method: "apple" }));
+  });
+
+  it("links Apple to an existing account by email", async () => {
+    const existingId = new ObjectId();
+    usersCol.findOne.mockResolvedValue({ _id: existingId, email: "user@example.com", authProviders: { google: "g-uid" } });
+    const { upsertFirebaseUser } = await import("@/lib/users/upsertFirebaseUser");
+    const res = await upsertFirebaseUser(
+      makeDecodedToken({ uid: "apple-uid", firebase: { sign_in_provider: "apple.com", identities: {} } }),
+    );
+    expect(res).toMatchObject({ id: String(existingId), isNewUser: false });
+    const update = usersCol.updateOne.mock.calls[0][1].$set;
+    expect(update.authProviders).toEqual({ google: "g-uid", apple: "apple-uid" });
+  });
+
+  it("still says Google in the signup notice for Google users", async () => {
+    usersCol.insertOne.mockResolvedValue({ insertedId: new ObjectId() });
+    const { upsertFirebaseUser } = await import("@/lib/users/upsertFirebaseUser");
+    await upsertFirebaseUser(makeDecodedToken());
+    expect(notifyOpsSignup).toHaveBeenCalledWith(expect.objectContaining({ method: "google" }));
+  });
+
   it("uses client displayName when token name is missing", async () => {
     const insertedId = new ObjectId();
     usersCol.insertOne.mockResolvedValue({ insertedId });

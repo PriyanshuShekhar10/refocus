@@ -707,3 +707,69 @@
 :global(.rf-embedded) .btnPrimary:hover:not(:disabled) {
   background: var(--rf-primary-hover);
 }
+
+/* Dashboard sections (desktop box and mobile): the prototype's chunky buttons. */
+:global(.rf-section) .btn {
+  border-radius: 12px;
+  font-weight: 700;
+}
+:global(.rf-section) .btnPrimary,
+:global(.rf-section) .btnPrimary:hover:not(:disabled) {
+  border: 0;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 4px 0 var(--rf-primary-shadow);
+}
+:global(.rf-section) .btnPrimary {
+  background: var(--rf-primary);
+}
+:global(.rf-section) .btnPrimary:hover:not(:disabled) {
+  background: var(--rf-primary-hover);
+}
+:global(.rf-section) .btnPrimary:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: none;
+}
+:global(.rf-section) .btnGhost,
+:global(.rf-section) .btnGhost:hover:not(:disabled),
+:global(.rf-section) .btnDanger,
+:global(.rf-section) .btnDanger:hover:not(:disabled) {
+  border-width: 2px 2px 4px;
+  border-style: solid;
+}
+:global(.rf-section) .btnGhost {
+  border-color: var(--rf-chunk);
+  background: var(--rf-card);
+  color: var(--rf-ink-soft);
+}
+:global(.rf-section) .btnGhost:hover:not(:disabled) {
+  border-color: var(--rf-chunk);
+  background: var(--rf-chunk-hover);
+}
+:global(.rf-section) .btnDanger {
+  border-color: var(--rf-sess-miss-border);
+  background: var(--rf-card);
+  color: var(--rf-sess-miss-ink);
+}
+:global(.rf-section) .btnDanger:hover:not(:disabled) {
+  border-color: var(--rf-sess-miss-border);
+  background: var(--rf-sess-miss-bg);
+}
+:global(.rf-section) .btnGhost:active:not(:disabled),
+:global(.rf-section) .btnDanger:active:not(:disabled) {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+:global(.rf-section) .switch input:checked ~ .switchTrack {
+  background: var(--rf-primary);
+}
+:global(.rf-section) .segmented {
+  border-radius: 10px;
+}
+:global(.rf-section) .segmentedBtn {
+  border-radius: 8px;
+  font-weight: 700;
+}
+:global(.rf-section) .segmentedBtnActive {
+  box-shadow: 0 2px 0 var(--rf-chunk);
+}

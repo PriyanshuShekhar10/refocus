@@ -11,7 +11,7 @@ import { swrKeys } from "@/lib/swr/keys";
 import { VerifiedName } from "@/components/verified-tag";
 import DeviceTestModal from "../DeviceTestModal";
 import BugReportDialog from "../BugReportDialog";
-import { Bug, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bug, ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import SidebarUpdatesBox from "../Updates/SidebarUpdatesBox";
 import { releaseAllLocalMediaStreams } from "@/lib/localMedia";
 import { AttendanceHighlight } from "@/components/attendance-highlight";
@@ -20,6 +20,8 @@ import { UpNextPanel } from "./UpNextPanel";
 import { attendanceLevel } from "@/lib/sessionAttendanceStats";
 import { pickJoinableSession } from "@/lib/sessionWindow";
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
+import { useSessionStats } from "@/hooks/useSessionStats";
+import { WeekStreak } from "./WeekStreak";
 import { profileHref, urlForTab } from "@/lib/dashboardTabs";
 
 const ATTENDANCE_COLORS = {
@@ -172,12 +174,6 @@ export function CalendarRightSidebar({
         return result.data;
       }),
   );
-  const upcomingCount = useMemo(() => {
-    const sessions = upcomingData?.sessions;
-    if (!sessions) return null;
-    const now = Date.now();
-    return sessions.filter((s) => new Date(s.end).getTime() >= now).length;
-  }, [upcomingData]);
 
   // Re-check the join window and today's count as time passes.
   const [nowTick, setNowTick] = useState(() => Date.now());
@@ -209,6 +205,8 @@ export function CalendarRightSidebar({
     [upcomingData, nowTick],
   );
   const sessionCount = sessionCountProp ?? todayCount;
+  const { stats: focusStats } = useSessionStats();
+  const streak = focusStats?.currentStreak ?? 0;
   const joinableSession = joinableSessionProp !== undefined ? joinableSessionProp : derivedJoinable;
 
   useEffect(() => {
@@ -577,7 +575,7 @@ export function CalendarRightSidebar({
                   {currentAvatarUrl ? (
                     <AvatarImage src={currentAvatarUrl} alt={displayName} />
                   ) : null}
-                  <AvatarFallback className="text-xs font-semibold bg-rf-cream-bg text-rf-plum-ink">
+                  <AvatarFallback className="text-[13px] font-bold bg-rf-pink-soft text-rf-pink-ink">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -595,6 +593,12 @@ export function CalendarRightSidebar({
                     {sessionCount} session{sessionCount !== 1 ? "s" : ""} today
                   </Link>
                 </p>
+                {streak > 0 ? (
+                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-rf-streak-bg py-px pl-1.5 pr-2 text-xs font-bold text-rf-streak-ink">
+                    <Flame className="h-[13px] w-[13px] text-rf-streak" fill="currentColor" strokeWidth={0} aria-hidden />
+                    {streak}-day streak
+                  </span>
+                ) : null}
               </div>
             </div>
           </div>
@@ -602,10 +606,10 @@ export function CalendarRightSidebar({
           {myAttendance ? (
             <Link
               href={urlForTab("profile")}
-              className="mt-2 flex flex-col gap-3 rounded-[14px] border border-rf-line bg-rf-card p-3.5 text-left transition-colors hover:border-rf-rose"
+              className="mt-3 flex flex-col gap-3 rounded-[20px] border-2 border-b-[5px] border-rf-chunk bg-rf-card p-3.5 text-left transition-colors hover:border-rf-primary/50"
             >
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-xs font-semibold text-rf-ink-mute">
+                <span className="text-xs font-extrabold text-rf-ink-mute">
                   Your attendance
                 </span>
                 <span className="text-[11.5px] text-rf-ink-mute">
@@ -614,13 +618,13 @@ export function CalendarRightSidebar({
               </div>
               <div className="flex items-center gap-3">
                 <span
-                  className={`text-[26px] font-semibold leading-none tracking-[-0.03em] tabular-nums ${
+                  className={`text-[26px] font-extrabold leading-none tracking-[-0.03em] tabular-nums ${
                     ATTENDANCE_COLORS[attendanceLevel(myAttendance.percent)].text
                   }`}
                 >
                   {myAttendance.percent}%
                 </span>
-                <span className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-rf-line-soft">
+                <span className="relative h-3 flex-1 overflow-hidden rounded-full bg-rf-line-soft">
                   <span
                     className={`absolute inset-y-0 left-0 rounded-full ${
                       ATTENDANCE_COLORS[attendanceLevel(myAttendance.percent)].bar
@@ -629,22 +633,9 @@ export function CalendarRightSidebar({
                   />
                 </span>
               </div>
-              <div className="flex gap-4 border-t border-rf-line-soft pt-2.5 text-[12.5px] text-rf-ink-soft">
-                <span>
-                  <strong className="font-semibold text-rf-ink">
-                    {myAttendance.attended}
-                  </strong>{" "}
-                  sessions done
-                </span>
-                {upcomingCount !== null ? (
-                  <span>
-                    <strong className="font-semibold text-rf-ink">
-                      {upcomingCount}
-                    </strong>{" "}
-                    upcoming
-                  </span>
-                ) : null}
-              </div>
+              {focusStats ? (
+                <WeekStreak trend={focusStats.trend} streak={streak} best={focusStats.longestStreak} />
+              ) : null}
             </Link>
           ) : null}
         </div>

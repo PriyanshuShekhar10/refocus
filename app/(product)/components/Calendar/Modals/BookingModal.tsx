@@ -40,7 +40,7 @@ export function BookingModal({
 
   return (
     <ModalWrapper onClose={onClose}>
-      <div className="w-full max-w-md rounded-lg bg-rf-card p-6 shadow-2xl border border-rf-line">
+      <div className="w-full max-w-md rounded-[20px] border-2 border-b-[5px] border-rf-chunk bg-rf-card p-6 shadow-[0_30px_80px_-20px_rgba(0,0,0,.4)]">
         <h2 className="text-xl font-bold text-rf-ink">
           Confirm Booking
         </h2>
@@ -76,13 +76,13 @@ export function BookingModal({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="rounded-md border border-rf-line bg-rf-card text-rf-ink px-4 py-2 text-sm hover:bg-rf-line-soft"
+            className="rf-btn rounded-xl px-4 py-2 text-sm"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
-            className="rounded-md bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover"
+            className="rf-btn-primary rounded-xl px-4 py-2 text-sm"
           >
             Confirm
           </button>

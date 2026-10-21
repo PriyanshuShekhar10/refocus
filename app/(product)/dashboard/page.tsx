@@ -159,7 +159,7 @@ function SectionBox({
   const arrow = back ? <BackArrow onBack={back.onBack} label={back.label} /> : null;
   if (isMobile) {
     return (
-      <div className={fill ? "h-full overflow-y-auto no-scrollbar" : "h-full overflow-y-auto px-3 pb-20 pt-4"}>
+      <div className={fill ? "rf-section h-full overflow-y-auto no-scrollbar" : "rf-section h-full overflow-y-auto px-3 pb-20 pt-4"}>
         {arrow ? <div className={fill ? "px-3 pt-3" : undefined}>{arrow}</div> : null}
         {children}
       </div>
@@ -167,7 +167,7 @@ function SectionBox({
   }
   return (
     <div className="h-full p-4">
-      <div className="rf-embedded h-full min-h-0 overflow-hidden rounded-[14px] border border-rf-line bg-rf-card text-rf-ink">
+      <div className="rf-embedded rf-section h-full min-h-0 overflow-hidden rounded-[14px] border border-rf-line bg-rf-card text-rf-ink">
         <div className="h-full overflow-y-auto px-[clamp(16px,3vw,40px)] pb-16 pt-8">
           {arrow ? <div className="mx-auto max-w-[980px]">{arrow}</div> : null}
           {children}
@@ -340,7 +340,7 @@ function DashboardContent() {
           showAdminTab={isAdmin}
         />
       </div>
-      <div className="ml-0 flex min-w-0 flex-1 flex-col overflow-hidden lg:ml-16">
+      <div className="ml-0 flex min-w-0 flex-1 flex-col overflow-hidden lg:ml-[72px]">
         <EmailVerificationStrip />
         <div className="flex min-h-0 flex-1 overflow-hidden pb-16 lg:pb-0">
           <WallpaperProvider active={!!showWallpaper}>

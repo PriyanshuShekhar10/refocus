@@ -67,9 +67,6 @@ export default function FriendRow({
       .toUpperCase() || initial;
   const tint = TINTS[hashId(friend.user_id) % TINTS.length];
   const meta = [handleLine, sinceText].filter(Boolean).join(" · ");
-  const pill =
-    "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[12.5px] font-medium transition-colors disabled:opacity-60";
-
   return (
     <div
       className="-mx-2 flex flex-wrap items-center gap-3 rounded-[10px] border-b px-2 py-3.5 transition-colors last:border-b-0 hover:bg-[var(--bg)]"
@@ -112,7 +109,7 @@ export default function FriendRow({
         <button
           type="button"
           onClick={() => onOpenChat(friend)}
-          className={`${pill} border-rf-line bg-rf-card text-rf-ink hover:border-rf-ink-soft`}
+          className="rf-btn h-8 px-3 text-[12.5px]"
         >
           <MessageCircle className="h-3.5 w-3.5" />
           Chat
@@ -120,7 +117,7 @@ export default function FriendRow({
         <button
           type="button"
           onClick={() => onBookSession(friend)}
-          className={`${pill} border-rf-primary bg-rf-primary text-rf-on-primary hover:border-rf-primary-hover hover:bg-rf-primary-hover`}
+          className="rf-btn-primary h-8 px-3 text-[12.5px]"
         >
           <Calendar className="h-3.5 w-3.5" />
           Book session

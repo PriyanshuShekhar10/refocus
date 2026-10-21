@@ -26,6 +26,7 @@ import {
   Volume2,
   VolumeX,
   X,
+  MessagesSquare,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -41,6 +42,7 @@ import AdminMailbox, {
 import AdminEngagement from "./AdminEngagement";
 import AdminRematch from "./AdminRematch";
 import AdminBugs from "./AdminBugs";
+import AdminMessages from "./AdminMessages";
 import AdminCrew from "./AdminCrew";
 import AdminTestCall from "./AdminTestCall";
 import AdminUpdates from "./AdminUpdates";
@@ -54,6 +56,7 @@ type AdminSection =
   | "mailbox"
   | "reports"
   | "bugs"
+  | "messages"
   | "history"
   | "ip-activity"
   | "logins"
@@ -290,6 +293,7 @@ const SECTIONS: {
   { id: "ip-activity", label: "Banned IP activity", icon: Activity },
   { id: "reports", label: "Reports", icon: Flag },
   { id: "bugs", label: "Bugs", icon: Bug },
+  { id: "messages", label: "Messages", icon: MessagesSquare },
   { id: "history", label: "History", icon: History },
   { id: "config", label: "Config", icon: Settings2 },
 ];
@@ -320,6 +324,7 @@ const ACTION_LABELS: Record<string, string> = {
   "daily.rotate_accounts": "Set Daily.co accounts to rotate",
   "update.publish": "Published product update",
   "update.delete": "Deleted product update",
+  "messages.view_conversation": "Viewed private messages",
 };
 
 function StatCard({
@@ -1526,6 +1531,8 @@ export default function AdminPanel() {
         ) : null}
 
         {section === "bugs" ? <AdminBugs /> : null}
+
+        {section === "messages" ? <AdminMessages /> : null}
 
         {section === "crew" ? <AdminCrew active /> : null}
 

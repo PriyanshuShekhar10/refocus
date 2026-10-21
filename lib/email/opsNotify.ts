@@ -25,7 +25,7 @@ async function sendOpsEmail(input: {
 export async function notifyOpsSignup(input: {
   email: string;
   firstName?: string | null;
-  method: "email" | "google";
+  method: "email" | "google" | "apple";
   userId: string;
 }): Promise<void> {
   try {

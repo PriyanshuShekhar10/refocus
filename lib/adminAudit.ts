@@ -26,7 +26,8 @@ export type AdminAuditAction =
   | "daily.switch_account"
   | "daily.rotate_accounts"
   | "update.publish"
-  | "update.delete";
+  | "update.delete"
+  | "messages.view_conversation";
 
 export type AdminAuditEntry = {
   _id?: ObjectId;

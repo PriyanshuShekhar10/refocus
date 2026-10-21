@@ -125,13 +125,14 @@ export function UpNextPanel({ onOpenSession, onTestDevices, onJoin }: UpNextPane
           const partner = partnerOf(next, currentUserId);
           const hosting = next.owner_id === currentUserId;
           const canJoin = !!partner && isCallJoinable(start, end, now);
+          const opensAt = new Date(start.getTime() - 30 * 60_000);
           return (
-            <div className="flex shrink-0 flex-col gap-3 rounded-[14px] border border-rf-line bg-rf-card p-4">
+            <div className="flex shrink-0 flex-col gap-2.5 rounded-[20px] border-2 border-b-[5px] border-rf-primary bg-rf-next-bg px-4 py-3.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="whitespace-nowrap text-[11.5px] font-semibold tracking-[0.02em] text-rf-ink-mute">
+                <span className="whitespace-nowrap text-[11.5px] font-extrabold uppercase tracking-[0.06em] text-rf-primary-shadow">
                   Next up
                 </span>
-                <span className="whitespace-nowrap text-xs font-semibold text-rf-plum-ink">
+                <span className="whitespace-nowrap text-xs font-extrabold text-rf-primary-shadow">
                   {startsIn(start, end, now)}
                 </span>
               </div>
@@ -140,16 +141,16 @@ export function UpNextPanel({ onOpenSession, onTestDevices, onJoin }: UpNextPane
                 onClick={() => onOpenSession?.(next)}
                 className="flex items-center gap-2.5 text-left text-rf-ink"
               >
-                <Avatar className="h-9 w-9 shrink-0">
+                <Avatar className="h-10 w-10 shrink-0 border-2 border-rf-card ring-2 ring-rf-primary">
                   {partner?.avatarUrl ? (
                     <AvatarImage src={partner.avatarUrl} alt={partner.label} />
                   ) : null}
-                  <AvatarFallback className="bg-rf-tint-blush text-xs font-semibold text-rf-ink">
+                  <AvatarFallback className="bg-rf-cream-bg text-[13px] font-extrabold text-rf-ink">
                     {partner ? partner.initials : "···"}
                   </AvatarFallback>
                 </Avatar>
                 <span className="flex min-w-0 flex-col leading-[1.35]">
-                  <span className="truncate text-[14.5px] font-semibold">
+                  <span className="truncate text-[15px] font-extrabold">
                     {partner ? partner.label : "Waiting for match"}
                   </span>
                   <span className="whitespace-nowrap text-[12.5px] text-rf-ink-soft">
@@ -159,35 +160,51 @@ export function UpNextPanel({ onOpenSession, onTestDevices, onJoin }: UpNextPane
                 </span>
               </button>
               {canJoin ? (
-                <>
-                  <Link
-                    href={`/sessions/${next.id}`}
-                    onClick={onJoin}
-                    className="flex h-10 items-center justify-center rounded-[10px] bg-rf-primary text-sm font-semibold text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
-                  >
-                    Join session
-                  </Link>
-                  {onTestDevices ? (
-                    <button
-                      type="button"
-                      onClick={onTestDevices}
-                      className="h-9 rounded-[9px] border border-rf-line text-[13px] font-medium text-rf-ink-soft transition-colors hover:bg-rf-line-soft hover:text-rf-ink"
-                    >
-                      Test audio and video
-                    </button>
-                  ) : null}
-                </>
+                <Link
+                  href={`/sessions/${next.id}`}
+                  onClick={onJoin}
+                  className="flex h-11 items-center justify-center rounded-[14px] bg-rf-primary text-sm font-extrabold uppercase tracking-[0.06em] text-rf-on-primary shadow-[0_4px_0_var(--rf-primary-shadow)] transition-transform hover:bg-rf-primary-hover active:translate-y-1 active:shadow-none"
+                >
+                  Join session
+                </Link>
+              ) : partner ? (
+                <span
+                  aria-disabled="true"
+                  title="The room opens 30 min before start."
+                  className="flex h-11 items-center justify-center rounded-[14px] bg-rf-primary text-sm font-extrabold uppercase tracking-[0.06em] text-rf-on-primary opacity-[.55] shadow-[0_4px_0_var(--rf-primary-shadow)]"
+                >
+                  Opens {formatLocalTime(opensAt, timeFmt)}
+                </span>
               ) : (
-                <p className="text-[12.5px] text-rf-ink-mute">
-                  {partner
-                    ? "The room opens 30 min before start."
-                    : "We'll match you with a partner before it starts."}
+                <p className="text-[12.5px] text-rf-ink-soft">
+                  We&apos;ll match you with a partner before it starts.
                 </p>
               )}
+              {onTestDevices ? (
+                <button
+                  type="button"
+                  onClick={onTestDevices}
+                  className="h-9 rounded-xl border-2 border-b-4 border-rf-next-soft bg-rf-card text-[12.5px] font-bold text-rf-primary-shadow transition-transform active:translate-y-[2px] active:border-b-2"
+                >
+                  Test audio and video
+                </button>
+              ) : null}
             </div>
           );
         })()
-      ) : null}
+      ) : (
+        <div className="flex shrink-0 flex-col gap-2.5 rounded-[20px] border-2 border-b-[5px] border-rf-chunk bg-rf-card p-4">
+          <span className="text-[11.5px] font-extrabold uppercase tracking-[0.06em] text-rf-ink-mute">Next up</span>
+          <p className="text-sm text-rf-ink-soft">Nothing booked yet.</p>
+          <button
+            type="button"
+            onClick={() => document.querySelector<HTMLButtonElement>("[data-book-session-trigger]")?.click()}
+            className="h-[42px] rounded-[14px] bg-rf-primary text-sm font-extrabold text-rf-on-primary shadow-[0_4px_0_var(--rf-primary-shadow)] transition-transform hover:bg-rf-primary-hover active:translate-y-1 active:shadow-none"
+          >
+            Book a session
+          </button>
+        </div>
+      )}
 
       <div className="flex shrink-0 flex-col">
         <span className="px-2 pb-1 text-[11.5px] font-semibold tracking-[0.02em] text-rf-ink-mute">

@@ -16,6 +16,8 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Flame } from "lucide-react";
+import { useSessionStats } from "@/hooks/useSessionStats";
 
 export type { DashboardTab as TabKey } from "@/lib/dashboardTabs";
 import type { DashboardTab as TabKey } from "@/lib/dashboardTabs";
@@ -44,6 +46,8 @@ const SideBar: FC<SideBarProps> = ({
     .toUpperCase();
   const [friendsUnread, setFriendsUnread] = useState(0);
   const [pendingSessionRequests, setPendingSessionRequests] = useState(0);
+  const { stats } = useSessionStats();
+  const streak = stats?.currentStreak ?? 0;
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -82,26 +86,26 @@ const SideBar: FC<SideBarProps> = ({
 
   return (
     <aside
-      className="fixed top-0 left-0 z-40 flex h-screen w-16 flex-col items-center gap-3 border-r border-rf-side-line bg-rf-side-bg pb-4 pt-3 font-rf shadow-sm"
+      className="fixed top-0 left-0 z-40 flex h-screen w-[72px] flex-col items-center gap-3.5 bg-rf-side-bg py-4 font-rf"
       aria-label="Main navigation"
     >
       {/* Primary work */}
-      <nav className="flex flex-col gap-3" aria-label="Workspace">
+      <nav className="flex flex-col gap-3.5" aria-label="Workspace">
         <SideBarIcon
-          icon={<Home size={19} strokeWidth={1.8} />}
+          icon={<Home size={20} strokeWidth={1.9} />}
           text="Dashboard"
           onClick={() => onSelect("dashboard")}
           active={activeTab === "dashboard"}
         />
         <SideBarIcon
-          icon={<Clock size={18} strokeWidth={1.8} />}
+          icon={<Clock size={20} strokeWidth={1.9} />}
           text="Sessions"
           onClick={() => onSelect("sessions")}
           active={activeTab === "sessions"}
         />
         {showBacklogTab ? (
           <SideBarIcon
-            icon={<ListTodo size={18} strokeWidth={1.8} />}
+            icon={<ListTodo size={20} strokeWidth={1.9} />}
             text="Backlog"
             onClick={() => onSelect("backlog")}
             active={activeTab === "backlog"}
@@ -112,16 +116,18 @@ const SideBar: FC<SideBarProps> = ({
       <Divider />
 
       {/* People */}
-      <nav className="flex flex-col gap-3" aria-label="People">
+      <nav className="flex flex-col gap-3.5" aria-label="People">
         <SideBarIcon
           icon={
             <div className="relative inline-flex">
-              <Heart size={18} strokeWidth={1.8} />
+              <Heart size={20} strokeWidth={1.9} />
               {pendingSessionRequests > 0 ? (
                 <span
-                  className="absolute -right-1.5 -top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-rf-side-bg"
+                  className="absolute -right-[18px] -top-[18px] min-w-[18px] rounded-full border-2 border-rf-side-bg bg-rf-pink px-1 text-center text-[10px] font-extrabold leading-[14px] text-white"
                   aria-hidden="true"
-                />
+                >
+                  {pendingSessionRequests}
+                </span>
               ) : null}
             </div>
           }
@@ -134,7 +140,7 @@ const SideBar: FC<SideBarProps> = ({
           active={activeTab === "friends"}
         />
         <SideBarIcon
-          icon={<Hash size={18} strokeWidth={1.8} />}
+          icon={<Hash size={20} strokeWidth={1.9} />}
           text="Community"
           onClick={() => onSelect("community")}
           active={activeTab === "community"}
@@ -144,9 +150,9 @@ const SideBar: FC<SideBarProps> = ({
       {showAdminTab ? (
         <>
           <Divider />
-          <nav className="flex flex-col gap-3" aria-label="Admin">
+          <nav className="flex flex-col gap-3.5" aria-label="Admin">
             <SideBarIcon
-              icon={<ShieldCheck size={18} strokeWidth={1.8} />}
+              icon={<ShieldCheck size={20} strokeWidth={1.9} />}
               text="Admin"
               onClick={() => onSelect("admin")}
               active={activeTab === "admin"}
@@ -156,15 +162,15 @@ const SideBar: FC<SideBarProps> = ({
       ) : null}
 
       {/* Utilities */}
-      <div className="mt-auto flex flex-col items-center gap-3">
-        <nav className="flex flex-col gap-3" aria-label="Tools">
+      <div className="mt-auto flex flex-col items-center gap-3.5">
+        <nav className="flex flex-col gap-3.5" aria-label="Tools">
           <SideBarIcon
             icon={
               <div className="relative">
-                <MessageCircle size={18} strokeWidth={1.8} />
+                <MessageCircle size={20} strokeWidth={1.9} />
                 {friendsUnread > 0 ? (
                   <span
-                    className="absolute -right-1.5 -top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-rf-side-bg"
+                    className="absolute -right-[18px] -top-[18px] h-3 w-3 rounded-full border-2 border-rf-side-bg bg-red-500"
                     aria-hidden="true"
                   />
                 ) : null}
@@ -185,7 +191,7 @@ const SideBar: FC<SideBarProps> = ({
             active={false}
           />
           <SideBarIcon
-            icon={<Settings2 size={18} strokeWidth={1.8} />}
+            icon={<Settings2 size={20} strokeWidth={1.9} />}
             text="Settings"
             onClick={() => onSelect("settings")}
             active={activeTab === "settings"}
@@ -193,26 +199,35 @@ const SideBar: FC<SideBarProps> = ({
           <button
             type="button"
             onClick={() => onSelect("profile")}
-            aria-label="Profile"
+            aria-label={streak > 0 ? `Profile (${streak}-day focus streak)` : "Profile"}
             aria-current={activeTab === "profile" ? "page" : undefined}
             className={cn(
-              "group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-3xl border-2 p-0 shadow-sm transition-all duration-200 ease-out hover:rounded-xl",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose focus-visible:ring-offset-2 focus-visible:ring-offset-rf-side-bg",
-              activeTab === "profile" ? "border-rf-side-hover" : "border-rf-side-line",
+              "group relative mb-2 flex h-12 w-12 items-center justify-center rounded-full border-[3px] p-0",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-rf-side-bg",
+              activeTab === "profile" ? "border-[#FFC940]" : "border-white",
             )}
           >
-            <Avatar className="h-full w-full rounded-none">
+            <Avatar className="h-full w-full">
               {user?.image ? <AvatarImage src={user.image} alt={displayName} /> : null}
-              <AvatarFallback className="rounded-none text-xs font-semibold bg-rf-side-btn text-rf-side-icon">
+              <AvatarFallback className="bg-[#FBE6F0] text-[13px] font-extrabold text-[#B8457F]">
                 {initials}
               </AvatarFallback>
             </Avatar>
+            {streak > 0 ? (
+              <span
+                className="absolute -bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-px rounded-full border-2 border-rf-side-bg bg-rf-streak px-[5px] text-[10px] font-extrabold leading-[14px] text-white"
+                aria-hidden="true"
+              >
+                <Flame className="h-[9px] w-[9px]" fill="currentColor" strokeWidth={0} />
+                {streak}
+              </span>
+            ) : null}
             <span
               role="tooltip"
               className={cn(
-                "pointer-events-none absolute left-[3.75rem] top-1/2 z-50 -translate-y-1/2",
+                "pointer-events-none absolute left-[4.25rem] top-1/2 z-50 -translate-y-1/2",
                 "whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium shadow-md",
-                "bg-rf-ink text-rf-bg",
+                "bg-[#0A0A0A] text-white",
                 "opacity-0 transition-opacity duration-100",
                 "group-hover:opacity-100 group-focus-visible:opacity-100",
               )}
@@ -242,12 +257,12 @@ const SideBarIcon: FC<SideBarIconProps> = ({
   href,
 }) => {
   const className = cn(
-    "group relative flex h-12 w-12 items-center justify-center border shadow-sm",
-    "transition-all duration-200 ease-out",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose focus-visible:ring-offset-2 focus-visible:ring-offset-rf-side-bg",
+    "group relative flex h-12 w-12 items-center justify-center rounded-2xl border-0",
+    "transition-[transform,box-shadow,background-color] duration-100 ease-out active:translate-y-[3px] active:shadow-none",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-rf-side-bg",
     active
-      ? "rounded-xl border-rf-side-active bg-rf-side-active text-rf-side-active-ink"
-      : "rounded-3xl border-rf-side-line bg-rf-side-btn text-rf-side-icon hover:rounded-xl hover:text-rf-side-hover",
+      ? "bg-rf-side-active text-rf-side-active-ink shadow-[0_4px_0_var(--rf-side-active-shadow)]"
+      : "bg-rf-side-btn text-rf-side-icon shadow-[0_4px_0_var(--rf-side-shadow)] hover:bg-white/20",
   );
 
   const content = (
@@ -256,9 +271,9 @@ const SideBarIcon: FC<SideBarIconProps> = ({
       <span
         role="tooltip"
         className={cn(
-          "pointer-events-none absolute left-[3.75rem] top-1/2 z-50 -translate-y-1/2",
+          "pointer-events-none absolute left-[4.25rem] top-1/2 z-50 -translate-y-1/2",
           "whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium shadow-md",
-          "bg-rf-ink text-rf-bg",
+          "bg-[#0A0A0A] text-white",
           "opacity-0 transition-opacity duration-100",
           "group-hover:opacity-100 group-focus-visible:opacity-100",
         )}
@@ -295,7 +310,7 @@ const SideBarIcon: FC<SideBarIconProps> = ({
 };
 
 const Divider: FC = () => (
-  <hr className="h-px w-10 border-0 bg-rf-side-line" />
+  <hr className="my-0.5 h-0.5 w-9 rounded-sm border-0 bg-rf-side-line" />
 );
 
 export default SideBar;

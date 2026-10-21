@@ -59,11 +59,11 @@ export function ConfirmModal({
 
   const confirmClasses =
     confirmVariant === "success"
-      ? "rounded-md bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50"
-      : "rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50";
+      ? "rf-btn-primary rounded-xl px-4 py-2 text-sm"
+      : "rf-btn-primary rounded-xl bg-red-700 px-4 py-2 text-sm shadow-[0_3px_0_#7f1d1d] hover:bg-red-800";
   return (
     <ModalWrapper onClose={onCancel}>
-      <div className="w-full max-w-md rounded-lg bg-rf-card p-6 shadow-xl border border-rf-line text-rf-ink">
+      <div className="w-full max-w-md rounded-[20px] border-2 border-b-[5px] border-rf-chunk bg-rf-card p-6 text-rf-ink shadow-[0_30px_80px_-20px_rgba(0,0,0,.4)]">
         <h2 className="text-lg font-semibold text-rf-ink">
           {title}
         </h2>
@@ -89,7 +89,7 @@ export function ConfirmModal({
         ) : null}
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="rounded-md border border-rf-line bg-rf-card text-rf-ink px-4 py-2 text-sm hover:bg-rf-line-soft"
+            className="rf-btn rounded-xl px-4 py-2 text-sm"
             onClick={onCancel}
             disabled={busy}
           >

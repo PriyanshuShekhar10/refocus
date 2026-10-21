@@ -65,11 +65,11 @@ function personLine(name?: string | null, email?: string | null): string {
 export function buildOpsSignupEmail(input: {
   email: string;
   firstName?: string | null;
-  method: "email" | "google";
+  method: "email" | "google" | "apple";
   userId: string;
 }): { subject: string; html: string; text: string } {
   const who = personLine(input.firstName, input.email);
-  const method = input.method === "google" ? "Google" : "email";
+  const method = input.method === "google" ? "Google" : input.method === "apple" ? "Apple" : "email";
   const subject = `New signup: ${who}`;
 
   return opsShell({

@@ -354,7 +354,7 @@ export default function Community({ onPreviewProfile }: CommunityProps) {
                     type="button"
                     onClick={() => void handlePost()}
                     disabled={!canParticipate || !newPostContent.trim() || posting}
-                    className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-full border border-rf-primary bg-rf-primary px-4 text-[13px] font-medium text-rf-on-primary transition-opacity hover:bg-rf-primary-hover disabled:opacity-55"
+                    className="rf-btn-primary h-8 px-[18px] text-[13px]"
                   >
                     {posting ? (
                       <>

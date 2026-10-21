@@ -283,7 +283,7 @@ export function SessionDetailsModal({
               {canJoin ? (
                 <a
                   href={`/sessions/${event.id}`}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-rf-primary px-4 py-2.5 text-sm font-semibold text-rf-on-primary hover:bg-rf-primary-hover transition-colors"
+                  className="rf-btn-primary w-full rounded-xl px-4 py-2.5 text-sm"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -338,7 +338,7 @@ export function SessionDetailsModal({
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50 transition-colors"
+                className="rf-btn-primary rounded-xl px-4 py-2 text-sm"
               >
                 {saving ? "Saving…" : "Save"}
               </button>
@@ -346,7 +346,7 @@ export function SessionDetailsModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-rf-line px-4 py-2 text-sm font-medium text-rf-ink-soft hover:bg-rf-line-soft transition-colors"
+              className="rf-btn rounded-xl px-4 py-2 text-sm"
             >
               Close
             </button>

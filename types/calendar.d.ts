@@ -43,6 +43,8 @@ export type CalendarEvent = {
     username?: string;
     about?: string;
     quiet?: boolean;
+    /** Only set for the current user: whether they joined the call. */
+    attended?: boolean;
     avatar_url?: string;
     emailVerified?: boolean;
     attendance?: {
@@ -90,6 +92,8 @@ export type FetchedSession = {
     avatar_url?: string;
     emailVerified?: boolean;
     quiet?: boolean;
+    /** Only set for the current user: whether they joined the call. */
+    attended?: boolean;
     attendance?: {
       percent: number;
       booked: number;

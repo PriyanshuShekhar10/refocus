@@ -151,7 +151,7 @@ export default function DeviceTestModal({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="device-test-title"
-        className="w-full max-w-md overflow-hidden rounded-2xl border border-rf-line bg-rf-card shadow-xl"
+        className="w-full max-w-md overflow-hidden rounded-[20px] border-2 border-b-[5px] border-rf-chunk bg-rf-card shadow-[0_30px_80px_-20px_rgba(0,0,0,.4)]"
       >
         <div className="flex items-start justify-between border-b border-rf-line px-5 py-4">
           <div>
@@ -261,7 +261,7 @@ export default function DeviceTestModal({ open, onClose }: Props) {
             <button
               type="button"
               onClick={() => void startStream()}
-              className="rounded-lg border border-rf-line px-4 py-2 text-sm font-medium text-rf-ink-soft hover:bg-rf-line-soft"
+              className="rf-btn rounded-xl px-4 py-2 text-sm"
             >
               Try again
             </button>
@@ -269,7 +269,7 @@ export default function DeviceTestModal({ open, onClose }: Props) {
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-semibold text-rf-on-primary hover:bg-rf-primary-hover"
+            className="rf-btn-primary rounded-xl px-4 py-2 text-sm"
           >
             Done
           </button>

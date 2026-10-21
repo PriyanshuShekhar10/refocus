@@ -24,7 +24,7 @@ export function CalendarDayHeader({
 
   return (
     <div
-      className="flex h-9 shrink-0 border-b border-rf-line-soft/70"
+      className="flex h-12 shrink-0 border-b border-rf-line-soft/70"
       style={endInset > 0 ? { paddingRight: endInset } : undefined}
     >
       {/* Aligns with time gutter — intentionally blank */}
@@ -47,33 +47,19 @@ export function CalendarDayHeader({
               key={key}
               className="flex items-center justify-center border-r border-rf-line-soft/60"
             >
-              <div className="relative flex items-baseline gap-1 pb-0.5">
-                <span
-                  className={cn(
-                    "text-[13px] font-normal",
-                    isToday
-                      ? "text-rf-ink-mute"
-                      : "text-rf-ink-mute",
-                  )}
-                >
+              <div className="flex items-center gap-2">
+                <span className="text-[12.5px] font-bold uppercase tracking-[0.06em] text-rf-ink-mute">
                   {weekday}
                 </span>
                 <span
+                  aria-current={isToday ? "date" : undefined}
                   className={cn(
-                    "text-[14px] tabular-nums",
-                    isToday
-                      ? "font-semibold text-rf-plum-ink"
-                      : "font-medium text-rf-ink",
+                    "grid h-[30px] min-w-[30px] place-items-center rounded-[10px] px-1.5 text-[15px] font-extrabold tabular-nums",
+                    isToday ? "bg-rf-today text-white" : "text-rf-ink",
                   )}
                 >
                   {dateNum}
                 </span>
-                {isToday ? (
-                  <span
-                    className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-rf-rose/65"
-                    aria-hidden="true"
-                  />
-                ) : null}
               </div>
             </div>
           );

@@ -6,11 +6,14 @@ import {
   getRedirectResult,
   signInWithPopup,
   signInWithRedirect,
+  type AuthProvider,
   type UserCredential,
 } from "firebase/auth";
 import {
+  appleAuthProvider,
   getFirebaseAuth,
   googleAuthProvider,
+  isAppleSignInEnabled,
   isFirebaseClientConfigured,
 } from "@/lib/firebase/client";
 import { Loader2 } from "lucide-react";
@@ -46,11 +49,18 @@ async function completeFirebaseSignIn(
   }
 }
 
-function formatFirebaseAuthError(err: unknown): string {
+type OAuthProviderKey = "google" | "apple";
+
+const PROVIDERS: Record<OAuthProviderKey, { label: string; provider: AuthProvider }> = {
+  google: { label: "Google", provider: googleAuthProvider },
+  apple: { label: "Apple", provider: appleAuthProvider },
+};
+
+function formatFirebaseAuthError(err: unknown, label = "Google"): string {
   if (err && typeof err === "object" && "code" in err) {
     const code = String((err as { code: string }).code);
     if (code === "auth/internal-error") {
-      return "Google sign-in was blocked by the browser or site policy. Refresh and try again.";
+      return `${label} sign-in was blocked by the browser or site policy. Refresh and try again.`;
     }
     if (code === "auth/unauthorized-domain") {
       return "This domain is not authorized for Firebase sign-in. Add it under Firebase → Authentication → Settings → Authorized domains.";
@@ -59,7 +69,10 @@ function formatFirebaseAuthError(err: unknown): string {
       return "Sign-in popup was closed before completing.";
     }
     if (code === "auth/operation-not-allowed") {
-      return "Google sign-in is not enabled in Firebase Console. Open Authentication → Sign-in method → Google, set a support email, and click Save.";
+      return `${label} sign-in is not enabled in Firebase Console. Open Authentication → Sign-in method → ${label} and finish its setup.`;
+    }
+    if (code === "auth/invalid-oauth-client-id" || code === "auth/invalid-credential") {
+      return `${label} sign-in isn't set up for the website yet. Please use another sign-in method.`;
     }
     const message =
       "message" in err && typeof (err as { message?: string }).message === "string"
@@ -68,6 +81,14 @@ function formatFirebaseAuthError(err: unknown): string {
     return message;
   }
   return err instanceof Error ? err.message : "Sign-in failed. Please try again.";
+}
+
+function AppleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+      <path d="M16.37 12.44c-.02-2.3 1.88-3.4 1.97-3.46-1.07-1.57-2.74-1.78-3.33-1.8-1.42-.14-2.77.84-3.49.84-.72 0-1.83-.82-3.01-.8-1.55.02-2.98.9-3.78 2.29-1.61 2.8-.41 6.94 1.16 9.21.77 1.11 1.68 2.36 2.88 2.31 1.16-.05 1.6-.75 3-.75s1.79.75 3.01.72c1.25-.02 2.04-1.13 2.8-2.25.88-1.29 1.24-2.54 1.26-2.6-.03-.01-2.42-.93-2.47-3.71zM14.08 5.69c.64-.78 1.07-1.85.95-2.93-.92.04-2.04.61-2.7 1.39-.59.69-1.11 1.79-.97 2.85 1.03.08 2.07-.52 2.72-1.31z" />
+    </svg>
+  );
 }
 
 function GoogleIcon() {
@@ -99,11 +120,12 @@ export function FirebaseOAuthButtons({
   onLoadingChange,
   onSuccess,
 }: FirebaseOAuthButtonsProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<OAuthProviderKey | null>(null);
+  const isLoading = loadingProvider !== null;
 
-  const setGoogleLoading = useCallback((loading: boolean) => {
-    setIsLoading(loading);
-    onLoadingChange?.(loading);
+  const setProviderLoading = useCallback((provider: OAuthProviderKey | null) => {
+    setLoadingProvider(provider);
+    onLoadingChange?.(provider !== null);
   }, [onLoadingChange]);
 
   useEffect(() => {
@@ -113,7 +135,9 @@ export function FirebaseOAuthButtons({
     getRedirectResult(auth)
       .then(async (result) => {
         if (!result) return;
-        setGoogleLoading(true);
+        const key: OAuthProviderKey =
+          result.providerId === "apple.com" ? "apple" : "google";
+        setProviderLoading(key);
         await completeFirebaseSignIn(result);
         // Keep loader up while parent navigates after onSuccess.
         onSuccess?.();
@@ -121,24 +145,25 @@ export function FirebaseOAuthButtons({
       .catch((err) => {
         console.error("[firebase-oauth] redirect result failed:", err);
         onError?.(formatFirebaseAuthError(err));
-        setGoogleLoading(false);
+        setProviderLoading(null);
       });
-  }, [onError, onSuccess, setGoogleLoading]);
+  }, [onError, onSuccess, setProviderLoading]);
 
   if (!isFirebaseClientConfigured()) {
     return null;
   }
 
-  const handleGoogleSignIn = async () => {
+  const handleSignIn = async (key: OAuthProviderKey) => {
     if (disabled || isLoading) return;
+    const { label, provider } = PROVIDERS[key];
 
-    setGoogleLoading(true);
+    setProviderLoading(key);
 
     try {
       const auth = getFirebaseAuth();
 
       try {
-        const credential = await signInWithPopup(auth, googleAuthProvider);
+        const credential = await signInWithPopup(auth, provider);
         await completeFirebaseSignIn(credential);
         // Keep loader up while parent navigates after onSuccess.
         onSuccess?.();
@@ -151,35 +176,44 @@ export function FirebaseOAuthButtons({
           code === "auth/popup-blocked" ||
           code === "auth/popup-closed-by-user"
         ) {
-          await signInWithRedirect(auth, googleAuthProvider);
+          await signInWithRedirect(auth, provider);
           return;
         }
         throw popupErr;
       }
     } catch (err) {
-      console.error("[firebase-oauth] google sign-in failed:", err);
-      onError?.(formatFirebaseAuthError(err));
-      setGoogleLoading(false);
+      console.error(`[firebase-oauth] ${key} sign-in failed:`, err);
+      onError?.(formatFirebaseAuthError(err, label));
+      setProviderLoading(null);
     }
   };
 
+  const keys: OAuthProviderKey[] = isAppleSignInEnabled() ? ["google", "apple"] : ["google"];
+
   return (
-    <DButton
-      type="button"
-      variant="ghost"
-      size="lg"
-      full
-      disabled={disabled || isLoading}
-      onClick={handleGoogleSignIn}
-      style={{ display: "flex", alignItems: "center", gap: 10 }}
-    >
-      {isLoading ? (
-        <Loader2 size={18} className="animate-spin" aria-hidden />
-      ) : (
-        <GoogleIcon />
-      )}
-      {isLoading ? "Signing in…" : "Continue with Google"}
-    </DButton>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {keys.map((key) => (
+        <DButton
+          key={key}
+          type="button"
+          variant="ghost"
+          size="lg"
+          full
+          disabled={disabled || isLoading}
+          onClick={() => void handleSignIn(key)}
+          style={{ display: "flex", alignItems: "center", gap: 10 }}
+        >
+          {loadingProvider === key ? (
+            <Loader2 size={18} className="animate-spin" aria-hidden />
+          ) : key === "google" ? (
+            <GoogleIcon />
+          ) : (
+            <AppleIcon />
+          )}
+          {loadingProvider === key ? "Signing in…" : `Continue with ${PROVIDERS[key].label}`}
+        </DButton>
+      ))}
+    </div>
   );
 }
 

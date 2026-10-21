@@ -242,7 +242,7 @@ export default function BookSessionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl bg-rf-card shadow-xl border border-rf-line overflow-hidden">
+      <div className="w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden rounded-[20px] border-2 border-b-[5px] border-rf-chunk bg-rf-card shadow-[0_30px_80px_-20px_rgba(0,0,0,.4)]">
         <div className="flex items-center justify-between px-4 py-3 border-b border-rf-line">
           <div className="flex items-center gap-3 min-w-0">
             <Avatar className="h-9 w-9 shrink-0">
@@ -522,7 +522,7 @@ export default function BookSessionModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-rf-line bg-rf-card px-4 py-2 text-sm font-medium text-rf-ink-soft hover:bg-rf-line-soft transition-colors"
+            className="rf-btn rounded-xl px-4 py-2 text-sm"
           >
             Cancel
           </button>
@@ -530,7 +530,7 @@ export default function BookSessionModal({
             type="button"
             onClick={sendRequest}
             disabled={!canSend || sending}
-            className="rounded-lg bg-rf-primary px-4 py-2 text-sm font-medium text-rf-on-primary hover:bg-rf-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rf-btn-primary rounded-xl px-4 py-2 text-sm"
           >
             {sending ? "Sending…" : "Send session request"}
           </button>

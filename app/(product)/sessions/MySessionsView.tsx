@@ -26,7 +26,7 @@ export function MySessionsView({
     <div className="flex flex-col">
       <header className="mb-5 flex flex-wrap items-end justify-between gap-4 rounded-[14px] border border-rf-line bg-rf-card p-6">
         <div>
-          <h1 className="text-[clamp(24px,4vw,32px)] font-medium leading-[1.05] tracking-[-0.04em] text-rf-ink">
+          <h1 className="text-[clamp(24px,4vw,32px)] font-semibold leading-[1.05] tracking-[-0.04em] text-rf-ink">
             My Sessions
           </h1>
           <p className="mt-2.5 text-sm text-rf-ink-soft">
@@ -38,7 +38,7 @@ export function MySessionsView({
           {showBackLink ? (
             <Link
               href="/dashboard"
-              className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-rf-line bg-rf-card px-3.5 text-[13px] font-medium text-rf-ink transition-colors hover:border-rf-ink-mute"
+              className="rf-btn h-9 px-3.5 text-[13px]"
             >
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
               Back to Calendar
