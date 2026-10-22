@@ -3,6 +3,7 @@ export { MobileBottomNav, MOBILE_MORE_TABS, getMobileNavTab } from "./MobileBott
 export type { MobileNavTab } from "./MobileBottomNav";
 export { MobileMoreMenu } from "./MobileMoreMenu";
 export { MobileAgendaHeader } from "./MobileAgendaHeader";
+export { MobileDashboardHeader } from "./MobileDashboardHeader";
 export { MobileSessionCard } from "./MobileSessionCard";
 export { MobileBookSheet } from "./MobileBookSheet";
 export { MobileSessionSheet } from "./MobileSessionSheet";

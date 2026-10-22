@@ -129,9 +129,6 @@ function formatDate(): string {
   });
 }
 
-const utilityRowClass =
-  "flex min-h-9 w-full items-center justify-between gap-2 whitespace-nowrap rounded-lg px-2 text-left text-[13px] text-rf-ink-soft transition-colors hover:bg-rf-line-soft hover:text-rf-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose";
-
 /** Collapse / expand: just an arrow, highlighted on hover. */
 const sidebarToggleClass =
   "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-rf-ink-mute transition-colors hover:bg-rf-line-soft hover:text-rf-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35";
@@ -593,12 +590,10 @@ export function CalendarRightSidebar({
                     {sessionCount} session{sessionCount !== 1 ? "s" : ""} today
                   </Link>
                 </p>
-                {streak > 0 ? (
-                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-rf-streak-bg py-px pl-1.5 pr-2 text-xs font-bold text-rf-streak-ink">
-                    <Flame className="h-[13px] w-[13px] text-rf-streak" fill="currentColor" strokeWidth={0} aria-hidden />
-                    {streak}-day streak
-                  </span>
-                ) : null}
+                <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-rf-streak-bg py-px pl-1.5 pr-2 text-xs font-bold text-rf-streak-ink">
+                  <Flame className="h-[13px] w-[13px] text-rf-streak" fill="currentColor" strokeWidth={0} aria-hidden />
+                  {streak}-day streak
+                </span>
               </div>
             </div>
           </div>
@@ -725,47 +720,27 @@ export function CalendarRightSidebar({
       <div className="min-h-0 flex-1" aria-hidden="true" />
 
       {!joinableSession || showUpNext ? (
-        <div className="shrink-0 space-y-1.5 border-t border-rf-line-soft/80 pt-2">
-          <button
-            type="button"
-            onClick={() => setDeviceTestOpen(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-rf-line/80 bg-rf-card px-3 py-2 text-xs font-semibold text-[#54657E] transition-colors hover:bg-rf-line-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35 dark:text-gray-300"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-3.5 w-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
+        <div className="flex shrink-0 items-center justify-between gap-2 border-t-2 border-rf-line-soft pt-2">
+          <span className="truncate text-xs text-rf-ink-mute">
+            Appearance: {mounted ? ((resolvedTheme ?? theme) === "dark" ? "Dark" : "Light") : "…"} · Help · Account
+          </span>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                if (!mounted) return;
+                const active = resolvedTheme ?? theme;
+                setTheme(active === "dark" ? "light" : "dark");
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-rf-ink-soft transition-colors hover:bg-rf-line-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35"
+              title="Appearance"
+              aria-label={`Appearance, currently ${
+                mounted && (resolvedTheme ?? theme) === "dark" ? "Dark" : "Light"
+              }. Toggle theme.`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
-            Test audio and video
-          </button>
-
-          <div className="space-y-0.5">
-          <button
-            type="button"
-            onClick={() => {
-              if (!mounted) return;
-              const active = resolvedTheme ?? theme;
-              setTheme(active === "dark" ? "light" : "dark");
-            }}
-            className={utilityRowClass}
-            aria-label={`Appearance, currently ${
-              mounted && (resolvedTheme ?? theme) === "dark" ? "Dark" : "Light"
-            }. Toggle theme.`}
-          >
-            <span className="flex items-center gap-2 text-rf-ink-soft">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-3.5 w-3.5"
+                className="h-[15px] w-[15px]"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -778,48 +753,41 @@ export function CalendarRightSidebar({
                   d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
                 />
               </svg>
-              Appearance:{" "}
-              {mounted
-                ? (resolvedTheme ?? theme) === "dark"
-                  ? "Dark"
-                  : "Light"
-                : "…"}
-            </span>
-          </button>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setBugReportOpen(true)}
-            className={utilityRowClass}
-          >
-            <span className="flex items-center gap-2 text-rf-ink-soft">
-              <Bug className="h-3.5 w-3.5" aria-hidden="true" />
-              Report a bug
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-[13px] text-red-600/75 transition-colors hover:bg-red-50/80 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35 dark:text-red-400/75 dark:hover:bg-red-950/30 dark:hover:text-red-400"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-3.5 w-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
+            <button
+              type="button"
+              onClick={() => setBugReportOpen(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-rf-ink-soft transition-colors hover:bg-rf-line-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35"
+              title="Report a bug"
+              aria-label="Report a bug"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-            Sign Out
-          </button>
+              <Bug className="h-[15px] w-[15px]" aria-hidden="true" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-red-600/75 transition-colors hover:bg-red-50/80 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35 dark:text-red-400/75 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+              title="Sign out"
+              aria-label="Sign out"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-[15px] w-[15px]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       ) : null}

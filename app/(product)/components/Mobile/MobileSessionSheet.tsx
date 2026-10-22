@@ -147,7 +147,7 @@ export function MobileSessionSheet({
               <button
                 type="button"
                 onClick={onJoin}
-                className="min-h-12 w-full rounded-xl py-3.5 text-sm font-semibold bg-rf-primary text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
+                className="min-h-12 w-full rounded-xl py-3.5 text-sm font-extrabold bg-rf-primary text-rf-on-primary shadow-[0_3px_0_var(--rf-primary-shadow)] transition-[transform] duration-100 hover:bg-rf-primary-hover active:translate-y-[3px] active:shadow-none"
               >
                 Join session
               </button>
@@ -184,7 +184,7 @@ export function MobileSessionSheet({
             <button
               type="button"
               onClick={onManage}
-              className="min-h-12 w-full rounded-xl py-3.5 text-sm font-semibold bg-rf-primary text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
+              className="min-h-12 w-full rounded-xl py-3.5 text-sm font-extrabold bg-rf-primary text-rf-on-primary shadow-[0_3px_0_var(--rf-primary-shadow)] transition-[transform] duration-100 hover:bg-rf-primary-hover active:translate-y-[3px] active:shadow-none"
             >
               Manage session
             </button>

@@ -34,13 +34,13 @@ import { Toast } from "../Calendar/Modals/Toast";
 import { ConfirmModal, partnerNoteField } from "../Calendar/Modals/ConfirmModal";
 import { SessionDetailsModal } from "../Calendar/Modals/SessionDetailsModal";
 import { MobileAgendaHeader } from "./MobileAgendaHeader";
+import { MobileDashboardHeader } from "./MobileDashboardHeader";
 import { MobileSessionCard } from "./MobileSessionCard";
+import DeviceTestModal from "../DeviceTestModal";
+import { releaseAllLocalMediaStreams } from "@/lib/localMedia";
 import { MobileBookSheet, bookSheetDateLabel } from "./MobileBookSheet";
 import { MobileSessionSheet } from "./MobileSessionSheet";
-import {
-  filterAgendaEvents,
-  pickNextUpSession,
-} from "./sessionUiState";
+import { filterAgendaEvents } from "./sessionUiState";
 import { useMobileAgendaColors } from "./mobileAgendaColors";
 
 const BOOK_SLOT_MINUTES = BOOKING_TIME_STEP_MINUTES;
@@ -214,7 +214,6 @@ function createInitialState(): UIState {
 export default function MobileCalendar() {
   const agenda = useMobileAgendaColors();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const nextUpRef = useRef<HTMLDivElement>(null);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const [ui, dispatch] = useReducer(uiReducer, undefined, createInitialState);
   const [now, setNow] = useState(new Date());
@@ -223,6 +222,7 @@ export default function MobileCalendar() {
   const [bookQuiet, setBookQuiet] = useState(false);
   const [booking, setBooking] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [deviceTestOpen, setDeviceTestOpen] = useState(false);
   const { timeZone } = useUserTimezone();
   const { canBookSessions, bannedMessage } = useCommunityModeration();
 
@@ -297,21 +297,10 @@ export default function MobileCalendar() {
   const isToday =
     ymdInTimeZone(ui.startDate, timeZone) === ymdInTimeZone(now, timeZone);
 
-  const nextUp = useMemo(
-    () =>
-      isToday ? pickNextUpSession(agendaEvents, currentUserId, now) : null,
-    [isToday, agendaEvents, currentUserId, now],
-  );
-
-  const listEvents = useMemo(() => {
-    if (!nextUp) return agendaEvents;
-    return agendaEvents.filter((e) => e.id !== nextUp.id);
-  }, [agendaEvents, nextUp]);
-
-  useEffect(() => {
-    if (!nextUpRef.current || !scrollRef.current) return;
-    nextUpRef.current.scrollIntoView({ block: "start", behavior: "smooth" });
-  }, [dayKey, nextUp?.id]);
+  // The "next up" card now lives in the header and looks across all days
+  // (matching the desktop rail), so the day's agenda shows every session
+  // for the viewed day without excluding one.
+  const listEvents = agendaEvents;
 
   const goToday = useCallback(
     () => dispatch({ type: "GO_TODAY", timeZone }),
@@ -562,16 +551,6 @@ export default function MobileCalendar() {
       className="flex h-full min-h-0 flex-col"
       style={{ backgroundColor: agenda.page, color: agenda.text }}
     >
-      <MobileAgendaHeader
-        startDate={ui.startDate}
-        timeZone={timeZone}
-        isToday={isToday}
-        onPrev={goPrev}
-        onNext={goNext}
-        onToday={goToday}
-        onSelectDate={selectDate}
-      />
-
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto overscroll-y-contain"
@@ -581,6 +560,23 @@ export default function MobileCalendar() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
+        <MobileDashboardHeader
+          onOpenNextUp={(event) =>
+            dispatch({ type: "OPEN_SESSION_SHEET", event })
+          }
+          onTestDevices={() => setDeviceTestOpen(true)}
+        />
+
+        <MobileAgendaHeader
+          startDate={ui.startDate}
+          timeZone={timeZone}
+          isToday={isToday}
+          onPrev={goPrev}
+          onNext={goNext}
+          onToday={goToday}
+          onSelectDate={selectDate}
+        />
+
         <div className="mx-auto max-w-[560px] px-4 pb-4 pt-3">
           <h2
             className="mb-3 text-[13.5px] font-semibold"
@@ -589,22 +585,7 @@ export default function MobileCalendar() {
             {dayHeading}
           </h2>
 
-          {nextUp && (
-            <div ref={nextUpRef} className="mb-4">
-              <MobileSessionCard
-                event={nextUp}
-                currentUserId={currentUserId}
-                now={now}
-                isNextUp
-                highlighted={highlightId === nextUp.id}
-                onPress={() =>
-                  dispatch({ type: "OPEN_SESSION_SHEET", event: nextUp })
-                }
-              />
-            </div>
-          )}
-
-          {listEvents.length === 0 && !nextUp ? (
+          {listEvents.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <p className="text-sm" style={{ color: agenda.textSecondary }}>
                 No sessions on this day
@@ -612,7 +593,7 @@ export default function MobileCalendar() {
               <button
                 type="button"
                 onClick={() => dispatch({ type: "OPEN_BOOK_SHEET" })}
-                className="min-h-11 rounded-xl px-5 text-sm font-semibold bg-rf-primary text-rf-on-primary transition-colors hover:bg-rf-primary-hover"
+                className="min-h-11 rounded-xl px-5 text-sm font-extrabold bg-rf-primary text-rf-on-primary shadow-[0_3px_0_var(--rf-primary-shadow)] transition-[transform] duration-100 hover:bg-rf-primary-hover active:translate-y-[3px] active:shadow-none"
               >
                 Book a session
               </button>
@@ -639,7 +620,7 @@ export default function MobileCalendar() {
 
       {/* FAB */}
       <div
-        className="pointer-events-none fixed left-0 right-0 z-40 flex justify-center px-4 lg:hidden"
+        className="pointer-events-none fixed right-4 z-40 lg:hidden"
         style={{
           bottom: "calc(4rem + env(safe-area-inset-bottom, 0px) + 0.5rem)",
         }}
@@ -653,9 +634,9 @@ export default function MobileCalendar() {
             }
             dispatch({ type: "OPEN_BOOK_SHEET" });
           }}
-          className="pointer-events-auto flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold bg-rf-primary text-rf-on-primary shadow-[0_8px_24px_rgba(0,0,0,.2)] transition-colors hover:bg-rf-primary-hover active:bg-rf-primary-hover"
+          className="pointer-events-auto flex h-[52px] items-center gap-2 rounded-2xl bg-rf-primary px-5 text-[15px] font-extrabold text-rf-on-primary shadow-[0_4px_0_var(--rf-primary-shadow),0_12px_24px_-8px_rgba(0,0,0,.35)] transition-[transform] duration-100 active:translate-y-1 active:shadow-none hover:bg-rf-primary-hover"
         >
-          <Plus className="h-5 w-5" aria-hidden />
+          <Plus className="h-[18px] w-[18px]" strokeWidth={2.6} aria-hidden />
           Book session
         </button>
       </div>
@@ -808,6 +789,14 @@ export default function MobileCalendar() {
       )}
 
       {ui.toast && <Toast message={ui.toast} />}
+
+      <DeviceTestModal
+        open={deviceTestOpen}
+        onClose={() => {
+          releaseAllLocalMediaStreams();
+          setDeviceTestOpen(false);
+        }}
+      />
     </div>
   );
 }

@@ -1,19 +1,15 @@
 "use client";
 
-import { Home, Users, MessageCircle, MoreHorizontal } from "lucide-react";
+import { Home, Clock, Heart, Hash, Settings } from "lucide-react";
 import type { TabKey } from "../Sidebar/sidebar";
 
-export type MobileNavTab = "home" | "friends" | "community" | "more";
+export type MobileNavTab = "home" | "sessions" | "friends" | "community" | "more";
 
-export const MOBILE_MORE_TABS: TabKey[] = [
-  "profile",
-  "sessions",
-  "settings",
-  "admin",
-];
+export const MOBILE_MORE_TABS: TabKey[] = ["profile", "settings", "admin"];
 
 export function getMobileNavTab(activeTab: TabKey): MobileNavTab {
   if (activeTab === "dashboard") return "home";
+  if (activeTab === "sessions") return "sessions";
   if (activeTab === "friends") return "friends";
   if (activeTab === "community") return "community";
   return "more";
@@ -49,33 +45,39 @@ export function MobileBottomNav({
       onClick: () => onSelect("dashboard"),
     },
     {
+      id: "sessions",
+      label: "Sessions",
+      icon: <Clock className="h-5 w-5" />,
+      onClick: () => onSelect("sessions"),
+    },
+    {
       id: "friends",
       label: "Friends",
-      icon: <Users className="h-5 w-5" />,
+      icon: <Heart className="h-5 w-5" />,
       onClick: () => onSelect("friends"),
       badge: pendingSessionRequests,
     },
     {
       id: "community",
       label: "Community",
-      icon: <MessageCircle className="h-5 w-5" />,
+      icon: <Hash className="h-5 w-5" />,
       onClick: () => onSelect("community"),
     },
     {
       id: "more",
       label: "More",
-      icon: <MoreHorizontal className="h-5 w-5" />,
+      icon: <Settings className="h-5 w-5" />,
       onClick: onMoreOpen,
     },
   ];
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-rf-line bg-rf-card lg:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      className="fixed bottom-0 left-0 right-0 z-50 h-[68px] border-t-2 border-rf-chunk bg-rf-card px-1.5 pt-1.5 lg:hidden"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)" }}
       aria-label="Mobile navigation"
     >
-      <div className="grid h-16 grid-cols-4">
+      <div className="grid h-full grid-cols-5">
         {tabs.map((tab) => {
           const isActive = tab.id === "more" ? moreActive : navTab === tab.id;
           return (
@@ -85,26 +87,30 @@ export function MobileBottomNav({
               onClick={tab.onClick}
               aria-label={tab.label}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex flex-col items-center justify-center gap-0.5 transition-colors ${
-                isActive
-                  ? "text-rf-plum-ink"
-                  : "text-rf-ink-mute"
+              className={`relative flex min-h-11 flex-col items-center justify-center gap-0.5 ${
+                isActive ? "text-rf-primary" : "text-rf-ink-mute"
               }`}
             >
               <div
-                className={`relative rounded-xl p-1.5 transition-colors ${
-                  isActive ? "bg-rf-cream-bg" : ""
+                className={`relative flex rounded-xl border-2 px-3.5 py-1 transition-colors ${
+                  isActive
+                    ? "border-[#9DC1EE] bg-[#E3EEFB]"
+                    : "border-transparent bg-transparent"
                 }`}
               >
                 {tab.icon}
                 {tab.badge && tab.badge > 0 ? (
                   <span
-                    className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-rf-card"
+                    className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-rf-card bg-rf-rose px-1 text-[9.5px] font-extrabold leading-none text-white"
                     aria-hidden
-                  />
+                  >
+                    {tab.badge}
+                  </span>
                 ) : null}
               </div>
-              <span className="text-[10px] font-medium">{tab.label}</span>
+              <span className={`text-[10.5px] ${isActive ? "font-extrabold" : "font-semibold"}`}>
+                {tab.label}
+              </span>
             </button>
           );
         })}

@@ -250,16 +250,13 @@ export function MobileSessionCard({
         {state === "available" && (
           <>
             <span
-              className="text-[13.5px] font-medium"
+              className="text-[13px] font-semibold"
               style={{ color: agenda.plumMuted }}
             >
               • Available
             </span>
-            <span
-              className="text-[13.5px] font-semibold"
-              style={{ color: agenda.plum }}
-            >
-              Join →
+            <span className="rounded-xl bg-rf-primary px-3.5 py-2 text-[13px] font-extrabold text-rf-on-primary shadow-[0_3px_0_var(--rf-primary-shadow)]">
+              Book
             </span>
           </>
         )}

@@ -244,7 +244,7 @@ export function MobileBookSheet({
             type="button"
             onClick={onBook}
             disabled={!selected || booking}
-            className="min-h-12 w-full whitespace-nowrap rounded-xl bg-rf-primary text-[14.5px] font-semibold text-rf-on-primary transition-colors hover:bg-rf-primary-hover disabled:opacity-50"
+            className="min-h-12 w-full whitespace-nowrap rounded-xl bg-rf-primary text-[14.5px] font-extrabold text-rf-on-primary shadow-[0_3px_0_var(--rf-primary-shadow)] transition-[transform] duration-100 hover:bg-rf-primary-hover active:translate-y-[3px] active:shadow-none disabled:opacity-50 disabled:shadow-none disabled:active:translate-y-0"
           >
             {booking ? "Booking…" : bookLabel}
           </button>

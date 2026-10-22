@@ -3,12 +3,7 @@
 import { signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { CgProfile } from "react-icons/cg";
-import {
-  HiOutlineClock,
-  HiOutlineShieldCheck,
-  HiSun,
-  HiMoon,
-} from "react-icons/hi";
+import { HiOutlineShieldCheck, HiSun, HiMoon } from "react-icons/hi";
 import { BsGearFill } from "react-icons/bs";
 import { FiLogOut } from "react-icons/fi";
 import { Bug } from "lucide-react";
@@ -37,11 +32,6 @@ const MENU_ITEMS: MenuItem[] = [
     tab: "profile",
     label: "Profile",
     icon: <CgProfile size={20} />,
-  },
-  {
-    tab: "sessions",
-    label: "Sessions",
-    icon: <HiOutlineClock size={20} />,
   },
   {
     tab: "settings",

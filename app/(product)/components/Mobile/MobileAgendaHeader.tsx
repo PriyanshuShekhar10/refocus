@@ -34,22 +34,16 @@ export function MobileAgendaHeader({
   });
   const ymd = ymdInTimeZone(startDate, timeZone);
 
+  const chunkyBtn =
+    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-b-4 border-rf-chunk bg-rf-card text-rf-ink-soft transition-[transform,border-width] duration-100 hover:bg-rf-chunk-hover active:translate-y-[2px] active:border-b-2";
+
   return (
-    <header
-      className="shrink-0 px-2 py-2 [--agenda-hover:var(--agenda-hover-color)]"
-      style={
-        {
-          borderBottom: `1px solid ${agenda.border}`,
-          "--agenda-hover-color": agenda.hover,
-        } as React.CSSProperties
-      }
-    >
-      <div className="flex items-center justify-between gap-1">
+    <header className="shrink-0 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-1.5">
         <button
           type="button"
           onClick={onPrev}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-[var(--agenda-hover-color)]"
-          style={{ color: agenda.textSecondary }}
+          className={chunkyBtn}
           aria-label="Previous day"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -66,8 +60,7 @@ export function MobileAgendaHeader({
               el.click();
             }
           }}
-          className="min-h-11 flex-1 rounded-xl px-2 text-center text-base font-semibold transition-colors hover:bg-[var(--agenda-hover-color)]"
-          style={{ color: agenda.text }}
+          className="min-h-11 flex-1 rounded-xl border-2 border-b-4 border-rf-chunk bg-rf-card px-2 text-center text-base font-extrabold text-rf-ink transition-[transform,border-width] duration-100 hover:bg-rf-chunk-hover active:translate-y-[2px] active:border-b-2"
           aria-label="Pick a date"
         >
           {label}
@@ -92,8 +85,7 @@ export function MobileAgendaHeader({
         <button
           type="button"
           onClick={onNext}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-[var(--agenda-hover-color)]"
-          style={{ color: agenda.textSecondary }}
+          className={chunkyBtn}
           aria-label="Next day"
         >
           <ChevronRight className="h-5 w-5" />
@@ -101,7 +93,7 @@ export function MobileAgendaHeader({
       </div>
 
       {!isToday && (
-        <div className="mt-1 flex justify-center pb-1">
+        <div className="mt-2 flex justify-center">
           <button
             type="button"
             onClick={onToday}

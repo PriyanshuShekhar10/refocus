@@ -125,15 +125,13 @@ export function CalendarHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-2.5">
-        {streak > 0 ? (
-          <div
-            title="Focus streak"
-            className="flex h-[38px] items-center gap-1.5 whitespace-nowrap rounded-xl bg-rf-streak-bg px-3 text-[15px] font-extrabold text-rf-streak-ink"
-          >
-            <Flame className="h-[19px] w-[19px] text-rf-streak" fill="currentColor" strokeWidth={0} aria-hidden />
-            <span>{streak}-day streak</span>
-          </div>
-        ) : null}
+        <div
+          title="Focus streak"
+          className="flex h-[38px] items-center gap-1.5 whitespace-nowrap rounded-xl bg-rf-streak-bg px-3 text-[15px] font-extrabold text-rf-streak-ink"
+        >
+          <Flame className="h-[19px] w-[19px] text-rf-streak" fill="currentColor" strokeWidth={0} aria-hidden />
+          <span>{streak}-day streak</span>
+        </div>
         {onToggleDuration ? (
           <div className="relative" ref={filterRef}>
             <button
