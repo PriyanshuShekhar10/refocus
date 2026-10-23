@@ -108,16 +108,19 @@ export async function GET() {
 
   // Build a daily map of completed sessions for the last 8 weeks so the UI
   // can render a sparkline / heatmap without re-querying.
+  //
+  // Day boundaries are computed purely from the UTC calendar date of each
+  // timestamp (never via local setHours/setDate), so this matches how
+  // `completedDays` below is keyed regardless of the server process's TZ.
+  const dayMs = 24 * 60 * 60 * 1000;
+  const utcDayStartMs = (d: Date) =>
+    Date.parse(`${d.toISOString().slice(0, 10)}T00:00:00.000Z`);
   const trendDays = 56;
-  const trendStart = new Date(now);
-  trendStart.setHours(0, 0, 0, 0);
-  trendStart.setDate(trendStart.getDate() - (trendDays - 1));
+  const trendStartMs = utcDayStartMs(now) - (trendDays - 1) * dayMs;
   const trend: Array<{ date: string; sessions: number; minutes: number }> = [];
   const trendIndex = new Map<string, number>();
   for (let i = 0; i < trendDays; i++) {
-    const d = new Date(trendStart);
-    d.setDate(trendStart.getDate() + i);
-    const key = d.toISOString().slice(0, 10);
+    const key = new Date(trendStartMs + i * dayMs).toISOString().slice(0, 10);
     trendIndex.set(key, i);
     trend.push({ date: key, sessions: 0, minutes: 0 });
   }
@@ -268,44 +271,35 @@ export async function GET() {
   const completionRate = attended > 0 ? completed / attended : 0;
 
   // Streaks: consecutive days (counting back from today / yesterday) with
-  // at least one completed session.
-  const dayKey = (d: Date) => {
-    const x = new Date(d);
-    x.setHours(0, 0, 0, 0);
-    return x.toISOString().slice(0, 10);
-  };
+  // at least one completed session. Day keys are the same UTC-based
+  // `dayKey` used for the trend above, so they always agree with
+  // `completedDays` regardless of the server process's local TZ.
+  const dayKey = (d: Date) => d.toISOString().slice(0, 10);
   const todayKey = dayKey(now);
-  const yesterdayKey = dayKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+  const yesterdayKey = dayKey(new Date(now.getTime() - dayMs));
 
   let currentStreak = 0;
-  const cursor = new Date(now);
-  cursor.setHours(0, 0, 0, 0);
+  let cursorMs = utcDayStartMs(now);
   // If no session today, start counting from yesterday (so today not yet
   // counted doesn't break the streak before evening).
   if (!completedDays.has(todayKey) && completedDays.has(yesterdayKey)) {
-    cursor.setDate(cursor.getDate() - 1);
+    cursorMs -= dayMs;
   }
-  while (completedDays.has(dayKey(cursor))) {
+  while (completedDays.has(dayKey(new Date(cursorMs)))) {
     currentStreak += 1;
-    cursor.setDate(cursor.getDate() - 1);
+    cursorMs -= dayMs;
   }
 
   // Longest streak: walk all completion days, find longest consecutive run.
   let longestStreak = 0;
   const sortedDays = Array.from(completedDays).sort();
   let runLength = 0;
-  let prevDay: string | null = null;
+  let prevDayMs: number | null = null;
   for (const day of sortedDays) {
-    if (prevDay === null) {
-      runLength = 1;
-    } else {
-      const prev = new Date(prevDay);
-      const next = new Date(prev);
-      next.setDate(prev.getDate() + 1);
-      runLength = dayKey(next) === day ? runLength + 1 : 1;
-    }
+    const currentMs = Date.parse(`${day}T00:00:00.000Z`);
+    runLength = prevDayMs !== null && currentMs - prevDayMs === dayMs ? runLength + 1 : 1;
     if (runLength > longestStreak) longestStreak = runLength;
-    prevDay = day;
+    prevDayMs = currentMs;
   }
 
   return NextResponse.json({
