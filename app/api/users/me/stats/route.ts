@@ -7,6 +7,8 @@ import { resolveAvatarUrl } from "@/lib/userAvatar";
 import { resolveSessionDisplayName } from "@/lib/sessionPersonalization";
 import { accumulateAttendanceStats } from "@/lib/sessionAttendanceStats";
 import { sessionParticipantIdValues } from "@/lib/sessionAttendanceQuery";
+import { resolveUserTimeZone } from "@/lib/sessionReminders";
+import { ymdInTimeZone, startOfDayInTimeZone, addDaysInTimeZone } from "@/lib/zonedTime";
 
 
 type SessionTypeBreakdown = Record<string, number>;
@@ -44,6 +46,16 @@ export async function GET() {
   const db = await getDb();
   const now = new Date();
   const participantIdValues = sessionParticipantIdValues(userId);
+
+  const userDoc = await db
+    .collection("users")
+    .findOne(
+      { _id: new ObjectId(userId) },
+      { projection: { preferences: 1 } },
+    );
+  const timeZone = resolveUserTimeZone(
+    userDoc?.preferences as { timezone?: string } | undefined,
+  );
 
   const sessions = (await db
     .collection("sessions")
@@ -109,20 +121,19 @@ export async function GET() {
   // Build a daily map of completed sessions for the last 8 weeks so the UI
   // can render a sparkline / heatmap without re-querying.
   //
-  // Day boundaries are computed purely from the UTC calendar date of each
-  // timestamp (never via local setHours/setDate), so this matches how
-  // `completedDays` below is keyed regardless of the server process's TZ.
-  const dayMs = 24 * 60 * 60 * 1000;
-  const utcDayStartMs = (d: Date) =>
-    Date.parse(`${d.toISOString().slice(0, 10)}T00:00:00.000Z`);
+  // Day boundaries are the user's own calendar day (per their timezone
+  // preference, resolved above), not the server's — so "today" lines up
+  // with the day the user actually experienced.
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
   const trendDays = 56;
-  const trendStartMs = utcDayStartMs(now) - (trendDays - 1) * dayMs;
   const trend: Array<{ date: string; sessions: number; minutes: number }> = [];
   const trendIndex = new Map<string, number>();
+  let trendCursor = addDaysInTimeZone(now, -(trendDays - 1), timeZone);
   for (let i = 0; i < trendDays; i++) {
-    const key = new Date(trendStartMs + i * dayMs).toISOString().slice(0, 10);
+    const key = ymdInTimeZone(trendCursor, timeZone);
     trendIndex.set(key, i);
     trend.push({ date: key, sessions: 0, minutes: 0 });
+    trendCursor = addDaysInTimeZone(trendCursor, 1, timeZone);
   }
 
   // Sorted by start_time DESC, so iterate as-is.
@@ -163,7 +174,7 @@ export async function GET() {
       completed += 1;
       totalMinutes += s.duration_min || 0;
 
-      const startKey = new Date(s.start_time).toISOString().slice(0, 10);
+      const startKey = ymdInTimeZone(new Date(s.start_time), timeZone);
       completedDays.add(startKey);
 
       const idx = trendIndex.get(startKey);
@@ -172,7 +183,10 @@ export async function GET() {
         trend[idx].minutes += s.duration_min || 0;
       }
 
-      const weekday = new Date(s.start_time).getDay();
+      // Weekday of the user's local calendar day (startKey), not the
+      // server's interpretation of the raw UTC timestamp.
+      const [y, m, d] = startKey.split("-").map(Number);
+      const weekday = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
       byWeekday[weekday] += 1;
     }
 
@@ -271,33 +285,35 @@ export async function GET() {
   const completionRate = attended > 0 ? completed / attended : 0;
 
   // Streaks: consecutive days (counting back from today / yesterday) with
-  // at least one completed session. Day keys are the same UTC-based
-  // `dayKey` used for the trend above, so they always agree with
-  // `completedDays` regardless of the server process's local TZ.
-  const dayKey = (d: Date) => d.toISOString().slice(0, 10);
-  const todayKey = dayKey(now);
-  const yesterdayKey = dayKey(new Date(now.getTime() - dayMs));
+  // at least one completed session. Day keys are the user's own calendar
+  // day (`timeZone`, resolved above), matching how `completedDays` and the
+  // trend above are keyed — so streaks track the day as the user
+  // experienced it, not the server's.
+  const todayKey = ymdInTimeZone(now, timeZone);
+  const yesterdayKey = ymdInTimeZone(addDaysInTimeZone(now, -1, timeZone), timeZone);
 
   let currentStreak = 0;
-  let cursorMs = utcDayStartMs(now);
+  let cursor = startOfDayInTimeZone(now, timeZone);
   // If no session today, start counting from yesterday (so today not yet
   // counted doesn't break the streak before evening).
   if (!completedDays.has(todayKey) && completedDays.has(yesterdayKey)) {
-    cursorMs -= dayMs;
+    cursor = addDaysInTimeZone(cursor, -1, timeZone);
   }
-  while (completedDays.has(dayKey(new Date(cursorMs)))) {
+  while (completedDays.has(ymdInTimeZone(cursor, timeZone))) {
     currentStreak += 1;
-    cursorMs -= dayMs;
+    cursor = addDaysInTimeZone(cursor, -1, timeZone);
   }
 
   // Longest streak: walk all completion days, find longest consecutive run.
+  // Each `day` is already a resolved local-calendar-date string, so a plain
+  // UTC-parsed diff of exactly one day correctly means "consecutive".
   let longestStreak = 0;
   const sortedDays = Array.from(completedDays).sort();
   let runLength = 0;
   let prevDayMs: number | null = null;
   for (const day of sortedDays) {
     const currentMs = Date.parse(`${day}T00:00:00.000Z`);
-    runLength = prevDayMs !== null && currentMs - prevDayMs === dayMs ? runLength + 1 : 1;
+    runLength = prevDayMs !== null && currentMs - prevDayMs === ONE_DAY_MS ? runLength + 1 : 1;
     if (runLength > longestStreak) longestStreak = runLength;
     prevDayMs = currentMs;
   }
