@@ -40,6 +40,7 @@ export type CohortRetentionWeek = {
   active: number;
   rate: number;
   partial: boolean;
+  activeUserIds: string[];
 };
 
 export type CohortRow = {
@@ -73,7 +74,7 @@ export function computeCohortRetention(
 
     let booked = 0;
     let joinedCall = 0;
-    const activeByWeek = new Map<number, number>();
+    const activeUserIdsByWeek = new Map<number, string[]>();
 
     for (const u of members) {
       const touches = touchesByUser.get(u.id) ?? [];
@@ -90,21 +91,24 @@ export function computeCohortRetention(
         weeksSeen.add(w);
       }
       for (const w of weeksSeen) {
-        activeByWeek.set(w, (activeByWeek.get(w) ?? 0) + 1);
+        const list = activeUserIdsByWeek.get(w) ?? [];
+        list.push(u.id);
+        activeUserIdsByWeek.set(w, list);
       }
     }
 
     const maxWeek = weeksBetween(cohort, todayMonday);
     const weeks: CohortRetentionWeek[] = [];
     for (let w = 0; w <= maxWeek; w++) {
-      const active = activeByWeek.get(w) ?? 0;
+      const activeUserIds = activeUserIdsByWeek.get(w) ?? [];
       // The most recent week is always still in progress (it contains "now").
       const partial = w === maxWeek;
       weeks.push({
         week: w,
-        active,
-        rate: members.length > 0 ? Math.round((active / members.length) * 10000) / 10000 : 0,
+        active: activeUserIds.length,
+        rate: members.length > 0 ? Math.round((activeUserIds.length / members.length) * 10000) / 10000 : 0,
         partial,
+        activeUserIds,
       });
     }
 

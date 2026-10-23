@@ -38,7 +38,12 @@ describe("computeCohortRetention", () => {
     expect(row.size).toBe(3);
     expect(row.booked).toBe(2); // u1, u2 had a partnered session
     expect(row.joinedCall).toBe(1); // only u1 ever joined a call
-    expect(row.weeks[0]).toMatchObject({ week: 0, active: 1, rate: 0.3333 });
+    expect(row.weeks[0]).toMatchObject({
+      week: 0,
+      active: 1,
+      rate: 0.3333,
+      activeUserIds: ["u1"],
+    });
   });
 
   it("marks only the most recent week as partial", () => {

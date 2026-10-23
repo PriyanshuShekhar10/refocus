@@ -1,9 +1,19 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import useSWR from "swr";
 import type { CSSProperties } from "react";
+import { X } from "lucide-react";
 
-type CohortWeek = { week: number; active: number; rate: number; partial: boolean };
+type ActiveUser = { id: string; name: string | null; username: string | null };
+type CohortWeek = {
+  week: number;
+  active: number;
+  rate: number;
+  partial: boolean;
+  activeUsers: ActiveUser[];
+};
 type CohortRow = {
   cohort: string;
   size: number;
@@ -39,6 +49,9 @@ export default function AdminCohorts() {
       if (!res.ok) throw new Error("Couldn't load cohort retention.");
       return res.json();
     },
+  );
+  const [selected, setSelected] = useState<{ cohort: string; week: CohortWeek } | null>(
+    null,
   );
 
   const cohorts = data?.cohorts ?? [];
@@ -108,11 +121,17 @@ export default function AdminCohorts() {
                     </td>
                     {weekCols.map((w) => {
                       const cell = byWeek.get(w);
+                      const clickable = Boolean(cell && cell.active > 0);
                       return (
                         <td
                           key={w}
-                          className="px-3 py-2.5 text-right tabular-nums text-rf-ink"
+                          className={`px-3 py-2.5 text-right tabular-nums text-rf-ink ${
+                            clickable ? "cursor-pointer hover:underline" : ""
+                          }`}
                           style={cellStyle(cell)}
+                          onClick={() => {
+                            if (clickable && cell) setSelected({ cohort: row.cohort, week: cell });
+                          }}
                         >
                           {cell ? (
                             <span>
@@ -133,10 +152,54 @@ export default function AdminCohorts() {
             </tbody>
           </table>
           <p className="border-t border-rf-line-soft px-4 py-2 text-[11px] text-rf-ink-mute">
-            * week still in progress
+            * week still in progress · click a cell to see who was active
           </p>
         </div>
       )}
+
+      {selected ? (
+        <div className="rounded-xl border border-rf-line bg-rf-card p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-rf-ink">
+                {formatCohortLabel(selected.cohort)} cohort · week {selected.week.week}
+              </p>
+              <p className="mt-0.5 text-xs text-rf-ink-mute">
+                {selected.week.active} active
+                {selected.week.partial ? " so far (week still in progress)" : ""}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              className="rounded-lg p-1 text-rf-ink-mute hover:bg-rf-line-soft"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          {selected.week.activeUsers.length === 0 ? (
+            <p className="mt-3 text-sm text-rf-ink-mute">No one active this week.</p>
+          ) : (
+            <ul className="mt-3 divide-y divide-rf-line-soft">
+              {selected.week.activeUsers.map((u) => (
+                <li key={u.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                  <span className="font-medium text-rf-ink">{u.name || "—"}</span>
+                  {u.username ? (
+                    <Link
+                      href={`/u/${u.username}`}
+                      target="_blank"
+                      className="text-rf-plum-ink hover:underline"
+                    >
+                      @{u.username}
+                    </Link>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

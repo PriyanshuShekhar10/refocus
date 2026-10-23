@@ -16,6 +16,10 @@ type UserDoc = {
   createdAt?: Date;
   role?: string;
   email?: string;
+  name?: string;
+  firstname?: string;
+  lastname?: string;
+  username?: string;
 };
 
 type ParticipantDoc = {
@@ -36,7 +40,20 @@ export async function GET() {
   const [users, crewDocs] = await Promise.all([
     db
       .collection<UserDoc>("users")
-      .find({}, { projection: { createdAt: 1, role: 1, email: 1 } })
+      .find(
+        {},
+        {
+          projection: {
+            createdAt: 1,
+            role: 1,
+            email: 1,
+            name: 1,
+            firstname: 1,
+            lastname: 1,
+            username: 1,
+          },
+        },
+      )
       .toArray(),
     db
       .collection<{ userId?: string; canonicalEmail?: string }>("engagement_crew")
@@ -54,6 +71,7 @@ export async function GET() {
 
   const eligible: CohortUser[] = [];
   const eligibleIds = new Set<string>();
+  const userLabelById = new Map<string, { name: string | null; username: string | null }>();
   for (const u of users) {
     const id = String(u._id);
     const email = (u.email || "").trim().toLowerCase();
@@ -75,6 +93,9 @@ export async function GET() {
     }
     eligible.push({ id, createdAt: new Date(u.createdAt) });
     eligibleIds.add(id);
+    const name =
+      [u.firstname, u.lastname].filter(Boolean).join(" ") || u.name || null;
+    userLabelById.set(id, { name, username: u.username || null });
   }
 
   const sessions = await db
@@ -103,6 +124,18 @@ export async function GET() {
 
   const cohorts = computeCohortRetention(eligible, touchesByUser, new Date());
 
+  const cohortsWithUsers = cohorts.map((row) => ({
+    ...row,
+    weeks: row.weeks.map((w) => ({
+      ...w,
+      activeUsers: w.activeUserIds.map((id) => ({
+        id,
+        name: userLabelById.get(id)?.name ?? null,
+        username: userLabelById.get(id)?.username ?? null,
+      })),
+    })),
+  }));
+
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
     excluded: {
@@ -111,6 +144,6 @@ export async function GET() {
       crew: excludedCrew,
       preTracking: excludedPreTracking,
     },
-    cohorts,
+    cohorts: cohortsWithUsers,
   });
 }
