@@ -19,6 +19,7 @@ import {
   Shield,
   ShieldOff,
   Trash2,
+  TrendingUp,
   UserX,
   Users,
   UserPlus,
@@ -46,6 +47,7 @@ import AdminMessages from "./AdminMessages";
 import AdminCrew from "./AdminCrew";
 import AdminTestCall from "./AdminTestCall";
 import AdminUpdates from "./AdminUpdates";
+import AdminCohorts from "./AdminCohorts";
 
 type AdminSection =
   | "overview"
@@ -63,6 +65,7 @@ type AdminSection =
   | "crew"
   | "test-call"
   | "updates"
+  | "cohorts"
   | "config";
 
 type DailyAccountRow = {
@@ -290,6 +293,7 @@ const SECTIONS: {
   { id: "blocked", label: "Blocked", icon: Ban },
   { id: "mailbox", label: "Mailbox", icon: Mail },
   { id: "updates", label: "Updates", icon: Megaphone },
+  { id: "cohorts", label: "Cohorts", icon: TrendingUp },
   { id: "ip-activity", label: "Banned IP activity", icon: Activity },
   { id: "reports", label: "Reports", icon: Flag },
   { id: "bugs", label: "Bugs", icon: Bug },
@@ -1539,6 +1543,8 @@ export default function AdminPanel() {
         {section === "test-call" ? <AdminTestCall active /> : null}
 
         {section === "updates" ? <AdminUpdates active={section === "updates"} /> : null}
+
+        {section === "cohorts" ? <AdminCohorts /> : null}
 
         {section === "users" ? (
           <div className="space-y-4">
