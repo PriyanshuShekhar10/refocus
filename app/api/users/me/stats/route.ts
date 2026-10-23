@@ -37,6 +37,18 @@ type AggregatedSession = {
 // dashboard. Only sessions that have already ended are counted, so the
 // numbers don't churn for sessions still in flight.
 export async function GET() {
+  try {
+    return await handleGet();
+  } catch (err) {
+    console.error("GET /api/users/me/stats failed", err);
+    return NextResponse.json(
+      { error: "Service temporarily unavailable" },
+      { status: 503 },
+    );
+  }
+}
+
+async function handleGet() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) {

@@ -124,19 +124,32 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Too many authentication attempts. Please try again later.");
         }
 
-        const db = await getDb();
-        const user = await db
-          .collection<{
-            _id: unknown;
-            email: string;
-            name?: string;
-            hashedPassword?: string;
-            avatar_url?: string | null;
-            image?: string | null;
-          }>("users")
-          .findOne({
-            email: credentials.email.toLowerCase(),
-          });
+        let user: {
+          _id: unknown;
+          email: string;
+          name?: string;
+          hashedPassword?: string;
+          avatar_url?: string | null;
+          image?: string | null;
+        } | null;
+        try {
+          const db = await getDb();
+          user = await db
+            .collection<{
+              _id: unknown;
+              email: string;
+              name?: string;
+              hashedPassword?: string;
+              avatar_url?: string | null;
+              image?: string | null;
+            }>("users")
+            .findOne({
+              email: credentials.email.toLowerCase(),
+            });
+        } catch (err) {
+          console.error("[auth] credentials sign-in: database unavailable:", err);
+          throw new Error("Sign-in is temporarily unavailable. Please try again.");
+        }
         if (!user || !user.hashedPassword) return null;
         const ok = await bcrypt.compare(
           credentials.password,

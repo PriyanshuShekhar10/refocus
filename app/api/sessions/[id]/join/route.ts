@@ -16,6 +16,21 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
+    return await handlePost(req, { params });
+  } catch (err) {
+    console.error("POST /api/sessions/[id]/join failed", err);
+    return NextResponse.json(
+      { error: "Service temporarily unavailable" },
+      { status: 503 },
+    );
+  }
+}
+
+async function handlePost(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const session = await getServerSession(authOptions);
   type AuthUser = { id?: string };
   const userId = (session?.user as AuthUser | undefined)?.id;
