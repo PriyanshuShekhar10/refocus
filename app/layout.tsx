@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Quicksand, Geist, Geist_Mono, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers";
@@ -13,6 +13,18 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "Refocus",
   description: "Finding you an accountability partner.",
+};
+
+// The app shell (fixed-height panes, bottom nav) is sized to the initial
+// viewport; pinch-zooming out on mobile leaves those panes their original
+// screen size while the now-larger visible area shows blank page behind
+// them. Locking the zoom level avoids that instead of making every
+// fixed-height pane re-measure against the live visual viewport.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 const quicksandSans = Quicksand({
