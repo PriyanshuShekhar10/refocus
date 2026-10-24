@@ -134,6 +134,15 @@ button,
   * {
     @apply border-border;
   }
+  html,
+  body {
+    /* Belt-and-suspenders: the app shell is designed to never need page-level
+       horizontal scroll (horizontal scrolling lives in specific inner
+       containers, e.g. the mobile home carousel). Guard against it outright
+       so a stray overflow (or a zoomed-viewport edge case) can't open up a
+       page-wide horizontal scrollbar. */
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground;
   }

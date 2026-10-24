@@ -8,7 +8,7 @@ import { formatLocalTime } from "@/lib/localTime";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import * as sessionsApi from "@/lib/api/sessionsApi";
 import { swrKeys } from "@/lib/swr/keys";
-import { isCallJoinable } from "@/lib/sessionWindow";
+import { CALL_JOIN_VISIBLE_MINUTES, isCallJoinable } from "@/lib/sessionWindow";
 
 const LATER_COUNT = 5;
 
@@ -125,7 +125,7 @@ export function UpNextPanel({ onOpenSession, onTestDevices, onJoin }: UpNextPane
           const partner = partnerOf(next, currentUserId);
           const hosting = next.owner_id === currentUserId;
           const canJoin = !!partner && isCallJoinable(start, end, now);
-          const opensAt = new Date(start.getTime() - 30 * 60_000);
+          const opensAt = new Date(start.getTime() - CALL_JOIN_VISIBLE_MINUTES * 60_000);
           return (
             <div className="flex shrink-0 flex-col gap-2.5 rounded-[20px] border-2 border-b-[5px] border-rf-primary bg-rf-next-bg px-4 py-3.5">
               <div className="flex items-center justify-between gap-2">
@@ -170,7 +170,7 @@ export function UpNextPanel({ onOpenSession, onTestDevices, onJoin }: UpNextPane
               ) : partner ? (
                 <span
                   aria-disabled="true"
-                  title="The room opens 30 min before start."
+                  title={`The room opens ${CALL_JOIN_VISIBLE_MINUTES} min before start.`}
                   className="flex h-11 items-center justify-center rounded-[14px] bg-rf-primary text-sm font-extrabold uppercase tracking-[0.06em] text-rf-on-primary opacity-[.55] shadow-[0_4px_0_var(--rf-primary-shadow)]"
                 >
                   Opens {formatLocalTime(opensAt, timeFmt)}

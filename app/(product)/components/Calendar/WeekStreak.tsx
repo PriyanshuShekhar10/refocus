@@ -26,7 +26,18 @@ export function weekFocusDays(trend: TrendDay[], now = new Date()): { label: str
 }
 
 /** The "this week" streak row from the prototype: flame circles for focused days. */
-export function WeekStreak({ trend, streak, best }: { trend: TrendDay[]; streak: number; best: number }) {
+export function WeekStreak({
+  trend,
+  streak,
+  best,
+  bordered = true,
+}: {
+  trend: TrendDay[];
+  streak: number;
+  best: number;
+  /** Set false when this is the only content in its own card (no divider above it needed). */
+  bordered?: boolean;
+}) {
   // "Today" depends on the viewer's local clock; computing it during SSR (server
   // timezone/instant) can disagree with the client's first render and trigger a
   // hydration mismatch. Resolve it only after mount, like the server would see it.
@@ -34,7 +45,7 @@ export function WeekStreak({ trend, streak, best }: { trend: TrendDay[]; streak:
   useEffect(() => setNow(new Date()), []);
   const days = weekFocusDays(trend, now ?? new Date(0));
   return (
-    <div className="border-t border-rf-line-soft pt-2.5">
+    <div className={bordered ? "border-t border-rf-line-soft pt-2.5" : ""}>
       <div className="mb-2 flex items-center justify-between">
         <span className="flex items-center gap-1 text-xs font-bold text-rf-streak-ink">
           <Flame className="h-3.5 w-3.5 text-rf-streak" fill="currentColor" strokeWidth={0} aria-hidden />

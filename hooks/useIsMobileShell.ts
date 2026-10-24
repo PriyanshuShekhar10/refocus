@@ -10,10 +10,15 @@ export function useIsMobileShell() {
 
   useEffect(() => {
     setMounted(true);
-    const check = () => setIsMobile(window.innerWidth < MOBILE_SHELL_BREAKPOINT);
+    // matchMedia tracks the same layout-viewport breakpoint Tailwind's `lg:`
+    // classes use. Reading window.innerWidth directly can disagree with that
+    // CSS media query while the page is pinch-zoomed on mobile Safari,
+    // leaving the shell stuck between the mobile and desktop layouts.
+    const mql = window.matchMedia(`(max-width: ${MOBILE_SHELL_BREAKPOINT - 1}px)`);
+    const check = () => setIsMobile(mql.matches);
     check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    mql.addEventListener("change", check);
+    return () => mql.removeEventListener("change", check);
   }, []);
 
   return { isMobile, mounted };
