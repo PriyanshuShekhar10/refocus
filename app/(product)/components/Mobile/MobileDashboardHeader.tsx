@@ -44,7 +44,7 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-/** Greeting + today's count, plus a swipeable attendance / next-up carousel. */
+/** Greeting + today's count, plus stacked attendance / streak / next-up cards. */
 export function MobileDashboardHeader({
   onOpenNextUp,
   onTestDevices,
@@ -164,74 +164,56 @@ export function MobileDashboardHeader({
       </div>
 
       {attendance || stats || nextUp ? (
-        <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {(() => {
-            // Each card goes full width when it's the only one in the
-            // carousel; otherwise they peek at 82% so the next one is
-            // visible to swipe to.
-            const cardCount = (attendance ? 1 : 0) + (stats ? 1 : 0) + (nextUp ? 1 : 0);
-            const cardWidth = cardCount > 1 ? "w-[82%]" : "w-full";
+        <div className="mt-3 flex flex-col gap-3 px-4">
+          {attendance ? (
+            <div className="flex flex-col gap-2.5 rounded-2xl border border-rf-line bg-rf-card p-3.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-xs font-bold text-rf-ink-mute">Your attendance</span>
+                <span className="text-[11.5px] text-rf-ink-mute">
+                  {attendance.attended} of {attendance.booked} showed up
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-2xl font-extrabold leading-none tracking-[-0.03em] tabular-nums ${
+                    ATTENDANCE_COLORS[attendanceLevel(attendance.percent)].text
+                  }`}
+                >
+                  {attendance.percent}%
+                </span>
+                <span className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-rf-line-soft">
+                  <span
+                    className={`absolute inset-y-0 left-0 rounded-full ${
+                      ATTENDANCE_COLORS[attendanceLevel(attendance.percent)].bar
+                    }`}
+                    style={{ width: `${attendance.percent}%` }}
+                  />
+                </span>
+              </div>
+            </div>
+          ) : null}
 
-            return (
-              <>
-                {attendance ? (
-                  <div
-                    className={`flex shrink-0 snap-center flex-col gap-2.5 rounded-2xl border border-rf-line bg-rf-card p-3.5 ${cardWidth}`}
-                  >
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-xs font-bold text-rf-ink-mute">Your attendance</span>
-                      <span className="text-[11.5px] text-rf-ink-mute">
-                        {attendance.attended} of {attendance.booked} showed up
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`text-2xl font-extrabold leading-none tracking-[-0.03em] tabular-nums ${
-                          ATTENDANCE_COLORS[attendanceLevel(attendance.percent)].text
-                        }`}
-                      >
-                        {attendance.percent}%
-                      </span>
-                      <span className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-rf-line-soft">
-                        <span
-                          className={`absolute inset-y-0 left-0 rounded-full ${
-                            ATTENDANCE_COLORS[attendanceLevel(attendance.percent)].bar
-                          }`}
-                          style={{ width: `${attendance.percent}%` }}
-                        />
-                      </span>
-                    </div>
-                  </div>
-                ) : null}
+          {stats ? (
+            <div className="rounded-2xl border border-rf-line bg-rf-card p-3.5">
+              <WeekStreak
+                trend={stats.trend}
+                streak={streak}
+                best={stats.longestStreak}
+                bordered={false}
+              />
+            </div>
+          ) : null}
 
-                {stats ? (
-                  <div
-                    className={`shrink-0 snap-center rounded-2xl border border-rf-line bg-rf-card p-3.5 ${cardWidth}`}
-                  >
-                    <WeekStreak
-                      trend={stats.trend}
-                      streak={streak}
-                      best={stats.longestStreak}
-                      bordered={false}
-                    />
-                  </div>
-                ) : null}
-
-                {nextUp ? (
-                  <div className={`shrink-0 snap-center ${cardWidth}`}>
-                    <MobileNextUpCard
-                      event={nextUp}
-                      currentUserId={currentUserId}
-                      now={now}
-                      onOpen={() => onOpenNextUp(nextUp)}
-                      onTestDevices={onTestDevices}
-                      className="mb-0 h-full"
-                    />
-                  </div>
-                ) : null}
-              </>
-            );
-          })()}
+          {nextUp ? (
+            <MobileNextUpCard
+              event={nextUp}
+              currentUserId={currentUserId}
+              now={now}
+              onOpen={() => onOpenNextUp(nextUp)}
+              onTestDevices={onTestDevices}
+              className="mb-0"
+            />
+          ) : null}
         </div>
       ) : null}
     </div>
