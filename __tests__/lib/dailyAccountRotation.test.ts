@@ -216,7 +216,12 @@ describe("createOrGetDailyRoom fail-safes", () => {
   it("does not move an existing room when GET returns 5xx", async () => {
     sessionsCol.findOne.mockResolvedValue({ daily_account_id: "1" });
 
-    fetchMock.mockResolvedValueOnce(textResponse(503, "unavailable"));
+    // A transient 5xx is retried a couple of times before giving up — supply
+    // enough 503s to exhaust the retries, not just one.
+    fetchMock
+      .mockResolvedValueOnce(textResponse(503, "unavailable"))
+      .mockResolvedValueOnce(textResponse(503, "unavailable"))
+      .mockResolvedValueOnce(textResponse(503, "unavailable"));
 
     const { createOrGetDailyRoom } = await import("@/lib/providers/video/daily/rooms");
     await expect(createOrGetDailyRoom(sessionId)).rejects.toThrow(
@@ -239,6 +244,9 @@ describe("createOrGetDailyRoom fail-safes", () => {
 
     fetchMock
       .mockResolvedValueOnce(textResponse(404)) // account 1 miss
+      // Account 2's 5xx is retried a couple of times before aborting.
+      .mockResolvedValueOnce(textResponse(503))
+      .mockResolvedValueOnce(textResponse(503))
       .mockResolvedValueOnce(textResponse(503)); // account 2 abort
 
     const { createOrGetDailyRoom } = await import("@/lib/providers/video/daily/rooms");

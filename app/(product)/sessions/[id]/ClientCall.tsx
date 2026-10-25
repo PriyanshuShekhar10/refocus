@@ -26,6 +26,28 @@ import { VideoStage, type VideoJoin, type VideoStageHandle } from "./video/Video
 
 type Phase = "loading" | "in-call" | "ended" | "error";
 
+const JOIN_RETRY_DELAYS_MS = [400, 1000, 2000];
+
+// Join-flow fetches occasionally fail with a transient network error (not a
+// real 4xx from the server) — users were having to manually hit "Try again"
+// 5-6 times. Retry those automatically before surfacing an error.
+async function fetchWithRetry(url: string, init?: RequestInit): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= JOIN_RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const res = await fetch(url, init);
+      if (res.status < 500) return res;
+      lastError = new Error(`Server error: ${res.status}`);
+    } catch (e) {
+      lastError = e;
+    }
+    if (attempt < JOIN_RETRY_DELAYS_MS.length) {
+      await new Promise((resolve) => setTimeout(resolve, JOIN_RETRY_DELAYS_MS[attempt]));
+    }
+  }
+  throw lastError;
+}
+
 type PrejoinInfo = {
   partnerName: string | null;
   partnerInitial: string | null;
@@ -174,7 +196,7 @@ export default function ClientCall({
       setPhase("loading");
       setError(null);
       try {
-        const resJoin = await fetch(`/api/sessions/${sessionId}/join`, {
+        const resJoin = await fetchWithRetry(`/api/sessions/${sessionId}/join`, {
           method: "POST",
         });
         if (!resJoin.ok && resJoin.status !== 409) {
@@ -182,7 +204,7 @@ export default function ClientCall({
           throw new Error(data.error || "Failed to join session");
         }
 
-        const resInfo = await fetch(`/api/sessions/${sessionId}`);
+        const resInfo = await fetchWithRetry(`/api/sessions/${sessionId}`);
         const info = await resInfo.json().catch(() => ({}));
         const youQuiet: boolean = Boolean(info?.youQuiet);
         if (info?.partner) {
@@ -194,7 +216,7 @@ export default function ClientCall({
           setMuted(true);
         }
 
-        const tokenRes = await fetch(`/api/sessions/${sessionId}/video/token`, {
+        const tokenRes = await fetchWithRetry(`/api/sessions/${sessionId}/video/token`, {
           method: "POST",
         });
         if (!tokenRes.ok) {

@@ -9,6 +9,45 @@ import {
 
 const DAILY_API_BASE = "https://api.daily.co/v1";
 
+const DAILY_PROBE_RETRY_DELAYS_MS = [300, 800];
+
+// A single flaky response from one Daily.co account used to abort the whole
+// join (see probeForExistingRoom / ensureRoomOnAccount below) even though
+// the other accounts were fine. Retry a transient failure on this one read
+// before treating it as a real abort/retry_same.
+async function fetchDailyRoomWithRetry(
+  url: string,
+  account: DailyAccount,
+): Promise<Response> {
+  let lastResponse: Response | undefined;
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= DAILY_PROBE_RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${account.apiKey}` },
+        cache: "no-store",
+      });
+      if (res.status < 500) return res;
+      lastResponse = res;
+      lastError = undefined;
+    } catch (e) {
+      lastResponse = undefined;
+      lastError = e;
+    }
+    if (attempt < DAILY_PROBE_RETRY_DELAYS_MS.length) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, DAILY_PROBE_RETRY_DELAYS_MS[attempt]),
+      );
+    }
+  }
+  // Retries exhausted. A persistent 5xx is still a real Response — hand it
+  // back so callers' existing status-based abort/retry_same handling runs,
+  // instead of masking it as a generic thrown error. Only a genuine network
+  // exception (no response at all) propagates as a throw.
+  if (lastResponse) return lastResponse;
+  throw lastError;
+}
+
 type ProbeOutcome =
   | { kind: "found"; account: DailyAccount }
   | { kind: "miss" }
@@ -106,10 +145,10 @@ async function probeAccountForRoom(
   | { kind: "skip_key" }
   | { kind: "abort"; status: number }
 > {
-  const roomRes = await fetch(`${DAILY_API_BASE}/rooms/${roomName}`, {
-    headers: { Authorization: `Bearer ${account.apiKey}` },
-    cache: "no-store",
-  });
+  const roomRes = await fetchDailyRoomWithRetry(
+    `${DAILY_API_BASE}/rooms/${roomName}`,
+    account,
+  );
   if (roomRes.ok) return { kind: "found" };
   if (roomRes.status === 404) return { kind: "miss" };
   if (roomRes.status === 401) return { kind: "skip_key" };
@@ -142,10 +181,10 @@ async function getRoomOnAccount(
   roomName: string,
   account: DailyAccount,
 ): Promise<{ status: number; body: string }> {
-  const roomRes = await fetch(`${DAILY_API_BASE}/rooms/${roomName}`, {
-    headers: { Authorization: `Bearer ${account.apiKey}` },
-    cache: "no-store",
-  });
+  const roomRes = await fetchDailyRoomWithRetry(
+    `${DAILY_API_BASE}/rooms/${roomName}`,
+    account,
+  );
   const body = await roomRes.text();
   return { status: roomRes.status, body };
 }
