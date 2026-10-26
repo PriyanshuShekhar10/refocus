@@ -184,6 +184,10 @@ export const authOptions: NextAuthOptions = {
         if (nextImage !== undefined) {
           token.picture = nextImage || undefined;
         }
+        const nextName = (session as { name?: string | null }).name;
+        if (nextName !== undefined) {
+          token.name = nextName || undefined;
+        }
       }
       // JWT may predate profile photo upload; backfill once per token.
       if (

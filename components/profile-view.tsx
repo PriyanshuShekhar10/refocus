@@ -158,6 +158,10 @@ export function ProfileView({ embedded = false }: Props) {
       if (res.ok) {
         setUsernameStatus("idle");
         await loadUser();
+        const nextName = [editFields.firstname, editFields.lastname]
+          .filter(Boolean)
+          .join(" ");
+        await updateSession({ name: nextName || null });
         setIsEditing(false);
         setAddedPrompts([]);
       }

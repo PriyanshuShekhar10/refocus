@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { ObjectId } from "mongodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
@@ -54,6 +55,21 @@ export async function POST(
   const db = await getDb();
   const s = await db.collection<SessionDoc>("sessions").findOne({ _id: sessionObjectId });
   if (!s) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Read the user's current name fresh rather than trusting session.user.name,
+  // which can be stale (the NextAuth JWT is only refreshed on explicit
+  // session.update() calls, not on every profile edit path).
+  let currentName = user?.name;
+  if (ObjectId.isValid(userId)) {
+    const userDoc = await db
+      .collection("users")
+      .findOne(
+        { _id: new ObjectId(userId) },
+        { projection: { name: 1 } },
+      );
+    if (userDoc?.name) currentName = userDoc.name;
+  }
+
   if (!isOwnerOrParticipant(s, userId)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -70,7 +86,7 @@ export async function POST(
     const join = await issueSessionVideoJoin({
       sessionId,
       userId,
-      userName: user?.name,
+      userName: currentName,
       sessionEnd: s.end_time,
       storedProvider: s.video_provider,
     });

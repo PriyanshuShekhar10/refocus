@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { ArrowRight } from "lucide-react";
 import { DButton, Field, DInput, designStyles } from "@/components/design";
 
@@ -15,6 +16,7 @@ export function DetailsForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { update: updateSession } = useSession();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +31,8 @@ export function DetailsForm({
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error || "Failed to save details");
+      const nextName = [firstname, lastname].filter(Boolean).join(" ");
+      await updateSession({ name: nextName || null });
       router.push("/profile");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
