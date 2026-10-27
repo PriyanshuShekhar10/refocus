@@ -2,6 +2,7 @@
 
 import { forwardRef } from "react";
 import { DailyStage } from "./DailyStage";
+import { StreamStage } from "./StreamStage";
 import type { VideoStageHandle, VideoStageProps } from "./types";
 
 /**
@@ -12,6 +13,8 @@ export const VideoStage = forwardRef<VideoStageHandle, VideoStageProps>(function
   switch (props.join.provider) {
     case "daily":
       return <DailyStage ref={ref} {...props} />;
+    case "stream":
+      return <StreamStage ref={ref} {...props} />;
   }
 });
 

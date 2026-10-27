@@ -3,17 +3,19 @@
  * this, never to a vendor SDK, so swapping providers means adding one adapter.
  */
 
-export type VideoProviderId = "daily";
+export type VideoProviderId = "daily" | "stream";
 
-export const VIDEO_PROVIDER_IDS: readonly VideoProviderId[] = ["daily"];
+export const VIDEO_PROVIDER_IDS: readonly VideoProviderId[] = ["daily", "stream"];
 
 /** What a client needs to join a session's call. Sent as-is to the browser and the app. */
 export type VideoJoin = {
   provider: VideoProviderId;
   token: string;
   roomName: string;
-  /** Provider host the client connects to (Daily: `<team>.daily.co`). */
+  /** Provider-specific namespace for `roomName` (Daily: host domain; Stream: call type). */
   domain: string;
+  /** Stream-only: Daily ships its own in-call chat; Stream needs a separate chat channel. */
+  chat?: { channelType: string; channelId: string };
 };
 
 export interface VideoProvider {

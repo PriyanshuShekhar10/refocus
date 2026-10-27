@@ -2,10 +2,12 @@ import type { DailyDeviceError } from "@/app/(product)/components/MediaPermissio
 
 /** Join details from POST /api/sessions/[id]/video/token. */
 export type VideoJoin = {
-  provider: "daily";
+  provider: "daily" | "stream";
   token: string;
   roomName: string;
   domain: string;
+  /** Stream-only: an inbuilt chat channel alongside the call. */
+  chat?: { channelType: string; channelId: string };
 };
 
 export type VideoDeviceError = DailyDeviceError;
@@ -20,8 +22,13 @@ export type VideoStageHandle = {
 
 export type VideoStageProps = {
   join: VideoJoin;
+  /** The joining user's id. Only Stream needs this (Daily's token already encodes identity). */
+  userId: string;
   startMuted: boolean;
   isDark: boolean;
+  /** Only Stream uses these — chat panel open state, toggled from the header. */
+  chatOpen: boolean;
+  onCloseChat(): void;
   onLeft(): void;
   onDeviceError(error: VideoDeviceError): void;
   onCameraStarted(): void;

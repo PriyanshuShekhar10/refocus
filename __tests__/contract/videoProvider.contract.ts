@@ -1,6 +1,8 @@
 /**
  * Rules every video provider adapter must follow. Run it against each adapter
  * (see videoProvider.test.ts); a new provider (e.g. LiveKit) adds one line there.
+ * Adapters may return extra provider-specific fields beyond the four checked
+ * here (e.g. Stream's `chat`) — those are covered by that adapter's own tests.
  */
 import { describe, expect, it } from "vitest";
 import type { VideoProvider } from "@/lib/providers/video";
@@ -22,7 +24,6 @@ export function runVideoProviderContract(name: string, make: () => VideoProvider
         expect(typeof join[key]).toBe("string");
         expect(join[key].length).toBeGreaterThan(0);
       }
-      expect(Object.keys(join).sort()).toEqual(["domain", "provider", "roomName", "token"]);
     });
 
     it("puts both partners of a session in the same room", async () => {

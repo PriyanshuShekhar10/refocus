@@ -330,10 +330,10 @@ export function SessionTaskPill({
       aria-pressed={open}
       aria-label={open ? `Hide ${summary}` : `Show ${summary}`}
       onClick={onToggle}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-medium tabular-nums backdrop-blur-sm transition-colors duration-150 focus-visible:ring-1 focus-visible:ring-white/35 ${
+      className={`inline-flex h-9 items-center gap-1.5 rounded-full border-2 border-b-4 px-3.5 text-[12.5px] font-bold tabular-nums transition-transform active:translate-y-0.5 active:border-b-2 ${
         open
-          ? "border-white/20 bg-white/10 text-white"
-          : "border-white/15 bg-white/5 text-slate-200 hover:bg-white/10"
+          ? "border-[#3B7DD8] bg-[#1F2E41] text-[#6EA0E1]"
+          : "border-[#343A47] bg-[#181B22] text-[#C3C8D2]"
       }`}
     >
       <ListChecks className="h-3.5 w-3.5" aria-hidden="true" />
@@ -342,7 +342,7 @@ export function SessionTaskPill({
         {youDone}/{youTotal}
       </span>
       {partnerLabel ? (
-        <span className="hidden text-slate-400 sm:inline">{partnerLabel}</span>
+        <span className="hidden text-[#9AA2B0] sm:inline">{partnerLabel}</span>
       ) : null}
     </button>
   );
@@ -358,16 +358,16 @@ export function SessionTaskRail({
   onClose: () => void;
 }) {
   return (
-    <aside className="hidden h-full w-[240px] shrink-0 flex-col border-l border-white/10 bg-slate-950/70 backdrop-blur-md sm:flex">
-      <div className="flex items-center justify-between px-4 pt-3">
-        <p className="text-[11px] font-medium text-slate-500">Tasks</p>
+    <aside className="hidden h-full w-[280px] shrink-0 flex-col rounded-2xl border border-[#2B303A] bg-[#181B22] sm:flex">
+      <div className="flex items-center justify-between border-b border-[#262A34] px-[18px] py-3.5">
+        <p className="text-[15px] font-bold tracking-tight text-white">Session tasks</p>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-sm p-0.5 text-slate-500 transition-colors duration-150 hover:text-slate-200 focus-visible:ring-1 focus-visible:ring-white/35"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-[#9AA2B0] transition-colors duration-150 hover:bg-[#262A34] hover:text-white focus-visible:ring-1 focus-visible:ring-white/35"
           aria-label="Hide tasks"
         >
-          <X className="h-3.5 w-3.5" aria-hidden="true" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
       <SessionTaskPanel tasks={tasks} partnerName={partnerName} tone="call" />
