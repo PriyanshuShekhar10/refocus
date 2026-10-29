@@ -18,6 +18,7 @@ import { AttendanceHighlight } from "@/components/attendance-highlight";
 import type { CalendarEvent } from "@/types/calendar";
 import { UpNextPanel } from "./UpNextPanel";
 import { attendanceLevel } from "@/lib/sessionAttendanceStats";
+import { useClientGreeting } from "@/hooks/useClientGreeting";
 import { pickJoinableSession } from "@/lib/sessionWindow";
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
 import { useSessionStats } from "@/hooks/useSessionStats";
@@ -114,21 +115,6 @@ type DetailedProfile = {
   attendance?: { percent: number; booked: number; attended: number } | null;
 };
 
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
-function formatDate(): string {
-  return new Date().toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 /** Collapse / expand: just an arrow, highlighted on hover. */
 const sidebarToggleClass =
   "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-rf-ink-mute transition-colors hover:bg-rf-line-soft hover:text-rf-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rf-rose/35";
@@ -144,6 +130,7 @@ export function CalendarRightSidebar({
   onOpenSession,
 }: CalendarRightSidebarProps) {
   const { data: session } = useSession();
+  const { greeting, dateLabel } = useClientGreeting();
   const { theme, setTheme, resolvedTheme } = useTheme();
   // Auto-minimises on narrow screens until the person chooses; a profile
   // preview opens it without changing their saved choice.
@@ -579,10 +566,10 @@ export function CalendarRightSidebar({
               </Link>
               <div className="min-w-0">
                 <h2 className="truncate text-[18px] font-semibold leading-[1.25] tracking-[-0.02em] text-rf-ink">
-                  {getGreeting()}, {firstName}
+                  {greeting}, {firstName}
                 </h2>
                 <p className="mt-0.5 text-[13px] text-rf-ink-mute">
-                  {formatDate()} ·{" "}
+                  {dateLabel} ·{" "}
                   <Link
                     href="/dashboard?tab=sessions"
                     className="font-medium text-rf-plum-ink hover:underline"

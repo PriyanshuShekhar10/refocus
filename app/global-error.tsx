@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import posthog from "posthog-js";
+import { recoverFromChunkLoadError } from "@/lib/chunkLoadErrorRecovery";
 
 /** Last-resort boundary when the root layout itself fails: report and offer a retry. */
 export default function GlobalError({
@@ -13,6 +14,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     posthog.captureException(error, { $exception_source: "global-error-boundary", error_digest: error.digest });
+    recoverFromChunkLoadError(error);
   }, [error]);
 
   return (

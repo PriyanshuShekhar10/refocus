@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ensureAblyAccess, getAblyClient } from "@/lib/ably-client";
+import { ensureAblyAccess, getAblyClient, safeChannelSubscribe } from "@/lib/ably-client";
 import { sessionTasksChannel } from "@/lib/realtimeChannels";
 import {
   SESSION_TASKS_PER_OWNER_MAX,
@@ -105,7 +105,7 @@ export function useSessionTasks(sessionId: string, userId: string | null) {
       let cancelled = false;
       const ch = channel;
       void ensureAblyAccess(sessionTasksChannel(sessionId)).then(() => {
-        if (!cancelled) ch.subscribe("event", onEvent);
+        if (!cancelled) safeChannelSubscribe(ch, "event", onEvent);
       });
       return () => {
         cancelled = true;

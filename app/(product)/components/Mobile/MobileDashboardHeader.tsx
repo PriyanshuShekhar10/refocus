@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import * as sessionsApi from "@/lib/api/sessionsApi";
 import { swrKeys } from "@/lib/swr/keys";
 import { useSessionStats } from "@/hooks/useSessionStats";
+import { useClientGreeting } from "@/hooks/useClientGreeting";
 import { attendanceLevel } from "@/lib/sessionAttendanceStats";
 import { urlForTab } from "@/lib/dashboardTabs";
 import type { CalendarEvent, FetchedSession } from "@/types/calendar";
@@ -37,13 +38,6 @@ const ATTENDANCE_COLORS = {
   critical: { text: "text-rf-danger", bar: "bg-rf-danger" },
 } as const;
 
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
 /** Greeting + today's count, plus stacked attendance / streak / next-up cards. */
 export function MobileDashboardHeader({
   onOpenNextUp,
@@ -58,6 +52,7 @@ export function MobileDashboardHeader({
     return () => clearInterval(t);
   }, []);
   const { data: session } = useSession();
+  const { greeting, dateLabel } = useClientGreeting();
   const { stats } = useSessionStats();
   const streak = stats?.currentStreak ?? 0;
   const [attendance, setAttendance] = useState<{
@@ -150,14 +145,10 @@ export function MobileDashboardHeader({
         </Link>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-[clamp(15px,5vw,20px)] font-bold leading-tight tracking-[-0.02em] text-rf-ink">
-            {getGreeting()}, {firstName}
+            {greeting}, {firstName}
           </h1>
           <p className="mt-0.5 truncate text-[clamp(11px,3.2vw,13px)] text-rf-ink-mute">
-            {new Date().toLocaleDateString("en-US", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-            })}{" "}
+            {dateLabel}{" "}
             · {todayCount} session{todayCount !== 1 ? "s" : ""} today
           </p>
         </div>

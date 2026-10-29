@@ -34,6 +34,19 @@ function ensureInit() {
       maskAllInputs: true,
       maskTextSelector: ".ph-no-capture",
     },
+    before_send: (event) => {
+      // Browser-internal, functionally harmless — doesn't indicate anything
+      // broke. Not worth tracking as an application error.
+      if (event?.event === "$exception") {
+        const message = String(
+          (event.properties?.$exception_list as Array<{ value?: string }> | undefined)?.[0]?.value ?? "",
+        );
+        if (message.includes("ResizeObserver loop completed with undelivered notifications")) {
+          return null;
+        }
+      }
+      return event;
+    },
   });
   initialized = true;
 }

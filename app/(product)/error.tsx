@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import posthog from "posthog-js";
+import { recoverFromChunkLoadError } from "@/lib/chunkLoadErrorRecovery";
 
 /** Something in the signed-in app crashed: report it and offer a retry. */
 export default function ProductError({
@@ -13,6 +14,7 @@ export default function ProductError({
 }) {
   useEffect(() => {
     posthog.captureException(error, { $exception_source: "react-error-boundary", error_digest: error.digest });
+    recoverFromChunkLoadError(error);
   }, [error]);
 
   return (

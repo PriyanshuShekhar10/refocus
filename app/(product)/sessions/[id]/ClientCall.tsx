@@ -14,7 +14,7 @@ import MediaPermissionHelp, {
 import { WRAP_UP_MINUTES } from "@/lib/sessionWindow";
 import { playSessionCompleteSound, unlockSessionCompleteSound } from "@/lib/sessionCompleteSound";
 import { releaseAllLocalMediaStreams } from "@/lib/localMedia";
-import { ensureAblyAccess, getAblyClient } from "@/lib/ably-client";
+import { ensureAblyAccess, getAblyClient, safeChannelSubscribe } from "@/lib/ably-client";
 import { sessionAlertsChannel } from "@/lib/realtimeChannels";
 import type { SessionCheerEvent } from "@/types/sessionCheer";
 import { useSessionTasks } from "@/hooks/useSessionTasks";
@@ -406,7 +406,7 @@ export default function ClientCall({
       let cancelled = false;
       const ch = channel;
       void ensureAblyAccess(sessionAlertsChannel(sessionId)).then(() => {
-        if (!cancelled) ch.subscribe("event", onEvent);
+        if (!cancelled) safeChannelSubscribe(ch, "event", onEvent);
       });
       return () => {
         cancelled = true;

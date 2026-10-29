@@ -48,3 +48,42 @@ export async function ensureAblyAccess(channelName: string): Promise<void> {
     console.warn("[Ably] re-authorise failed:", err);
   }
 }
+
+function isCapabilityDenied(err: unknown): boolean {
+  const code = (err as { code?: number } | null)?.code;
+  const message = (err as { message?: string } | null)?.message ?? "";
+  return code === 40160 || message.includes("denied access based on given capability");
+}
+
+/**
+ * channel.subscribe() returns a promise that rejects — uncaught, by default
+ * in every call site in this app — whenever the subscribe can't complete:
+ * the connection is suspended/failed (a real network blip; nothing to do
+ * but let it reconnect) or the current token's capability doesn't cover
+ * this channel yet. The latter can happen even right after
+ * ensureAblyAccess() re-authorised, if the server-side capability (built
+ * from Mongo — see lib/ablyCapability.ts) was computed before some other
+ * in-flight request (e.g. joining a session) had actually committed —
+ * so retry once with a forced re-authorise before giving up.
+ */
+export function safeChannelSubscribe(
+  channel: ReturnType<Ably.Realtime["channels"]["get"]>,
+  eventName: string,
+  listener: (message: Ably.Message) => void,
+): void {
+  const attempt = (allowRetry: boolean) => {
+    channel.subscribe(eventName, listener).catch((err: unknown) => {
+      if (allowRetry && isCapabilityDenied(err)) {
+        getAblyClient()
+          .auth.authorize()
+          .then(() => attempt(false))
+          .catch((reauthErr) => {
+            console.warn(`[Ably] re-authorise after capability denial failed for "${channel.name}":`, reauthErr);
+          });
+        return;
+      }
+      console.warn(`[Ably] subscribe to "${channel.name}" failed:`, err);
+    });
+  };
+  attempt(true);
+}

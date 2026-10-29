@@ -6,7 +6,7 @@ import type { CalendarEvent, FetchedSession, OccupiedSession } from "@/types/cal
 import { toISO, addDays, addMinutes } from "@/lib/utils";
 import { type DurationMin } from "@/constants/calendar";
 import * as sessionsApi from "@/lib/api/sessionsApi";
-import { getAblyClient } from "@/lib/ably-client";
+import { ensureAblyAccess, getAblyClient, safeChannelSubscribe } from "@/lib/ably-client";
 import { sessionsChannel } from "@/lib/realtimeChannels";
 import type { SessionRealtimeEvent } from "@/types/sessionRealtime";
 import { swrKeys } from "@/lib/swr/keys";
@@ -323,6 +323,7 @@ export function useCalendarSessions({
     document.addEventListener("visibilitychange", onVisibleAgain);
     window.addEventListener("focus", onFocus);
 
+    let cancelled = false;
     try {
       const client = getAblyClient();
       channel = client.channels.get(sessionsChannel());
@@ -335,7 +336,10 @@ export function useCalendarSessions({
           // ignore malformed payloads
         }
       };
-      channel.subscribe("event", onEvent);
+      const ch = channel;
+      void ensureAblyAccess(sessionsChannel()).then(() => {
+        if (!cancelled) safeChannelSubscribe(ch, "event", onEvent);
+      });
 
       const onConnectionChange = () => {
         const state = client.connection.state;
@@ -351,6 +355,7 @@ export function useCalendarSessions({
       onConnectionChange();
 
       return () => {
+        cancelled = true;
         channel?.unsubscribe("event", onEvent);
         client.connection.off(onConnectionChange);
         document.removeEventListener("visibilitychange", onVisibleAgain);

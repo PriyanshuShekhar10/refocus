@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 import { Loader2, PartyPopper } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getAblyClient } from "@/lib/ably-client";
+import { ensureAblyAccess, getAblyClient, safeChannelSubscribe } from "@/lib/ably-client";
 import { welcomeBoardChannel } from "@/lib/realtimeChannels";
 import { swrKeys } from "@/lib/swr/keys";
 import type { WelcomeAnnouncement } from "@/lib/welcomeAnnouncements";
@@ -103,6 +103,7 @@ export default function WelcomeBoard({
   }, [data?.nextCursor, data?.announcements]);
 
   useEffect(() => {
+    let cancelled = false;
     const client = getAblyClient();
     const channel = client.channels.get(welcomeBoardChannel());
 
@@ -138,8 +139,11 @@ export default function WelcomeBoard({
       );
     };
 
-    channel.subscribe("event", onEvent);
+    void ensureAblyAccess(welcomeBoardChannel()).then(() => {
+      if (!cancelled) safeChannelSubscribe(channel, "event", onEvent);
+    });
     return () => {
+      cancelled = true;
       channel.unsubscribe("event", onEvent);
     };
   }, [mutate]);

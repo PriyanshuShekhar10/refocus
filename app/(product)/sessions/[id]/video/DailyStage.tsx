@@ -58,6 +58,10 @@ export const DailyStage = forwardRef<VideoStageHandle, VideoStageProps>(function
       // Device test holds the camera/mic on the Refocus origin; Daily needs
       // the physical devices inside its iframe.
       await prepareForDailyCall();
+      // The component can unmount while the above await is in flight
+      // (fast navigation away, a quick re-render) — re-check rather than
+      // trusting the check from before this second await.
+      if (cancelled || !containerRef.current) return;
 
       const container = containerRef.current;
       container.replaceChildren();

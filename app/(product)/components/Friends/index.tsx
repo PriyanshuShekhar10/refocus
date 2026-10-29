@@ -11,7 +11,7 @@ import FriendRequestCard from "./FriendRequestCard";
 import SessionRequestCard from "./SessionRequestCard";
 import EmptyCard from "./EmptyCard";
 import Reveal from "./Reveal";
-import { getAblyClient } from "@/lib/ably-client";
+import { ensureAblyAccess, getAblyClient, safeChannelSubscribe } from "@/lib/ably-client";
 import { userChannel } from "@/lib/realtimeChannels";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 import { useFriendsData } from "@/hooks/useFriendsData";
@@ -78,6 +78,7 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
 
   useEffect(() => {
     if (!currentUserId) return;
+    let cancelled = false;
     const client = getAblyClient();
     const channel = client.channels.get(userChannel(currentUserId));
     const onEvent = (message: { data?: unknown }) => {
@@ -105,8 +106,11 @@ export default function Friends({ onPreviewProfile }: FriendsProps) {
         }
       } catch {}
     };
-    channel.subscribe("event", onEvent);
+    void ensureAblyAccess(userChannel(currentUserId)).then(() => {
+      if (!cancelled) safeChannelSubscribe(channel, "event", onEvent);
+    });
     return () => {
+      cancelled = true;
       channel.unsubscribe("event", onEvent);
     };
   }, [currentUserId, setUnreadCounts]);

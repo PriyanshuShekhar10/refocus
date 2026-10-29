@@ -5,7 +5,7 @@ import FriendChat from "@/app/(product)/components/FriendChat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FiX } from "react-icons/fi";
 import { useSession } from "next-auth/react";
-import { getAblyClient } from "@/lib/ably-client";
+import { ensureAblyAccess, getAblyClient, safeChannelSubscribe } from "@/lib/ably-client";
 import { userChannel } from "@/lib/realtimeChannels";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 import { useFriendsList } from "@/hooks/useFriendsData";
@@ -104,6 +104,7 @@ export function ChatDock() {
 
   useEffect(() => {
     if (!currentUserId) return;
+    let cancelled = false;
     const client = getAblyClient();
     const channel = client.channels.get(userChannel(currentUserId));
     const onEvent = (message: { data?: unknown }) => {
@@ -131,8 +132,11 @@ export function ChatDock() {
         }
       } catch {}
     };
-    channel.subscribe("event", onEvent);
+    void ensureAblyAccess(userChannel(currentUserId)).then(() => {
+      if (!cancelled) safeChannelSubscribe(channel, "event", onEvent);
+    });
     return () => {
+      cancelled = true;
       channel.unsubscribe("event", onEvent);
     };
   }, [currentUserId, setUnreadCounts]);
