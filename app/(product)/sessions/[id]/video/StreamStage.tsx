@@ -1,12 +1,14 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { LayoutGrid, MonitorPlay } from "lucide-react";
 import type { Call, StreamVideoClient } from "@stream-io/video-react-sdk";
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 import "./stream-grid-fix.css";
 import { prepareForDailyCall } from "@/lib/localMedia";
 import { StreamChatPanel, StreamChatSheet } from "./StreamChatPanel";
+import { createStreamTokenProvider } from "./streamTokenProvider";
+import { useIsNarrowViewport } from "./useIsNarrowViewport";
 import { useStreamChat } from "./useStreamChat";
 import type { VideoDeviceError, VideoStageHandle, VideoStageProps } from "./types";
 
@@ -108,17 +110,71 @@ function LayoutSwitcher({
 }
 
 /**
+ * Bridges Stream's own reactive camera/mic state out to this component's
+ * imperative callbacks. Stream's native CallControls buttons call the SDK
+ * directly (call.microphone.toggle(), etc.), bypassing setMicEnabled/
+ * retryCamera entirely — so without this, neither an already-denied browser
+ * permission nor a mute toggled via the native button would ever reach
+ * onDeviceError/onMicStateChange. hasBrowserPermission reflects the actual
+ * OS/browser permission state (true unless really denied — a first-time
+ * user who hasn't been asked yet also reads true), so this never fires on
+ * its own the way an auto-enable-on-join probe would. Renders nothing; must
+ * be a child of <StreamCall> since the state hooks need that call context.
+ */
+function CallStateBridge({
+  sdk,
+  onDeviceError,
+  onMicStateChange,
+}: {
+  sdk: StreamSdk;
+  onDeviceError: (error: VideoDeviceError) => void;
+  onMicStateChange?: (enabled: boolean) => void;
+}) {
+  const { useCallStateHooks } = sdk;
+  const { useMicrophoneState, useCameraState } = useCallStateHooks();
+  const mic = useMicrophoneState();
+  const cam = useCameraState();
+
+  useEffect(() => {
+    const failures: DeviceFailure[] = [];
+    if (!mic.hasBrowserPermission) failures.push({ media: "audio", name: "NotAllowedError" });
+    if (!cam.hasBrowserPermission) failures.push({ media: "video", name: "NotAllowedError" });
+    if (failures.length > 0) onDeviceError(mapDeviceError(failures));
+  }, [mic.hasBrowserPermission, cam.hasBrowserPermission, onDeviceError]);
+
+  useEffect(() => {
+    onMicStateChange?.(!mic.isMute);
+  }, [mic.isMute, onMicStateChange]);
+
+  return null;
+}
+
+/**
  * Stream Video's own built-in components, unmodified — PaginatedGridLayout
  * and SpeakerLayout (switchable via LayoutSwitcher, the Grid/Speaker choice
  * most video-calling apps expose) + CallControls. stream-grid-fix.css
  * patches one real CSS bug in PaginatedGridLayout (see that file) so tiles
- * actually fill the available space instead of staying small. The only
- * additions beyond Stream's own components are the layout switcher and a
- * chat panel (desktop side panel / mobile bottom sheet, toggled from
- * ClientCall's header, since CallControls has no chat button of its own).
+ * actually fill the available space instead of staying small. Beyond
+ * Stream's own components, this adds: the layout switcher, a chat panel
+ * (desktop side panel / mobile full-screen sheet, toggled from ClientCall's
+ * header, since CallControls has no chat button of its own), and
+ * CallStateBridge (a non-rendering bridge for device-permission/mute state —
+ * see its own doc comment).
  */
 export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(function StreamStage(
-  { join, userId, chatOpen, onCloseChat, onLeft, onDeviceError, onCameraStarted },
+  {
+    join,
+    userId,
+    sessionId,
+    chatOpen,
+    onCloseChat,
+    onLeft,
+    onDeviceError,
+    onCameraStarted,
+    onMicStateChange,
+    onJoinFailed,
+    onUnreadChatChange,
+  },
   ref,
 ) {
   const [sdk, setSdk] = useState<StreamSdk | null>(null);
@@ -127,8 +183,13 @@ export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(functio
   const callRef = useRef<Call | null>(null);
   const clientRef = useRef<StreamVideoClient | null>(null);
   const callingStateSubRef = useRef<{ unsubscribe(): void } | null>(null);
-  const handlers = useRef({ onLeft, onDeviceError, onCameraStarted });
-  handlers.current = { onLeft, onDeviceError, onCameraStarted };
+  const handlers = useRef({ onLeft, onDeviceError, onCameraStarted, onJoinFailed });
+  handlers.current = { onLeft, onDeviceError, onCameraStarted, onJoinFailed };
+
+  // Stable per sessionId — shared by the video client and the chat client so
+  // both can silently refresh an expiring token instead of joining with a
+  // token that's handed over once and never revisited (see streamTokenProvider.ts).
+  const tokenProvider = useMemo(() => createStreamTokenProvider(sessionId), [sessionId]);
 
   useImperativeHandle(
     ref,
@@ -179,6 +240,11 @@ export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(functio
       const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
       if (!apiKey) {
         console.error("[Stream] NEXT_PUBLIC_STREAM_API_KEY is not set");
+        if (!cancelled) {
+          handlers.current.onJoinFailed?.(
+            "Video calling isn't configured correctly. Please contact support.",
+          );
+        }
         return;
       }
 
@@ -189,15 +255,20 @@ export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(functio
       const client = new StreamVideoClientCtor({
         apiKey,
         user: { id: userId },
-        token: join.token,
+        tokenProvider,
       });
 
       const call = client.call(join.domain, join.roomName);
 
       try {
         await call.join({ create: true });
-      } catch {
-        // Join failures are rare; device errors (below) cover the common case.
+      } catch (err) {
+        if (!cancelled) {
+          handlers.current.onJoinFailed?.(err instanceof Error ? err.message : undefined);
+        }
+        void call.leave().catch(() => {});
+        void client.disconnectUser().catch(() => {});
+        return;
       }
       if (cancelled) {
         void call.leave().catch(() => {});
@@ -232,16 +303,22 @@ export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(functio
       if (call) void call.leave().catch(() => {});
       if (client) void client.disconnectUser().catch(() => {});
     };
-  }, [sdk, join, userId]);
+  }, [sdk, join, userId, tokenProvider]);
 
   const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
   const chat = useStreamChat({
     apiKey,
     userId,
-    token: join.token,
+    tokenProvider,
     channelType: join.chat?.channelType,
     channelId: join.chat?.channelId,
+    chatOpen,
   });
+  const isNarrowViewport = useIsNarrowViewport();
+
+  useEffect(() => {
+    onUnreadChatChange?.(chat.hasUnread);
+  }, [chat.hasUnread, onUnreadChatChange]);
 
   if (!ready || !sdk || !callRef.current || !clientRef.current) {
     return <div className="min-w-0 flex-1" aria-label="Video call" />;
@@ -254,6 +331,7 @@ export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(functio
       <div className="flex min-w-0 flex-1 flex-col">
         <StreamVideo client={clientRef.current}>
           <StreamCall call={callRef.current}>
+            <CallStateBridge sdk={sdk} onDeviceError={onDeviceError} onMicStateChange={onMicStateChange} />
             {/* The call screen (ClientCall) is always a fixed dark background,
                 regardless of site theme — pin Stream's theme to match.
                 Stream's own CSS never sets a color on participant name
@@ -281,11 +359,24 @@ export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(functio
           </StreamCall>
         </StreamVideo>
       </div>
-      {chatOpen && join.chat && apiKey && chat.client && chat.channel ? (
-        <>
-          <StreamChatPanel client={chat.client} channel={chat.channel} onClose={onCloseChat} />
-          <StreamChatSheet client={chat.client} channel={chat.channel} onClose={onCloseChat} />
-        </>
+      {chatOpen && join.chat && apiKey ? (
+        isNarrowViewport ? (
+          <StreamChatSheet
+            client={chat.client}
+            channel={chat.channel}
+            connectError={chat.connectError}
+            onRetry={chat.retry}
+            onClose={onCloseChat}
+          />
+        ) : (
+          <StreamChatPanel
+            client={chat.client}
+            channel={chat.channel}
+            connectError={chat.connectError}
+            onRetry={chat.retry}
+            onClose={onCloseChat}
+          />
+        )
       ) : null}
     </div>
   );

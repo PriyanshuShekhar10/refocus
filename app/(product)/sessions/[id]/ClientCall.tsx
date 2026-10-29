@@ -129,6 +129,7 @@ export default function ClientCall({
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
   const [cheerBurstId, setCheerBurstId] = useState(0);
   const [cheerToast, setCheerToast] = useState<string | null>(null);
   const [cheerSending, setCheerSending] = useState(false);
@@ -272,6 +273,22 @@ export default function ClientCall({
   const handleCameraStarted = useCallback(() => {
     deviceHelpDismissedRef.current = false;
     setDeviceError(null);
+  }, []);
+
+  // Stream's native CallControls mic button changes the real device state
+  // directly (bypassing toggleMute), which used to leave `muted` stale for
+  // the wrap-up banner's "Unmute to say goodbye" logic. StreamStage reports
+  // the actual mic state here regardless of which control changed it.
+  const handleMicStateChange = useCallback((enabled: boolean) => {
+    setMuted(!enabled);
+  }, []);
+
+  // The SFU join itself (not just a device-permission error) can fail —
+  // reuse the same "Couldn't start the call" screen the initial join/token
+  // fetch already shows, rather than leaving a frozen blank call screen.
+  const handleJoinFailed = useCallback((message?: string) => {
+    setError(message ?? "Couldn't connect to the call. Please try again.");
+    setPhase("error");
   }, []);
 
   // Keep partner info in sync when the other participant joins mid-wait.
@@ -639,7 +656,7 @@ export default function ClientCall({
                 aria-pressed={chatOpen}
                 aria-label={chatOpen ? "Hide chat" : "Show chat"}
                 onClick={() => setChatOpen((v) => !v)}
-                className={`inline-flex h-9 items-center gap-1.5 rounded-full border-2 border-b-4 px-3.5 text-[12.5px] font-bold transition-transform active:translate-y-0.5 active:border-b-2 ${
+                className={`relative inline-flex h-9 items-center gap-1.5 rounded-full border-2 border-b-4 px-3.5 text-[12.5px] font-bold transition-transform active:translate-y-0.5 active:border-b-2 ${
                   chatOpen
                     ? "border-[#3B7DD8] bg-[#1F2E41] text-[#6EA0E1]"
                     : "border-[#343A47] bg-[#181B22] text-[#C3C8D2]"
@@ -647,6 +664,12 @@ export default function ClientCall({
               >
                 <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
                 Chat
+                {hasUnreadChat ? (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#E45858] ring-2 ring-[#0E1015]"
+                  />
+                ) : null}
               </button>
             ) : null}
             {partner ? (
@@ -701,6 +724,12 @@ export default function ClientCall({
                   >
                     <MessageCircle className="h-4 w-4" aria-hidden="true" />
                     {chatOpen ? "Hide chat" : "Show chat"}
+                    {hasUnreadChat ? (
+                      <span
+                        aria-hidden="true"
+                        className="ml-auto h-2 w-2 rounded-full bg-[#E45858]"
+                      />
+                    ) : null}
                   </DropdownMenuPrimitive.Item>
                 ) : null}
                 {partner ? (
@@ -751,6 +780,7 @@ export default function ClientCall({
               ref={stageRef}
               join={join}
               userId={currentUserId}
+              sessionId={sessionId}
               startMuted={startMuted}
               isDark={isDark}
               chatOpen={chatOpen}
@@ -758,6 +788,9 @@ export default function ClientCall({
               onLeft={handleLeftMeeting}
               onDeviceError={showDeviceError}
               onCameraStarted={handleCameraStarted}
+              onMicStateChange={handleMicStateChange}
+              onJoinFailed={handleJoinFailed}
+              onUnreadChatChange={setHasUnreadChat}
             />
             {deviceError ? (
               <MediaPermissionHelp

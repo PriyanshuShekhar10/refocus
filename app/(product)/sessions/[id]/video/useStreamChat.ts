@@ -1,31 +1,45 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Channel as StreamChannel, StreamChat } from "stream-chat";
 import { playChatMessageSound } from "@/lib/chatMessageSound";
 
-/** Owns the chat connection for the call and plays a sound on incoming messages. */
+/** Owns the chat connection for the call, plays a sound on incoming messages, and tracks unread/connect state. */
 export function useStreamChat({
   apiKey,
   userId,
-  token,
+  tokenProvider,
   channelType,
   channelId,
+  chatOpen,
 }: {
   apiKey: string | undefined;
   userId: string;
-  token: string;
+  tokenProvider: () => Promise<string>;
   channelType: string | undefined;
   channelId: string | undefined;
-}): { client: StreamChat | null; channel: StreamChannel | null } {
+  chatOpen: boolean;
+}): { client: StreamChat | null; channel: StreamChannel | null; hasUnread: boolean; connectError: boolean; retry(): void } {
   const [channel, setChannel] = useState<StreamChannel | null>(null);
+  const [hasUnread, setHasUnread] = useState(false);
+  const [connectError, setConnectError] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
   const clientRef = useRef<StreamChat | null>(null);
+  const chatOpenRef = useRef(chatOpen);
+  chatOpenRef.current = chatOpen;
+
+  useEffect(() => {
+    if (chatOpen) setHasUnread(false);
+  }, [chatOpen]);
+
+  const retry = useCallback(() => setRetryNonce((n) => n + 1), []);
 
   useEffect(() => {
     if (!apiKey || !channelType || !channelId) return;
 
     let cancelled = false;
     let unsubscribe: (() => void) | null = null;
+    setConnectError(false);
 
     const setup = async () => {
       const { StreamChat: StreamChatCtor } = await import("stream-chat");
@@ -34,7 +48,7 @@ export function useStreamChat({
       const client = StreamChatCtor.getInstance(apiKey);
       clientRef.current = client;
       try {
-        await client.connectUser({ id: userId }, token);
+        await client.connectUser({ id: userId }, tokenProvider);
         if (cancelled) return;
 
         const ch = client.channel(channelType, channelId);
@@ -45,9 +59,11 @@ export function useStreamChat({
         unsubscribe = ch.on("message.new", (event) => {
           if (event.user?.id === userId) return;
           playChatMessageSound();
+          if (!chatOpenRef.current) setHasUnread(true);
         }).unsubscribe;
       } catch (err) {
         console.error("[Stream Chat] failed to connect", err);
+        if (!cancelled) setConnectError(true);
       }
     };
 
@@ -61,7 +77,7 @@ export function useStreamChat({
       clientRef.current = null;
       if (client) void client.disconnectUser().catch(() => {});
     };
-  }, [apiKey, userId, token, channelType, channelId]);
+  }, [apiKey, userId, tokenProvider, channelType, channelId, retryNonce]);
 
-  return { client: clientRef.current, channel };
+  return { client: clientRef.current, channel, hasUnread, connectError, retry };
 }

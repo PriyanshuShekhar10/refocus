@@ -24,6 +24,17 @@ export type VideoStageProps = {
   join: VideoJoin;
   /** The joining user's id. Only Stream needs this (Daily's token already encodes identity). */
   userId: string;
+  /** Only Stream needs this — lets it refetch a fresh token when the one it joined with expires. */
+  sessionId: string;
+  /**
+   * Daily-only: encoded into the iframe URL (`startAudioOff`) before join.
+   * Stream ignores this prop — its call type already forces mic off by
+   * default for every participant via settings_override (see
+   * lib/providers/video/stream/index.ts's SETTINGS_OVERRIDE), quiet mode or
+   * not, so there's nothing provider-specific left for Stream to do with it.
+   * Kept here only so this doesn't become a silent landmine if that
+   * server-side default ever changes.
+   */
   startMuted: boolean;
   isDark: boolean;
   /** Only Stream uses these — chat panel open state, toggled from the header. */
@@ -32,4 +43,10 @@ export type VideoStageProps = {
   onLeft(): void;
   onDeviceError(error: VideoDeviceError): void;
   onCameraStarted(): void;
+  /** Only Stream uses this — mirrors the call's real mic state regardless of which control changed it. */
+  onMicStateChange?(enabled: boolean): void;
+  /** Only Stream uses this — the SFU join itself (not just device acquisition) failed. */
+  onJoinFailed?(message?: string): void;
+  /** Only Stream uses this — an unread chat message arrived while the panel was closed. */
+  onUnreadChatChange?(hasUnread: boolean): void;
 };

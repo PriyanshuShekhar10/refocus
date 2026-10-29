@@ -44,20 +44,54 @@ function useChatUi(): ChatUiSdk | null {
   return ui;
 }
 
-/** Daily Prebuilt ships its own in-call chat; this is the Stream equivalent — a desktop side panel. */
-export function StreamChatPanel({
+/** The loading/error/ready states shared by both the desktop panel and mobile sheet's content slot. */
+function ChatSlot({
+  ui,
   client,
   channel,
-  onClose,
+  connectError,
+  onRetry,
 }: {
-  client: StreamChat;
-  channel: StreamChannel;
-  onClose: () => void;
+  ui: ChatUiSdk | null;
+  client: StreamChat | null;
+  channel: StreamChannel | null;
+  connectError: boolean;
+  onRetry: () => void;
 }) {
+  if (connectError) {
+    return (
+      <div className="flex flex-col items-start gap-2 p-3 text-sm text-white/60">
+        <span>Couldn’t load chat.</span>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="rounded-md border border-white/20 px-2.5 py-1 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+  if (ui && client && channel) {
+    return <ChatContent ui={ui} client={client} channel={channel} />;
+  }
+  return <div className="p-3 text-sm text-white/60">Loading chat…</div>;
+}
+
+type ChatPanelProps = {
+  client: StreamChat | null;
+  channel: StreamChannel | null;
+  connectError: boolean;
+  onRetry: () => void;
+  onClose: () => void;
+};
+
+/** Daily Prebuilt ships its own in-call chat; this is the Stream equivalent — a desktop side panel. */
+export function StreamChatPanel({ client, channel, connectError, onRetry, onClose }: ChatPanelProps) {
   const ui = useChatUi();
 
   return (
-    <div className="hidden h-full flex-col border-black/10 bg-slate-950 sm:flex sm:w-80 sm:border-l">
+    <div className="flex h-full w-80 flex-col border-l border-black/10 bg-slate-950">
       <div className="flex items-center justify-between border-b border-white/10 p-2">
         <span className="text-sm font-medium text-white">Chat</span>
         <button
@@ -70,11 +104,7 @@ export function StreamChatPanel({
         </button>
       </div>
       <div className="min-h-0 flex-1">
-        {ui ? (
-          <ChatContent ui={ui} client={client} channel={channel} />
-        ) : (
-          <div className="p-3 text-sm text-white/60">Loading chat…</div>
-        )}
+        <ChatSlot ui={ui} client={client} channel={channel} connectError={connectError} onRetry={onRetry} />
       </div>
     </div>
   );
@@ -85,19 +115,11 @@ export function StreamChatPanel({
  * partial-height bottom sheet, so there's never a height budget tight
  * enough to cut off the message composer at the bottom.
  */
-export function StreamChatSheet({
-  client,
-  channel,
-  onClose,
-}: {
-  client: StreamChat;
-  channel: StreamChannel;
-  onClose: () => void;
-}) {
+export function StreamChatSheet({ client, channel, connectError, onRetry, onClose }: ChatPanelProps) {
   const ui = useChatUi();
 
   return (
-    <div className="fixed inset-0 z-30 flex flex-col bg-slate-950 sm:hidden">
+    <div className="fixed inset-0 z-30 flex flex-col bg-slate-950">
       <div
         className="flex items-center justify-between border-b border-white/10 p-3"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
@@ -113,11 +135,7 @@ export function StreamChatSheet({
         </button>
       </div>
       <div className="min-h-0 flex-1" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        {ui ? (
-          <ChatContent ui={ui} client={client} channel={channel} />
-        ) : (
-          <div className="p-3 text-sm text-white/60">Loading chat…</div>
-        )}
+        <ChatSlot ui={ui} client={client} channel={channel} connectError={connectError} onRetry={onRetry} />
       </div>
     </div>
   );
