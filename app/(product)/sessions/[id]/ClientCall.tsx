@@ -178,6 +178,16 @@ export default function ClientCall({
     releaseAllLocalMediaStreams();
   }, []);
 
+  // Warm the Stream Video SDK chunk in parallel with the join/token round
+  // trip below, instead of waiting for StreamStage to mount before starting
+  // the download. Stream is the default provider, so this pays off on
+  // nearly every call; on a rare Daily session it's a small wasted fetch.
+  // Dynamic import() is deduped by specifier, so StreamStage's own import
+  // of the same module later resolves instantly from this warm cache.
+  useEffect(() => {
+    void import("@stream-io/video-react-sdk");
+  }, []);
+
   const reportAttendance = useCallback(() => {
     if (attendanceReportedRef.current) return;
     attendanceReportedRef.current = true;
@@ -208,7 +218,12 @@ export default function ClientCall({
           throw new Error(data.error || "Failed to join session");
         }
 
-        const resInfo = await fetchWithRetry(`/api/sessions/${sessionId}`);
+        // Independent of each other once joined — fetch in parallel instead
+        // of serially to shave a full round trip off time-to-video.
+        const [resInfo, tokenRes] = await Promise.all([
+          fetchWithRetry(`/api/sessions/${sessionId}`),
+          fetchWithRetry(`/api/sessions/${sessionId}/video/token`, { method: "POST" }),
+        ]);
         const info = await resInfo.json().catch(() => ({}));
         const youQuiet: boolean = Boolean(info?.youQuiet);
         if (info?.partner) {
@@ -220,9 +235,6 @@ export default function ClientCall({
           setMuted(true);
         }
 
-        const tokenRes = await fetchWithRetry(`/api/sessions/${sessionId}/video/token`, {
-          method: "POST",
-        });
         if (!tokenRes.ok) {
           const data = await tokenRes.json().catch(() => ({}));
           throw new Error(data.error || "Failed to initialize call");

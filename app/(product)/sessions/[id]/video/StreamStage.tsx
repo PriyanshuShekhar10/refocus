@@ -321,7 +321,14 @@ export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(functio
   }, [chat.hasUnread, onUnreadChatChange]);
 
   if (!ready || !sdk || !callRef.current || !clientRef.current) {
-    return <div className="min-w-0 flex-1" aria-label="Video call" />;
+    // Previously an empty div here — the SDK download + SFU join can take a
+    // couple of seconds, and a bare black box read as a stalled/broken call.
+    return (
+      <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-3" aria-label="Video call">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-white/70" />
+        <p className="text-xs font-medium text-white/50">Connecting…</p>
+      </div>
+    );
   }
 
   const { StreamVideo, StreamCall, StreamTheme, PaginatedGridLayout, SpeakerLayout, CallControls } = sdk;
