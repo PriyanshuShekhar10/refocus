@@ -4,19 +4,19 @@
  * WebRTC/WebSocket, so it only needs connect-src for its coordinator APIs
  * and SFU edges.
  *
- * Stream doesn't publish a fixed CSP domain list — these are best-effort
- * defaults. Verify against actual CSP violation reports in the browser
- * console while testing locally (VIDEO_PROVIDER=stream) and extend this list
- * if the console reports a blocked origin not covered here.
+ * Per Stream's own networking doc (getstream.io/video/docs/react/misc/networking),
+ * clients need *.stream-io-video.com (SFU edges, e.g.
+ * sfu-<id>-aws-sao1.stream-io-video.com), *.stream-io-api.com (coordinator,
+ * e.g. video.stream-io-api.com), and *.getstream.io — all over HTTPS/WSS.
  */
 export function listStreamConnectOriginsFromEnv(): string[] {
   if (!process.env.STREAM_API_KEY) return [];
   return [
-    "https://video.stream-io-api.com",
-    "wss://video.stream-io-api.com",
+    "https://*.stream-io-api.com",
+    "wss://*.stream-io-api.com",
     "https://*.stream-io-video.com",
     "wss://*.stream-io-video.com",
-    "https://chat.stream-io-api.com",
-    "wss://chat.stream-io-api.com",
+    "https://*.getstream.io",
+    "wss://*.getstream.io",
   ];
 }
