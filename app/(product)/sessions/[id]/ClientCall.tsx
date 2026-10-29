@@ -94,6 +94,9 @@ const COMPLETION_GRACE_MS = 60_000;
 const WRAP_UP_MS = WRAP_UP_MINUTES * 60_000;
 const COMPLETE_BANNER_MS = 10_000;
 const CHEER_BURST_MS = 3_200;
+// Hard wall: once wrap-up time is over, nobody can "stay a bit longer" —
+// show the notice briefly, then force everyone off the call.
+const HARD_WALL_COUNTDOWN_MS = 8_000;
 
 function formatRemaining(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -478,6 +481,16 @@ export default function ClientCall({
     stageRef.current?.leave();
     setPhase("ended");
   }, [endMs, reportAttendance]);
+
+  // Hard wall: once wrap-up is over there's no "stay a bit longer" — the
+  // call ends for everyone on its own a few seconds after the notice shows.
+  useEffect(() => {
+    if (wrapUpBanner !== "ending") return;
+    const timeout = window.setTimeout(() => {
+      leaveCall();
+    }, HARD_WALL_COUNTDOWN_MS);
+    return () => window.clearTimeout(timeout);
+  }, [wrapUpBanner, leaveCall]);
 
   const retryDeviceSetup = useCallback(async () => {
     deviceHelpDismissedRef.current = false;
@@ -921,7 +934,7 @@ export default function ClientCall({
                     Wrap-up is over
                   </p>
                   <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                    Thanks for focusing. You can leave now, or linger a moment more.
+                    Thanks for focusing. This call is ending now.
                   </p>
                   <div className="mt-3 flex flex-wrap justify-center gap-2">
                     <button
@@ -932,14 +945,7 @@ export default function ClientCall({
                       }}
                       className="rounded-lg bg-[#5D1C6A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CA5995]"
                     >
-                      Leave session
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setWrapUpBanner(null)}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                    >
-                      Stay a bit longer
+                      Leave now
                     </button>
                   </div>
                 </>
