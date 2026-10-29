@@ -7,7 +7,11 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
   const email = session?.user?.email ?? null;
-  const isAdmin = await isUserAdmin(userId);
+  // The jwt callback in lib/auth.ts resolves this once per token; only fall
+  // back to a DB round trip when that hasn't happened yet (e.g. a very old
+  // token, or the lookup failed last time).
+  const cachedIsAdmin = (session?.user as { isAdmin?: boolean } | undefined)?.isAdmin;
+  const isAdmin = cachedIsAdmin ?? (await isUserAdmin(userId));
 
   return NextResponse.json({
     isAdmin,

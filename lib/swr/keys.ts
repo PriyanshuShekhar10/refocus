@@ -4,6 +4,7 @@ export const swrKeys = {
   crewMe: "/api/crew/me",
   userMe: "/api/users/me",
   userStats: "/api/users/me/stats",
+  userPreferences: "/api/users/preferences",
   friends: "/api/friends",
   friendsIncoming: "/api/friends/requests?type=incoming&status=pending",
   friendsOutgoing: "/api/friends/requests?type=outgoing&status=pending",

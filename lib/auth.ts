@@ -209,6 +209,26 @@ export const authOptions: NextAuthOptions = {
           // ignore lookup failures
         }
       }
+      // Admin role almost never changes; resolve it once per token instead
+      // of on every /api/admin/me request for the life of the session.
+      // ("admin" mirrors ADMIN_ROLE in lib/admin.ts — kept as a literal here
+      // to avoid a circular import, since lib/admin.ts imports authOptions.)
+      if (token.sub && token.adminLookupDone !== true && ObjectId.isValid(token.sub)) {
+        token.adminLookupDone = true;
+        try {
+          const db = await getDb();
+          const doc = (await db
+            .collection("users")
+            .findOne(
+              { _id: new ObjectId(token.sub) },
+              { projection: { role: 1 } },
+            )) as { role?: string | null } | null;
+          token.isAdmin = doc?.role === "admin";
+        } catch {
+          // ignore lookup failures; leave unresolved so it's retried next request
+          token.adminLookupDone = false;
+        }
+      }
       return token;
     },
     async session({ session, token }) {
@@ -219,6 +239,9 @@ export const authOptions: NextAuthOptions = {
       }
       if (token.picture && session.user) {
         session.user.image = token.picture as string;
+      }
+      if (session.user && token.adminLookupDone === true) {
+        (session.user as { isAdmin?: boolean }).isAdmin = token.isAdmin === true;
       }
       return session;
     },

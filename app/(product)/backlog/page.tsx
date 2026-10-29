@@ -1,37 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import SideBar, { type TabKey } from "../components/Sidebar/sidebar";
 import BacklogBoard from "../components/BacklogBoard";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 import { useDashboardWallpaper } from "@/hooks/useDashboardWallpaper";
+import { useAdminMe } from "@/hooks/useAdminMe";
 import { WallpaperProvider } from "@/components/wallpaper-context";
 import { MobileBottomNav, MobileMoreMenu } from "../components/Mobile";
 
 export default function BacklogPage() {
   const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const { isMobile, mounted } = useIsMobileShell();
   const { wallpaperUrl } = useDashboardWallpaper();
+  const { isAdmin } = useAdminMe();
   const showWallpaper = !!wallpaperUrl;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/admin/me");
-        const data = await res.json();
-        if (!cancelled && res.ok) setIsAdmin(Boolean(data.isAdmin));
-      } catch {
-        // ignore
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const handleSelectTab = (tab: TabKey) => {
     setMoreMenuOpen(false);

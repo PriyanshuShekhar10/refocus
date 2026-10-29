@@ -106,15 +106,19 @@ const TOUR_STEPS_MOBILE: TourStep[] = [
 function TabPanel({
   tab,
   activeTab,
+  mounted,
   className,
   children,
 }: {
   tab: TabKey;
   activeTab: TabKey;
+  /** Only render children once this tab has been visited, so inactive tabs don't fire their data fetches on first load. */
+  mounted: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
   const isActive = activeTab === tab;
+  if (!mounted) return null;
   return (
     <div
       className={`${className ?? ""}${isActive ? "" : " hidden"}`}
@@ -192,6 +196,18 @@ function DashboardContent() {
   const [backTo, setBackTo] = useState<TabKey | null>(null);
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
+  // Tabs mount lazily: a TabPanel only renders its children once its tab has
+  // been visited, so opening the dashboard doesn't fire every other tab's
+  // data fetches. Once visited it stays mounted (hidden via CSS) so
+  // switching back is instant and preserves scroll/form state.
+  const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(
+    () => new Set([activeTab]),
+  );
+  useEffect(() => {
+    setVisitedTabs((prev) =>
+      prev.has(activeTab) ? prev : new Set(prev).add(activeTab),
+    );
+  }, [activeTab]);
   const { isAdmin } = useAdminMe();
   const { count: pendingSessionRequests, refresh: refreshPendingRequests } =
     usePendingSessionRequestsCount();
@@ -350,32 +366,32 @@ function DashboardContent() {
               showWallpaper ? { backgroundImage: `url(${wallpaperUrl})` } : undefined
             }
           >
-            <TabPanel tab="dashboard" activeTab={activeTab} className="h-full">
+            <TabPanel tab="dashboard" activeTab={activeTab} mounted={visitedTabs.has("dashboard")} className="h-full">
               <div className={calendarPadding}>
                 <Dashboard onPreviewProfile={setProfilePreview} />
               </div>
             </TabPanel>
-            <TabPanel tab="sessions" activeTab={activeTab} className="h-full">
+            <TabPanel tab="sessions" activeTab={activeTab} mounted={visitedTabs.has("sessions")} className="h-full">
               <SectionBox isMobile={isMobile} back={activeTab === "sessions" ? back : null}>
                 <div className="mx-auto max-w-[980px]"><SessionHistory /></div>
               </SectionBox>
             </TabPanel>
-            <TabPanel tab="profile" activeTab={activeTab} className="h-full">
+            <TabPanel tab="profile" activeTab={activeTab} mounted={visitedTabs.has("profile")} className="h-full">
               <SectionBox isMobile={isMobile} back={activeTab === "profile" ? back : null}>
                 <div className="mx-auto max-w-[980px]"><Profile /></div>
               </SectionBox>
             </TabPanel>
-            <TabPanel tab="settings" activeTab={activeTab} className="h-full">
+            <TabPanel tab="settings" activeTab={activeTab} mounted={visitedTabs.has("settings")} className="h-full">
               <SectionBox isMobile={isMobile} back={activeTab === "settings" ? back : null}>
                 <div className="mx-auto max-w-[980px]"><Settings /></div>
               </SectionBox>
             </TabPanel>
-            <TabPanel tab="friends" activeTab={activeTab} className="h-full">
+            <TabPanel tab="friends" activeTab={activeTab} mounted={visitedTabs.has("friends")} className="h-full">
               <SectionBox isMobile={isMobile} fill back={activeTab === "friends" ? back : null}>
                 <Friends onPreviewProfile={setProfilePreview} />
               </SectionBox>
             </TabPanel>
-            <TabPanel tab="community" activeTab={activeTab} className="h-full">
+            <TabPanel tab="community" activeTab={activeTab} mounted={visitedTabs.has("community")} className="h-full">
               {isMobile ? (
                 <Community onPreviewProfile={setProfilePreview} />
               ) : (
@@ -384,12 +400,12 @@ function DashboardContent() {
                 </SectionBox>
               )}
             </TabPanel>
-            <TabPanel tab="matches" activeTab={activeTab} className="h-full">
+            <TabPanel tab="matches" activeTab={activeTab} mounted={visitedTabs.has("matches")} className="h-full">
               <SectionBox isMobile={isMobile} back={activeTab === "matches" ? back : null}>
                 <Matchmaking />
               </SectionBox>
             </TabPanel>
-            <TabPanel tab="user" activeTab={activeTab} className="h-full">
+            <TabPanel tab="user" activeTab={activeTab} mounted={visitedTabs.has("user")} className="h-full">
               <SectionBox isMobile={isMobile} back={activeTab === "user" ? back : null}>
                 <div className="mx-auto max-w-[980px]">
                   {profileUsername ? <PublicProfilePanel username={profileUsername} /> : null}
@@ -397,7 +413,7 @@ function DashboardContent() {
               </SectionBox>
             </TabPanel>
             {isAdmin ? (
-              <TabPanel tab="admin" activeTab={activeTab} className="h-full">
+              <TabPanel tab="admin" activeTab={activeTab} mounted={visitedTabs.has("admin")} className="h-full">
                 <div className={isMobile ? "h-full overflow-y-auto pb-20" : "h-full"}>
                   {isMobile && (
                     <div className="border-b border-rf-line bg-rf-amber-bg px-4 py-2 text-sm text-rf-amber-ink">

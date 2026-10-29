@@ -316,9 +316,10 @@ export function useCalendarSessions({
     };
     const onFocus = () => scheduleRefresh();
 
-    // Light background reconciliation even when realtime is healthy.
-    const BACKGROUND_POLL_MS = 90_000;
-    pollInterval = setInterval(scheduleRefresh, BACKGROUND_POLL_MS);
+    // Fallback poll only while realtime is degraded or unavailable — when
+    // Ably is connected, its push events plus SWR's focus/reconnect
+    // revalidation are enough on their own.
+    const FALLBACK_POLL_MS = 30_000;
     document.addEventListener("visibilitychange", onVisibleAgain);
     window.addEventListener("focus", onFocus);
 
@@ -338,16 +339,16 @@ export function useCalendarSessions({
 
       const onConnectionChange = () => {
         const state = client.connection.state;
-        // When Ably drops, poll more often until it recovers.
         if (state === "failed" || state === "suspended") {
-          if (pollInterval) clearInterval(pollInterval);
-          pollInterval = setInterval(scheduleRefresh, 30_000);
-        } else if (state === "connected") {
-          if (pollInterval) clearInterval(pollInterval);
-          pollInterval = setInterval(scheduleRefresh, BACKGROUND_POLL_MS);
+          if (!pollInterval) pollInterval = setInterval(scheduleRefresh, FALLBACK_POLL_MS);
+        } else if (state === "connected" && pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
         }
       };
       client.connection.on(onConnectionChange);
+      // Pick up a connection that's already degraded when this effect runs.
+      onConnectionChange();
 
       return () => {
         channel?.unsubscribe("event", onEvent);
@@ -361,7 +362,8 @@ export function useCalendarSessions({
         }
       };
     } catch {
-      // Ably unavailable — keep the quiet poll + focus/visibility refresh.
+      // Ably unavailable entirely — fall back to polling + focus/visibility refresh.
+      pollInterval = setInterval(scheduleRefresh, FALLBACK_POLL_MS);
       return () => {
         document.removeEventListener("visibilitychange", onVisibleAgain);
         window.removeEventListener("focus", onFocus);

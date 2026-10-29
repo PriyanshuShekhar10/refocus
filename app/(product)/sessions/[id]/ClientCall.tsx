@@ -304,9 +304,12 @@ export default function ClientCall({
   }, []);
 
   // Keep partner info in sync when the other participant joins mid-wait.
+  // Stops once a partner is known — there's nothing left to reconcile for
+  // the rest of the call.
   useEffect(() => {
-    if (phase !== "in-call") return;
+    if (phase !== "in-call" || partner) return;
     let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | null = null;
 
     const syncPartner = async () => {
       try {
@@ -315,6 +318,7 @@ export default function ClientCall({
         const info = await res.json();
         if (info?.partner) {
           setPartner(info.partner as SessionPartner);
+          if (interval) clearInterval(interval);
         }
       } catch {
         // ignore
@@ -322,12 +326,12 @@ export default function ClientCall({
     };
 
     syncPartner();
-    const interval = setInterval(syncPartner, 15_000);
+    interval = setInterval(syncPartner, 15_000);
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
-  }, [phase, sessionId]);
+  }, [phase, sessionId, partner]);
 
   // Drive the in-call countdown. Re-computing from the wall clock each tick
   // keeps the timer honest if the tab is throttled while backgrounded.

@@ -31,51 +31,14 @@ import {
 import { validatePassword } from "@/lib/validatePassword";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 
-import {
-  DEFAULT_SESSION_REMINDER_TIMING,
-  type SessionReminderTiming,
-} from "@/lib/sessionReminderPrefs";
 import { getBrowserTimeZone } from "@/lib/localTime";
 import { listTimeZones } from "@/lib/zonedTime";
 import { TIMEZONE_PREF_EVENT } from "@/components/user-timezone-provider";
 import { notifyWallpaperPref } from "@/hooks/useDashboardWallpaper";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useWallpaperActive } from "@/components/wallpaper-context";
 import { useIsMobileShell } from "@/hooks/useIsMobileShell";
 import { PageRefreshButton, useOnPageRefreshEvent, dispatchPageRefreshEvent, PAGE_REFRESH_EVENTS } from "@/components/page-refresh";
-
-type Prefs = {
-  defaultSessionLength: 25 | 50 | 75;
-  focusModeDefault: boolean;
-  publicProfile: boolean;
-  allowFriendRequests: boolean;
-  showInGlobalChat: boolean;
-  emailSessionReminders: boolean;
-  sessionReminderTiming: SessionReminderTiming;
-  emailFriendRequests: boolean;
-  emailWeeklyDigest: boolean;
-  emailCommunityMentions: boolean;
-  pushSessionReminders: boolean;
-  pushFriendRequests: boolean;
-  pushChatMessages: boolean;
-  timezone: string;
-};
-
-const DEFAULT_PREFS: Prefs = {
-  defaultSessionLength: 50,
-  focusModeDefault: true,
-  publicProfile: true,
-  allowFriendRequests: true,
-  showInGlobalChat: true,
-  emailSessionReminders: true,
-  sessionReminderTiming: DEFAULT_SESSION_REMINDER_TIMING,
-  emailFriendRequests: false,
-  emailWeeklyDigest: false,
-  emailCommunityMentions: true,
-  pushSessionReminders: true,
-  pushFriendRequests: true,
-  pushChatMessages: true,
-  timezone: "auto",
-};
 
 export default function Settings() {
   const wallpaperActive = useWallpaperActive();
@@ -573,30 +536,13 @@ function PrivacySection() {
 function AppearanceSection() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [wallpaperUrl, setWallpaperUrl] = useState<string | null>(null);
+  const { preferences } = useUserPreferences();
+  const wallpaperUrl = preferences.dashboardWallpaperUrl;
   const [wallpaperBusy, setWallpaperBusy] = useState(false);
   const [wallpaperError, setWallpaperError] = useState<string | null>(null);
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setMounted(true), []);
-
-  const loadWallpaper = useCallback(async () => {
-    try {
-      const res = await fetch("/api/users/preferences");
-      if (!res.ok) return;
-      const data = await res.json().catch(() => ({}));
-      const url = data?.preferences?.dashboardWallpaperUrl;
-      setWallpaperUrl(typeof url === "string" && url.trim() ? url.trim() : null);
-    } catch {
-      // keep default
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadWallpaper();
-  }, [loadWallpaper]);
-
-  useOnPageRefreshEvent(PAGE_REFRESH_EVENTS.settings, loadWallpaper);
 
   const active = mounted ? theme ?? resolvedTheme ?? "system" : "system";
 
@@ -625,7 +571,6 @@ function AppearanceSection() {
         return;
       }
       const url = data.wallpaperUrl ?? null;
-      setWallpaperUrl(url);
       notifyWallpaperPref(url);
     } catch {
       setWallpaperError("Upload failed");
@@ -644,7 +589,6 @@ function AppearanceSection() {
         setWallpaperError(data.error || "Could not remove wallpaper");
         return;
       }
-      setWallpaperUrl(null);
       notifyWallpaperPref(null);
     } catch {
       setWallpaperError("Could not remove wallpaper");
@@ -719,7 +663,6 @@ function AppearanceSection() {
                         body: JSON.stringify({ url: "/wallpaper.webp" })
                       });
                       if (!res.ok) throw new Error("Failed to save wallpaper");
-                      setWallpaperUrl("/wallpaper.webp");
                       notifyWallpaperPref("/wallpaper.webp");
                       setTheme("dark");
                     } catch (err) {
@@ -1223,48 +1166,6 @@ function Toggle({
  * value silently — the user can retry by toggling again.
  */
 function usePrefs() {
-  const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
-  const [saving, setSaving] = useState(false);
-
-  const loadPrefs = useCallback(async () => {
-    try {
-      const res = await fetch("/api/users/preferences");
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data?.preferences) {
-        setPrefs({ ...DEFAULT_PREFS, ...data.preferences });
-      }
-    } catch {
-      // keep defaults on failure
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadPrefs();
-  }, [loadPrefs]);
-
-  useOnPageRefreshEvent(PAGE_REFRESH_EVENTS.settings, loadPrefs);
-
-  const setPref = useCallback(
-    async <K extends keyof Prefs>(key: K, value: Prefs[K]) => {
-      const previous = prefs[key];
-      setPrefs((p) => ({ ...p, [key]: value }));
-      setSaving(true);
-      try {
-        const res = await fetch("/api/users/preferences", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ [key]: value }),
-        });
-        if (!res.ok) throw new Error("save failed");
-      } catch {
-        setPrefs((p) => ({ ...p, [key]: previous }));
-      } finally {
-        setSaving(false);
-      }
-    },
-    [prefs]
-  );
-
-  return { prefs, setPref, saving };
+  const { preferences, setPreference, saving } = useUserPreferences();
+  return { prefs: preferences, setPref: setPreference, saving };
 }
