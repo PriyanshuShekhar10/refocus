@@ -19,6 +19,12 @@ const CALL_TYPE = "default";
 const SETTINGS_OVERRIDE = {
   video: { enabled: true, camera_default_on: false, target_resolution: TARGET_RESOLUTION },
   audio: { mic_default_on: false, default_device: "speaker" as const },
+  // Not a hosted/moderated call — no one should be recording a focus
+  // session. "disabled" (not just omitting the key) also drops the
+  // start/stop-record capability from own_capabilities, which is what
+  // actually hides CallControls' Record button (it's wrapped in
+  // <Restricted requiredGrants={[START_RECORD_CALL, STOP_RECORD_CALL]}>).
+  recording: { mode: "disabled" as const },
 };
 
 /** Stream Video adapter. No room/call expiry handling yet (see plan's known limitation). */

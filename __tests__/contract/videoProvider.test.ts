@@ -87,6 +87,7 @@ describe("stream adapter specifics", () => {
     const expectedSettingsOverride = {
       video: { enabled: true, camera_default_on: false, target_resolution: { width: 640, height: 480 } },
       audio: { mic_default_on: false, default_device: "speaker" },
+      recording: { mode: "disabled" },
     };
 
     expect(streamClient.upsertUsers).toHaveBeenCalledWith([{ id: "u1", name: "Ravi" }]);

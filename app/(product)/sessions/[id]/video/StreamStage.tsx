@@ -320,6 +320,21 @@ export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(functio
     onUnreadChatChange?.(chat.hasUnread);
   }, [chat.hasUnread, onUnreadChatChange]);
 
+  // Stream's default per-tile "..." menu is built for moderated/hosted
+  // calls (Kick, Block, Allow/Disable audio & video for others, Pin for
+  // everyone...) — none of it applies to a 2-person session, so hide the
+  // menu button rather than ship those controls. Memoized so this doesn't
+  // create a new component identity (and remount the tile UI) on every
+  // StreamStage re-render — only when the SDK module itself changes.
+  const ParticipantViewUI = useMemo(() => {
+    if (!sdk) return undefined;
+    const { DefaultParticipantViewUI } = sdk;
+    function NoMenuParticipantUI() {
+      return <DefaultParticipantViewUI showMenuButton={false} />;
+    }
+    return NoMenuParticipantUI;
+  }, [sdk]);
+
   if (!ready || !sdk || !callRef.current || !clientRef.current) {
     // Previously an empty div here — the SDK download + SFU join can take a
     // couple of seconds, and a bare black box read as a stalled/broken call.
@@ -355,9 +370,13 @@ export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(functio
                   stream-grid-fix.css) silently does nothing. */}
               <div className="relative flex min-h-0 flex-1">
                 {layout === "grid" ? (
-                  <PaginatedGridLayout pageArrowsVisible={false} />
+                  <PaginatedGridLayout pageArrowsVisible={false} ParticipantViewUI={ParticipantViewUI} />
                 ) : (
-                  <SpeakerLayout participantsBarPosition="bottom" />
+                  <SpeakerLayout
+                    participantsBarPosition="bottom"
+                    ParticipantViewUISpotlight={ParticipantViewUI}
+                    ParticipantViewUIBar={ParticipantViewUI}
+                  />
                 )}
                 <LayoutSwitcher layout={layout} onChange={setLayout} />
               </div>
