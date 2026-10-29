@@ -1,0 +1,16 @@
+/*
+ * stream-chat-react's .str-chat (rendered by <Chat>) has no height/display
+ * rule of its own — it's a plain block, sized by content. Its child
+ * .str-chat__channel wants `height: 100%`, which only resolves against a
+ * parent with a DEFINITE height, so that rule silently did nothing and the
+ * chat ended up sized by its own content instead of the panel/sheet it's
+ * in, overflowing past the bottom edge (visible as a "half cut off" chat
+ * on the mobile bottom sheet). Same bug class as stream-grid-fix.css, just
+ * in the chat SDK's CSS instead of the video SDK's.
+ */
+.str-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+import { ListChecks, Menu, MessageCircle, Sparkle } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import ReportDialog from "@/app/(product)/components/ReportDialog";
 import MediaPermissionHelp, {
@@ -126,6 +128,8 @@ export default function ClientCall({
   const [showLeaveConfirm, setShowLeaveConfirm] = useState<boolean>(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
   const [cheerBurstId, setCheerBurstId] = useState(0);
   const [cheerToast, setCheerToast] = useState<string | null>(null);
   const [cheerSending, setCheerSending] = useState(false);
@@ -226,7 +230,7 @@ export default function ClientCall({
 
         const tokenData = (await tokenRes.json()) as Partial<VideoJoin>;
         if (
-          tokenData.provider !== "daily" ||
+          (tokenData.provider !== "daily" && tokenData.provider !== "stream") ||
           !tokenData.domain ||
           !tokenData.roomName ||
           !tokenData.token
@@ -269,6 +273,22 @@ export default function ClientCall({
   const handleCameraStarted = useCallback(() => {
     deviceHelpDismissedRef.current = false;
     setDeviceError(null);
+  }, []);
+
+  // Stream's native CallControls mic button changes the real device state
+  // directly (bypassing toggleMute), which used to leave `muted` stale for
+  // the wrap-up banner's "Unmute to say goodbye" logic. StreamStage reports
+  // the actual mic state here regardless of which control changed it.
+  const handleMicStateChange = useCallback((enabled: boolean) => {
+    setMuted(!enabled);
+  }, []);
+
+  // The SFU join itself (not just a device-permission error) can fail —
+  // reuse the same "Couldn't start the call" screen the initial join/token
+  // fetch already shows, rather than leaving a frozen blank call screen.
+  const handleJoinFailed = useCallback((message?: string) => {
+    setError(message ?? "Couldn't connect to the call. Please try again.");
+    setPhase("error");
   }, []);
 
   // Keep partner info in sync when the other participant joins mid-wait.
@@ -593,19 +613,19 @@ export default function ClientCall({
   if (!join) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950">
-      <div className="relative flex items-center justify-between gap-3 border-b border-white/10 bg-slate-900/90 px-4 py-2.5 text-white backdrop-blur">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="relative inline-flex h-2 w-2">
-            <span className="absolute inset-0 inline-flex h-full w-full animate-ping rounded-full bg-[#CA5995] opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#CA5995]" />
-          </span>
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#0E1015]">
+      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-x-4 gap-y-2 overflow-hidden border-b border-[#2B303A] bg-[#181B22] px-3 py-2 text-white sm:gap-y-3 sm:px-4 sm:py-3">
+        {/* No flex-1/basis here: the title shouldn't compete equally with
+            the button group for leftover space — it just needs to shrink
+            (min-w-0 + truncate) when the row is tight, not claim a share
+            of room the buttons actually need. */}
+        <div className="hidden min-w-0 shrink items-center gap-3 sm:flex">
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">
+            <p className="truncate text-[15px] font-bold tracking-tight">
               {prejoin.sessionName || `${prejoin.sessionType} session`}
               {partner ? ` · with ${partnerDisplayName}` : ""}
             </p>
-            <p className="text-[11px] text-slate-300">
+            <p className="text-[11.5px] font-semibold tracking-wide text-[#9AA2B0]">
               Refocus · {prejoin.durationMin} min
             </p>
           </div>
@@ -616,110 +636,212 @@ export default function ClientCall({
           urgency={urgency}
           reducedMotion={prefersReducedMotion}
         />
-        <SessionTaskPill
-          youDone={sessionTasks.youProgress.done}
-          youTotal={sessionTasks.youProgress.total}
-          partnerDone={sessionTasks.partnerProgress.done}
-          partnerTotal={sessionTasks.partnerProgress.total}
-          partnerName={partnerDisplayName}
-          open={tasksOpen}
-          onToggle={() => setTasksOpen((v) => !v)}
-        />
-        {partner ? (
+        <div className="flex flex-1 items-center justify-end gap-2">
+          {/* Desktop: Tasks/Chat/Cheer/Report inline. Mobile: collapsed into
+              the hamburger menu below — Time left and Leave session are the
+              only things that must stay directly visible on a small screen. */}
+          <div className="hidden items-center gap-2 sm:flex">
+            <SessionTaskPill
+              youDone={sessionTasks.youProgress.done}
+              youTotal={sessionTasks.youProgress.total}
+              partnerDone={sessionTasks.partnerProgress.done}
+              partnerTotal={sessionTasks.partnerProgress.total}
+              partnerName={partnerDisplayName}
+              open={tasksOpen}
+              onToggle={() => setTasksOpen((v) => !v)}
+            />
+            {join?.chat ? (
+              <button
+                type="button"
+                aria-pressed={chatOpen}
+                aria-label={chatOpen ? "Hide chat" : "Show chat"}
+                onClick={() => setChatOpen((v) => !v)}
+                className={`relative inline-flex h-9 items-center gap-1.5 rounded-full border-2 border-b-4 px-3.5 text-[12.5px] font-bold transition-transform active:translate-y-0.5 active:border-b-2 ${
+                  chatOpen
+                    ? "border-[#3B7DD8] bg-[#1F2E41] text-[#6EA0E1]"
+                    : "border-[#343A47] bg-[#181B22] text-[#C3C8D2]"
+                }`}
+              >
+                <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                Chat
+                {hasUnreadChat ? (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#E45858] ring-2 ring-[#0E1015]"
+                  />
+                ) : null}
+              </button>
+            ) : null}
+            {partner ? (
+              <button
+                type="button"
+                onClick={() => void sendCheer()}
+                disabled={cheerSending}
+                title="Send a cheer — partner hears a chime and sees confetti"
+                className="inline-flex h-9 items-center gap-1.5 rounded-full border-2 border-b-4 border-[#E0609F] bg-[#411F30] px-3.5 text-[12.5px] font-bold text-[#D878AA] transition-transform active:translate-y-0.5 active:border-b-2 disabled:opacity-60"
+              >
+                <Sparkle className="h-3.5 w-3.5" aria-hidden="true" />
+                Cheer
+              </button>
+            ) : null}
+            {partner ? (
+              <button
+                type="button"
+                onClick={() => setShowReportDialog(true)}
+                className="inline-flex h-9 items-center rounded-full border-2 border-b-4 border-[#343A47] bg-[#181B22] px-3.5 text-[12.5px] font-bold text-[#C3C8D2] transition-transform active:translate-y-0.5 active:border-b-2"
+              >
+                Report
+              </button>
+            ) : null}
+          </div>
+          <DropdownMenuPrimitive.Root>
+            <DropdownMenuPrimitive.Trigger asChild>
+              <button
+                type="button"
+                aria-label="More session options"
+                className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-b-4 border-[#343A47] bg-[#181B22] text-[#C3C8D2] transition-transform active:translate-y-0.5 active:border-b-2 sm:hidden"
+              >
+                <Menu className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </DropdownMenuPrimitive.Trigger>
+            <DropdownMenuPrimitive.Portal>
+              <DropdownMenuPrimitive.Content
+                align="end"
+                sideOffset={8}
+                className="z-50 flex min-w-[180px] flex-col gap-0.5 rounded-xl border border-[#2B303A] bg-[#181B22] p-1.5 text-white shadow-xl"
+              >
+                <DropdownMenuPrimitive.Item
+                  onSelect={() => setTasksOpen((v) => !v)}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium outline-none data-[highlighted]:bg-white/10"
+                >
+                  <ListChecks className="h-4 w-4" aria-hidden="true" />
+                  {tasksOpen ? "Hide tasks" : "Show tasks"}
+                </DropdownMenuPrimitive.Item>
+                {join?.chat ? (
+                  <DropdownMenuPrimitive.Item
+                    onSelect={() => setChatOpen((v) => !v)}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium outline-none data-[highlighted]:bg-white/10"
+                  >
+                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                    {chatOpen ? "Hide chat" : "Show chat"}
+                    {hasUnreadChat ? (
+                      <span
+                        aria-hidden="true"
+                        className="ml-auto h-2 w-2 rounded-full bg-[#E45858]"
+                      />
+                    ) : null}
+                  </DropdownMenuPrimitive.Item>
+                ) : null}
+                {partner ? (
+                  <DropdownMenuPrimitive.Item
+                    onSelect={() => void sendCheer()}
+                    disabled={cheerSending}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium text-[#D878AA] outline-none data-[disabled]:opacity-60 data-[highlighted]:bg-white/10"
+                  >
+                    <Sparkle className="h-4 w-4" aria-hidden="true" />
+                    Cheer
+                  </DropdownMenuPrimitive.Item>
+                ) : null}
+                {partner ? (
+                  <DropdownMenuPrimitive.Item
+                    onSelect={() => setShowReportDialog(true)}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium outline-none data-[highlighted]:bg-white/10"
+                  >
+                    Report
+                  </DropdownMenuPrimitive.Item>
+                ) : null}
+              </DropdownMenuPrimitive.Content>
+            </DropdownMenuPrimitive.Portal>
+          </DropdownMenuPrimitive.Root>
           <button
             type="button"
-            onClick={() => void sendCheer()}
-            disabled={cheerSending}
-            title="Send a cheer — partner hears a chime and sees confetti"
-            className="rounded-md border border-[#CA5995]/50 bg-[#5D1C6A]/40 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#CA5995]/40 disabled:opacity-60"
+            onClick={() => setShowLeaveConfirm(true)}
+            className="inline-flex h-9 items-center rounded-full bg-[#E45858] px-4 text-[12.5px] font-extrabold text-white shadow-[0_3px_0_#9c3434] transition-transform active:translate-y-[3px] active:shadow-none"
           >
-            Cheer
+            Leave session
           </button>
-        ) : null}
-        {partner ? (
-          <button
-            type="button"
-            onClick={() => setShowReportDialog(true)}
-            className="rounded-md border border-white/20 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/10"
-          >
-            Report
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => setShowLeaveConfirm(true)}
-          className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-700"
-        >
-          Leave session
-        </button>
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute bottom-0 left-0 h-0.5 origin-left bg-gradient-to-r from-[#5D1C6A] via-[#CA5995] to-[#FFD166]"
-          animate={{ scaleX: elapsedRatio }}
-          initial={{ scaleX: 0 }}
-          transition={{ duration: prefersReducedMotion ? 0 : 0.6, ease: "linear" }}
-          style={{ width: "100%" }}
-        />
+        </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] bg-[#262A34]">
+          <motion.div
+            aria-hidden
+            className="h-full origin-left rounded-r-[3px] bg-gradient-to-r from-[#5D1C6A] via-[#CA5995] to-[#FFD166]"
+            animate={{ scaleX: elapsedRatio }}
+            initial={{ scaleX: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.6, ease: "linear" }}
+            style={{ width: "100%" }}
+          />
+        </div>
       </div>
 
-      <div className="relative flex min-h-0 flex-1">
-        <VideoStage
-          ref={stageRef}
-          join={join}
-          startMuted={startMuted}
-          isDark={isDark}
-          onLeft={handleLeftMeeting}
-          onDeviceError={showDeviceError}
-          onCameraStarted={handleCameraStarted}
-        />
-        {deviceError ? (
-          <MediaPermissionHelp
-            error={deviceError}
-            onTryAgain={retryDeviceSetup}
-            onDismiss={dismissDeviceHelp}
-          />
-        ) : null}
-        {cheerBurstId > 0 ? (
-          <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
-            <Confetti
-              key={cheerBurstId}
-              active
-              reducedMotion={prefersReducedMotion}
-              burst="center"
-              count={72}
+      <div className="flex min-h-0 flex-1 flex-col gap-0 p-0 sm:gap-4 sm:p-4">
+        <div className="relative flex min-h-0 flex-1 gap-4">
+          <div className="relative flex min-h-0 flex-1 sm:rounded-2xl sm:border sm:border-[#2B303A] sm:bg-[#181B22] sm:p-4">
+            <VideoStage
+              ref={stageRef}
+              join={join}
+              userId={currentUserId}
+              sessionId={sessionId}
+              startMuted={startMuted}
+              isDark={isDark}
+              chatOpen={chatOpen}
+              onCloseChat={() => setChatOpen(false)}
+              onLeft={handleLeftMeeting}
+              onDeviceError={showDeviceError}
+              onCameraStarted={handleCameraStarted}
+              onMicStateChange={handleMicStateChange}
+              onJoinFailed={handleJoinFailed}
+              onUnreadChatChange={setHasUnreadChat}
             />
-          </div>
-        ) : null}
-        <AnimatePresence>
-          {cheerToast ? (
-            <motion.div
-              key={cheerToast}
-              className="pointer-events-none absolute inset-x-0 top-4 z-40 flex justify-center px-4"
-              initial={{ opacity: 0, y: prefersReducedMotion ? 0 : -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: prefersReducedMotion ? 0 : -6 }}
-              transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
-            >
-              <div className="rounded-full border border-white/20 bg-slate-900/90 px-4 py-2 text-xs font-medium text-white shadow-lg backdrop-blur">
-                {cheerToast}
+            {deviceError ? (
+              <MediaPermissionHelp
+                error={deviceError}
+                onTryAgain={retryDeviceSetup}
+                onDismiss={dismissDeviceHelp}
+              />
+            ) : null}
+            {cheerBurstId > 0 ? (
+              <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+                <Confetti
+                  key={cheerBurstId}
+                  active
+                  reducedMotion={prefersReducedMotion}
+                  burst="center"
+                  count={72}
+                />
               </div>
-            </motion.div>
+            ) : null}
+            <AnimatePresence>
+              {cheerToast ? (
+                <motion.div
+                  key={cheerToast}
+                  className="pointer-events-none absolute inset-x-0 top-4 z-40 flex justify-center px-4"
+                  initial={{ opacity: 0, y: prefersReducedMotion ? 0 : -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: prefersReducedMotion ? 0 : -6 }}
+                  transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
+                >
+                  <div className="rounded-full border border-white/20 bg-slate-900/90 px-4 py-2 text-xs font-medium text-white shadow-lg backdrop-blur">
+                    {cheerToast}
+                  </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+            {tasksOpen ? (
+              <SessionTaskSheet
+                tasks={sessionTasks}
+                partnerName={partnerDisplayName}
+                onClose={() => setTasksOpen(false)}
+              />
+            ) : null}
+          </div>
+          {tasksOpen ? (
+            <SessionTaskRail
+              tasks={sessionTasks}
+              partnerName={partnerDisplayName}
+              onClose={() => setTasksOpen(false)}
+            />
           ) : null}
-        </AnimatePresence>
-        {tasksOpen ? (
-          <SessionTaskRail
-            tasks={sessionTasks}
-            partnerName={partnerDisplayName}
-            onClose={() => setTasksOpen(false)}
-          />
-        ) : null}
-        {tasksOpen ? (
-          <SessionTaskSheet
-            tasks={sessionTasks}
-            partnerName={partnerDisplayName}
-            onClose={() => setTasksOpen(false)}
-          />
-        ) : null}
+        </div>
       </div>
 
       <AnimatePresence>
@@ -907,13 +1029,15 @@ function TimerPill({
 }) {
   const inWrapUp = remainingMs <= 0 && wrapUpRemainingMs > 0;
   const isOver = remainingMs <= 0 && wrapUpRemainingMs <= 0;
+  // Same pill shape/weight as the "Video Call" design's "Time left" chip,
+  // with analogous tints for the warning/critical/over states it didn't cover.
   const palette = isOver
-    ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
+    ? { border: "#1F4E3A", bg: "#153A2B", label: "#4ADE80", icon: "#4ADE80" }
     : inWrapUp || urgency === "critical"
-      ? "border-amber-400/50 bg-amber-500/15 text-amber-100"
+      ? { border: "#4E3B1F", bg: "#3A2E15", label: "#F5C563", icon: "#F5C563" }
       : urgency === "warning"
-        ? "border-amber-400/50 bg-amber-500/15 text-amber-100"
-        : "border-white/15 bg-white/5 text-slate-100";
+        ? { border: "#4E3B1F", bg: "#3A2E15", label: "#F5C563", icon: "#F5C563" }
+        : { border: "#26384E", bg: "#1F2E41", label: "#5A92DE", icon: "#6EA0E1" };
   const label = isOver
     ? "Time’s up"
     : inWrapUp
@@ -947,13 +1071,14 @@ function TimerPill({
           ? { duration: 1.4, repeat: Infinity, ease: "easeInOut" }
           : { duration: 0.2 }
       }
-      className={`hidden items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-medium backdrop-blur-sm sm:flex ${palette}`}
+      className="flex items-center gap-2.5 rounded-full border px-3.5 py-1.5"
+      style={{ borderColor: palette.border, backgroundColor: palette.bg }}
     >
       <svg
         className="h-3.5 w-3.5"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="currentColor"
+        stroke={palette.icon}
         strokeWidth={2}
       >
         <path
@@ -962,8 +1087,13 @@ function TimerPill({
           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      <span className="uppercase tracking-wide opacity-80">{label}</span>
-      <span className="font-mono text-sm tabular-nums tracking-tight">
+      <span
+        className="text-[11px] font-bold uppercase tracking-wide"
+        style={{ color: palette.label }}
+      >
+        {label}
+      </span>
+      <span className="font-mono text-base tabular-nums tracking-tight text-[#ECEEF3]">
         {isOver ? "00:00" : formatRemaining(displayMs)}
       </span>
     </motion.div>

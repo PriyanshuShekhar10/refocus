@@ -2,12 +2,14 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { CALL_JOIN_GRACE_MINUTES, WRAP_UP_MINUTES } from "@/lib/sessionWindow";
 import { dailyVideoProvider } from "./daily";
+import { streamVideoProvider } from "./stream";
 import { VIDEO_PROVIDER_IDS, type VideoJoin, type VideoProvider, type VideoProviderId } from "./types";
 
 export type { VideoJoin, VideoProvider, VideoProviderId } from "./types";
 
 const PROVIDERS: Record<VideoProviderId, VideoProvider> = {
   daily: dailyVideoProvider,
+  stream: streamVideoProvider,
 };
 
 function isVideoProviderId(value: unknown): value is VideoProviderId {

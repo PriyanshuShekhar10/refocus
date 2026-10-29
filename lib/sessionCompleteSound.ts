@@ -29,6 +29,11 @@ function getOrCreateContext(): AudioContext | null {
   return sharedCtx;
 }
 
+/** Shared AudioContext, unlocked by {@link unlockSessionCompleteSound} — reused by other call-screen sounds. */
+export function getSharedAudioContext(): AudioContext | null {
+  return getOrCreateContext();
+}
+
 /**
  * Call from a user gesture (e.g. Start call) so the chime can play later
  * when the session timer hits zero.

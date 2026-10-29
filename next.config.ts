@@ -1,10 +1,12 @@
 import type { NextConfig } from "next";
 import { listDailyDomainsFromEnv, listDailyOriginsFromEnv } from "./lib/providers/video/daily/env";
+import { listStreamConnectOriginsFromEnv } from "./lib/providers/video/stream/env";
 
 const dailyDomains = listDailyDomainsFromEnv();
 const dailyOrigins = listDailyOriginsFromEnv();
 const dailyOriginAllowList = dailyOrigins.map((origin) => `"${origin}"`).join(" ");
 const dailyWildcard = "https://*.daily.co";
+const streamConnectOrigins = listStreamConnectOriginsFromEnv();
 const isProd = process.env.NODE_ENV === "production";
 
 if (isProd && dailyDomains.length === 0) {
@@ -63,6 +65,7 @@ const cspDirectives: Record<string, string[]> = {
     ...dailyOrigins,
     dailyWildcard,
     "https://api.daily.co",
+    ...streamConnectOrigins,
     "https://*.ably.io",
     "https://*.ably-realtime.com",
     "wss://*.ably.io",

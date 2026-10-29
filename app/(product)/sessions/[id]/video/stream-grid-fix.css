@@ -1,0 +1,57 @@
+/*
+ * PaginatedGridLayout (Stream's own built-in component, used unmodified)
+ * has a real CSS sizing bug: its group wrapper caps width at
+ * max-width:110vh, and each tile's `flex: 0 1 calc(50% - 6px)` fixes WIDTH
+ * explicitly, then derives height purely from that width via a fixed
+ * aspect-ratio — with no cap from the available HEIGHT. On a wide/short
+ * panel this leaves both tiles small with empty space below them.
+ *
+ * This patches just the 2-participant case (the only one this app's 1:1
+ * calls use): drop the width cap, and let each tile sum to the largest
+ * 4:3 box that fits both the 50%-width column AND the full available
+ * height (the standard max-width/max-height/aspect-ratio "contain" trick —
+ * requires width/height to stay auto, not fixed by flex-basis).
+ */
+.str-video__paginated-grid-layout__group {
+  max-width: none;
+  height: 100%;
+  align-items: center;
+}
+.str-video__paginated-grid-layout__group.str-video__paginated-grid-layout--two-four
+  .str-video__participant-view {
+  flex: 0 1 auto;
+  width: auto;
+  height: auto;
+  max-width: calc(50% - 6px);
+  max-height: 100%;
+  aspect-ratio: 4 / 3;
+  min-width: 0;
+  min-height: 0;
+}
+
+/*
+ * Mobile: two tiles squeezed side by side at a phone's width get too small
+ * to be useful. Stack them instead — full width each, half the height.
+ */
+@media (max-width: 640px) {
+  .str-video__paginated-grid-layout__group.str-video__paginated-grid-layout--two-four {
+    flex-direction: column;
+  }
+  .str-video__paginated-grid-layout__group.str-video__paginated-grid-layout--two-four
+    .str-video__participant-view {
+    max-width: 100%;
+    max-height: calc(50% - 6px);
+  }
+}
+
+/*
+ * CallControls has no flex-wrap of its own, so on a narrow phone its ~6
+ * buttons (mic/camera/reactions/screenshare/record/leave) can overflow
+ * or get squeezed past usability. Let them wrap to a second row instead.
+ */
+@media (max-width: 480px) {
+  .str-video__call-controls {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+}
