@@ -249,8 +249,20 @@ export default function MobileCalendar() {
   }, [ui.toast]);
 
   useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 60000);
-    return () => clearInterval(interval);
+    const tick = () => setNow(new Date());
+    const interval = setInterval(tick, 60000);
+    // setInterval is throttled (or paused) while backgrounded/asleep, so
+    // resync immediately once the tab is visible/focused again.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") tick();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", tick);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", tick);
+    };
   }, []);
 
   useEffect(() => {

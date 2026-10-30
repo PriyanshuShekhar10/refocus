@@ -143,7 +143,19 @@ export function useCalendarGrid({
   useEffect(() => {
     const tick = () => setNow(new Date());
     const id = setInterval(tick, 60_000);
-    return () => clearInterval(id);
+    // setInterval is throttled (or fully paused) while the tab is backgrounded
+    // or the machine sleeps, so `now` can go stale and then jump once it
+    // catches up. Force a resync as soon as the tab is visible/focused again.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") tick();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", tick);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", tick);
+    };
   }, []);
 
   // Grid container ref
