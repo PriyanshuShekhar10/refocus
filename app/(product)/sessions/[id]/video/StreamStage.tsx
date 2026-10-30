@@ -16,6 +16,11 @@ import type { VideoDeviceError, VideoStageHandle, VideoStageProps } from "./type
 // a belt-and-suspenders client-side preference for the one remote participant.
 const TARGET_RESOLUTION = { width: 640, height: 480 };
 
+// call.join() occasionally fails with a transient SFU WS error (e.g. close
+// code 1006) rather than a real join rejection. Retry with backoff before
+// surfacing "Couldn't start the call" to the user.
+const SFU_JOIN_RETRY_DELAYS_MS = [500, 1500, 3000];
+
 type StreamSdk = typeof import("@stream-io/video-react-sdk");
 
 type DeviceFailure = { media: "video" | "audio"; name?: string; message?: string };
@@ -260,11 +265,27 @@ export const StreamStage = forwardRef<VideoStageHandle, VideoStageProps>(functio
 
       const call = client.call(join.domain, join.roomName);
 
-      try {
-        await call.join({ create: true });
-      } catch (err) {
+      let joinError: unknown;
+      for (let attempt = 0; attempt <= SFU_JOIN_RETRY_DELAYS_MS.length; attempt++) {
+        if (cancelled) return;
+        try {
+          await call.join({ create: true });
+          joinError = undefined;
+          break;
+        } catch (err) {
+          joinError = err;
+          if (attempt < SFU_JOIN_RETRY_DELAYS_MS.length) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, SFU_JOIN_RETRY_DELAYS_MS[attempt]),
+            );
+          }
+        }
+      }
+      if (joinError) {
         if (!cancelled) {
-          handlers.current.onJoinFailed?.(err instanceof Error ? err.message : undefined);
+          handlers.current.onJoinFailed?.(
+            joinError instanceof Error ? joinError.message : undefined,
+          );
         }
         void call.leave().catch(() => {});
         void client.disconnectUser().catch(() => {});
