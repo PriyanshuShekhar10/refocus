@@ -19,6 +19,7 @@ import {
   AuthDivider,
   FirebaseOAuthButtons,
 } from "@/components/firebase-oauth-buttons";
+import { getBrowserFingerprint } from "@/lib/browserFingerprint";
 
 export function SignUpForm({
   className,
@@ -59,10 +60,17 @@ export function SignUpForm({
     }
 
     try {
+      const browserFingerprint = await getBrowserFingerprint();
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, firstName, lastName }),
+        body: JSON.stringify({
+          email,
+          password,
+          firstName,
+          lastName,
+          ...(browserFingerprint ? { browserFingerprint } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to register");
@@ -70,6 +78,7 @@ export function SignUpForm({
         redirect: false,
         email,
         password,
+        ...(browserFingerprint ? { browserFingerprint } : {}),
       });
       if (login?.error) throw new Error(login.error);
 

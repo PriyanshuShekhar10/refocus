@@ -24,6 +24,7 @@
     "@ai-sdk/openai": "^3.0.27",
     "@auth/mongodb-adapter": "^3.11.3",
     "@daily-co/daily-js": "^0.92.2",
+    "@fingerprintjs/fingerprintjs": "^5.3.0",
     "@opentelemetry/api-logs": "^0.223.0",
     "@opentelemetry/exporter-logs-otlp-http": "^0.300.0",
     "@opentelemetry/resources": "^3.0.0",
@@ -71,7 +72,7 @@
     "@types/react": "19.2.9",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.12",
     "autoprefixer": "^10.4.20",
     "dotenv": "^17.2.1",
     "eslint": "^9",
@@ -80,7 +81,7 @@
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.12"
   },
   "overrides": {
     "@types/react": "19.2.9",
@@ -88,6 +89,25 @@
     "firebase-admin": {
       "jwks-rsa": {
         "jose": "4.15.9"
+      }
+    },
+    "firebase": {
+      "@firebase/firestore": {
+        "@grpc/grpc-js": "1.14.6"
+      }
+    },
+    "@vercel/blob": {
+      "@vercel/oidc": {
+        "@vercel/cli-config": {
+          "zod": "4.6.7"
+        }
+      }
+    },
+    "@vercel/functions": {
+      "@vercel/oidc": {
+        "@vercel/cli-config": {
+          "zod": "4.6.7"
+        }
       }
     }
   }

@@ -11,6 +11,7 @@ import {
   AuthDivider,
   FirebaseOAuthButtons,
 } from "@/components/firebase-oauth-buttons";
+import { getBrowserFingerprint } from "@/lib/browserFingerprint";
 
 export function LoginForm({
   className,
@@ -31,10 +32,12 @@ export function LoginForm({
     setError(null);
 
     try {
+      const browserFingerprint = await getBrowserFingerprint();
       const res = await signIn("credentials", {
         redirect: false,
         email,
         password,
+        ...(browserFingerprint ? { browserFingerprint } : {}),
       });
       if (res?.error) {
         if (res.error === "CredentialsSignin") {

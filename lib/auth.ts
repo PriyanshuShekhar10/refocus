@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 import { ObjectId } from "mongodb";
 import { resolveAvatarUrl } from "@/lib/userAvatar";
+import { getDeviceId } from "@/lib/deviceId";
 
 // When the app is served from a subdomain (dashboard.refocus.co.in) but the
 // marketing site lives on the apex/www, set AUTH_COOKIE_DOMAIN=".refocus.co.in"
@@ -62,8 +63,11 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
         firebaseIdToken: { label: "Firebase ID Token", type: "text" },
         displayName: { label: "Display Name", type: "text" },
+        browserFingerprint: { label: "Browser Fingerprint", type: "text" },
       },
       async authorize(credentials, req) {
+        const deviceId = getDeviceId(req);
+        const fingerprint = credentials?.browserFingerprint?.trim() || null;
         const firebaseIdToken = credentials?.firebaseIdToken?.trim();
         if (firebaseIdToken) {
           const ip = getClientIp(req);
@@ -83,7 +87,13 @@ export const authOptions: NextAuthOptions = {
               "@/lib/users/upsertFirebaseUser"
             );
             const displayName = credentials?.displayName?.trim() || null;
-            const user = await upsertFirebaseUser(decoded, displayName, ip);
+            const user = await upsertFirebaseUser(
+              decoded,
+              displayName,
+              ip,
+              deviceId,
+              fingerprint,
+            );
             if (user.id) {
               const { recordLoginIp } = await import("@/lib/userIps");
               void recordLoginIp({
@@ -91,6 +101,14 @@ export const authOptions: NextAuthOptions = {
                 ip,
                 method: "google",
                 email: user.email,
+              });
+              const { recordDeviceSeen } = await import("@/lib/userDevices");
+              void recordDeviceSeen({
+                userId: user.id,
+                deviceId,
+                fingerprint,
+                ip,
+                source: "login",
               });
             }
             return {
@@ -164,6 +182,14 @@ export const authOptions: NextAuthOptions = {
           ip,
           method: "credentials",
           email: user.email,
+        });
+        const { recordDeviceSeen } = await import("@/lib/userDevices");
+        void recordDeviceSeen({
+          userId,
+          deviceId,
+          fingerprint,
+          ip,
+          source: "login",
         });
         return {
           id: userId,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { DEVICE_ID_COOKIE, deviceIdCookieOptions } from "@/lib/deviceId";
 
 /**
  * Combined CSRF + auth middleware.
@@ -69,6 +70,16 @@ function originMatchesHost(req: NextRequest): boolean {
   return false;
 }
 
+/** Plant a long-lived device-id cookie on first contact, if missing. Used
+ * as a best-effort fraud/multi-account signal (see lib/userDevices.ts) —
+ * never a security boundary. */
+function ensureDeviceIdCookie(req: NextRequest, res: NextResponse): NextResponse {
+  if (!req.cookies.get(DEVICE_ID_COOKIE)) {
+    res.cookies.set(DEVICE_ID_COOKIE, crypto.randomUUID(), deviceIdCookieOptions());
+  }
+  return res;
+}
+
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
@@ -77,9 +88,9 @@ export async function middleware(req: NextRequest) {
   const keyAuthenticated = pathname === "/api/blog/publish" || pathname === "/api/blog/rebuild";
   if (MUTATING_METHODS.has(req.method) && pathname.startsWith("/api/") && !keyAuthenticated) {
     if (!originMatchesHost(req)) {
-      return NextResponse.json(
-        { error: "Cross-origin request blocked" },
-        { status: 403 },
+      return ensureDeviceIdCookie(
+        req,
+        NextResponse.json({ error: "Cross-origin request blocked" }, { status: 403 }),
       );
     }
   }
@@ -92,15 +103,18 @@ export async function middleware(req: NextRequest) {
     });
     if (!token) {
       if (pathname.startsWith("/api/")) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return ensureDeviceIdCookie(
+          req,
+          NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+        );
       }
       const loginUrl = new URL("/auth/login", req.url);
       loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search);
-      return NextResponse.redirect(loginUrl);
+      return ensureDeviceIdCookie(req, NextResponse.redirect(loginUrl));
     }
   }
 
-  return NextResponse.next();
+  return ensureDeviceIdCookie(req, NextResponse.next());
 }
 
 export const config = {

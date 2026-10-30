@@ -6,6 +6,7 @@ import {
   Activity,
   Ban,
   ChevronDown,
+  Fingerprint,
   Flag,
   History,
   LayoutDashboard,
@@ -48,6 +49,7 @@ import AdminCrew from "./AdminCrew";
 import AdminTestCall from "./AdminTestCall";
 import AdminUpdates from "./AdminUpdates";
 import AdminCohorts from "./AdminCohorts";
+import AdminDeviceFlags from "./AdminDeviceFlags";
 
 type AdminSection =
   | "overview"
@@ -62,6 +64,7 @@ type AdminSection =
   | "history"
   | "ip-activity"
   | "logins"
+  | "device-flags"
   | "crew"
   | "test-call"
   | "updates"
@@ -289,6 +292,7 @@ const SECTIONS: {
   { id: "crew", label: "Crew", icon: UserPlus },
   { id: "test-call", label: "Test call", icon: Video },
   { id: "logins", label: "Logins", icon: LogIn },
+  { id: "device-flags", label: "Device flags", icon: Fingerprint },
   { id: "deleted", label: "Deleted", icon: UserX },
   { id: "blocked", label: "Blocked", icon: Ban },
   { id: "mailbox", label: "Mailbox", icon: Mail },
@@ -1545,6 +1549,8 @@ export default function AdminPanel() {
         {section === "updates" ? <AdminUpdates active={section === "updates"} /> : null}
 
         {section === "cohorts" ? <AdminCohorts /> : null}
+
+        {section === "device-flags" ? <AdminDeviceFlags /> : null}
 
         {section === "users" ? (
           <div className="space-y-4">

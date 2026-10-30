@@ -18,6 +18,7 @@ import {
 } from "@/lib/firebase/client";
 import { Loader2 } from "lucide-react";
 import { DButton } from "@/components/design";
+import { getBrowserFingerprint } from "@/lib/browserFingerprint";
 
 type FirebaseOAuthButtonsProps = {
   disabled?: boolean;
@@ -35,9 +36,11 @@ async function completeFirebaseSignIn(
 ): Promise<void> {
   const idToken = await credential.user.getIdToken();
   const displayName = extractDisplayName(credential);
+  const browserFingerprint = await getBrowserFingerprint();
   const res = await signIn("credentials", {
     firebaseIdToken: idToken,
     displayName: displayName ?? undefined,
+    ...(browserFingerprint ? { browserFingerprint } : {}),
     redirect: false,
   });
 

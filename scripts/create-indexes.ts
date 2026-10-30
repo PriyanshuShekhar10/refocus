@@ -366,6 +366,24 @@ const INDEX_DEFINITIONS: CollectionIndexes[] = [
     ],
   },
   {
+    collection: "device_signals",
+    indexes: [
+      {
+        name: "device_signals_type_value_user_unique",
+        keys: { signalType: 1, signalValue: 1, userId: 1 },
+        options: { unique: true },
+      },
+      {
+        name: "device_signals_type_value",
+        keys: { signalType: 1, signalValue: 1 },
+      },
+      {
+        name: "device_signals_user",
+        keys: { userId: 1 },
+      },
+    ],
+  },
+  {
     collection: "engagement_crew",
     indexes: [
       {

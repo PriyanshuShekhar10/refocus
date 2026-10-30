@@ -15,6 +15,7 @@ import {
 import { findUserByEmailIdentity, isEmailBanned } from "@/lib/bannedEmails";
 import { logBannedIpSignupAttempt } from "@/lib/bannedIpWatch";
 import { recordSignupIp } from "@/lib/userIps";
+import { recordDeviceSeen } from "@/lib/userDevices";
 import { notifyOpsSignup } from "@/lib/email/opsNotify";
 
 export type AuthProviderKey = "google" | "apple";
@@ -84,6 +85,8 @@ export async function upsertFirebaseUser(
   decoded: DecodedIdToken,
   displayName?: string | null,
   clientIp?: string | null,
+  deviceId?: string | null,
+  browserFingerprint?: string | null,
 ): Promise<UpsertFirebaseUserResult> {
   const email = decoded.email ? displayEmail(decoded.email) : "";
   if (!email) {
@@ -200,6 +203,13 @@ export async function upsertFirebaseUser(
   const userId = String(res.insertedId);
 
   void recordSignupIp(userId, clientIp);
+  void recordDeviceSeen({
+    userId,
+    deviceId,
+    fingerprint: browserFingerprint,
+    ip: clientIp,
+    source: "signup",
+  });
   void logBannedIpSignupAttempt({
     ip: clientIp,
     attemptedEmail: email,

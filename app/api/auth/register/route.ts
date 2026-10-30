@@ -19,6 +19,8 @@ import {
 import { findUserByEmailIdentity, isEmailBanned } from "@/lib/bannedEmails";
 import { logBannedIpSignupAttempt } from "@/lib/bannedIpWatch";
 import { recordSignupIp } from "@/lib/userIps";
+import { recordDeviceSeen } from "@/lib/userDevices";
+import { getDeviceId } from "@/lib/deviceId";
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -28,13 +30,16 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const { email, password, name, firstName, lastName } = body as {
+  const { email, password, name, firstName, lastName, browserFingerprint } = body as {
     email?: string;
     password?: string;
     name?: string;
     firstName?: string;
     lastName?: string;
+    browserFingerprint?: string;
   };
+  const deviceId = getDeviceId(req);
+  const fingerprint = browserFingerprint?.trim() || null;
   if (!email || !password) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
@@ -117,6 +122,7 @@ export async function POST(req: NextRequest) {
     const userId = String(res.insertedId);
 
     void recordSignupIp(userId, ip);
+    void recordDeviceSeen({ userId, deviceId, fingerprint, ip, source: "signup" });
     void logBannedIpSignupAttempt({
       ip,
       attemptedEmail: normalizedEmail,
